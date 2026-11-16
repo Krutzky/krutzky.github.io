@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lern-Apps</title>
+<style>
+  :root {
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1d2433;
+    --muted: #6b7486;
+    --accent: #2f6fde;
+    --accent-soft: #e6eefc;
+    --border: #e1e5ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151c;
+      --card: #1b2029;
+      --text: #e8ebf2;
+      --muted: #9aa3b5;
+      --accent: #6c9cf0;
+      --accent-soft: #23314b;
+      --border: #2a303c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    line-height: 1.45;
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 28px 0 10px;
+  }
+  .app {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: inherit;
+  }
+  a.app:active { transform: scale(0.99); }
+  .nr {
+    flex: 0 0 auto;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .titel { font-weight: 600; }
+  .info { color: var(--muted); font-size: 0.9rem; }
+  .pfeil { margin-left: auto; color: var(--accent); font-size: 1.3rem; }
+  .gesperrt { opacity: 0.5; }
+  .zurueck {
+    display: inline-block;
+    margin: 0 0 4px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .hinweis {
+    margin-top: 32px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: var(--accent-soft);
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="titel">Lern-Apps</h1>
+  <p class="sub">Wähle dein Fach.</p>
+
+  <div id="liste"></div>
+
+  <div class="hinweis">
+    <strong>Abgeben:</strong> Tippe in der App oben auf <strong>„Ergebnisse abgeben“</strong> und lade die Datei herunter.
+    Lade sie dann in <strong>IServ → Aufgaben</strong> bei der Aufgabe mit dem Namen der App hoch.
+  </div>
+</main>
+
+<script>
+  /* =========================================================
+     EINE STARTSEITE FÜR ALLE APPS (Mathe + Physik)
+     Adresse: https://krutzky.github.io  (Repo „krutzky.github.io“)
+     Dieser QR-Code führt zu allen Apps. Oben stehen die Fächer
+     „Mathematik“ und „Physik“, darunter wie gewohnt Jahrgänge,
+     Themen und Ordner.
+
+     HIER BEARBEITEN: Für jede neue App eine Zeile ergänzen –
+     Mathe-Apps in MATHE_APPS, Physik-Apps in PHYSIK_APPS.
+     - jahrgang: z. B. "Jahrgang 7" (muss in den JAHRGAENGE des Fachs stehen).
+              Weglassen = Thema steht direkt in der Fach-Übersicht.
+     - thema: Überschrift (z. B. Modul oder Unterrichtseinheit)
+              Weglassen (mit jahrgang) = App steht direkt im Jahrgang.
+     - ordner: (optional) Unterordner innerhalb eines Themas
+     - nr:    Nummer auf der Kachel
+     - titel: Name der App
+     - info:  kurze Zeile unter dem Namen (optional)
+     - datei: Pfad der App im jeweiligen Repository
+              (Mathe-Apps im Repo „Mathe“, Physik-Apps im Repo „Physik“;
+              den Pfad schreibst du wie bisher OHNE „Mathe/“ bzw. „Physik/“ davor).
+              Leer lassen ("") = wird als „folgt bald“ angezeigt.
+     - frei:  false = App ist hochgeladen, aber noch gesperrt („folgt bald“).
+     - ab:    (optional) Datum, ab dem die App automatisch frei ist,
+              z. B. ab: "2026-11-03".
+     ========================================================= */
+
+  /* ---------------- MATHEMATIK (Repo „Mathe“) ---------------- */
+  const MATHE_JAHRGAENGE = ["Jahrgang 5", "Jahrgang 6", "Jahrgang 7", "Jahrgang 8", "Jahrgang 9", "Jahrgang 10"];
+
+  const MATHE_APPS = [
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.1", nr: 1, titel: "Fit für Diagramme", info: "Diagramme lesen, zeichnen und prüfen", datei: "Jahrgang%2005/Modul%205.1/Fit%20f%C3%BCr%20Diagramme.html" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.2", nr: 1, titel: "Vertauschungsgesetz und Verbindungsgesetz", info: "Geschickt rechnen: Input, 4 Forscheraufträge und Kurz-Check", datei: "Jahrgang%2005/Modul%205.2/Vertauschungsgesetz%20und%20Verbindungsgesetz/Vertauschungsgesetz%20und%20Verbindungsgesetz.html" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.2", nr: 2, titel: "Schriftlich addieren und subtrahieren", info: "Rechenprofi + −: Üben in 3 Stufen, Erklärung, Merkzettel und Tippkarten (Deutsch/Türkçe)", datei: "Jahrgang%2005/Modul%205.2/Schriftlich%20addieren%20und%20subtrahieren/Schriftlich%20addieren%20und%20subtrahieren.html" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.2", ordner: "Türkisch", nr: 1, titel: "Vertauschungsgesetz und Verbindungsgesetz", info: "Türkçe: Değişme ve birleşme özelliği", datei: "Jahrgang%2005/Modul%205.2/T%C3%BCrkisch/Vertauschungsgesetz%20und%20Verbindungsgesetz%20T%C3%BCrkisch.html" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.3", nr: 1, titel: "Modul 5.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.4", nr: 1, titel: "Modul 5.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 5", thema: "Modul 5.5", nr: 1, titel: "Modul 5.5", info: "", datei: "" },
+    { jahrgang: "Jahrgang 6", thema: "Modul 6.1", nr: 1, titel: "Modul 6.1", info: "", datei: "" },
+    { jahrgang: "Jahrgang 6", thema: "Modul 6.2", nr: 1, titel: "Modul 6.2", info: "", datei: "" },
+    { jahrgang: "Jahrgang 6", thema: "Modul 6.3", nr: 1, titel: "Modul 6.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 6", thema: "Modul 6.4", nr: 1, titel: "Modul 6.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 6", thema: "Modul 6.5", nr: 1, titel: "Modul 6.5", info: "", datei: "" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.1", nr: 1, titel: "Modul 7.1", info: "", datei: "" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.2", nr: 1, titel: "7.2 Proportionale und antiproportionale Zuordnung", info: "Fit für die Klassenarbeit: Stationen, Textaufgaben, Experten und Merkzettel", datei: "Jahrgang%2007/Modul%207.2/7.2%20Proportionale%20und%20antiproportionale%20Zuordnung.html" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.2", nr: 2, titel: "Dreisatz bei proportionalen Zuordnungen", info: "Waldis Klassenfahrt: Textaufgaben in vier Etappen", datei: "Jahrgang%2007/Modul%207.2/Dreisatz%20bei%20proportionalen%20Zuordnungen/Dreisatz%20bei%20proportionalen%20Zuordnungen.html" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.2", nr: 3, titel: "Antiproportionale Zuordnungen", info: "Waldis Je-mehr-desto-weniger: erkennen, prüfen und rechnen in vier Stationen", datei: "Jahrgang%2007/Modul%207.2/Antiproportionale%20Zuordnungen/Antiproportionale%20Zuordnungen.html" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.2", ordner: "WWC´s", nr: 1, titel: "WWC_7.2_A1", info: "Proportionale Zuordnungen: 5 Aufgaben in 10 Minuten, bestanden ab 4 richtigen", datei: "Jahrgang%2007/Modul%207.2/WWC%C2%B4s/WWC_7.2_A1.html" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.2", ordner: "WWC´s", nr: 2, titel: "WWC_7.2_A2", info: "Dreisatz-Test: 5 Aufgaben in 10 Minuten, bestanden ab 4 richtigen", datei: "Jahrgang%2007/Modul%207.2/WWC%C2%B4s/WWC_7.2_A2.html" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.3", nr: 1, titel: "Modul 7.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.4", nr: 1, titel: "Modul 7.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 7", thema: "Modul 7.5", nr: 1, titel: "Modul 7.5", info: "", datei: "" },
+    { jahrgang: "Jahrgang 8", thema: "Modul 8.1", nr: 1, titel: "Modul 8.1", info: "", datei: "" },
+    { jahrgang: "Jahrgang 8", thema: "Modul 8.2", nr: 1, titel: "Modul 8.2", info: "", datei: "" },
+    { jahrgang: "Jahrgang 8", thema: "Modul 8.3", nr: 1, titel: "Modul 8.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 8", thema: "Modul 8.4", nr: 1, titel: "Modul 8.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 8", thema: "Modul 8.5", nr: 1, titel: "Modul 8.5", info: "", datei: "" },
+    { jahrgang: "Jahrgang 9", thema: "Modul 9.1", nr: 1, titel: "Modul 9.1", info: "", datei: "" },
+    { jahrgang: "Jahrgang 9", thema: "Modul 9.2", nr: 1, titel: "Modul 9.2", info: "", datei: "" },
+    { jahrgang: "Jahrgang 9", thema: "Modul 9.3", nr: 1, titel: "Modul 9.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 9", thema: "Modul 9.4", nr: 1, titel: "Modul 9.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 9", thema: "Modul 9.5", nr: 1, titel: "Modul 9.5", info: "", datei: "" },
+    { jahrgang: "Jahrgang 10", nr: 1, titel: "ZP-10 Vorbereitung Kahoot!", info: "Fit für die Zentrale Prüfung: Teil 1 und Teil 2", datei: "Jahrgang%2010/ZP-10%20Vorbereitung%20Kahoot!.html" },
+    { jahrgang: "Jahrgang 10", nr: 2, titel: "Kopfrechen Kahoot!", info: "Fit für Teil 1: Kopfrechnen ohne Taschenrechner", datei: "Jahrgang%2010/Kopfrechen%20Kahoot!.html" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.1", ordner: "Quadratische Funktionen – Parabeln", nr: 1, titel: "Parabel-Fahrstuhl", info: "Wie verändert e die Parabel y = x² + e?", datei: "Jahrgang%2010/Modul%2010.1/Quadratische%20Funktionen%20-%20Parabeln/parabel-fahrstuhl.html" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.1", ordner: "Quadratische Funktionen – Parabeln", nr: 2, titel: "Parabel-Kran", info: "Wie verschiebt d die Parabel y = (x − d)²?", datei: "Jahrgang%2010/Modul%2010.1/Quadratische%20Funktionen%20-%20Parabeln/parabel-kran.html" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.1", ordner: "Quadratische Funktionen – Parabeln", nr: 3, titel: "Skatepark-Baustelle", info: "Kran-Check (d) und der neue Form-Regler a", datei: "Jahrgang%2010/Modul%2010.1/Quadratische%20Funktionen%20-%20Parabeln/skatepark-baustelle.html" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.1", ordner: "Quadratische Funktionen – Parabeln", nr: 4, titel: "Skatepark-Bauleitung", info: "Baupläne lesen: y = a(x − d)² + e", datei: "Jahrgang%2010/Modul%2010.1/Quadratische%20Funktionen%20-%20Parabeln/skatepark-bauleitung.html" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.2", nr: 1, titel: "Modul 10.2", info: "", datei: "" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.3", nr: 1, titel: "Modul 10.3", info: "", datei: "" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.4", nr: 1, titel: "Modul 10.4", info: "", datei: "" },
+    { jahrgang: "Jahrgang 10", thema: "Modul 10.5", nr: 1, titel: "Modul 10.5", info: "", datei: "" },
+  ];
+
+  /* ---------------- PHYSIK (Repo „Physik“) ---------------- */
+  const PHYSIK_JAHRGAENGE = ["Jahrgang 7", "Jahrgang 8", "Jahrgang 10"];
+
+  const PHYSIK_APPS = [
+    { thema: "Sicherheitsunterweisung", nr: 1, titel: "Sicherheits-Check", info: "Sicher experimentieren im Physikraum", datei: "Sicherheitsunterweisung/sicherheitscheck.html" },
+    { thema: "Physik Kahoot!", nr: 1, titel: "Physik-Wissensjagd", info: "1100 Fragen zu Phänomenen, Rätseln und Rekorden", datei: "Physik%20Kahoot!/physik-kahoot.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 1, titel: "Linsen-Labor", info: "Linsen und Lichtstrahlen", datei: "Jahrgang%2007/Wie%20kann%20man%20Lichtstrahlen%20beeinflussen/linsenlabor.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 2, titel: "Linsen-Messlabor", info: "Wovon hängen Lage und Größe des Bildes ab?", datei: "Jahrgang%2007/Wie%20kann%20man%20Lichtstrahlen%20beeinflussen/linsenmesslabor.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 3, titel: "Optik-Werkstatt", info: "Wie helfen uns Linsen beim Sehen?", datei: "Jahrgang%2007/Wie%20kann%20man%20Lichtstrahlen%20beeinflussen/optikwerkstatt.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 4, titel: "Regenbogen-Labor", info: "Wie entsteht ein Regenbogen?", datei: "Jahrgang%2007/Wie%20kann%20man%20Lichtstrahlen%20beeinflussen/regenbogenlabor.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 5, titel: "Lichtschutz-Labor", info: "Wann wird Licht gefährlich?", datei: "Jahrgang%2007/Wie%20kann%20man%20Lichtstrahlen%20beeinflussen/lichtschutzlabor.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 1, titel: "Ladungslabor 1", info: "Was passiert beim Reiben?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-1.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 2, titel: "Ladungslabor 2", info: "Welche Kräfte wirken zwischen Ladungen?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-2.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 3, titel: "Ladungslabor 3", info: "Woher kommt die Ladung?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-3.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 4, titel: "Ladungslabor 4", info: "Warum leiten Metalle?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-4.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 5, titel: "Ladungslabor 5", info: "Wie entsteht Spannung?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-5.html" },
+    { jahrgang: "Jahrgang 7", thema: "Wie verhalten sich ruhende Ladungen?", nr: 6, titel: "Ladungslabor 6", info: "Wie entsteht ein Blitz?", datei: "Jahrgang%2007/Wie%20verhalten%20sich%20ruhende%20Ladungen/ladungslabor-6.html" },
+    { jahrgang: "Jahrgang 10", thema: "Woher kommt unsere tägliche Energie?", nr: 1, titel: "Strom-Spur", info: "Woher kommt unser Strom?", datei: "Jahrgang%2010/Woher%20kommt%20unsere%20t%C3%A4gliche%20Energie/strom-spur.html" },
+    { jahrgang: "Jahrgang 10", thema: "Woher kommt unsere tägliche Energie?", nr: 2, titel: "Kosten-Detektiv", info: "Was kostet uns der Strom?", datei: "Jahrgang%2010/Woher%20kommt%20unsere%20t%C3%A4gliche%20Energie/kosten-detektiv.html" },
+    { jahrgang: "Jahrgang 10", thema: "Woher kommt unsere tägliche Energie?", nr: 3, titel: "Sonne-Wind-Labor", info: "Wie gewinnen wir Energie aus Sonne und Wind?", datei: "Jahrgang%2010/Woher%20kommt%20unsere%20t%C3%A4gliche%20Energie/sonne-wind-labor.html" },
+    { jahrgang: "Jahrgang 10", thema: "Woher kommt unsere tägliche Energie?", nr: 4, titel: "Solar-Labor", info: "Warum liefert das Balkonkraftwerk so wenig?", datei: "Jahrgang%2010/Woher%20kommt%20unsere%20t%C3%A4gliche%20Energie/solar-labor.html" },
+    // { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 6, titel: "Name der nächsten App", info: "", datei: "" },
+  ];
+
+  /* ===== Ab hier nichts ändern ===== */
+  const FAECHER = [
+    { name: "Mathematik", jahrgaenge: MATHE_JAHRGAENGE, apps: MATHE_APPS, pfad: "Mathe/" },
+    { name: "Physik", jahrgaenge: PHYSIK_JAHRGAENGE, apps: PHYSIK_APPS, pfad: "Physik/" },
+  ];
+
+  const liste = document.getElementById("liste");
+  const sub = document.querySelector(".sub");
+  const titelEl = document.getElementById("titel");
+
+  function istOffen(app) {
+    return !!app.datei && app.frei !== false &&
+      (!app.ab || new Date() >= new Date(app.ab + "T00:00:00"));
+  }
+  function themenVon(l) {
+    const t = [];
+    l.forEach(a => { if (a.thema && !t.includes(a.thema)) t.push(a.thema); });
+    return t;
+  }
+  function kachel(nr, titel, info, href, offen) {
+    const el = document.createElement(offen ? "a" : "div");
+    el.className = "app" + (offen ? "" : " gesperrt");
+    if (offen) el.href = href;
+    el.innerHTML =
+      '<div class="nr"></div>' +
+      '<div><div class="titel"></div><div class="info"></div></div>' +
+      (offen ? '<div class="pfeil">›</div>' : '');
+    el.querySelector(".nr").textContent = nr;
+    el.querySelector(".titel").textContent = titel;
+    el.querySelector(".info").textContent = info;
+    return el;
+  }
+  function ueberschrift(t) {
+    const h = document.createElement("h2"); h.textContent = t; liste.appendChild(h);
+  }
+  function zurueckLink(text, href) {
+    const a = document.createElement("a");
+    a.href = href; a.className = "zurueck"; a.textContent = "‹ " + text;
+    liste.appendChild(a);
+  }
+  function anzahl(n, eins, viele) { return n + " " + (n === 1 ? eins : viele); }
+  function hashFuer(o) {
+    return "#" + Object.keys(o).map(k => k + "=" + encodeURIComponent(o[k])).join("&");
+  }
+  function appKachel(fach, app, nr) {
+    const offen = istOffen(app);
+    return kachel(nr, app.titel, offen ? (app.info || "") : "folgt bald", fach.pfad + app.datei, offen);
+  }
+  function zusammenfassung(l) {
+    const offen = l.filter(istOffen);
+    const nt = themenVon(offen).length;
+    const na = offen.filter(a => !a.thema).length;
+    return [na ? anzahl(na, "App", "Apps") : "", nt ? anzahl(nt, "Thema", "Themen") : ""].filter(Boolean).join(" · ");
+  }
+
+  // Ebene 0: Fächer
+  function zeigeFaecher() {
+    liste.innerHTML = "";
+    titelEl.textContent = "Lern-Apps";
+    sub.textContent = "Wähle dein Fach.";
+    ueberschrift("Fächer");
+    FAECHER.forEach((fach, i) => {
+      const offen = fach.apps.filter(istOffen).length;
+      liste.appendChild(kachel(i + 1, fach.name, offen ? anzahl(offen, "App", "Apps") : "folgt bald",
+        hashFuer({ f: fach.name }), offen > 0));
+    });
+  }
+
+  // Ebene 1: Übersicht eines Fachs
+  function zeigeUebersicht(fach) {
+    liste.innerHTML = "";
+    sub.textContent = "Wähle deinen Bereich.";
+    zurueckLink("Fächer", "#");
+    ueberschrift(fach.name);
+    const ohneJg = fach.apps.filter(a => !a.jahrgang);
+    let nr = 1;
+    themenVon(ohneJg).forEach(thema => {
+      const offen = ohneJg.filter(a => a.thema === thema && istOffen(a)).length;
+      liste.appendChild(kachel(nr++, thema, offen ? anzahl(offen, "App", "Apps") : "folgt bald",
+        hashFuer({ f: fach.name, t: thema }), offen > 0));
+    });
+    fach.jahrgaenge.forEach(jg => {
+      const jgApps = fach.apps.filter(a => a.jahrgang === jg);
+      const offen = jgApps.filter(istOffen).length;
+      liste.appendChild(kachel(nr++, jg, offen ? zusammenfassung(jgApps) : "folgt bald",
+        hashFuer({ f: fach.name, j: jg }), offen > 0));
+    });
+  }
+
+  // Ebene 2: Themen eines Jahrgangs
+  function zeigeJahrgang(fach, jg) {
+    liste.innerHTML = "";
+    sub.textContent = "Wähle dein Thema.";
+    zurueckLink(fach.name, hashFuer({ f: fach.name }));
+    ueberschrift(jg);
+    const jgApps = fach.apps.filter(a => a.jahrgang === jg);
+    let nr = 1;
+    jgApps.filter(a => !a.thema).forEach(app => liste.appendChild(appKachel(fach, app, nr++)));
+    themenVon(jgApps).forEach(thema => {
+      const offen = jgApps.filter(a => a.thema === thema && istOffen(a)).length;
+      liste.appendChild(kachel(nr++, thema, offen ? anzahl(offen, "App", "Apps") : "folgt bald",
+        hashFuer({ f: fach.name, j: jg, t: thema }), offen > 0));
+    });
+  }
+
+  // Ebene 3: Apps eines Themas
+  function zeigeThema(fach, jg, thema) {
+    liste.innerHTML = "";
+    sub.textContent = "Wähle eine App.";
+    if (jg) zurueckLink(jg, hashFuer({ f: fach.name, j: jg }));
+    else zurueckLink(fach.name, hashFuer({ f: fach.name }));
+    ueberschrift(thema);
+    const themaApps = fach.apps.filter(a => (a.jahrgang || null) === (jg || null) && a.thema === thema);
+    themaApps.filter(a => !a.ordner).forEach(app => liste.appendChild(appKachel(fach, app, app.nr)));
+    let nr = themaApps.filter(a => !a.ordner).length + 1;
+    [...new Set(themaApps.filter(a => a.ordner).map(a => a.ordner))].forEach(ordner => {
+      const offen = themaApps.filter(a => a.ordner === ordner && istOffen(a)).length;
+      const ziel = jg ? { f: fach.name, j: jg, t: thema, o: ordner } : { f: fach.name, t: thema, o: ordner };
+      liste.appendChild(kachel(nr++, ordner, offen ? anzahl(offen, "App", "Apps") : "folgt bald",
+        hashFuer(ziel), offen > 0));
+    });
+  }
+
+  // Ebene 4: Apps in einem Ordner
+  function zeigeOrdner(fach, jg, thema, ordner) {
+    liste.innerHTML = "";
+    sub.textContent = "Wähle eine App.";
+    zurueckLink(thema, hashFuer(jg ? { f: fach.name, j: jg, t: thema } : { f: fach.name, t: thema }));
+    ueberschrift(ordner);
+    fach.apps.filter(a => (a.jahrgang || null) === (jg || null) && a.thema === thema && a.ordner === ordner)
+      .forEach(app => liste.appendChild(appKachel(fach, app, app.nr)));
+  }
+
+  function anzeigen() {
+    const p = {};
+    location.hash.replace(/^#/, "").split("&").forEach(x => {
+      const k = x.indexOf("=");
+      if (k > 0) p[x.slice(0, k)] = decodeURIComponent(x.slice(k + 1));
+    });
+    // Alte Mathe-Links ohne Fach (#j=…) landen weiterhin in Mathematik
+    let fach = FAECHER.find(f => f.name === p.f);
+    if (!fach && (p.j || p.t)) fach = FAECHER[0];
+    if (!fach) { zeigeFaecher(); window.scrollTo(0, 0); return; }
+    titelEl.textContent = fach.name + "-Apps";
+    const jg = fach.jahrgaenge.includes(p.j) ? p.j : null;
+    const passt = a => (a.jahrgang || null) === jg && a.thema === p.t;
+    if (p.t && p.o && fach.apps.some(a => passt(a) && a.ordner === p.o)) zeigeOrdner(fach, jg, p.t, p.o);
+    else if (p.t && fach.apps.some(passt)) zeigeThema(fach, jg, p.t);
+    else if (jg) zeigeJahrgang(fach, jg);
+    else zeigeUebersicht(fach);
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", anzeigen);
+  anzeigen();
+</script>
+</body>
+</html>
