@@ -120,9 +120,10 @@
      - nr:    Nummer auf der Kachel
      - titel: Name der App
      - info:  kurze Zeile unter dem Namen (optional)
-     - datei: Pfad der App im jeweiligen Repository
-              (Mathe-Apps im Repo „Mathe“, Physik-Apps im Repo „Physik“;
-              den Pfad schreibst du wie bisher OHNE „Mathe/“ bzw. „Physik/“ davor).
+     - datei: Pfad der App innerhalb des Fach-Ordners
+              (Mathe-Apps im Ordner „Mathematik“, Physik-Apps im Ordner „Physik“;
+              den Pfad schreibst du OHNE „Mathematik/“ bzw. „Physik/“ davor,
+              also z. B. "Jahrgang%2007/Modul%207.2/App.html").
               Leer lassen ("") = wird als „folgt bald“ angezeigt.
      - frei:  false = App ist hochgeladen, aber noch gesperrt („folgt bald“).
      - ab:    (optional) Datum, ab dem die App automatisch frei ist,
@@ -202,7 +203,7 @@
 
   /* ===== Ab hier nichts ändern ===== */
   const FAECHER = [
-    { name: "Mathematik", jahrgaenge: MATHE_JAHRGAENGE, apps: MATHE_APPS, pfad: "Mathe/" },
+    { name: "Mathematik", jahrgaenge: MATHE_JAHRGAENGE, apps: MATHE_APPS, pfad: "Mathematik/" },
     { name: "Physik", jahrgaenge: PHYSIK_JAHRGAENGE, apps: PHYSIK_APPS, pfad: "Physik/" },
   ];
 

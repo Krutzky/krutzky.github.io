@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 3</b><span>Woher kommt die Ladung?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Atom, Reib-Maschine oder Detektiv-Fall"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 3';
+var STATIONS=[
+  {key:'s1',name:'Atom-Baukasten',scene:'atom'},
+  {key:'s2',name:'Reib-Maschine',scene:'rub'},
+  {key:'s3',name:'Ladungs-Detektiv',scene:'game'},
+  {key:'s4',name:'Merksatz',scene:'rub'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'atom'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{m1:false,m2:false,m3:false,neu:null,neuOk:false,move:null,moveOk:false},
+  s2:{obs:{},obsOk:false,sum:null,sumOk:false,own:'',ok:false},
+  s3:{game:{i:0,score:0,streak:0,best:0,first:[]},bal:null,balOk:false,hair:null,hairOk:false},
+  s4:{gaps:{},ok:false,refl:'',pulli:null,pulliOk:false},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[]};
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-3-v1',RKEY='ladungslabor-3-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Atom: Kern mit Protonen (+), Hülle mit Elektronen (–). Beim Reiben wandern nur Elektronen.
+   Kunststoff + Wolle: Elektronen wandern vom Tuch zum Stab. Glas + Seide: vom Glas zur Seide. */
+var M={},ROT=0;
+var MAXP=8,MAXE=10,NA=8,MAXN=6;
+function freshModel(){
+  M={atom:{p:3,e:3,flash:0},
+     rub:{mat:'kw',n:0,fly:null,shake:0},
+     game:{fb:null,fbT:0}};
+  if(st.s1&&st.s1.m1){M.atom.p=3;}
+}
+freshModel();
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function sgnTxt(q){return q>0?'+'+q:(q<0?'–'+(-q):'0');}
+function chargeWord(q){return q>0?'positiv geladen':(q<0?'negativ geladen':'ungeladen');}
+function pLocked(){return !!(st.s1&&st.s1.m1);}
+
+/* Reibung: Spender und Empfänger */
+function rubInfo(){var kw=M.rub.mat==='kw';return {left:kw?'Kunststoffstab':'Glasstab',right:kw?'Wolltuch':'Seidentuch',
+  lcol:kw?'#5A6578':'#9FD3E0',rcol:kw?'#B45F3C':'#B9A3E3',toLeft:kw};}
+function counts(){var r=rubInfo(),n=M.rub.n;var L={p:NA,e:NA+(r.toLeft?n:-n)},R={p:NA,e:NA+(r.toLeft?-n:n)};return {L:L,R:R};}
+
+/* Detektiv-Karten */
+var CARDS=[
+  {t:'Ein Atom',p:4,e:4,a:'0'},
+  {t:'Luftballon nach dem Reiben',p:10,e:13,a:'-'},
+  {t:'Wolltuch nach dem Reiben',p:12,e:9,a:'+'},
+  {t:'Glasstab nach dem Reiben',p:9,e:6,a:'+'},
+  {t:'Papierschnipsel',p:6,e:6,a:'0'},
+  {t:'Haare nach dem Ballon',p:8,e:5,a:'+'},
+  {t:'Kunststoffstab nach dem Reiben',p:7,e:11,a:'-'},
+  {t:'Ein Atom mit zwei Elektronen mehr',p:5,e:7,a:'-'}
+];
+
+/* ---------- Zeichnen ---------- */
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return false;}
+function bg(){return col('surface');}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='atom')drawAtom(c,lupe);else if(sc==='rub')drawRub(c,lupe);else drawGame(c,lupe);}
+function proton(c,x,y,r){c.fillStyle='#E8322B';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle='rgba(0,0,0,.18)';c.lineWidth=1;c.stroke();
+  c.fillStyle='#fff';c.font='bold '+Math.round(r*1.4)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('+',x,y+0.5);}
+function electron(c,x,y,r){c.fillStyle='#2F6FD3';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+  c.fillStyle='#fff';c.font='bold '+Math.round(r*1.5)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('–',x,y+0.5);}
+var KPOS=[[0,0],[-15,-9],[15,-9],[0,17],[-17,12],[17,12],[0,-20],[-26,-1]];
+function drawAtom(c,lupe){var a=M.atom,cx=200,cy=186;
+  /* Hülle */
+  [[78,2],[132,8]].forEach(function(sh){c.strokeStyle=col('line');c.lineWidth=2;c.setLineDash([6,6]);c.beginPath();c.arc(cx,cy,sh[0],0,Math.PI*2);c.stroke();c.setLineDash([]);});
+  c.fillStyle='rgba(47,111,211,.06)';c.beginPath();c.arc(cx,cy,150,0,Math.PI*2);c.fill();
+  /* Kern */
+  c.fillStyle='rgba(232,50,43,.08)';c.beginPath();c.arc(cx,cy,40,0,Math.PI*2);c.fill();
+  for(var i=0;i<a.p;i++)proton(c,cx+KPOS[i][0],cy+KPOS[i][1],12);
+  if(a.flash>0){c.strokeStyle='rgba(232,50,43,'+a.flash+')';c.lineWidth=4;c.beginPath();c.arc(cx,cy,44,0,Math.PI*2);c.stroke();}
+  /* Elektronen */
+  for(var j=0;j<a.e;j++){var sh=j<2?0:1,idx=sh?j-2:j,cnt=sh?Math.max(1,a.e-2):Math.min(2,a.e),R=sh?132:78,ang=-Math.PI/2+idx*2*Math.PI/cnt+(sh?ROT*0.6:ROT);
+    electron(c,cx+Math.cos(ang)*R,cy+Math.sin(ang)*R,11);}
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='middle';
+    c.strokeStyle=col('ink-soft');c.lineWidth=1;
+    c.beginPath();c.moveTo(cx+42,cy-28);c.lineTo(390,70);c.stroke();c.fillText('Atomkern: Protonen (+)',396,70);
+    c.beginPath();c.moveTo(cx+120,cy+60);c.lineTo(390,300);c.stroke();c.fillText('Atomhülle: Elektronen (–)',396,300);
+    var q=a.p-a.e;c.font='bold 22px '+ff();c.fillStyle=q===0?col('ok'):(q>0?'#E8322B':'#2F6FD3');c.fillText('Ladung: '+sgnTxt(q),396,170);
+    c.font='15px '+ff();c.fillStyle=col('ink-soft');c.fillText(a.p+' Protonen, '+a.e+' Elektronen',396,198);
+    if(pLocked()){c.font='bold 12px '+ff();c.fillStyle=col('ink-soft');c.fillText('Der Kern ist jetzt fest.',396,226);}}
+}
+function atomPos(side,i){var bx=side?352:42,by=128;return [bx+30+(i%4)*60,by+32+Math.floor(i/4)*62];}
+function extraPos(side,k){var bx=side?352:42;return [bx+60+(k%4)*60,128+62+(k>=4?-58:2)];}
+function drawRub(c,lupe){var r=rubInfo(),n=M.rub.n,sh=M.rub.shake?Math.sin(M.rub.shake*Math.PI*8)*6:0;
+  /* Körper */
+  c.fillStyle=r.lcol;c.globalAlpha=.22;c.beginPath();if(c.roundRect)c.roundRect(32,118,268,146,16);else c.rect(32,118,268,146);c.fill();c.globalAlpha=1;
+  c.strokeStyle=r.lcol;c.lineWidth=3;c.stroke();
+  c.save();c.translate(sh,0);c.fillStyle=r.rcol;c.globalAlpha=.22;c.beginPath();if(c.roundRect)c.roundRect(340,118,268,146,16);else c.rect(340,118,268,146);c.fill();c.globalAlpha=1;c.strokeStyle=r.rcol;c.lineWidth=3;c.stroke();c.restore();
+  c.font='bold 15px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText(r.left,166,110);c.fillText(r.right,474,110);
+  /* Atome */
+  var lost=r.toLeft?{L:0,R:n}:{L:n,R:0};
+  for(var s=0;s<2;s++){for(var i=0;i<NA;i++){var p=atomPos(s,i);proton(c,p[0],p[1],11);
+      var hasE=i>=(s?lost.R:lost.L);
+      if(hasE)electron(c,p[0]+17,p[1]-12,8);else{c.strokeStyle='#2F6FD3';c.setLineDash([3,3]);c.lineWidth=1.5;c.beginPath();c.arc(p[0]+17,p[1]-12,8,0,Math.PI*2);c.stroke();c.setLineDash([]);}}}
+  var gain=r.toLeft?0:1,fl=M.rub.fly;
+  for(var k=0;k<n;k++){if(fl&&k===n-1)continue;var e=extraPos(gain,k);electron(c,e[0]+(gain?sh:0),e[1]-(k>=4?0:0),8);}
+  if(fl){var from=atomPos(1-gain,n-1),to=extraPos(gain,n-1),t=fl.t,x=from[0]+17+(to[0]-from[0]-17)*t,y=from[1]-12+(to[1]-from[1]+12)*t-Math.sin(t*Math.PI)*70;electron(c,x,y,9);}
+  /* Zähler */
+  var C=counts();[[C.L,166],[C.R,474]].forEach(function(o){var q=o[0].p-o[0].e;c.font='15px '+ff();c.fillStyle=col('ink-soft');c.textAlign='center';c.textBaseline='top';
+    c.fillText(o[0].p+' Protonen · '+o[0].e+' Elektronen',o[1],274);c.font='bold 17px '+ff();c.fillStyle=q===0?col('ink-soft'):(q>0?'#E8322B':'#2F6FD3');c.fillText('Ladung '+sgnTxt(q)+' · '+chargeWord(q),o[1],296);});
+  if(!lupe){c.font='13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='top';c.fillText('Jeder rote Punkt ist ein Atomkern (+), jeder blaue Punkt ein Elektron (–).',32,14);
+    c.fillText('Gestrichelter Kreis: Hier fehlt ein Elektron.',32,34);}
+}
+function drawGame(c,lupe){var g=st.s3.game||{i:0},i=Math.min(g.i||0,CARDS.length-1),done=(g.i||0)>=CARDS.length;
+  if(done){c.font='bold 26px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='middle';c.fillText('Fall abgeschlossen!',320,120);
+    var sc=g.score||0,stars=sc>=8?3:sc>=6?2:sc>=4?1:0;c.font='54px '+ff();c.fillStyle='#E8892B';c.fillText('★'.repeat(stars)+'☆'.repeat(3-stars),320,190);
+    c.font='18px '+ff();c.fillStyle=col('ink-soft');c.fillText(sc+' von '+CARDS.length+' beim ersten Versuch richtig',320,250);return;}
+  var cd=CARDS[i];
+  c.fillStyle=col('surface-2');c.beginPath();if(c.roundRect)c.roundRect(70,40,500,270,18);else c.rect(70,40,500,270);c.fill();c.strokeStyle=col('line');c.lineWidth=2;c.stroke();
+  c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='top';c.fillText('FALL '+(i+1)+' VON '+CARDS.length,92,56);
+  c.font='bold 22px '+ff();c.fillStyle=col('ink');c.fillText(cd.t,92,76);
+  var all=[];for(var a=0;a<cd.p;a++)all.push('+');for(var b=0;b<cd.e;b++)all.push('-');
+  var seed=i*97+13;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280;}
+  for(var z=all.length-1;z>0;z--){var w=Math.floor(rnd()*(z+1));var tmp=all[z];all[z]=all[w];all[w]=tmp;}
+  all.forEach(function(s,k){var x=110+(k%9)*50+(Math.floor(k/9)%2)*25,y=140+Math.floor(k/9)*48;if(s==='+')proton(c,x,y,14);else electron(c,x,y,14);});
+  if(M.game.fb&&M.game.fbT>0){c.globalAlpha=Math.min(1,M.game.fbT*2);c.font='bold 20px '+ff();c.textAlign='center';c.fillStyle=M.game.fb==='ok'?col('ok'):col('bad');c.fillText(M.game.fb==='ok'?'Richtig!':'Zähle noch einmal: mehr + oder mehr –?',320,290);c.globalAlpha=1;}
+}
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='atom'){zoom(A,{x:200,y:186,s:120},bg());scaleView(B,M.atom.p,M.atom.e);$('capA').innerHTML='<b>Atomkern</b> von nah';$('capB').innerHTML='<b>Ladungs-Waage</b>';}
+  else if(sc==='rub'){zoom(A,{x:320,y:180,s:220},bg());var C=counts(),x=B.getContext('2d'),w=B.width,r=rubInfo();paper(x,w);
+    var qL=C.L.p-C.L.e,qR=C.R.p-C.R.e;
+    vtext(x,w,[{t:'Ladungskonto',s:0.085,b:true},{t:r.left+': '+sgnTxt(qL),s:0.068,b:true,c:qL<0?'#1C66C0':qL>0?'#C8423D':'#4E5677'},{t:'('+C.L.p+' +  und  '+C.L.e+' –)',s:0.06,c:'#4E5677'},
+      {t:r.right+': '+sgnTxt(qR),s:0.068,b:true,c:qR<0?'#1C66C0':qR>0?'#C8423D':'#4E5677'},{t:'('+C.R.p+' +  und  '+C.R.e+' –)',s:0.06,c:'#4E5677'},{t:'Zusammen: '+sgnTxt(qL+qR),s:0.075,b:true,c:'#22865A'}]);
+    $('capA').innerHTML='<b>Berührfläche</b> von nah';$('capB').innerHTML='<b>Ladungskonto</b>';}
+  else{var g=st.s3.game||{},i=Math.min(g.i||0,CARDS.length-1);paper(A.getContext('2d'),A.width,'#FFFFFF');
+    vtext(A.getContext('2d'),A.width,[{t:'So gehst du vor',s:0.08,b:true},{t:'1. Zähle die roten + (Protonen).',s:0.062,c:'#C8423D'},{t:'2. Zähle die blauen – (Elektronen).',s:0.062,c:'#1C66C0'},{t:'Mehr – : negativ',s:0.066,b:true,c:'#1C66C0'},{t:'Mehr + : positiv',s:0.066,b:true,c:'#C8423D'},{t:'Gleich viele: ungeladen',s:0.066,b:true,c:'#22865A'}]);
+    var x2=B.getContext('2d'),w2=B.width;paper(x2,w2);var sc2=g.score||0,str=g.streak||0;
+    vtext(x2,w2,[{t:'Punkte',s:0.07,c:'#4E5677',a:'center'},{t:String(sc2),s:0.3,b:true,c:'#22865A',a:'center'},{t:'Serie: '+str+' richtig hintereinander',s:0.062,c:'#4E5677',a:'center'},{t:'Bestwert: '+(g.best||0),s:0.062,c:'#4E5677',a:'center'}]);
+    $('capA').innerHTML='<b>Zähl-Hilfe</b>';$('capB').innerHTML='<b>Punktestand</b>';}
+}
+function scaleView(B,p,e,hide){var x=B.getContext('2d'),w=B.width;paper(x,w,'#FFFFFF');var d=Math.max(-3,Math.min(3,e-p)),ang=d*0.07;
+  var cx=w/2,cy=w*0.42;x.fillStyle='#8A93A6';x.fillRect(cx-w*0.015,cy,w*0.03,w*0.36);x.fillRect(cx-w*0.16,cy+w*0.36,w*0.32,w*0.03);
+  x.save();x.translate(cx,cy);x.rotate(ang);x.fillStyle='#4E5677';x.fillRect(-w*0.4,-w*0.012,w*0.8,w*0.024);
+  [[-1,p,'#E8322B','+'],[1,e,'#2F6FD3','–']].forEach(function(o){var px=o[0]*w*0.36;x.save();x.translate(px,0);x.rotate(-ang);
+    x.strokeStyle='#8A93A6';x.lineWidth=w*0.006;x.beginPath();x.moveTo(-w*0.08,w*0.12);x.lineTo(0,0);x.lineTo(w*0.08,w*0.12);x.stroke();
+    x.fillStyle='#E3E8F0';x.fillRect(-w*0.11,w*0.12,w*0.22,w*0.02);
+    var n=o[1],r=w*0.022;for(var k=0;k<n;k++){var col2=k%4,row=Math.floor(k/4);var xx=-w*0.075+col2*w*0.05,yy=w*0.1-row*w*0.05;x.fillStyle=o[2];x.beginPath();x.arc(xx,yy,r,0,Math.PI*2);x.fill();}
+    x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.06)+'px '+ff();x.textAlign='center';x.textBaseline='top';x.fillText(hide?o[3]:(o[1]+' '+o[3]),0,w*0.16);x.restore();});
+  x.restore();
+  if(!hide){var q=p-e;x.font='bold '+Math.round(w*0.065)+'px '+ff();x.textAlign='center';x.textBaseline='top';x.fillStyle=q===0?'#22865A':(q>0?'#C8423D':'#1C66C0');x.fillText(chargeWord(q),cx,w*0.86);}}
+function statusInfo(){var sc=scene();
+  if(sc==='atom'){var q=M.atom.p-M.atom.e;return [q===0?'ok':'info','Das Atom ist '+chargeWord(q)+(q?' (Ladung '+sgnTxt(q)+').':'. Gleich viele + und –.')];}
+  if(sc==='rub'){var n=M.rub.n,r=rubInfo();if(!n)return ['info','Noch nicht gerieben. Beide Körper sind ungeladen.'];
+    return ['ok',n+' Elektron'+(n>1?'en sind':' ist')+' '+(r.toLeft?'vom '+r.right+' zum '+r.left:'vom '+r.left+' zum '+r.right)+' gewandert.'];}
+  var g=st.s3.game||{};if((g.i||0)>=CARDS.length)return ['ok','Alle Fälle gelöst!'];return ['info','Zähle + und –. Wie ist der Gegenstand geladen?'];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();e.className='status '+s[0];e.textContent=s[1];}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0,reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;var moving=false;
+  if(scene()==='atom'&&!reduce){ROT+=dt*0.5;moving=true;}
+  if(M.atom.flash>0){M.atom.flash=Math.max(0,M.atom.flash-dt*1.5);moving=true;}
+  if(M.rub.shake>0){M.rub.shake=Math.max(0,M.rub.shake-dt*2.5);moving=true;}
+  if(M.rub.fly){M.rub.fly.t+=dt*1.8;if(M.rub.fly.t>=1)M.rub.fly=null;moving=true;}
+  if(M.game.fbT>0){M.game.fbT=Math.max(0,M.game.fbT-dt*0.7);moving=true;}
+  draw();if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+
+/* ---------- Aktionen ---------- */
+function setP(v){if(pLocked()){M.atom.flash=1;kick();renderCtl();return;}M.atom.p=Math.max(1,Math.min(MAXP,v));kick();}
+function setE(v){M.atom.e=Math.max(0,Math.min(MAXE,v));kick();}
+function setN(v){var r=M.rub;v=Math.max(0,Math.min(MAXN,v));if(v>r.n){r.shake=1;r.n=v;r.fly={t:0};}else{r.n=v;r.fly=null;}kick();}
+function answerCard(a){var g=st.s3.game=st.s3.game||{i:0,score:0,streak:0,best:0,first:[]};if(g.i>=CARDS.length)return;
+  var cd=CARDS[g.i],ok=a===cd.a,firstTry=g.first[g.i]===undefined;
+  if(firstTry)g.first[g.i]=ok;
+  if(ok){if(firstTry){g.score++;g.streak++;g.best=Math.max(g.best,g.streak);}g.i++;M.game.fb='ok';}else{g.streak=0;M.game.fb='bad';}
+  if(g.i>=CARDS.length&&g.score1==null)g.score1=g.score;
+  M.game.fbT=1.2;save();kick();renderCtl();r3();}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max,unit){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+(unit==null?'×':unit);draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='';var eb=$('ctlCard').querySelector('.eyebrow');
+  if(needGuess()){eb.textContent='Bevor du startest';eb.classList.add('pro');$('ctl').innerHTML=guessBox();bindGuess();return;}
+  eb.textContent='Steuerpult';eb.classList.remove('pro');
+  if(sc==='atom'){var a=M.atom;h=slider('P','PROTONEN IM KERN (+)',String(a.p),1,MAXP,1,a.p,'1','8')+(pLocked()?'<p class="locked">Der Kern ist jetzt fest. Protonen können ein Atom nicht verlassen. Nur Elektronen können wandern.</p>':'')+
+    slider('E','ELEKTRONEN IN DER HÜLLE (–)',String(a.e),0,MAXE,1,a.e,'0','10','g');}
+  else if(sc==='rub'){var r=M.rub;h='<div class="ctlrow"><span>STOFFE</span>'+segHTML('sM',[['kw','Kunststoffstab + Wolltuch'],['gs','Glasstab + Seidentuch']],r.mat)+'</div>'+
+    slider('N','SO OFT GERIEBEN',r.n+'×',0,MAXN,1,r.n,'0 (nicht gerieben)',MAXN+'×','g')+'<p class="muted" style="font-size:14px">Bei jedem Reibzug wandert im Modell ein Elektron.</p>';}
+  else{var g=st.s3.game||{i:0},done=(g.i||0)>=CARDS.length;
+    h=done?'<div class="row"><button class="btn sec" type="button" id="gAgain">Noch einmal spielen</button></div>':
+      '<p class="muted">Fall '+((g.i||0)+1)+' von '+CARDS.length+'. Wie ist der Gegenstand geladen?</p><div class="choice">'+
+      [['+','positiv geladen (mehr +)'],['-','negativ geladen (mehr –)'],['0','ungeladen (gleich viele)']].map(function(o){return '<button type="button" class="opt" data-a="'+o[0]+'"><b>'+o[1]+'</b></button>';}).join('')+'</div>';}
+  h+='<p class="status info" id="stat"></p>';
+  $('ctl').innerHTML=h;
+  if(sc==='atom'){bindSlider('P',function(){return M.atom.p;},setP,1,1,MAXP,'');bindSlider('E',function(){return M.atom.e;},setE,1,0,MAXE,'');}
+  else if(sc==='rub'){bindSeg('sM',function(v){M.rub.mat=v;M.rub.n=0;M.rub.fly=null;renderCtl();kick();});bindSlider('N',function(){return M.rub.n;},setN,1,0,MAXN,'×');}
+  else{Array.prototype.forEach.call(document.querySelectorAll('#ctl .opt[data-a]'),function(b){b.addEventListener('click',function(){answerCard(b.dataset.a);});});
+    var ag=$('gAgain');if(ag)ag.addEventListener('click',function(){var g=st.s3.game;g.i=0;g.streak=0;g.first=[];g.score=0;g.round=(g.round||1)+1;save();renderCtl();r3();kick();});}
+  updStatus();
+}
+
+/* ---------- Vermutung ---------- */
+function pic(kind){var inner='';
+  if(kind==='eIn')inner='<rect x="14" y="44" width="30" height="12" rx="6" fill="#5A6578"/><circle cx="58" cy="30" r="8" fill="#2F6FD3"/><text x="58" y="34" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">–</text><path d="M52 34 Q44 40 40 44" stroke="#1A1F36" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>';
+  else if(kind==='pOut')inner='<rect x="14" y="44" width="30" height="12" rx="6" fill="#5A6578"/><circle cx="58" cy="30" r="8" fill="#E8322B"/><text x="58" y="34" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">+</text><path d="M40 42 Q46 34 50 32" stroke="#1A1F36" stroke-width="2.5" fill="none" marker-end="url(#ah)"/>';
+  else if(kind==='neu')inner='<rect x="20" y="44" width="40" height="12" rx="6" fill="#5A6578"/><path d="M40 16 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z" fill="#F5B82E"/>';
+  else inner='<rect x="36" y="16" width="8" height="38" rx="4" fill="#F3F5FA" stroke="#4E5677" stroke-width="2.5"/><circle cx="40" cy="58" r="9" fill="#E8432E"/><rect x="38" y="30" width="4" height="26" fill="#E8432E"/>';
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><defs><marker id="ah" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6z" fill="#1A1F36"/></marker></defs><rect x="4" y="4" width="72" height="72" rx="36" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="4"/>'+inner+'</svg>';}
+var GUESS=[{k:'A',t:'eIn',n:'Er hat negative Teilchen vom Tuch bekommen.'},{k:'B',t:'pOut',n:'Er hat positive Teilchen abgegeben.'},{k:'C',t:'neu',n:'Beim Reiben entsteht neue Ladung.'},{k:'D',t:'warm',n:'Die Wärme macht ihn negativ.'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+function guessBox(){var tmp=st.guessTmp||null;
+  return '<div class="guess stack"><p>Ein Kunststoffstab wird mit einem Wolltuch gerieben. Danach ist er <b>negativ</b> geladen. <b>Was ist beim Reiben passiert?</b></p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(tmp===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.t)+'<span style="font-size:13px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Erst wenn du deine Vermutung festgelegt hast, geht es los.</p>'+
+    '<div class="row"><button class="btn pri" type="button" id="gsOk"'+(tmp?'':' disabled')+'>Vermutung festlegen</button></div></div>';}
+function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guessTmp=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(x){x.classList.toggle('sel',x===b);});$('gsOk').disabled=false;});});
+  $('gsOk').addEventListener('click',function(){if(!st.guessTmp)return;st.guess=st.guessTmp;save();render();});}
+function needGuess(){return st.station===0&&!st.guess;}
+
+/* ---------- Station 1: Atom-Baukasten ---------- */
+var MISS=[
+  {id:'m1',t:'Mission 1',q:'Baue ein <b>ungeladenes</b> Atom mit <b>3 Protonen</b>.',check:function(){return M.atom.p===3&&M.atom.e===3;},hint:function(){return M.atom.p!==3?'Stelle zuerst 3 Protonen ein.':'Ein ungeladenes Atom hat gleich viele + und –. Wie viele Elektronen brauchst du?';}},
+  {id:'m2',t:'Mission 2',q:'Mach daraus ein <b>negativ</b> geladenes Atom mit der Ladung <b>–1</b>.',check:function(){return M.atom.p===3&&M.atom.e===4;},hint:function(){return M.atom.e<4?'Negativ heißt: mehr – als +. Gib ein Elektron dazu.':'Die Ladung soll genau –1 sein. Schau auf die Ladungs-Waage.';}},
+  {id:'m3',t:'Mission 3',q:'Mach daraus ein <b>positiv</b> geladenes Atom mit der Ladung <b>+2</b>.',check:function(){return M.atom.p===3&&M.atom.e===1;},hint:function(){return 'Positiv heißt: weniger – als +. Nimm Elektronen weg, bis die Ladung +2 ist.';}}
+];
+var QNEU={q:'Wann ist ein Atom ungeladen?',o:['Wenn es gleich viele Protonen (+) und Elektronen (–) hat.','Wenn es gar keine Elektronen hat.','Wenn es mehr Protonen als Elektronen hat.'],a:0,
+  ok:'Genau! Die positiven und negativen Ladungen gleichen sich aus. Nach außen ist das Atom ungeladen.',bad:['','Ohne Elektronen bleiben nur die + im Kern. Dann ist das Atom positiv.','Dann gibt es mehr + als –. Wie ist das Atom dann geladen?']};
+var QMOVE={q:'In Mission 2 und 3 war der Kern fest. Was kann ein Atom also abgeben oder aufnehmen?',o:['nur Elektronen (–)','nur Protonen (+)','Protonen und Elektronen'],a:0,
+  ok:'Richtig! Die Protonen sitzen fest im Kern. Nur die Elektronen in der Hülle können wandern.',bad:['','Konntest du in Mission 2 und 3 die Protonen verändern?','Die Protonen sitzen fest im Kern. Was konntest du noch verändern?']};
+function r1(){var s=st.s1;
+  if(needGuess()){$('task').innerHTML='<div><p class="eyebrow">Station 1 · Atom-Baukasten</p><h2>Woraus bestehen Ladungen?</h2></div><p class="note">Lege zuerst oben im Kasten <b>„Bevor du startest“</b> deine Vermutung fest. Danach erscheint das Steuerpult und es geht los.</p>';return;}
+  var g='<div class="guess"><p class="eyebrow pro">Deine Vermutung</p><p><b>'+guessName(st.guess)+'</b>. In Station 4 prüfst du sie.</p></div>';
+  var info='<div class="stack"><p>Alle Stoffe bestehen aus winzigen <b>Atomen</b>. Jedes Atom hat einen <b>Atomkern</b> mit positiven <b>Protonen (+)</b> und eine <b>Atomhülle</b> mit negativen <b>Elektronen (–)</b>. Baue selbst Atome!</p></div>';
+  var stars=MISS.filter(function(m){return s[m.id];}).length;
+  var mis=MISS.map(function(m,i){var open=i===0||s[MISS[i-1].id];if(!open)return '';
+    return '<div class="q"><p class="eyebrow">'+m.t+(s[m.id]?' · geschafft ★':'')+'</p><p>'+m.q+'</p>'+(s[m.id]?'':'<div class="row"><button class="btn pri" type="button" data-m="'+i+'">Prüfen</button></div>')+'<p class="fb'+(s[m.id]?' ok':'')+'" id="fbm'+i+'">'+(s[m.id]?'Super gebaut!':'')+'</p></div>';}).join('');
+  var neu=s.m3?mcHTML('neu',QNEU.q,QNEU.o,s.neu,QNEU.a):'';
+  var mv=s.neuOk?mcHTML('move',QMOVE.q,QMOVE.o,s.move,QMOVE.a):'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Atom-Baukasten</p><h2>Woraus bestehen Ladungen?</h2></div>'+info+'<p class="hint"><b>Missionen:</b> '+'★'.repeat(stars)+'☆'.repeat(3-stars)+'</p>'+mis+neu+mv+
+    (st.done[0]?'<p class="win"><b>Klasse!</b> Ein Atom ist ungeladen, wenn es gleich viele + und – hat. Nur Elektronen können wandern.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m]'),function(b){b.addEventListener('click',function(){var i=+b.dataset.m,m=MISS[i],ok=m.check();tryInc('s1'+m.id,ok,M.atom.p+'/'+M.atom.e);
+    var fb=$('fbm'+i);if(ok){s[m.id]=true;save();renderCtl();r1();}else{fb.className='fb bad';fb.textContent=m.hint();
+      showHelp(fb,'s1'+m.id,function(){M.atom.p=3;M.atom.e=[3,4,1][i];kick();renderCtl();helpMsg('fbm'+i,'Das Modell ist jetzt richtig eingestellt. Schau es dir an und tippe auf „Prüfen“.');});}});});
+  if(s.m3){bindMC('neu',QNEU.a,'s1neu',QNEU.ok,QNEU.bad,function(){s.neuOk=true;save();r1();showFb('neu',true,QNEU.ok);},function(j){s.neu=j;});if(s.neuOk)showFb('neu',true,QNEU.ok);}
+  if(s.neuOk){bindMC('move',QMOVE.a,'s1move',QMOVE.ok,QMOVE.bad,function(){s.moveOk=true;finish(0);save();r1();showFb('move',true,QMOVE.ok);},function(j){s.move=j;});if(s.moveOk)showFb('move',true,QMOVE.ok);}
+  bindNext();
+}
+
+/* ---------- Station 2: Reib-Maschine ---------- */
+var OBS2=[
+  {id:'a',q:'1. <b>Kunststoffstab + Wolltuch</b>, 5-mal gerieben. Die Elektronen wandern …',o:['vom Tuch zum Stab','vom Stab zum Tuch','gar nicht'],a:0,w:'Wähle „Kunststoffstab + Wolltuch“, stelle 5 Reibzüge ein und beobachte, wohin die blauen Punkte fliegen.'},
+  {id:'b',q:'2. Der Kunststoffstab hat jetzt <b>zu viele</b> Elektronen. Er ist …',o:['negativ geladen','positiv geladen','ungeladen'],a:0,w:'Schau auf das Ladungskonto: Mehr + oder mehr –?'},
+  {id:'c',q:'3. Das Wolltuch hat jetzt <b>zu wenige</b> Elektronen. Es ist …',o:['negativ geladen','positiv geladen','ungeladen'],a:1,w:'Beim Tuch fehlen Elektronen. Es bleiben mehr + als – übrig.'},
+  {id:'d',q:'4. <b>Glasstab + Seidentuch</b>, gerieben. Die Elektronen wandern …',o:['vom Glasstab zur Seide','von der Seide zum Glasstab','gar nicht'],a:0,w:'Wähle „Glasstab + Seidentuch“ und reibe. Wohin fliegen die blauen Punkte?'}
+];
+var QSUM={q:'Schau auf das Ladungskonto: Was zeigt die Zeile „Zusammen“?',o:['Zusammen sind Stab und Tuch immer ungeladen. Die Ladung wird beim Reiben nur getrennt, nicht neu erzeugt.','Beim Reiben entsteht immer mehr Ladung.','Die Ladung des Tuchs verschwindet.'],a:0,
+  ok:'Richtig! Was der eine an Elektronen bekommt, fehlt dem anderen. Darum sind Stab und Tuch immer entgegengesetzt geladen.',bad:['','Reibe weiter und schau auf „Zusammen“. Ändert sich die Zahl?','Schau auf das Tuch im Ladungskonto: Ist seine Ladung weg?']};
+var FACH3='<div class="merk"><h3>Fachbegriffe</h3><ul style="margin:0;padding-left:1.2em"><li><span class="k">Elektronenüberschuss</span>: zu viele Elektronen. Der Gegenstand ist <b>negativ</b> geladen.</li><li><span class="k">Elektronenmangel</span>: zu wenige Elektronen. Der Gegenstand ist <b>positiv</b> geladen.</li></ul></div>';
+function r2(){var s=st.s2;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Im Modell reiben</p><p>Links und rechts siehst du je acht Atome. Mit dem Regler reibst du die beiden Körper aneinander. Beobachte die <b>Elektronen</b> und das <b>Ladungskonto</b>.</p>'+segQHTML(OBS2,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var sum=s.obsOk?FACH3+mcHTML('sum',QSUM.q,QSUM.o,s.sum,QSUM.a):'';
+  var own=s.sumOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Warum ist der Kunststoffstab nach dem Reiben negativ geladen? Benutze das Wort <b>Elektronen</b>.</p><textarea class="free" id="own" rows="3" placeholder="Der Kunststoffstab ist negativ geladen, weil …">'+esc(s.own)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c2o">Fertig</button></div>')+'<p class="fb" id="fb2o"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Reib-Maschine</p><h2>Was passiert beim Reiben im Inneren?</h2></div>'+obs+sum+own+
+    (st.done[1]?'<p class="win"><b>Stark!</b> Beim Reiben wandern Elektronen von einem Körper zum anderen.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(OBS2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});
+  else helpMsg('fb2','Gut beobachtet! Kunststoff bekommt Elektronen vom Wolltuch, Glas gibt Elektronen an die Seide ab.');
+  if(s.obsOk){bindMC('sum',QSUM.a,'s2sum',QSUM.ok,QSUM.bad,function(){s.sumOk=true;save();r2();showFb('sum',true,QSUM.ok);},function(j){s.sum=j;});if(s.sumOk)showFb('sum',true,QSUM.ok);}
+  if(s.sumOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c2o').addEventListener('click',function(){var fb=$('fb2o');var t=(s.own||'').trim();if(t.length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}if(!/elektron/i.test(t)){fb.className='fb bad';fb.textContent='Benutze das Wort „Elektronen“.';return;}s.ok=true;finish(1);save();r2();});
+    else helpMsg('fb2o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 3: Ladungs-Detektiv ---------- */
+var QBAL={q:'Zwei Luftballons wurden an den Haaren gerieben und stoßen sich ab. Erkläre mit dem Modell:',o:['Beide haben Elektronenüberschuss. Sie sind gleichnamig (negativ) geladen und stoßen sich ab.','Beide haben Elektronenmangel und ziehen sich an.','Ein Ballon hat Protonen vom anderen bekommen.'],a:0,
+  ok:'Genau! Gleichnamige Ladungen stoßen sich ab, das weißt du aus Stunde 2. Jetzt weißt du auch, woher die Ladung kommt.',bad:['','Die Ballons stoßen sich ab. Sind sie dann gleich oder verschieden geladen?','Protonen sitzen fest im Kern. Was kann wandern?']};
+var QHAIR={q:'Nach dem Reiben am Ballon sind die Haare positiv geladen. Was ist passiert?',o:['Die Haare haben Elektronen an den Ballon abgegeben.','Die Haare haben Protonen bekommen.','In den Haaren ist neue + Ladung entstanden.'],a:0,
+  ok:'Richtig! Den Haaren fehlen jetzt Elektronen (Elektronenmangel). Darum sind sie positiv.',bad:['','Protonen sitzen fest im Kern und wandern nicht.','Ladung entsteht nicht neu. Sie wird nur getrennt.']};
+function r3(){var s=st.s3,g=s.game||{i:0},done=(g.i||0)>=CARDS.length;
+  var intro='<div class="stack"><p class="eyebrow">Teil A · Ladungs-Detektiv</p><p>Jeder Fall zeigt die Ladungen in einem Gegenstand. Zähle <b>+</b> und <b>–</b>. Wähle dann im Steuerpult, wie der Gegenstand geladen ist. Für jeden Fall, den du beim ersten Versuch löst, gibt es einen Punkt.</p>'+
+    (done?'<p class="win"><b>'+(g.score||0)+' von '+CARDS.length+' Punkten.</b> '+((g.score||0)>=6?'Starke Detektivarbeit!':'Du kannst noch einmal spielen und deinen Bestwert verbessern.')+'</p>':'<p class="note">Fall '+((g.i||0)+1)+' von '+CARDS.length+' · Punkte: '+(g.score||0)+'</p>')+'</div>';
+  var bal=done?mcHTML('bal',QBAL.q,QBAL.o,s.bal,QBAL.a):'';
+  var hair=s.balOk?mcHTML('hair',QHAIR.q,QHAIR.o,s.hair,QHAIR.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Ladungs-Detektiv</p><h2>Positiv, negativ oder ungeladen?</h2></div>'+intro+bal+hair+
+    (st.done[2]?'<p class="win"><b>Fall gelöst!</b> Mit dem Kern-Hülle-Modell kannst du erklären, wie Gegenstände geladen werden.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  if(done){bindMC('bal',QBAL.a,'s3bal',QBAL.ok,QBAL.bad,function(){s.balOk=true;save();r3();showFb('bal',true,QBAL.ok);},function(j){s.bal=j;});if(s.balOk)showFb('bal',true,QBAL.ok);}
+  if(s.balOk){bindMC('hair',QHAIR.a,'s3hair',QHAIR.ok,QHAIR.bad,function(){s.hairOk=true;finish(2);save();r3();showFb('hair',true,QHAIR.ok);},function(j){s.hair=j;});if(s.hairOk)showFb('hair',true,QHAIR.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Alle Stoffe bestehen aus winzigen ',post:'.',o:['Atomen','Zellen','Kugeln'],a:0},
+  {pre:'Ein Atom hat einen positiv geladenen ',post:' und eine Hülle mit negativ geladenen Elektronen.',o:['Kern','Rand','Deckel'],a:0},
+  {pre:'Ein Gegenstand ist ungeladen, wenn er gleich viele positive und negative ',post:' hat.',o:['Ladungen','Atome','Kerne'],a:0},
+  {pre:'Beim Reiben wandern ',post:' von einem Gegenstand zum anderen.',o:['Elektronen','Protonen','Atomkerne'],a:0},
+  {pre:'Hat ein Gegenstand zu viele Elektronen, ist er ',post:' geladen.',o:['negativ','positiv'],a:0},
+  {pre:'Hat ein Gegenstand zu wenige Elektronen, ist er ',post:' geladen.',o:['positiv','negativ'],a:0}
+];
+var WORTE='Atomen · Kern · Ladungen · Elektronen · negativ · positiv';
+var MERK='<div class="merk"><h3>Merksatz: Das Kern-Hülle-Modell</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var PULLI={q:'Du ziehst einen Pullover über den Kopf. Danach ist der Pullover negativ und deine Haare sind positiv geladen. Was ist passiert?',o:['Elektronen sind von den Haaren auf den Pullover gewandert.','Protonen sind vom Pullover auf die Haare gewandert.','In den Haaren ist neue Ladung entstanden.'],a:0,
+  ok:'Richtig! Der Pullover hat jetzt Elektronenüberschuss, den Haaren fehlen Elektronen.',bad:['','Protonen sitzen fest im Kern. Sie wandern nicht.','Ladung wird beim Reiben nicht erzeugt, sondern nur getrennt.']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b></p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: Der Stab hat Elektronen vom Tuch bekommen.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Beantworte jetzt die Leitfrage in einem Satz: <b>Woher kommt die Ladung beim Reiben?</b></p><textarea class="free" id="refl" rows="2" placeholder="Beim Reiben …">'+esc(s.refl)+'</textarea></div>':'';
+  var pulli=s.ok?mcHTML('pulli',PULLI.q,PULLI.o,s.pulli,PULLI.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+pulli+(s.pulliOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindMC('pulli',PULLI.a,'s4pulli',PULLI.ok,PULLI.bad,function(){s.pulliOk=true;finish(3);save();r4();showFb('pulli',true,PULLI.ok);},function(j){s.pulli=j;});if(s.pulliOk)showFb('pulli',true,PULLI.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Die Papierschnipsel',task:'Ein negativ geladener Stab zieht ungeladene Papierschnipsel an. Im Papier können die Elektronen ein kleines Stück in ihrer Hülle verrutschen.',q:'Was passiert im Papier, wenn der Stab näher kommt?',
+   o:['Die Elektronen weichen ein Stück zurück. Die Seite zum Stab wird leicht positiv und wird angezogen.','Das Papier bekommt Elektronen vom Stab und wird negativ.','Die Protonen wandern zum Stab.'],a:0,ok:'Richtig! Die Ladungen im Papier werden nur verschoben. Die positive Seite ist näher am Stab, darum überwiegt die Anziehung.',bad:'Gleichnamige Ladungen stoßen sich ab. Was machen dann die Elektronen im Papier?'},
+  {id:'b',title:'Der Metallstab',task:'Ein Metallstab wird in der Hand mit einem Wolltuch gerieben. Danach zieht er keine Schnipsel an.',q:'Woran liegt das?',
+   o:['Die Elektronen fließen über die Hand ab.','Metall hat keine Elektronen.','Metall kann man nicht reiben.'],a:0,ok:'Genau! In Metallen können sich Elektronen frei bewegen. Sie fließen über deine Hand ab. Mehr dazu in der nächsten Stunde.',bad:'Auch Metall besteht aus Atomen mit Elektronen. Was könnte mit ihnen passieren?'},
+  {id:'c',title:'Die Gesamtladung',task:'Ein Stab bekommt beim Reiben 1000 Elektronen vom Tuch.',q:'Wie sind Stab und Tuch dann geladen?',
+   o:['Stab: 1000 Elektronen zu viel (negativ). Tuch: 1000 Elektronen zu wenig (positiv).','Beide sind negativ geladen.','Nur der Stab ist geladen, das Tuch bleibt ungeladen.'],a:0,ok:'Richtig! Was der Stab bekommt, fehlt dem Tuch. Zusammen bleiben sie ungeladen.',bad:'Woher kommen die Elektronen des Stabs? Was fehlt dann dem Tuch?'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Profi-Fälle zum Kern-Hülle-Modell</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1m1','Station 1 · Mission 1 (ungeladenes Atom)'],['s1m2','Station 1 · Mission 2 (Ladung –1)'],['s1m3','Station 1 · Mission 3 (Ladung +2)'],['s1neu','Station 1 · Wann ist ein Atom ungeladen?'],['s1move','Station 1 · Was kann wandern?'],
+  ['s2obs','Station 2 · Beobachtungen Reib-Maschine'],['s2sum','Station 2 · Ladung wird getrennt'],['s3bal','Station 3 · Ballons mit dem Modell erklären'],['s3hair','Station 3 · Haare positiv'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4pulli','Station 4 · Pullover'],['s5a','Profi · Papierschnipsel'],['s5b','Profi · Metallstab'],['s5c','Profi · Gesamtladung']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  var g=st.s3.game||{};
+  L.push('LADUNGSLABOR 3 · Wie verhalten sich ruhende Ladungen? · Das Kern-Hülle-Modell');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Atom-Baukasten');L.push('  Missionen geschafft: '+['m1','m2','m3'].filter(function(k){return st.s1[k];}).length+' von 3');
+  L.push('  Ungeladenes Atom: '+a(QNEU,st.s1.neu));L.push('  Was kann wandern: '+a(QMOVE,st.s1.move));L.push('');
+  L.push('STATION 2 · Reib-Maschine');segs(OBS2,st.s2.obs);L.push('  Gesamtladung: '+a(QSUM,st.s2.sum));L.push('  Meine Erklärung: '+((st.s2.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 3 · Ladungs-Detektiv');L.push('  Punkte (erste Runde): '+(g.score1!=null?g.score1:(g.score||0))+' von '+CARDS.length+(g.round>1?'   Gespielte Runden: '+g.round:'')+'   Beste Serie: '+(g.best||0));
+  L.push('  Ballons erklären: '+a(QBAL,st.s3.bal));L.push('  Haare positiv: '+a(QHAIR,st.s3.hair));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(gp,i){L.push('  '+(i+1)+'. '+gp.pre+gp.o[gp.a]+gp.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Pullover: '+a(PULLI,st.s4.pulli));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,app:'LL3',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,own:st.s2.own||'',refl:st.s4.refl||'',game:{score:(g.score1!=null?g.score1:(g.score||0)),best:g.best||0,first:g.first||[],round:g.round||1,done:(g.i||0)>=CARDS.length||g.score1!=null},
+    tries:st.tries,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL3-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-3_'+n+'.txt';}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 3</p><h2 id="stH">Willkommen im Ladungslabor 3!</h2>'+
+    '<p>Heute schaust du in die Stoffe hinein: Woher kommt die Ladung beim Reiben? Baue Atome, reibe im Modell und löse Detektiv-Fälle.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();kick();
+
+})();
+
+</script>
+</body>
+</html>

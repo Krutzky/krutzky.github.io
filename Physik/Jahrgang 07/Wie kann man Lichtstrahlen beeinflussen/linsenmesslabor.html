@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Linsen-Messlabor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Linsen-Messlabor</b><span>Wovon hängen Lage und Größe des Bildes ab?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+
+<main>
+  <section class="card plot" aria-label="Optische Bank">
+    <canvas id="cv" aria-label="Optische Bank mit Leuchte, Dia, Sammellinse und Schirm (Seitenansicht)"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvDia" aria-label="Das Dia von vorne, mit Lineal"></canvas><small><b>Dia</b> (Gegenstand) mit Lineal</small></div>
+      <div class="view"><canvas id="cvScr" aria-label="Was auf dem Schirm zu sehen ist, mit Lineal"></canvas><small><b>Schirm</b> mit Lineal <span id="scrScale"></span></small></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="ctlCard">
+      <p class="eyebrow">Steuerpult</p>
+      <div id="ctlOn" class="ctl">
+        <div class="lift">
+          <div class="disp g"><small>DIA VOR DER LINSE</small><span id="dispG">30 cm</span></div>
+          <div class="keys">
+            <button class="key" id="gl" type="button" aria-label="Dia 1 cm näher an die Linse">◀</button>
+            <button class="key" id="gr" type="button" aria-label="Dia 1 cm weiter weg">▶</button>
+          </div>
+        </div>
+        <input type="range" class="gr" id="g" min="5" max="50" step="1" value="30" aria-label="Regler: Abstand Dia–Linse">
+        <div class="scale"><span>5 cm (nah)</span><span>50 cm (weit)</span></div>
+        <hr class="sep">
+        <div class="lift">
+          <div class="disp"><small>SCHIRM HINTER DER LINSE</small><span id="dispS">40,0 cm</span></div>
+          <div class="keys">
+            <button class="key" id="sl" type="button" aria-label="Schirm 0,5 cm näher an die Linse">◀</button>
+            <button class="key" id="sr" type="button" aria-label="Schirm 0,5 cm weiter weg">▶</button>
+          </div>
+        </div>
+        <input type="range" id="s" min="5" max="65" step="0.5" value="40" aria-label="Regler: Abstand Linse–Schirm">
+        <div class="scale"><span>5 cm (nah)</span><span>65 cm (weit)</span></div>
+        <p class="muted" id="fTxt">Die Brennweite der Linse ist <b>f = 10 cm</b>.</p>
+        <label class="chk" id="raysRow"><input type="checkbox" id="tRays"> Röntgenblick: Lichtstrahlen zeigen</label>
+        <label class="chk" id="lensRow" hidden><input type="checkbox" id="tLens"> Dickere Linse einsetzen (f = 5 cm)</label>
+      </div>
+      <p class="locked" id="ctlOff" hidden></p>
+    </section>
+
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var F=10, A=3, GH=1, FR=1.5;           /* Brennweite, Linsenradius, halbe Höhe des L (G = 2 cm), halbe Dia-Größe (cm) */
+var G_CM=2*GH;
+var STATIONS=[
+  {key:'s1',name:'Begriffe'},
+  {key:'s2',name:'Messen'},
+  {key:'s3',name:'Je-desto'},
+  {key:'s4',name:'Merksatz'},
+  {key:'s5',name:'Profi-Zusatz',pro:true}
+];
+var ROWS=[40,30,20,15,12];
+var GUESS=[
+  {k:'A',t:'Das Bild wird <b>größer</b>. Der Schirm muss <b>weiter weg</b>.'},
+  {k:'B',t:'Das Bild wird <b>größer</b>. Der Schirm muss <b>näher an die Linse</b>.'},
+  {k:'C',t:'Das Bild wird <b>kleiner</b>. Der Schirm muss <b>weiter weg</b>.'},
+  {k:'D',t:'Am Bild ändert sich <b>nichts</b>.'}
+];
+
+var st={station:0,done:[false,false,false,false,false],s:40,g:30,rays:false,thick:false,guess:null,
+  s1:{map:{},mapOk:false,G:'',gOk:false,f:null,fOk:false},
+  s2:{row:0,vals:{},tip:0},
+  s3:{jd:{},jdOk:false,gl:null,glOk:false,own:'',ok:false},
+  s4:{gaps:{},ok:false,kino:null,kinoOk:false,refl:''},
+  s5:{a:null,b:null},res:{},tries:{},help:{},t0:null};
+
+/* ---------- Speicher (nur Bequemlichkeit) ---------- */
+var KEY='linsen-messlabor-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;}catch(e){}}
+
+/* ---------- Versuche zählen ---------- */
+var RKEY='linsen-messlabor-resets';
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+/* Hilfe: nach 3 Fehlversuchen kann die Lösung angezeigt werden */
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+
+/* ---------- Physik ---------- */
+function binv(g){return 1/F-1/g;}
+function bOf(g){var v=binv(g);return v>1e-9?1/v:Infinity;}
+function isSharp(g,s){var b=bOf(g);return isFinite(b)&&Math.abs(s-b)<=0.5;}
+function Btrue(g){var b=bOf(g);return isFinite(b)?G_CM*b/g:Infinity;}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function fmtS(v){return (Math.round(v*2)/2).toFixed(1).replace('.',',');}
+function num(t){if(t==null)return NaN;t=String(t).trim().replace(',','.').replace(/\s*cm$/i,'');return t===''?NaN:parseFloat(t);}
+
+/* ---------- Farben & Schrift ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function font(px,b){return (b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+
+/* ---------- Optische Bank (Seitenansicht) ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,VS=1,AY=0;
+var X0=-60,X1=69,PADL=14,PADR=14;
+function X(x){return PADL+(x-X0)/(X1-X0)*(W-PADL-PADR);}
+function Y(y){return AY-y*VS;}
+function resize(){
+  var w=cv.getBoundingClientRect().width||640;
+  var h=Math.round(Math.max(260,Math.min(w*0.55,420)));
+  var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;VS=(H-86)/14;AY=30+7*VS;
+  sizeView($('cvDia'));sizeView($('cvScr'));
+  draw();
+}
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function dotPx(x,y,c,r){ctx.beginPath();ctx.arc(x,y,r||5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function badge(n,x,y){ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.fillStyle=col('ink');ctx.fill();ctx.fillStyle=col('surface');ctx.font=font(14,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(n),x,y+1);}
+function lensPath(){var hw=Math.max(6,W*0.012)*(F<10?1.7:1),top=Y(A),bot=Y(-A),cx=X(0);
+  ctx.beginPath();ctx.moveTo(cx,top);ctx.quadraticCurveTo(cx+hw*2,AY,cx,bot);ctx.quadraticCurveTo(cx-hw*2,AY,cx,top);ctx.closePath();
+  ctx.fillStyle=col('lens');ctx.globalAlpha=.75;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=col('lens-edge');ctx.lineWidth=2;ctx.stroke();}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function dim(a,b,y,t,c){var x1=X(a),x2=X(b);if(x2-x1<8)return;c=c||col('ink-soft');line(x1,y,x2,y,c,1.4);line(x1,y-5,x1,y+5,c,1.4);line(x2,y-5,x2,y+5,c,1.4);if(t&&x2-x1>34)tag(t,(x1+x2)/2,y,c);}
+function vdim(x,y1,y2,c){c=c||col('ink-soft');line(x,Y(y1),x,Y(y2),c,1.6);line(x-5,Y(y1),x+5,Y(y1),c,1.6);line(x-5,Y(y2),x+5,Y(y2),c,1.6);}
+var SH=6;  /* halbe Schirmhöhe (cm) */
+function spotOnScreen(g,s){
+  var k=-s/g,fac=1-s*binv(g),lo=Math.min(k*GH,-k*GH)-A*Math.abs(fac),hi=Math.max(k*GH,-k*GH)+A*Math.abs(fac);
+  var hgt=hi-lo,alpha=Math.max(.18,Math.min(1,2/Math.max(hgt,.1)));
+  var x=X(s);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#FFC94D';var t=Math.min(hi,SH),b=Math.max(lo,-SH);ctx.fillRect(x-4,Y(t),5,Math.max(2,(t-b)*VS));ctx.restore();
+}
+function base(o){
+  var g=o.g,s=o.s;
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  var railY=Y(-7.2);
+  ctx.fillStyle=col('rail');ctx.fillRect(X(X0+1),railY,X(X1-1)-X(X0+1),8);
+  ctx.fillStyle=col('ink-soft');ctx.font=font(W<520?10:12);ctx.textAlign='center';ctx.textBaseline='top';
+  for(var x=-55;x<=65;x+=5){var big=x%10===0;line(X(x),railY+8,X(x),railY+(big?16:12),col('rail'),1.2);if(big&&(W>=520||x%20===0))ctx.fillText(Math.abs(x),X(x),railY+18);}
+  ctx.textAlign='left';ctx.fillText('cm',X(X1-1)-14,railY+18);
+  line(X(X0+1),AY,X(X1-1),AY,col('axis'),1.2,[6,6],.7);
+  [-F,F].forEach(function(fx){dotPx(X(fx),AY,col('axis'),3.5);ctx.fillStyle=col('axis');ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('F',X(fx),AY+6);});
+  /* Leuchte */
+  var lx=-g-8.5,lw=6;
+  if(X(lx)>2){
+    var grd=ctx.createLinearGradient(X(lx+lw),0,X(-g),0);grd.addColorStop(0,'rgba(255,214,102,.55)');grd.addColorStop(1,'rgba(255,214,102,.12)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.moveTo(X(lx+lw),Y(1.2));ctx.lineTo(X(-g),Y(FR));ctx.lineTo(X(-g),Y(-FR));ctx.lineTo(X(lx+lw),Y(-1.2));ctx.closePath();ctx.fill();
+    ctx.fillStyle=col('navy');roundRect(X(lx),Y(2),X(lx+lw)-X(lx),4*VS,6);ctx.fill();
+    ctx.beginPath();ctx.arc(X(lx+lw)-3,AY,Math.max(4,VS*0.6),0,Math.PI*2);ctx.fillStyle='#FFD666';ctx.fill();
+    line(X(lx+lw/2),Y(-2),X(lx+lw/2),railY,col('rail'),3);
+    ctx.fillStyle=col('ink-soft');ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('Leuchte',X(lx+lw/2),Y(2)-4);
+  }
+  /* Dia */
+  var dx=X(-g);
+  ctx.fillStyle='#F2EFE6';ctx.strokeStyle=col('axis');ctx.lineWidth=1.5;ctx.fillRect(dx-3,Y(FR),6,2*FR*VS);ctx.strokeRect(dx-3,Y(FR),6,2*FR*VS);
+  ctx.fillStyle=col('red');ctx.fillRect(dx-2.5,Y(GH),5,2*GH*VS);
+  line(dx,Y(-FR),dx,railY,col('rail'),3);
+  /* Linse */
+  line(X(0),Y(-A),X(0),railY,col('rail'),3);
+  lensPath();
+  /* Schirm */
+  var sx=X(s);
+  ctx.fillStyle=col('surface-2');ctx.strokeStyle=col('axis');ctx.lineWidth=1.5;ctx.fillRect(sx,Y(SH),7,2*SH*VS);ctx.strokeRect(sx,Y(SH),7,2*SH*VS);
+  if(o.spot!==false)spotOnScreen(g,s);
+  line(sx+3.5,Y(-SH),sx+3.5,railY,col('rail'),3);
+  /* Beschriftung oben */
+  var labels=[{x:-g,t:'Dia „L“'},{x:0,t:F<10?'dicke Linse':'Sammellinse'},{x:s,t:'Schirm'}];
+  ctx.font=font(12,true);ctx.textBaseline='bottom';ctx.textAlign='center';
+  var lastR=-1e9;labels.sort(function(a,b){return a.x-b.x;}).forEach(function(l){var px=X(l.x),w=ctx.measureText(l.t).width;var yy=12;if(px-w/2<lastR+4)yy=26;else lastR=px+w/2;ctx.fillStyle=col('ink');ctx.fillText(l.t,px,yy+6);});
+}
+/* Strahl von Gegenstandspunkt y über Linsenhöhe h bis zum Schirm bei s */
+function rayTo(g,y,h,s){return {x0:-g,y0:y,x1:0,y1:h,x2:s,y2:y*(-s/g)+h*(1-s*binv(g))};}
+function drawRays(g,s,y,c,alpha){
+  [-2.7,-1.35,0,1.35,2.7].forEach(function(h){var r=rayTo(g,y,h,s);
+    line(X(r.x0),Y(r.y0),X(r.x1),Y(r.y1),c,2,null,alpha);
+    var y2=r.y2,x2=r.x2;var LIM=6.6;if(Math.abs(y2)>LIM){var t=(Math.sign(y2)*LIM-r.y1)/(y2-r.y1);x2=r.x1+(r.x2-r.x1)*t;y2=Math.sign(y2)*LIM;}
+    line(X(r.x1),Y(r.y1),X(x2),Y(y2),c,2,null,alpha);});
+}
+function draw(){
+  if(!W)return;
+  var k=STATIONS[st.station].key;
+  base({g:st.g,s:st.s});
+  var b=bOf(st.g),sharp=isSharp(st.g,st.s);
+  if(st.rays){
+    drawRays(st.g,st.s,GH,col('ray1'),.95);drawRays(st.g,st.s,-GH,col('ray2'),.95);
+    dotPx(X(-st.g),Y(GH),col('ray1'),5);dotPx(X(-st.g),Y(-GH),col('ray2'),5);
+    if(isFinite(b)&&b<=st.s+0.01&&b<X1){var yb=GH*(-b/st.g);if(Math.abs(yb)<7){dotPx(X(b),Y(yb),col('ray1'),5);dotPx(X(b),Y(-yb),col('ray2'),5);}}
+  }
+  var dy=Y(-5.2+(-0.0));
+  if(k==='s1'&&!st.s1.mapOk){
+    /* Größen nummerieren */
+    var yb2=GH*b/st.g;
+    dim(-st.g,0,Y(-4.6));badge(3,(X(-st.g)+X(0))/2,Y(-4.6));
+    dim(0,st.s,Y(-4.6));badge(1,(X(0)+X(st.s))/2,Y(-4.6));
+    dim(0,F,Y(4.2));badge(5,(X(0)+X(F))/2,Y(4.2));
+    vdim(X(-st.g)+14,GH,-GH);badge(2,X(-st.g)+32,Y(0)-16);
+    vdim(X(st.s)+16,yb2,-yb2);badge(4,X(st.s)+34,Y(0)-16);
+  } else {
+    dim(-st.g,0,Y(-4.6),'g = '+fmt(st.g)+' cm',col('blue'));
+    dim(0,st.s,Y(-4.6),(sharp?'b = ':'Schirm: ')+fmtS(st.s)+' cm',sharp?col('ray1'):null);
+    dim(0,F,Y(4.2),'f',col('ink-soft'));
+    if(sharp){tag('scharf ✓',X(st.s)+12,Y(SH)+10,col('ok'),'left');}
+  }
+  renderViews(st.g,st.s);
+}
+
+/* ---------- Dia- und Schirmansicht mit Lineal ---------- */
+var off=document.createElement('canvas'),octx=off.getContext('2d');
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);c._w=w;c._dpr=dpr;}
+function lShape(c2){ /* L in Dia-Koordinaten (cm), Höhe 2 cm */
+  c2.fillStyle='#FFF3D6';c2.fillRect(-FR,-FR,2*FR,2*FR);
+  c2.fillStyle='#E8432E';c2.fillRect(-0.62,-GH,0.42,2*GH);c2.fillRect(-0.62,-GH,1.24,0.42);
+}
+function ruler(x,c,ppc,yZero,maxCm,dpr){
+  /* senkrechtes Lineal, 0 bei yZero (Pixel, nach unten), Teilung in mm */
+  var w=c.width,top=Math.max(4*dpr,yZero-maxCm*ppc),rw=Math.round(w*0.15);
+  x.save();x.fillStyle='rgba(255,250,235,.93)';x.fillRect(4*dpr,top-6*dpr,rw,yZero-top+12*dpr);
+  x.strokeStyle='#333';x.fillStyle='#222';x.lineWidth=Math.max(1,dpr);
+  var mm=ppc/10,stepMm=mm>=3*dpr?1:(mm*5>=4*dpr?5:10);
+  var labEvery=ppc>=22*dpr?1:(ppc>=10*dpr?2:5);
+  x.font='bold '+Math.round(Math.max(9,Math.min(13,ppc/dpr*0.55))*dpr)+'px '+getComputedStyle(document.body).fontFamily;x.textBaseline='middle';x.textAlign='left';
+  for(var m=0;m<=maxCm*10+0.01;m+=stepMm){var yy=yZero-m*mm;if(yy<top-1)break;var big=m%10===0,mid=m%5===0;
+    var len=big?rw*0.55:(mid?rw*0.38:rw*0.22);x.beginPath();x.moveTo(4*dpr+rw,yy);x.lineTo(4*dpr+rw-len,yy);x.stroke();
+    if(big&&(m/10)%labEvery===0)x.fillText(String(m/10),7*dpr,yy);}
+  /* Nulllinie quer übers Bild */
+  x.strokeStyle='rgba(255,255,255,.35)';x.setLineDash([4*dpr,4*dpr]);x.beginPath();x.moveTo(4*dpr+rw,yZero);x.lineTo(w-4*dpr,yZero);x.stroke();
+  x.restore();
+}
+function renderDia(){var c=$('cvDia'),x=c.getContext('2d'),w=c.width,ppc=w/4.2,dpr=c._dpr||1;
+  x.setTransform(1,0,0,1,0,0);x.fillStyle=col('room');x.fillRect(0,0,w,w);
+  x.setTransform(ppc,0,0,-ppc,w*0.58,w/2);lShape(x);x.setTransform(1,0,0,1,0,0);
+  ruler(x,c,ppc,w/2+GH*ppc,3.4,dpr);}
+var SAMPLES=(function(){var a=[],n=56,gold=Math.PI*(3-Math.sqrt(5));for(var i=0;i<n;i++){var r=Math.sqrt((i+.5)/n),t=i*gold;a.push([r*Math.cos(t),r*Math.sin(t)]);}return a;})();
+var NICE=[3,4,5,6,8,10,12,15,20,25];
+function renderScreen(g,s){
+  var c=$('cvScr'),x=c.getContext('2d'),w=c.width,dpr=c._dpr||1,k=-s/g,fac=1-s*binv(g);
+  var need=Math.max(2.4,2*GH*Math.abs(k)*1.45+Math.min(3,A*Math.abs(fac)));
+  var viewCm=NICE.filter(function(n){return n>=need;})[0]||25;
+  var ppc=w/viewCm;$('scrScale').textContent='(Ausschnitt '+viewCm+' cm)';
+  var cxp=w*0.58;
+  if(off.width!==w){off.width=w;off.height=w;}
+  octx.setTransform(1,0,0,1,0,0);octx.fillStyle='#000';octx.fillRect(0,0,w,w);
+  octx.setTransform(ppc*k,0,0,-ppc*k,cxp,w/2);lShape(octx);octx.setTransform(1,0,0,1,0,0);
+  x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle='#000';x.fillRect(0,0,w,w);
+  x.globalCompositeOperation='lighter';
+  var rpx=A*Math.abs(fac)*ppc;
+  var bright=Math.min(1.25,Math.pow(Math.max(.35,1/Math.abs(k)),.3));
+  if(rpx<0.6){x.globalAlpha=Math.min(1,bright);x.drawImage(off,0,0);}
+  else{if('filter' in x)x.filter='blur('+Math.min(12*dpr,rpx/5).toFixed(1)+'px)';for(var i=0;i<SAMPLES.length;i++){x.globalAlpha=bright/SAMPLES.length;x.drawImage(off,SAMPLES[i][0]*A*fac*ppc,-SAMPLES[i][1]*A*fac*ppc);}}
+  x.filter='none';x.globalCompositeOperation='source-over';x.globalAlpha=1;
+  x.fillStyle='rgba(255,255,255,.06)';x.fillRect(0,0,w,w);
+  var yZero=w/2+GH*Math.abs(k)*ppc;
+  if(yZero<w-2)ruler(x,c,ppc,yZero,Math.min(viewCm,2*GH*Math.abs(k)+viewCm*0.3),dpr);
+}
+function renderViews(g,s){renderDia();renderScreen(g,s);}
+
+/* ---------- Steuerpult ---------- */
+function setS(v){v=Math.max(5,Math.min(65,Math.round(v*2)/2));st.s=v;$('s').value=v;$('dispS').textContent=fmtS(v)+' cm';draw();}
+function setG(v){v=Math.max(5,Math.min(50,Math.round(v)));st.g=v;$('g').value=v;$('dispG').textContent=v+' cm';draw();}
+function setF(thick){st.thick=!!thick;F=thick?5:10;$('tLens').checked=!!thick;$('fTxt').innerHTML='Die Brennweite der Linse ist <b>f = '+F+' cm</b>.';draw();}
+function ctlMode(o){
+  $('ctlOn').hidden=!!o.off;$('ctlOff').hidden=!o.off;if(o.off){$('ctlOff').innerHTML=o.off;}
+  $('raysRow').hidden=!!o.off;$('lensRow').hidden=!o.lens;
+  if(!o.lens&&st.thick)setF(false);
+  if(o.off){st.rays=false;$('tRays').checked=false;}
+}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function tipBox(list,n){var h='';for(var i=0;i<n&&i<list.length;i++)h+='<p class="hint"><b>Tipp '+(i+1)+':</b> '+list[i]+'</p>';return h;}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function guessName(k){return {A:'A (größer, Schirm weiter weg)',B:'B (größer, Schirm näher)',C:'C (kleiner, Schirm weiter weg)',D:'D (keine Änderung)'}[k];}
+function bindChoice(sel,onPick){Array.prototype.forEach.call(document.querySelectorAll(sel),function(box){Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){onPick(box,+b.dataset.j,b);});});});}
+
+/* ---------- Station 1: Begriffe ---------- */
+var TERMS=['Gegenstandsweite g','Bildweite b','Brennweite f','Gegenstandsgröße G','Bildgröße B'];
+var MARKS=[{n:1,a:1},{n:2,a:3},{n:3,a:0},{n:4,a:4},{n:5,a:2}];
+var TERMHELP={0:'Die Gegenstandsweite ist der Abstand vom Gegenstand (Dia) bis zur Linse.',1:'Die Bildweite ist der Abstand von der Linse bis zum Bild (Schirm).',2:'Die Brennweite ist der Abstand von der Linse bis zum Brennpunkt F.',3:'Die Gegenstandsgröße ist die Höhe des Dia-L.',4:'Die Bildgröße ist die Höhe des Bildes auf dem Schirm.'};
+var QF={q:'Eine dieser Größen kannst du an der optischen Bank nicht verändern. Sie hängt nur von der Linse ab. Welche?',o:['Gegenstandsweite g','Bildweite b','Brennweite f'],a:2,
+  w:['Die Gegenstandsweite änderst du, wenn du das Dia verschiebst.','Die Bildweite änderst du, wenn du den Schirm verschiebst.','']};
+function r1(){
+  ctlMode({off:'In Station 1 ist alles fest eingestellt: Das Dia steht <b>30 cm</b> vor der Linse, der Schirm <b>15 cm</b> dahinter. Das Bild ist scharf.'});
+  if(st.g!==30)setG(30);if(st.s!==15)setS(15);
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Wir schieben das Dia <b>näher an die Linse</b> heran (von 40 cm auf 15 cm). Was passiert mit dem scharfen Bild auf dem Schirm? Wähle deine Vermutung.</p><div class="choice" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 4 schaust du, ob sie stimmt.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var map='<div class="stack"><p>An der optischen Bank links siehst du fünf Nummern. Ordne jeder Nummer den passenden <b>Fachbegriff</b> zu.</p><div class="bz">'+
+    MARKS.map(function(m){var v=st.s1.map[m.n];return '<span class="badge">'+m.n+'</span><select class="sel'+(st.s1.mapOk?' ok':'')+'" id="m'+m.n+'" aria-label="Nummer '+m.n+'"'+(st.s1.mapOk?' disabled':'')+'><option value="">…</option>'+TERMS.map(function(t,j){return '<option value="'+j+'"'+(String(v)===String(j)?' selected':'')+'>'+t+'</option>';}).join('')+'</select>';}).join('')+
+    '</div>'+(st.s1.mapOk?'':'<div class="row"><button class="btn pri" type="button" id="c1m">Prüfen</button></div>')+'<p class="fb" id="fb1m"></p></div>';
+  var meas=st.s1.mapOk?'<div class="q"><p><b>Miss nach:</b> Wie groß ist das „L“ auf dem Dia? Benutze das Lineal in der Dia-Ansicht.</p><div class="row"><label for="gIn">G =</label><input class="num'+(st.s1.gOk?' ok':'')+'" id="gIn" inputmode="decimal" value="'+esc(st.s1.G)+'"'+(st.s1.gOk?' disabled':'')+'><span>cm</span>'+(st.s1.gOk?'':'<button class="btn sec sm" type="button" id="c1g">Prüfen</button>')+'</div><p class="fb" id="fb1g"></p></div>':'';
+  var fq=st.s1.gOk?'<div class="q"><p><b>'+QF.q+'</b></p><div class="choice" data-q="f">'+QF.o.map(function(o,j){return '<button type="button" class="opt'+(st.s1.f===j?(j===QF.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb1f"></p></div>':'';
+  $('task').innerHTML=g+
+   '<div><p class="eyebrow">Station 1 · Begriffe</p><h2>Wer ist wer an der optischen Bank?</h2></div>'+map+meas+fq+
+   (st.done[0]?'<p class="win"><b>Klasse!</b> Du kennst alle Größen. Jetzt wird gemessen.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  if(!st.s1.mapOk){
+    MARKS.forEach(function(m){$('m'+m.n).addEventListener('change',function(){st.s1.map[m.n]=this.value;this.className='sel';save();});});
+    $('c1m').addEventListener('click',function(){var fb=$('fb1m'),empty=0,wrong=[],codes=[],used={};
+      MARKS.forEach(function(m){var el=$('m'+m.n);if(el.value===''){empty++;return;}var ok=+el.value===m.a;el.className='sel '+(ok?'ok':'bad');if(!ok){wrong.push(m);codes.push(m.n+':'+el.value);}});
+      if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Zuordnungen.';return;}
+      tryInc('s1begr',!wrong.length,codes.join(','));
+      if(wrong.length){fb.className='fb bad';fb.textContent=(wrong.length===1?'Eine Zuordnung stimmt':''+wrong.length+' Zuordnungen stimmen')+' noch nicht. Tipp zu Nummer '+wrong[0].n+': Schau, wo die Linie beginnt und endet.';showHelp(fb,'s1begr',function(){MARKS.forEach(function(m){st.s1.map[m.n]=String(m.a);});save();r1();var f=$('fb1m');f.className='fb ok';f.textContent='Die Lösung ist eingetragen. Schau sie dir an der optischen Bank an und tippe auf „Prüfen“.';});return;}
+      st.s1.mapOk=true;save();r1();var f=$('fb1m');f.className='fb ok';f.textContent='Alles richtig zugeordnet! An der Bank stehen jetzt die echten Werte.';});
+  } else {$('fb1m').className='fb ok';$('fb1m').textContent='Alles richtig zugeordnet!';}
+  if(st.s1.mapOk&&!st.s1.gOk){
+    $('gIn').addEventListener('input',function(){st.s1.G=this.value;this.className='num';save();});
+    $('c1g').addEventListener('click',function(){var v=num($('gIn').value),fb=$('fb1g');if(isNaN(v)){fb.className='fb bad';fb.textContent='Trage eine Zahl ein.';return;}
+      var ok=Math.abs(v-G_CM)<=0.15;tryInc('s1G',ok,String(v));
+      if(ok){st.s1.gOk=true;save();r1();$('fb1g').className='fb ok';$('fb1g').textContent='Genau: G = 2 cm. Das Dia-L bleibt immer gleich groß.';}
+      else{$('gIn').className='num bad';fb.className='fb bad';fb.textContent=v>5?'Das ist zu groß. Lies am Lineal ab: Jeder große Strich ist 1 cm.':'Noch nicht. Die 0 des Lineals liegt am unteren Rand des L. Wo endet das L oben?';showHelp(fb,'s1G',function(){st.s1.G='2';save();r1();var f=$('fb1g');f.className='fb ok';f.textContent='Das L ist 2 cm hoch. Tippe auf „Prüfen“.';});}});
+  } else if(st.s1.gOk){$('fb1g').className='fb ok';$('fb1g').textContent='Genau: G = 2 cm.';}
+  if(st.s1.gOk){
+    bindChoice('.choice[data-q="f"]',function(box,j){tryInc('s1f',j===QF.a,j);st.s1.f=j;var fb=$('fb1f');
+      Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===QF.a?' ok':' bad'):'');});
+      if(j===QF.a){st.s1.fOk=true;finish(0);save();r1();}else{fb.className='fb bad';fb.textContent=QF.w[j];save();}});
+    if(st.s1.fOk){$('fb1f').className='fb ok';$('fb1f').textContent='Richtig! Die Brennweite gehört zur Linse. Eine andere Brennweite gibt es nur mit einer anderen Linse.';}
+  }
+  bindNext();
+}
+
+/* ---------- Station 2: Messen ---------- */
+var TIPS2=['Schalte den Röntgenblick ein. Wo sich die orangen Strahlen treffen, liegt das Bild. Dahin gehört der Schirm.',
+  'Die Bildweite liest du am Schirm-Display ab. Die Bildgröße misst du mit dem Lineal in der Schirm-Ansicht: Die 0 liegt am unteren Rand des Bildes.',
+  'Je näher das Dia an den Brennpunkt (10 cm) kommt, desto weiter musst du den Schirm nach hinten schieben. Bei 12 cm fast bis zum Ende!'];
+function rowsDone(){var n=0;ROWS.forEach(function(g,i){if(st.s2.vals[i]&&st.s2.vals[i].ok)n++;});return n;}
+function tableHTML(editRow){
+  return '<div class="tw"><table class="mt"><thead><tr><th>Gegenstands&shy;weite g<small>in cm</small></th><th>Bildweite b<small>in cm</small></th><th>Gegenstands&shy;größe G<small>in cm</small></th><th>Bildgröße B<small>in cm</small></th></tr></thead><tbody>'+
+   ROWS.map(function(g,i){var v=st.s2.vals[i]||{},cls=v.ok?'done':(i===editRow?'cur':(i>editRow?'lock':''));
+     if(i===editRow&&!v.ok)return '<tr class="cur"><td><b>'+g+'</b></td><td><input class="num" id="inB" inputmode="decimal" aria-label="Bildweite b in cm" value="'+esc(v.bIn)+'"></td><td>2</td><td><input class="num" id="inBB" inputmode="decimal" aria-label="Bildgröße B in cm" value="'+esc(v.BIn)+'"></td></tr>';
+     return '<tr class="'+cls+'"><td><b>'+g+'</b></td><td class="v">'+(v.ok?'<b>'+fmt(v.b,1)+'</b>':'')+'</td><td>2</td><td class="v">'+(v.ok?'<b>'+fmt(v.B,1)+'</b>':'')+'</td></tr>';}).join('')+
+   '</tbody></table></div>';
+}
+function r2(){
+  ctlMode({});
+  var cur=st.s2.row,doneAll=rowsDone()===ROWS.length,g=ROWS[cur];
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 2 · Messen</p><h2>Die Messreihe</h2></div>'+
+   '<p>Verschiebe das Dia Schritt für Schritt näher an die Linse. Stelle jedes Mal den Schirm scharf und trage <b>Bildweite b</b> und <b>Bildgröße B</b> in die Tabelle ein.</p>'+
+   (doneAll?'':'<p class="note"><b>Zeile '+(cur+1)+' von '+ROWS.length+':</b> 1. Stelle das Dia auf <b>g = '+g+' cm</b>. 2. Schiebe den Schirm, bis das Bild scharf ist. 3. Lies b am Display ab und miss B mit dem Lineal.</p>')+
+   tableHTML(doneAll?-1:cur)+
+   (doneAll?'':'<div class="row"><button class="btn pri" type="button" id="c2">Messwerte prüfen</button><button class="btn tip" type="button" id="t2"'+(st.s2.tip>=TIPS2.length?' hidden':'')+'>Tipp anzeigen</button></div>')+
+   '<p class="fb" id="fb2"></p><div class="stack">'+tipBox(TIPS2,st.s2.tip)+'</div>'+
+   (doneAll?'<p class="win"><b>Messreihe komplett!</b> In Station 3 wertest du deine Tabelle aus.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  if(!doneAll){
+    var v=st.s2.vals[cur]||(st.s2.vals[cur]={});
+    $('inB').addEventListener('input',function(){v.bIn=this.value;this.className='num';save();});
+    $('inBB').addEventListener('input',function(){v.BIn=this.value;this.className='num';save();});
+    $('t2').addEventListener('click',function(){st.s2.tip++;save();r2();});
+    $('c2').addEventListener('click',function(){var fb=$('fb2'),bi=num($('inB').value),Bi=num($('inBB').value),key='s2r'+(cur+1);
+      fb.className='fb bad';
+      if(st.g!==g){fb.textContent='Stelle zuerst das Dia auf g = '+g+' cm (oberes Display).';return;}
+      if(isNaN(bi)||isNaN(Bi)){fb.textContent='Trage beide Messwerte ein (b und B).';return;}
+      var bt=bOf(g),BT=Btrue(g);
+      if(!isSharp(g,st.s)){tryInc(key,false,'scharf');fb.textContent='Das Bild auf dem Schirm ist noch nicht scharf. Schiebe den Schirm '+(st.s>bt?'näher an die Linse.':'weiter weg von der Linse.');showHelp(fb,key,function(){setG(g);setS(Math.round(bt*2)/2);v.bIn=fmtS(Math.round(bt*2)/2);v.BIn=fmt(BT,1);save();r2();var f=$('fb2');f.className='fb ok';f.textContent='Der Schirm steht jetzt richtig und die Werte sind eingetragen. Schau dir Display und Lineal an und tippe auf „Messwerte prüfen“.';});return;}
+      if(Math.abs(bi-st.s)>0.3&&Math.abs(bi-bt)>0.8){tryInc(key,false,'b');$('inB').className='num bad';fb.textContent='Die Bildweite stimmt nicht. Lies sie am Schirm-Display ab.';showHelp(fb,key,function(){setG(g);setS(Math.round(bt*2)/2);v.bIn=fmtS(Math.round(bt*2)/2);v.BIn=fmt(BT,1);save();r2();var f=$('fb2');f.className='fb ok';f.textContent='Der Schirm steht jetzt richtig und die Werte sind eingetragen. Schau dir Display und Lineal an und tippe auf „Messwerte prüfen“.';});return;}
+      if(Math.abs(Bi-BT)>Math.max(0.3,0.15*BT)){tryInc(key,false,'B');$('inBB').className='num bad';fb.textContent=(Bi===G_CM&&Math.abs(BT-G_CM)>0.3)?'2 cm ist die Größe des Dias. Miss das Bild auf dem Schirm!':'Miss die Bildgröße noch einmal. Die 0 liegt am unteren Rand des Bildes, lies am oberen Rand ab.';showHelp(fb,key,function(){setG(g);setS(Math.round(bt*2)/2);v.bIn=fmtS(Math.round(bt*2)/2);v.BIn=fmt(BT,1);save();r2();var f=$('fb2');f.className='fb ok';f.textContent='Der Schirm steht jetzt richtig und die Werte sind eingetragen. Schau dir Display und Lineal an und tippe auf „Messwerte prüfen“.';});return;}
+      tryInc(key,true);v.ok=true;v.b=bi;v.B=Bi;v.g=g;
+      if(cur<ROWS.length-1)st.s2.row=cur+1;
+      if(rowsDone()===ROWS.length)finish(1);
+      save();r2();var f2=$('fb2');f2.className='fb ok';f2.textContent='Richtig gemessen! g = '+g+' cm → b = '+fmt(bi,1)+' cm, B = '+fmt(Bi,1)+' cm.'+(rowsDone()<ROWS.length?' Weiter mit der nächsten Zeile.':'');});
+  }
+  bindNext();
+}
+
+/* ---------- Station 3: Je-desto ---------- */
+var JD=[
+  {pre:'Je kleiner die Gegenstandsweite g, desto ',post:' die Bildweite b.',o:['größer','kleiner'],a:0},
+  {pre:'Je kleiner die Gegenstandsweite g, desto ',post:' das Bild B.',o:['größer','kleiner'],a:0},
+  {pre:'Je weiter das Dia von der Linse entfernt ist, desto näher liegt das Bild am ',post:'.',o:['Brennpunkt F','Dia','Leuchte'],a:0}
+];
+var QGL={q:'Bei welcher Gegenstandsweite war das Bild genauso groß wie das Dia (2 cm)?',o:['40 cm','30 cm','20 cm','15 cm','12 cm'],a:2};
+function chartHTML(){return '<div class="chart"><div class="legend"><span><i style="background:var(--ray1)"></i>Bildweite b</span><span><i style="background:var(--blue)"></i>Bildgröße B</span></div><canvas id="ch" aria-label="Diagramm deiner Messwerte"></canvas></div>';}
+function drawChart(){
+  var c=$('ch');if(!c)return;var w=c.getBoundingClientRect().width||320,h=Math.round(Math.min(260,w*0.62)),dpr=window.devicePixelRatio||1;
+  c.style.height=h+'px';c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);
+  var L=40,R=12,T=10,B=36,xm=45,ym=65;function px(v){return L+(v/xm)*(w-L-R);}function py(v){return h-B-(v/ym)*(h-T-B);}
+  x.fillStyle=col('surface');x.fillRect(0,0,w,h);x.font=font(11);x.fillStyle=col('ink-soft');x.strokeStyle=col('grid');x.lineWidth=1;
+  for(var gx=0;gx<=45;gx+=5){x.beginPath();x.moveTo(px(gx),py(0));x.lineTo(px(gx),py(ym));x.stroke();if(gx%10===0){x.textAlign='center';x.textBaseline='top';x.fillText(gx,px(gx),py(0)+4);}}
+  for(var gy=0;gy<=60;gy+=10){x.beginPath();x.moveTo(px(0),py(gy));x.lineTo(px(xm),py(gy));x.stroke();x.textAlign='right';x.textBaseline='middle';x.fillText(gy,L-6,py(gy));}
+  x.textAlign='center';x.textBaseline='bottom';x.fillText('Gegenstandsweite g in cm',L+(w-L-R)/2,h-2);
+  x.save();x.translate(11,T+(h-T-B)/2);x.rotate(-Math.PI/2);x.textBaseline='middle';x.fillText('in cm',0,0);x.restore();
+  /* Brennpunkt */
+  x.strokeStyle=col('axis');x.setLineDash([4,4]);x.beginPath();x.moveTo(px(10),py(0));x.lineTo(px(10),py(ym));x.stroke();x.setLineDash([]);x.fillStyle=col('axis');x.textAlign='left';x.textBaseline='top';x.fillText('f',px(10)+3,py(ym)+2);
+  function series(key,c2){var pts=ROWS.map(function(g,i){var v=st.s2.vals[i];return v&&v.ok?[g,v[key]]:null;}).filter(Boolean).sort(function(a,b){return a[0]-b[0];});
+    x.strokeStyle=c2;x.lineWidth=2;x.beginPath();pts.forEach(function(p,i){if(i)x.lineTo(px(p[0]),py(p[1]));else x.moveTo(px(p[0]),py(p[1]));});x.stroke();
+    pts.forEach(function(p){x.beginPath();x.arc(px(p[0]),py(p[1]),5,0,Math.PI*2);x.fillStyle=c2;x.fill();x.strokeStyle=col('surface');x.lineWidth=2;x.stroke();});}
+  series('b',col('ray1'));series('B',col('blue'));
+}
+function autoOwn(t){t=(t||'').toLowerCase();if(t.trim().length<15)return 0;var p=1;if(/\bje\b/.test(t)&&/desto/.test(t))p++;if(/(gegenstand|dia|\bg\b|abstand|linse)/.test(t)&&/(bild|\bb\b|schirm)/.test(t)&&/(größer|groesser|grösser|kleiner|näher|naeher|weiter|größe)/.test(t))p++;return Math.min(3,p);}
+function r3(){
+  ctlMode({});
+  var jd='<div class="gap"><ol>'+JD.map(function(g,i){return '<li>'+g.pre+'<select class="sel'+(st.s3.jdOk?' ok':'')+'" id="j'+i+'" aria-label="Lücke '+(i+1)+'"'+(st.s3.jdOk?' disabled':'')+'><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'"'+(String(st.s3.jd[i])===String(j)||(st.s3.jdOk&&j===g.a)?' selected':'')+'>'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+    (st.s3.jdOk?'':'<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button></div>')+'<p class="fb" id="fb3"></p>';
+  var gl=st.s3.jdOk?'<div class="q"><p><b>'+QGL.q+'</b></p><div class="choice grid2" data-q="gl">'+QGL.o.map(function(o,j){return '<button type="button" class="opt'+(st.s3.gl===j?(j===QGL.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb3g"></p></div>':'';
+  var own=st.s3.glOk?'<div class="q"><p><b>Jetzt du:</b> Schreibe einen eigenen Je-desto-Satz. Benutze die Fachbegriffe (z. B. Gegenstandsweite, Bildweite, Bildgröße).</p><textarea class="free" id="own" rows="3" placeholder="Je näher …, desto …">'+esc(st.s3.own)+'</textarea>'+
+    (st.s3.ok?'':'<div class="row"><button class="btn pri" type="button" id="c3o">Fertig</button></div>')+'<p class="fb" id="fb3o"></p></div>':'';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 3 · Je-desto</p><h2>Was zeigt deine Messreihe?</h2></div>'+
+   '<p>Hier sind deine Messwerte als Tabelle und als Diagramm. Schau genau hin: Was passiert, wenn g kleiner wird?</p>'+
+   tableHTML(-1)+chartHTML()+'<p><b>Ergänze die Je-desto-Sätze.</b></p>'+jd+gl+own+
+   (st.s3.ok?'<p class="win"><b>Stark!</b> Du hast Zusammenhänge aus deinen Messwerten gefunden.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  drawChart();
+  if(!st.s3.jdOk){
+    JD.forEach(function(g,i){$('j'+i).addEventListener('change',function(){st.s3.jd[i]=this.value;this.className='sel';save();});});
+    $('c3').addEventListener('click',function(){var fb=$('fb3'),empty=0,wrong=0,codes=[];
+      JD.forEach(function(g,i){var s=$('j'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok){wrong++;codes.push(i+':'+s.value);}});
+      if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+      tryInc('s3jd',!wrong,codes.join(','));
+      if(wrong){fb.className='fb bad';fb.textContent=(wrong>1?wrong+' Lücken stimmen':'Eine Lücke stimmt')+' noch nicht. Lies die Tabelle von oben nach unten: g wird kleiner. Was machen b und B?';showHelp(fb,'s3jd',function(){JD.forEach(function(g,i){st.s3.jd[i]=String(g.a);});save();r3();var f=$('fb3');f.className='fb ok';f.textContent='Die Lösung ist eingetragen. Vergleiche mit deiner Tabelle und tippe auf „Prüfen“.';});return;}
+      st.s3.jdOk=true;save();r3();var f=$('fb3');f.className='fb ok';f.textContent='Richtig!';});
+  } else {$('fb3').className='fb ok';$('fb3').textContent='Richtig!';}
+  if(st.s3.jdOk){
+    bindChoice('.choice[data-q="gl"]',function(box,j){tryInc('s3gleich',j===QGL.a,j);st.s3.gl=j;
+      Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===QGL.a?' ok':' bad'):'');});
+      if(j===QGL.a){st.s3.glOk=true;save();r3();}else{var fb=$('fb3g');fb.className='fb bad';fb.textContent='Such in der Tabelle die Zeile, in der B = 2 cm ist.';save();}});
+    if(st.s3.glOk){$('fb3g').className='fb ok';$('fb3g').textContent='Genau! Bei g = 20 cm ist auch b = 20 cm. Das ist die doppelte Brennweite (2 · f).';}
+  }
+  if(st.s3.glOk){
+    $('own').addEventListener('input',function(){st.s3.own=this.value;save();});
+    if(!st.s3.ok)$('c3o').addEventListener('click',function(){var t=st.s3.own.trim(),fb=$('fb3o');
+      if(t.length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}
+      if(!/\bje\b/i.test(t)||!/desto/i.test(t)){fb.className='fb bad';fb.textContent='Ein Je-desto-Satz braucht „Je …“ und „desto …“.';return;}
+      st.s3.ok=true;finish(2);save();r3();});
+    else{$('fb3o').className='fb ok';$('fb3o').textContent='Gespeichert. Wir vergleichen eure Sätze gleich in der Klasse.';}
+  }
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz + Kino-AG ---------- */
+var GAPS=[
+  {pre:'Der Abstand vom Gegenstand bis zur Linse heißt ',post:'.',o:['Bildweite b','Gegenstandsweite g','Brennweite f'],a:1},
+  {pre:'Der Abstand von der Linse bis zum Bild heißt ',post:'.',o:['Bildweite b','Gegenstandsweite g','Brennweite f'],a:0},
+  {pre:'Je kleiner die Gegenstandsweite ist, desto ',post:' ist die Bildweite.',o:['größer','kleiner'],a:0},
+  {pre:'Je kleiner die Gegenstandsweite ist, desto ',post:' ist das Bild.',o:['größer','kleiner'],a:0},
+  {pre:'Ist der Gegenstand weit weg von der Linse, ist das Bild ',post:'.',o:['klein','groß'],a:0}
+];
+var WORTE='Gegenstandsweite g · größer · klein · Bildweite b · größer';
+var MERK='<div class="merk"><h3>Merksatz: Lage und Größe des Bildes</h3><p>Der Abstand vom Gegenstand bis zur Linse heißt <span class="k">Gegenstandsweite g</span>. Der Abstand von der Linse bis zum Bild heißt <span class="k">Bildweite b</span>. Je kleiner die Gegenstandsweite ist, desto <span class="k">größer</span> ist die Bildweite. Je kleiner die Gegenstandsweite ist, desto <span class="k">größer</span> ist das Bild. Ist der Gegenstand weit weg von der Linse, ist das Bild <span class="k">klein</span>.</p></div>';
+var KINO={q:'Die Kino-AG stellt den Beamer weiter nach hinten. Das Bild auf der Leinwand wird größer, aber unscharf. Was muss im Beamer passieren, damit es wieder scharf wird?',
+  o:['Der Abstand zwischen Bild-Chip und Linse muss etwas kleiner werden.','Der Abstand zwischen Bild-Chip und Linse muss etwas größer werden.','Nichts. Man muss nur die Lampe heller machen.'],a:0,
+  ok:'Richtig! Die Leinwand ist weiter weg, also ist die Bildweite größer. Dafür muss die Gegenstandsweite kleiner werden. Genau das macht der Scharfstell-Ring am Beamer.',
+  w:['','Schau in deine Tabelle: Zu einer großen Bildweite b gehört eine kleine Gegenstandsweite g.','Helligkeit macht ein Bild nicht scharf. Scharf ist es nur, wenn der Schirm genau am Bildpunkt steht.']};
+function r4(){
+  ctlMode({});
+  var refl=st.s4.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: Das Bild wird größer und der Schirm muss weiter weg.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Begründe mit einem Messwert aus deiner Tabelle, warum A richtig ist:</p><textarea class="free" id="refl" rows="3" placeholder="A ist richtig, weil bei g = 40 cm … und bei g = 15 cm …">'+esc(st.s4.refl)+'</textarea></div>':'';
+  var kino=st.s4.ok?'<div class="q"><p class="eyebrow">Kino-AG</p><p><b>'+KINO.q+'</b></p><div class="choice" data-q="kino">'+KINO.o.map(function(o,j){return '<button type="button" class="opt'+(st.s4.kino===j?(j===KINO.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fbk"></p></div>':'';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div>'+
+   '<p>Wähle die passenden Wörter. Mit der optischen Bank kannst du alles nachprüfen.</p>'+
+   '<p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+
+   refl+kino+(st.s4.kinoOk?saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i);var v=st.s4.gaps[i];if(st.s4.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!==''){el.value=v;}
+    el.addEventListener('change',function(){st.s4.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(st.s4.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Tabelle oder teste an der optischen Bank!';showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){st.s4.gaps[i]=String(g.a);});save();r4();var f=$('fb4');f.className='fb ok';f.textContent='Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.';});return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){
+    $('refl').addEventListener('input',function(){st.s4.refl=this.value;save();});
+    bindChoice('.choice[data-q="kino"]',function(box,j){tryInc('s4kino',j===KINO.a,j);st.s4.kino=j;
+      if(j===KINO.a){st.s4.kinoOk=true;finish(3);save();r4();}else{save();r4();}});
+    if(st.s4.kino!=null){var f=$('fbk');f.className='fb '+(st.s4.kino===KINO.a?'ok':'bad');f.textContent=st.s4.kino===KINO.a?KINO.ok:KINO.w[st.s4.kino];}
+  }
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Dia im Brennpunkt',task:'Stelle das Dia auf <b>g = 10 cm</b>. Es steht jetzt genau im Brennpunkt. Suche mit dem Schirm ein scharfes Bild. Schalte auch den Röntgenblick ein.',q:'Was findest du heraus?',
+   o:['Das Bild ist ganz nah an der Linse.','Das Bild entsteht genau im Brennpunkt hinter der Linse.','Ich finde kein scharfes Bild. Hinter der Linse laufen die Strahlen nebeneinander her und treffen sich nicht.'],a:2,
+   ok:'Genau! Steht der Gegenstand im Brennpunkt, laufen die Strahlen hinter der Linse parallel. Das Bild wäre „unendlich weit weg“. So funktioniert übrigens ein Scheinwerfer.',bad:'Probier es aus: Schiebe den Schirm ganz nach hinten. Wird es irgendwo scharf? Schau auf die Strahlen.'},
+  {id:'b',title:'Die dicke Linse',task:'Stelle das Dia auf <b>g = 30 cm</b>. Stelle das Bild scharf und merke dir b und B. Setze dann die <b>dickere Linse</b> ein (Häkchen im Steuerpult) und stelle wieder scharf.',q:'Was ändert sich mit der dickeren Linse (f = 5 cm)?',
+   o:['Das Bild entsteht näher an der Linse und ist kleiner.','Das Bild entsteht weiter weg und ist größer.','Nichts, nur die Linse sieht anders aus.'],a:0,
+   ok:'Richtig! Eine dickere Linse bricht das Licht stärker. Das Bild entsteht näher an der Linse und ist kleiner. Das brauchst du nächste Stunde beim Auge.',bad:'Stelle mit beiden Linsen scharf und vergleiche die Werte am Display und am Lineal.'}
+];
+function r5(){
+  ctlMode({lens:true});
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Knobel-Experimente</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'" id="fp'+p.id+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eins der beiden Experimente.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();
+      if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse speichern (für IServ) ---------- */
+function resText(){
+  var r=st.res||{},d=new Date(),L=[];
+  L.push('LINSEN-MESSLABOR · Wovon hängen Lage und Größe des Bildes ab?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Begriffe');
+  L.push('  Zuordnung der Größen: '+(st.s1.mapOk?'richtig ✓':'noch nicht gelöst'));
+  L.push('  Gegenstandsgröße gemessen: G = '+(st.s1.G||'–')+' cm'+(st.s1.gOk?'  ✓':''));
+  L.push('  Feste Größe der Linse: '+(st.s1.f==null?'(keine Antwort)':QF.o[st.s1.f])+(st.s1.fOk?'  ✓':''));
+  L.push('');
+  L.push('STATION 2 · Messtabelle (G = 2 cm)');
+  L.push('  g in cm | b in cm | B in cm');
+  ROWS.forEach(function(g,i){var v=st.s2.vals[i]||{};L.push('  '+g+' | '+(v.ok?fmt(v.b,1):'–')+' | '+(v.ok?fmt(v.B,1):'–'));});
+  L.push('  Tipps benutzt: '+(st.s2.tip||0));
+  L.push('');
+  L.push('STATION 3 · Je-desto');
+  if(st.s3.jdOk)JD.forEach(function(j){L.push('  '+j.pre+j.o[j.a]+j.post);});else L.push('  (Je-desto-Sätze noch nicht gelöst)');
+  L.push('  Bild genauso groß wie das Dia bei: '+(st.s3.glOk?'g = 20 cm ✓':'(noch nicht beantwortet)'));
+  L.push('  Mein eigener Je-desto-Satz: '+((st.s3.own||'').trim()||'(leer)'));
+  L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){var tmp=document.createElement('div');tmp.innerHTML=MERK;L.push('  '+tmp.textContent.replace('Merksatz: Lage und Größe des Bildes','Lage und Größe des Bildes: '));}
+  else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Meine Begründung, warum A richtig ist: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Kino-AG: '+(st.s4.kino==null?'(keine Antwort)':KINO.o[st.s4.kino]+(st.s4.kino===KINO.a?'  ✓':'  ✗')));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var TL=[['s1begr','Station 1 · Begriffe zuordnen'],['s1G','Station 1 · Dia-Größe messen'],['s1f','Station 1 · Feste Größe der Linse'],
+    ['s2r1','Station 2 · Messung g = 40 cm'],['s2r2','Station 2 · Messung g = 30 cm'],['s2r3','Station 2 · Messung g = 20 cm'],['s2r4','Station 2 · Messung g = 15 cm'],['s2r5','Station 2 · Messung g = 12 cm'],
+    ['s3jd','Station 3 · Je-desto-Sätze'],['s3gleich','Station 3 · Gleich groß'],['s4gaps','Station 4 · Merksatz-Lückentext'],['s4kino','Station 4 · Kino-AG'],['s5a','Profi · Dia im Brennpunkt'],['s5b','Profi · Dicke Linse']];
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];if(!t){if(x[0].charAt(1)!=='5')L.push('  '+x[1]+': nicht bearbeitet');return;}if(x[0].charAt(1)!=='5'){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;
+  if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  L.push('');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var rows=ROWS.map(function(g,i){var v=st.s2.vals[i];return v&&v.ok?[g,v.b,v.B]:null;});
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,tries:st.tries,tips:{s2:st.s2.tip||0},
+    rows:rows,G:st.s1.G||'',own:st.s3.own||'',refl:st.s4.refl||'',kino:st.s4.kino,s5:st.s5,help:Object.keys(st.help||{}),mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LM-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Linsen-Messlabor_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||'7d')+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Linsen-Messlabor“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wovon hängen Lage und Größe des Bildes ab?</p><h2 id="stH">Willkommen im Linsen-Messlabor!</h2>'+
+    '<p>Heute misst du, wo eine Sammellinse ein Bild erzeugt und wie groß es ist.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');
+          else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();[r1,r2,r3,r4,r5][st.station]();resize();if(st.station===2)drawChart();}
+
+$('s').addEventListener('input',function(){setS(parseFloat(this.value));});
+$('sl').addEventListener('click',function(){setS(st.s-.5);});
+$('sr').addEventListener('click',function(){setS(st.s+.5);});
+$('g').addEventListener('input',function(){setG(parseFloat(this.value));});
+$('gl').addEventListener('click',function(){setG(st.g-1);});
+$('gr').addEventListener('click',function(){setG(st.g+1);});
+$('tRays').addEventListener('change',function(){st.rays=this.checked;draw();});
+$('tLens').addEventListener('change',function(){setF(this.checked);});
+var armed=false;
+$('reset').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();
+});
+window.addEventListener('resize',function(){resize();drawChart();});
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',function(){draw();drawChart();});}
+new MutationObserver(function(){draw();drawChart();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){draw();drawChart();});
+
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+setS(40);setG(30);
+render();remind();startDialog();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+.choice.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.choice.grid3 .opt{padding:8px 8px;font-size:14px;display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25);flex:none}
+.tick{color:var(--ok);font-weight:700}
+.chip{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:1px 8px;font-size:13px;margin:2px 0;color:var(--ink-soft)}
+.chip.on{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg.long{display:flex;flex-direction:column;border-radius:12px}
+.seg.long button{text-align:left;border-top:1px solid var(--line);font-weight:600}
+.seg.long button:first-child{border-top:none}
+@media (max-width:440px){.choice.grid3{grid-template-columns:1fr 1fr}}
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 4</b><span>Warum leiten Metalle?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Leiter-Test, Metallgitter oder Metallstab"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 4';
+var STATIONS=[
+  {key:'s1',name:'Leiter-Test',scene:'test'},
+  {key:'s2',name:'Blick ins Metall',scene:'grid'},
+  {key:'s3',name:'Ladung im Metall',scene:'bar'},
+  {key:'s4',name:'Merksatz',scene:'grid'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'bar'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{obs:{},obsOk:false,gem:null,gemOk:false,tested:{}},
+  s2:{obs:{},obsOk:false,rumpf:null,rumpfOk:false},
+  s3:{obsA:{},aOk:false,obsB:{},bOk:false,hand:null,handOk:false,own:'',ok:false,touched:false,handed:false},
+  s4:{gaps:{},ok:false,refl:'',kabel:null,kabelOk:false},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[]};
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-4-v1',RKEY='ladungslabor-4-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Leiter-Test: geladene Kugel (Elektronenüberschuss) wird über einen Stab in der Hand berührt.
+   Gittermodell: positive Atomrümpfe sitzen fest im Gitter, freie Elektronen bewegen sich dazwischen.
+   Metallstab: Elektronen werden von einem negativen Stab weggeschoben (Influenz), zusätzliche Elektronen verteilen sich und fließen über die Hand ab. */
+var M={},T=0;
+var MATS=[['cu','Kupfer',1,'#C8763C'],['fe','Eisen',1,'#8A8F98'],['al','Aluminium',1,'#B9C0CB'],['ag','Silber',1,'#D9DDE3'],['ku','Kunststoff',0,'#E8C33A'],['ho','Holz (trocken)',0,'#A9784A'],['gl','Glas',0,'#A8DDEA'],['gu','Gummi',0,'#3A3D45']];
+function mat(k){return MATS.filter(function(m){return m[0]===k;})[0]||MATS[0];}
+var TR=17,Q0=6,BN=24,GRID=[],RUMPF=[];
+(function(){for(var r=0;r<4;r++)for(var c=0;c<7;c++)GRID.push([110+c*70,92+r*66]);
+  for(var r2=0;r2<3;r2++)for(var c2=0;c2<8;c2++)RUMPF.push([229+c2*44,156+r2*34]);})();
+function rng(s){return function(){s=(s*9301+49297)%233280;return s/233280;};}
+function freshModel(){var r=rng(11);
+  M={test:{mat:'cu',q:Q0,conn:0,on:false,fly:[],acc:0},
+     grid:{mat:'me',view:'gitter',track:false,trail:[],el:[]},
+     bar:{mode:'near',k:0,el:[],ball:Q0,hand:false}};
+  GRID.forEach(function(p,i){var a=r()*6.28;M.grid.el.push({x:p[0]+28*Math.cos(a),y:p[1]+28*Math.sin(a),vx:Math.cos(a)*70,vy:Math.sin(a)*70,h:i,ph:a});});
+  for(var i=0;i<BN;i++)M.bar.el.push({x:212+(i+.5)/BN*336,y:142+r()*96,u:(i+.5)/BN,v:r(),ph:r()*6.28,leave:false});
+}
+freshModel();
+function sgnTxt(q){return q>0?'+'+q:(q<0?'–'+(-q):'0');}
+function chargeWord(q){return q>0?'positiv geladen':(q<0?'negativ geladen':'ungeladen');}
+function qCol(q){return q===0?'#22865A':(q>0?'#C8423D':'#1C66C0');}
+
+/* ---------- Zeichnen ---------- */
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return false;}
+function bg(){return col('surface');}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='test')drawTest(c,lupe);else if(sc==='grid')drawGrid(c,lupe);else drawBar(c,lupe);}
+function electron(c,x,y,r,hl){c.fillStyle=hl?'#F5B82E':'#2F6FD3';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();if(hl){c.strokeStyle='#8A5A00';c.lineWidth=2;c.stroke();}
+  c.fillStyle=hl?'#1A1F36':'#fff';c.font='bold '+Math.round(r*1.5)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('–',x,y+0.5);}
+function rumpf(c,x,y,r){c.fillStyle='#F6C3BF';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.strokeStyle='#E8322B';c.lineWidth=2;c.stroke();
+  c.fillStyle='#B3261E';c.font='bold '+Math.round(r*1.1)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('+',x,y+1);}
+function rrect(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
+function hand(c,x,y){c.fillStyle='#F1C7A3';c.strokeStyle='#B07A52';c.lineWidth=2;rrect(c,x,y-26,54,52,14);c.fill();c.stroke();
+  for(var i=0;i<4;i++){rrect(c,x+46,y-24+i*12,22,10,5);c.fill();c.stroke();}
+  c.font='bold 14px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='top';c.fillText('Hand',x+30,y+32);}
+
+/* Station 1: Leiter-Test */
+var RODY=180,RODH=34,RODLEN=300;
+function rodL(){return 214-52*M.test.conn;}
+function drawTest(c,lupe){var t=M.test,m=mat(t.mat),cx=110,cy=RODY,R=52,L=rodL();
+  /* Stativ */
+  c.fillStyle='#C9CED8';c.fillRect(cx-5,cy+R-2,10,110);c.fillRect(cx-40,cy+R+104,80,10);
+  /* Kugel */
+  var gr=c.createRadialGradient(cx-18,cy-18,6,cx,cy,R);gr.addColorStop(0,'#F4F6FA');gr.addColorStop(1,'#9AA3B5');c.fillStyle=gr;c.beginPath();c.arc(cx,cy,R,0,Math.PI*2);c.fill();
+  for(var i=0;i<t.q;i++){var a=-Math.PI/2+i*2*Math.PI/Q0+0.3;electron(c,cx+Math.cos(a)*(R-14),cy+Math.sin(a)*(R-14),9);}
+  /* Stab */
+  c.fillStyle=m[3];rrect(c,L,RODY-RODH/2,RODLEN,RODH,8);c.fill();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=1.5;c.stroke();
+  if(lupe){c.save();rrect(c,L,RODY-RODH/2,RODLEN,RODH,8);c.clip();
+    for(var k=0;k<24;k++)for(var r2=0;r2<2;r2++){var x=L+8+k*12.4,y=RODY-7+r2*14;
+      if(m[2]){c.fillStyle='#F6C3BF';c.beginPath();c.arc(x,y,3,0,7);c.fill();c.strokeStyle='#E8322B';c.lineWidth=.8;c.stroke();}
+      else{c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.arc(x,y,3,0,7);c.fill();c.fillStyle='#2F6FD3';c.beginPath();c.arc(x+Math.cos(T*3+k+r2)*4.5,y+Math.sin(T*3+k+r2)*4.5,1.6,0,7);c.fill();}}
+    if(m[2])for(var j=0;j<40;j++){var xx=L+((j*37+T*30*((j%3)+1))%RODLEN),yy=RODY+Math.sin(j*1.7+T*2)*12;c.fillStyle='#2F6FD3';c.beginPath();c.arc(xx,yy,1.8,0,7);c.fill();}
+    c.restore();}
+  else{c.font='bold 15px '+ff();c.fillStyle=t.mat==='cu'||t.mat==='ho'||t.mat==='gu'?'#fff':'#1A1F36';c.textAlign='center';c.textBaseline='middle';c.fillText(m[1]+'stab',L+RODLEN/2,RODY);}
+  t.fly.forEach(function(f){electron(c,L+f.t*(RODLEN+20),RODY+Math.sin(f.t*12)*5,8);});
+  hand(c,L+RODLEN-6,RODY);
+  if(!lupe){c.font='bold 15px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText('geladene Kugel',cx,cy-R-10);
+    c.font='bold 17px '+ff();c.fillStyle=qCol(-t.q);c.textBaseline='top';c.fillText(t.q?t.q+' Elektronen zu viel':'ungeladen',cx+20,cy-R-58);
+    c.font='13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.fillText('Die Kugel steht auf einem Fuß aus Kunststoff.',300,300);
+    c.fillText(t.conn>=1?'Der Stab berührt die Kugel.':'Der Stab berührt die Kugel noch nicht.',300,320);}
+}
+
+/* Station 2: Gittermodell */
+function gridFree(){return M.grid.mat==='me'&&M.grid.view==='gitter';}
+function drawGrid(c,lupe){var G=M.grid,me=G.mat==='me',free=gridFree();
+  c.fillStyle=me?'#E6EAF1':'#FFF1C2';rrect(c,66,48,508,292,18);c.fill();c.strokeStyle=me?'#9AA3B5':'#E0B83A';c.lineWidth=2.5;c.stroke();
+  if(!lupe){c.font='bold 16px '+ff();c.fillStyle=col('ink');c.textAlign='left';c.textBaseline='bottom';
+    c.fillText(me?(free?'Kupfer im Gittermodell':'Einzelne Kupferatome'):'Kunststoff (vereinfacht)',70,40);}
+  GRID.forEach(function(p,i){var j=Math.sin(T*9+i*1.3)*1.6,x=p[0]+j,y=p[1]+Math.cos(T*8+i)*1.6;
+    if(!free){c.strokeStyle='rgba(47,111,211,.35)';c.setLineDash([3,4]);c.lineWidth=1.5;c.beginPath();c.arc(p[0],p[1],27,0,Math.PI*2);c.stroke();c.setLineDash([]);}
+    rumpf(c,x,y,15);});
+  if(G.trail.length>1){c.strokeStyle='rgba(245,184,46,.85)';c.lineWidth=3;c.beginPath();c.moveTo(G.trail[0][0],G.trail[0][1]);G.trail.forEach(function(q){c.lineTo(q[0],q[1]);});c.stroke();}
+  G.el.forEach(function(e,i){electron(c,e.x,e.y,8,G.track&&i===TR);});
+  if(!lupe){var ly=356;c.textBaseline='middle';c.textAlign='left';c.font='14px '+ff();
+    rumpf(c,84,ly,10);c.textAlign='left';c.font='14px '+ff();c.fillStyle=col('ink');c.fillText(free?'Atomrumpf (+), sitzt fest':'Kern mit inneren Elektronen (+)',100,ly);
+    electron(c,340,ly,8,false);c.textAlign='left';c.font='14px '+ff();c.fillStyle=col('ink');c.fillText(free?'freies Elektron (–)':'äußeres Elektron (–), gebunden',354,ly);}
+}
+function updGrid(dt){var G=M.grid,free=gridFree();
+  G.el.forEach(function(e){var h=GRID[e.h];
+    if(free){e.x+=e.vx*dt;e.y+=e.vy*dt;
+      if(Math.random()<dt*1.4){var a=Math.random()*6.28,s=55+Math.random()*55;e.vx=Math.cos(a)*s;e.vy=Math.sin(a)*s;}
+      if(e.x<78){e.x=78;e.vx=Math.abs(e.vx);}if(e.x>562){e.x=562;e.vx=-Math.abs(e.vx);}if(e.y<60){e.y=60;e.vy=Math.abs(e.vy);}if(e.y>328){e.y=328;e.vy=-Math.abs(e.vy);}
+      var cc=Math.max(0,Math.min(6,Math.round((e.x-110)/70))),rr=Math.max(0,Math.min(3,Math.round((e.y-92)/66))),p=GRID[rr*7+cc],dx=e.x-p[0],dy=e.y-p[1],d=Math.sqrt(dx*dx+dy*dy)||1;
+      if(d<24){e.x=p[0]+dx/d*24;e.y=p[1]+dy/d*24;var dot=(e.vx*dx+e.vy*dy)/d;if(dot<0){e.vx-=2*dot*dx/d;e.vy-=2*dot*dy/d;}}}
+    else{e.ph+=dt*2.2;var tx=h[0]+Math.cos(e.ph)*27,ty=h[1]+Math.sin(e.ph)*27,f=Math.min(1,dt*4);e.x+=(tx-e.x)*f;e.y+=(ty-e.y)*f;}});
+  if(G.track){G.trail.push([G.el[TR].x,G.el[TR].y]);if(G.trail.length>140)G.trail.shift();}else G.trail=[];}
+
+/* Station 3: Metallstab */
+function barTarget(e){if(e.leave)return [640,190];var k=M.bar.mode==='near'?M.bar.k/4:0,ex=1+k*2.2,f=1-Math.pow(1-e.u,ex);return [212+f*336,142+e.v*96];}
+function assignU(){var a=M.bar.el.filter(function(e){return !e.leave;});a.sort(function(p,q){return p.x-q.x;});a.forEach(function(e,i){e.u=(i+.5)/a.length;});}
+function barCounts(){var L=0,R=0;M.bar.el.forEach(function(e){if(e.leave)return;if(barTarget(e)[0]<379)L++;else R++;});return {L:12-L,R:12-R,n:L+R};}
+function updBar(dt){var B=M.bar,f=Math.min(1,dt*3);if(B.touch>0)B.touch=Math.max(0,B.touch-dt*0.8);
+  if(B.hand&&B.mode==='touch'){var act=B.el.filter(function(e){return !e.leave;});if(act.length>BN){act.sort(function(p,q){return q.x-p.x;});for(var i=0;i<act.length-BN;i++)act[i].leave=true;assignU();}}
+  B.el.forEach(function(e){var t=barTarget(e);e.x+=(t[0]-e.x)*f;e.y+=(t[1]-e.y)*f;});
+  var before=B.el.length;B.el=B.el.filter(function(e){return !(e.leave&&e.x>596);});if(B.el.length!==before)kickStatus();}
+function drawBar(c,lupe){var B=M.bar,C=barCounts();
+  if(B.mode==='near'){var end=196-(4-B.k)*34;c.fillStyle='#E8C33A';rrect(c,end-170,172,170,36,8);c.fill();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=1.5;c.stroke();
+    for(var i=0;i<6;i++){c.fillStyle='#1C66C0';c.font='bold 20px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('–',end-150+i*26,190);}
+    if(!lupe){c.font='bold 14px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText('negativ geladener Stab',Math.max(90,end-85),164);}}
+  else{var bx=150+22*Math.min(1,(B.touch||0)*2),by=190;var gr=c.createRadialGradient(bx-10,by-10,4,bx,by,34);gr.addColorStop(0,'#F4F6FA');gr.addColorStop(1,'#9AA3B5');c.fillStyle=gr;c.beginPath();c.arc(bx,by,34,0,Math.PI*2);c.fill();
+    for(var j=0;j<B.ball;j++){var a=j*2*Math.PI/Q0;electron(c,bx+Math.cos(a)*20,by+Math.sin(a)*20,7);}
+    c.fillStyle='#C9CED8';c.fillRect(bx-4,by+34,8,70);
+    if(!lupe){c.font='bold 14px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText('Kugel',bx,by-40);if(B.touch>0.1){c.fillStyle=col('ok');c.fillText('berührt!',bx,by-58);}
+      c.font='13px '+ff();c.fillStyle=qCol(-B.ball);c.textBaseline='top';c.fillText(B.ball?B.ball+' zu viel':'ungeladen',bx,by+108);}
+    if(B.hand)hand(c,560,190);}
+  c.fillStyle='#E6EAF1';rrect(c,206,132,348,116,14);c.fill();c.strokeStyle='#9AA3B5';c.lineWidth=2.5;c.stroke();
+  RUMPF.forEach(function(p,i){rumpf(c,p[0]+Math.sin(T*9+i)*1.2,p[1],12);});
+  B.el.forEach(function(e,i){electron(c,e.x+Math.sin(T*3+e.ph)*3,e.y+Math.cos(T*2.6+e.ph)*3,7);});
+  if(!lupe){c.font='bold 15px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText('Metallstab (Kupfer)',380,124);
+    c.strokeStyle=col('line');c.setLineDash([4,4]);c.lineWidth=1.5;c.beginPath();c.moveTo(380,252);c.lineTo(380,272);c.stroke();c.setLineDash([]);
+    [[C.L,293,'linkes Ende'],[C.R,467,'rechtes Ende']].forEach(function(o){c.font='13px '+ff();c.fillStyle=col('ink-soft');c.textBaseline='top';c.fillText(o[2],o[1],258);
+      c.font='bold 18px '+ff();c.fillStyle=qCol(o[0]);c.fillText(sgnTxt(o[0]),o[1],278);});
+    var tot=C.L+C.R;c.font='bold 15px '+ff();c.fillStyle=qCol(tot);c.fillText('ganzer Stab: '+sgnTxt(tot)+' · '+chargeWord(tot),380,312);}
+}
+function kickStatus(){updStatus();}
+
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='test'){zoom(A,{x:rodL()+150,y:RODY,s:120},bg());gauge(B,M.test.q);$('capA').innerHTML='<b>Lupe:</b> Blick in den Stab';$('capB').innerHTML='<b>Ladungsanzeige</b> der Kugel';}
+  else if(sc==='grid'){zoom(A,{x:285,y:158,s:150},bg());var x=B.getContext('2d'),w=B.width,me=M.grid.mat==='me';paper(x,w);
+    vtext(x,w,[{t:'Ladungskonto',s:0.085,b:true},{t:(gridFree()?'Atomrümpfe: ':'Positive Ladung: ')+GRID.length+' × +',s:0.062,b:true,c:'#C8423D'},{t:(gridFree()?'Freie Elektronen: ':'Gebundene Elektronen: ')+GRID.length+' × –',s:0.062,b:true,c:'#1C66C0'},
+      {t:'Zusammen: 0 · ungeladen',s:0.07,b:true,c:'#22865A'},{t:gridFree()?'Die Elektronen sind frei beweglich.':'Die Elektronen bleiben bei ihren Atomen.',s:0.06,c:'#4E5677'}]);
+    $('capA').innerHTML='<b>Lupe:</b> Ausschnitt';$('capB').innerHTML='<b>Ladungskonto</b>';}
+  else{zoom(A,{x:250,y:190,s:140},bg());var C=barCounts(),x2=B.getContext('2d'),w2=B.width;paper(x2,w2);
+    vtext(x2,w2,[{t:'Ladungskonto',s:0.085,b:true},{t:'Atomrümpfe: 24 × +',s:0.062,c:'#C8423D',b:true},{t:'Elektronen im Stab: '+C.n+' × –',s:0.062,c:'#1C66C0',b:true},
+      {t:'Linkes Ende: '+sgnTxt(C.L),s:0.066,b:true,c:qCol(C.L)},{t:'Rechtes Ende: '+sgnTxt(C.R),s:0.066,b:true,c:qCol(C.R)},{t:'Ganzer Stab: '+sgnTxt(C.L+C.R),s:0.072,b:true,c:qCol(C.L+C.R)}]);
+    $('capA').innerHTML='<b>Lupe:</b> linkes Ende';$('capB').innerHTML='<b>Ladungskonto</b>';}
+}
+function gauge(B,q){var x=B.getContext('2d'),w=B.width;paper(x,w,'#FFFFFF');var cx=w/2,cy=w*0.62,R=w*0.38;
+  x.lineWidth=w*0.05;x.strokeStyle='#E3E8F0';x.beginPath();x.arc(cx,cy,R,Math.PI,2*Math.PI);x.stroke();
+  x.strokeStyle='#2F6FD3';x.beginPath();x.arc(cx,cy,R,Math.PI,Math.PI+Math.PI*q/Q0);if(q>0)x.stroke();
+  var a=Math.PI+Math.PI*q/Q0;x.strokeStyle='#1A1F36';x.lineWidth=w*0.018;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(a)*R*0.92,cy+Math.sin(a)*R*0.92);x.stroke();
+  x.fillStyle='#1A1F36';x.beginPath();x.arc(cx,cy,w*0.03,0,7);x.fill();
+  x.font=Math.round(w*0.055)+'px '+ff();x.fillStyle='#4E5677';x.textAlign='center';x.textBaseline='top';x.fillText('0',cx-R,cy+w*0.04);x.fillText('stark',cx+R,cy+w*0.04);
+  x.font='bold '+Math.round(w*0.07)+'px '+ff();x.fillStyle=qCol(-q);x.fillText(q?q+' Elektronen zu viel':'ungeladen',cx,cy+w*0.15);}
+function statusInfo(){var sc=scene();
+  if(sc==='test'){var t=M.test,m=mat(t.mat);if(t.conn<1)return ['info',t.q?'Wähle einen Stoff und lege den Stab an die Kugel.':'Die Kugel ist ungeladen. Lade sie neu auf.'];
+    if(m[2])return [t.q?'info':'ok',t.q?'Elektronen fließen über den '+m[1]+'stab ab …':'Alle zusätzlichen Elektronen sind über den '+m[1]+'stab und die Hand abgeflossen. Die Kugel ist ungeladen.'];
+    return ['bad','Über den '+m[1]+'stab fließen keine Elektronen ab. Die Kugel bleibt geladen.'];}
+  if(sc==='grid'){if(M.grid.mat!=='me')return ['info','Im Kunststoff bleiben die Elektronen bei ihren Atomen.'];return gridFree()?['ok','Die freien Elektronen bewegen sich zwischen den Atomrümpfen.']:['info','Jedes Atom hat noch sein äußeres Elektron.'];}
+  var B=M.bar,C=barCounts();if(B.mode==='near')return B.k?['info','Der Stab schiebt die freien Elektronen weg. Links fehlen jetzt Elektronen.']:['info','Bringe den negativen Stab näher an das Metall.'];
+  if(C.L+C.R<0)return ['info','Das Metall hat '+(-(C.L+C.R))+' Elektronen zu viel. Sie haben sich im ganzen Stab verteilt.'];
+  return ['ok','Das Metall ist ungeladen.'];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();if(e.textContent!==s[1]){e.className='status '+s[0];e.textContent=s[1];}}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0,reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;if(reduce)dt*=0.5;T+=dt;var sc=scene(),moving=true;
+  if(sc==='test'){var tt=M.test,goal=tt.on?1:0;if(tt.conn!==goal){tt.conn=goal>tt.conn?Math.min(1,tt.conn+dt*2.5):Math.max(0,tt.conn-dt*2.5);if(tt.conn===1)testDone();}
+    if(tt.conn>=1&&mat(tt.mat)[2]&&tt.q>0){tt.acc+=dt;if(tt.acc>0.35){tt.acc=0;tt.q--;tt.fly.push({t:0});}}
+    tt.fly.forEach(function(f){f.t+=dt*1.1;});tt.fly=tt.fly.filter(function(f){return f.t<1;});}
+  else if(sc==='grid')updGrid(dt);else updBar(dt);
+  draw();if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+function testDone(){var s=st.s1;s.tested=s.tested||{};if(!s.tested[M.test.mat]){s.tested[M.test.mat]=true;save();if(st.station===0&&!needGuess())r1();}}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max,unit){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+(unit==null?'×':unit);draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='';var eb=$('ctlCard').querySelector('.eyebrow');
+  if(needGuess()){eb.textContent='Bevor du startest';eb.classList.add('pro');$('ctl').innerHTML=guessBox();bindGuess();return;}
+  eb.textContent='Steuerpult';eb.classList.remove('pro');
+  if(sc==='test'){var t=M.test,tested=(st.s1.tested||{});
+    h='<div class="ctlrow"><span>STOFF DES STABS</span><div class="choice grid3" id="mats">'+MATS.map(function(m){return '<button type="button" class="opt'+(t.mat===m[0]?' sel':'')+'" data-mat="'+m[0]+'"><span class="sw" style="background:'+m[3]+'"></span>'+m[1]+(tested[m[0]]?' <small class="tick">✓</small>':'')+'</button>';}).join('')+'</div></div>'+
+      '<div class="row"><button class="btn pri" type="button" id="tOn">'+(t.on?'Stab wegnehmen':'Stab an die Kugel legen')+'</button><button class="btn sec" type="button" id="tQ">Kugel neu aufladen</button></div>';}
+  else if(sc==='grid'){var G=M.grid;h='<div class="ctlrow"><span>STOFF</span>'+segHTML('sMat',[['me','Metall (Kupfer)'],['ku','Kunststoff']],G.mat)+'</div>'+
+      (G.mat==='me'?'<div class="ctlrow"><span>ANSICHT</span>'+segHTML('sView',[['einzeln','Einzelne Atome'],['gitter','Metallgitter']],G.view)+'</div>':'')+
+      '<div class="row"><button class="btn sec" type="button" id="gTr">'+(G.track?'Verfolgen beenden':'Ein Elektron verfolgen')+'</button></div>';}
+  else{var B=M.bar;h='<div class="ctlrow"><span>VERSUCH</span>'+segHTML('sMode',[['near','A · Stab nähern'],['touch','B · Berühren und ableiten']],B.mode)+'</div>';
+    if(B.mode==='near')h+=slider('K','STAB NÄHER HERANBRINGEN',B.k+' von 4',0,4,1,B.k,'weit weg','ganz nah','g');
+    else h+='<div class="row"><button class="btn pri" type="button" id="bT"'+(B.ball>2?'':' disabled')+'>Mit der geladenen Kugel berühren</button></div><div class="row"><button class="btn sec" type="button" id="bH">'+(B.hand?'Hand wegnehmen':'Metall mit der Hand anfassen')+'</button></div><div class="row"><button class="btn sec" type="button" id="bK"'+(B.ball>2?' disabled':'')+'>Kugel nachladen</button><button class="btn tip" type="button" id="bR">Alles zurücksetzen</button></div>';}
+  h+='<p class="status info" id="stat"></p>';
+  $('ctl').innerHTML=h;
+  if(sc==='test'){Array.prototype.forEach.call(document.querySelectorAll('#mats .opt'),function(b){b.addEventListener('click',function(){M.test.mat=b.dataset.mat;M.test.on=false;M.test.conn=0;M.test.q=Q0;M.test.fly=[];renderCtl();kick();});});
+    $('tOn').addEventListener('click',function(){M.test.on=!M.test.on;if(M.test.on&&M.test.conn>=1)testDone();renderCtl();kick();});
+    $('tQ').addEventListener('click',function(){M.test.q=Q0;M.test.on=false;M.test.fly=[];renderCtl();kick();});}
+  else if(sc==='grid'){bindSeg('sMat',function(v){M.grid.mat=v;renderCtl();kick();});bindSeg('sView',function(v){M.grid.view=v;kick();updStatus();});
+    $('gTr').addEventListener('click',function(){M.grid.track=!M.grid.track;M.grid.trail=[];renderCtl();});}
+  else{bindSeg('sMode',function(v){var B=M.bar;B.mode=v;B.hand=false;B.ball=Q0;B.el=B.el.filter(function(e){return !e.leave;}).slice(0,BN);assignU();renderCtl();kick();});
+    if(M.bar.mode==='near')bindSlider('K',function(){return M.bar.k;},function(v){M.bar.k=v;},1,0,4,' von 4');
+    else{$('bT').addEventListener('click',function(){var B=M.bar;if(B.ball<=2)return;B.touch=1;for(var i=0;i<4;i++)B.el.push({x:210,y:180+i*6,u:0,v:Math.random(),ph:Math.random()*6.28,leave:false});B.ball-=4;assignU();st.s3.touched=true;save();renderCtl();kick();});
+      $('bH').addEventListener('click',function(){M.bar.hand=!M.bar.hand;if(M.bar.hand){st.s3.handed=true;save();}renderCtl();kick();});
+      $('bK').addEventListener('click',function(){M.bar.ball=Q0;renderCtl();kick();});
+      $('bR').addEventListener('click',function(){var B=M.bar;B.ball=Q0;B.hand=false;B.el=B.el.filter(function(e){return !e.leave;}).slice(0,BN);assignU();renderCtl();kick();});}}
+  updStatus();
+}
+
+/* ---------- Vermutung ---------- */
+function pic(a,b){function mark(y,ok){return ok?'<path d="M60 '+(y-1)+' l4 5 8 -10" stroke="#22865A" stroke-width="3.5" fill="none" stroke-linecap="round"/>':'<path d="M60 '+(y-5)+' l10 10 M70 '+(y-5)+' l-10 10" stroke="#C8423D" stroke-width="3.5" stroke-linecap="round"/>';}
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="3" y="3" width="74" height="74" rx="14" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="3"/>'+
+    '<circle cx="18" cy="40" r="11" fill="#9AA3B5"/><text x="18" y="44.5" text-anchor="middle" font-size="13" font-weight="700" fill="#1C66C0">–</text>'+
+    '<rect x="30" y="22" width="24" height="9" rx="3" fill="#8A8F98"/><rect x="30" y="49" width="24" height="9" rx="3" fill="#E8C33A"/>'+
+    '<text x="42" y="18" text-anchor="middle" font-size="8" fill="#4E5677">Metall</text><text x="42" y="69" text-anchor="middle" font-size="8" fill="#4E5677">Kunststoff</text>'+mark(27,a)+mark(54,b)+'</svg>';}
+var GUESS=[{k:'A',a:1,b:0,n:'Nur über den Metallstab fließt die Ladung ab.'},{k:'B',a:1,b:1,n:'Über beide Stäbe fließt die Ladung ab.'},{k:'C',a:0,b:0,n:'Über keinen Stab fließt die Ladung ab.'},{k:'D',a:0,b:1,n:'Nur über den Kunststoffstab fließt die Ladung ab.'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+function guessBox(){var tmp=st.guessTmp||null;
+  return '<div class="guess stack"><p>Eine Kugel ist <b>negativ</b> geladen. Du hältst einen Stab in der Hand und berührst damit die Kugel. Einmal ist der Stab aus <b>Metall</b>, einmal aus <b>Kunststoff</b>. <b>Was passiert mit der Ladung der Kugel?</b></p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(tmp===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.a,o.b)+'<span style="font-size:13px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Erst wenn du deine Vermutung festgelegt hast, geht es los.</p>'+
+    '<div class="row"><button class="btn pri" type="button" id="gsOk"'+(tmp?'':' disabled')+'>Vermutung festlegen</button></div></div>';}
+function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guessTmp=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(x){x.classList.toggle('sel',x===b);});$('gsOk').disabled=false;});});
+  $('gsOk').addEventListener('click',function(){if(!st.guessTmp)return;st.guess=st.guessTmp;save();render();});}
+function needGuess(){return st.station===0&&!st.guess;}
+
+
+/* ---------- Station 1: Leiter-Test ---------- */
+var OBS1=MATS.map(function(m){return {id:m[0],q:'<b>'+m[1]+'</b>',o:['leitet','leitet nicht'],a:m[2]?0:1,w:'Teste '+m[1]+' im Modell: Stoff wählen, Stab an die Kugel legen und auf die Ladungsanzeige schauen.'};});
+var QGEM={q:'Was haben alle Stoffe gemeinsam, die in deinem Test leiten?',o:['Es sind Metalle.','Sie sind alle besonders schwer.','Sie sind alle durchsichtig.'],a:0,
+  ok:'Genau! Alle Metalle in deinem Test leiten. Aber warum? Das findest du in Station 2 heraus.',bad:['','Ist Eisen schwerer als Glas? Schau lieber, aus welcher Stoffgruppe die Leiter sind.','Ist Kupfer durchsichtig? Schau, aus welcher Stoffgruppe die Leiter sind.']};
+var FACH1='<div class="merk"><h3>Fachbegriffe</h3><ul style="margin:0;padding-left:1.2em"><li><span class="k">Leiter</span>: Durch diese Stoffe kann elektrische Ladung fließen, zum Beispiel durch Metalle.</li><li><span class="k">Isolatoren</span> (Nichtleiter): Durch diese Stoffe fließt keine Ladung, zum Beispiel durch Kunststoff und Glas.</li></ul></div>';
+var PRED=MATS.map(function(m){return {id:'p'+m[0],k:m[0],q:'<b>'+m[1]+'</b>',o:['leitet','leitet nicht'],a:m[2]?0:1};});
+function predScore(){var p=st.s1.pred||{};return PRED.filter(function(q){return p[q.id]===q.a;}).length;}
+function r1(){var s=st.s1,tested=s.tested||{},n=MATS.filter(function(m){return tested[m[0]];}).length;s.pred=s.pred||{};
+  if(needGuess()){$('task').innerHTML='<div><p class="eyebrow">Station 1 · Leiter-Test</p><h2>Welche Stoffe leiten Ladung?</h2></div><p class="note">Lege zuerst oben im Kasten <b>„Bevor du startest“</b> deine Vermutung fest. Danach erscheint das Steuerpult und es geht los.</p>';return;}
+  var g='<div class="guess"><p class="eyebrow pro">Deine Vermutung</p><p><b>'+guessName(st.guess)+'</b>. In Station 4 prüfst du sie.</p></div>';
+  var pred='<div class="stack"><p class="eyebrow">Teil A · Sage vorher</p><p>Was glaubst du: Welche Stoffe leiten die Ladung, welche nicht? Entscheide <b>vor dem Testen</b>. Für jede richtige Vorhersage gibt es einen Punkt.</p>'+segQHTML(PRED,s.pred,s.predOk)+
+    (s.predOk?'':'<div class="row"><button class="btn pri" type="button" id="c1p">Vorhersage festlegen</button></div>')+'<p class="fb" id="fb1p"></p></div>';
+  var info=s.predOk?'<div class="stack"><p class="eyebrow">Teil B · Teste im Modell</p><p>Die Kugel ist <b>negativ</b> geladen: Sie hat Elektronen zu viel. Du hältst einen Stab in der Hand und legst ihn an die Kugel. Fließen die Elektronen über den Stab und deine Hand ab? <b>Teste alle acht Stoffe!</b></p>'+
+    '<p class="hint"><b>Getestet:</b> '+n+' von 8 '+MATS.map(function(m){return '<span class="chip'+(tested[m[0]]?' on':'')+'">'+m[1]+'</span>';}).join(' ')+'</p></div>':'';
+  var obs=s.predOk?'<div class="stack"><p class="eyebrow">Teil C · Trage dein Ergebnis ein</p>'+segQHTML(OBS1,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p>'+
+    (s.obsOk?'<p class="win"><b>Deine Vorhersage: '+predScore()+' von 8 Punkten.</b> '+(predScore()===8?'Perfekt vorhergesagt!':'Vergleiche: Bei welchen Stoffen hast du dich geirrt?')+'</p>':'')+'</div>':'';
+  var gem=s.obsOk?FACH1+mcHTML('gem',QGEM.q,QGEM.o,s.gem,QGEM.a):'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Leiter-Test</p><h2>Welche Stoffe leiten Ladung?</h2></div>'+pred+info+obs+gem+
+    (st.done[0]?'<p class="win"><b>Klasse!</b> Metalle sind Leiter. Kunststoff, Holz, Glas und Gummi sind Isolatoren.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  if(s.predOk)PRED.forEach(function(q){var g=document.querySelector('[data-sq="'+q.id+'"]');if(g)Array.prototype.forEach.call(g.children,function(b){if(b.className==='ok')b.className='sel';});});
+  bindSegQ(s.pred,function(){return s.predOk;},PRED);
+  if(!s.predOk)$('c1p').addEventListener('click',function(){var miss=PRED.filter(function(q){return s.pred[q.id]==null;}).length,fb=$('fb1p');if(miss){fb.className='fb bad';fb.textContent='Entscheide dich noch bei '+miss+' Stoff'+(miss>1?'en':'')+'.';return;}s.predOk=true;save();r1();});
+  else helpMsg('fb1p','Vorhersage gespeichert. Jetzt wird getestet!');
+  if(s.predOk){bindSegQ(s.obs,function(){return s.obsOk;},OBS1);
+    if(!s.obsOk)$('c1').addEventListener('click',function(){if(checkSegQ(OBS1,s.obs,'s1obs','fb1',r1)){s.obsOk=true;save();r1();}});
+    else helpMsg('fb1','Richtig getestet! Über Kupfer, Eisen, Aluminium und Silber fließen die Elektronen ab.');}
+  if(s.obsOk){bindMC('gem',QGEM.a,'s1gem',QGEM.ok,QGEM.bad,function(){s.gemOk=true;finish(0);save();r1();showFb('gem',true,QGEM.ok);},function(j){s.gem=j;});if(s.gemOk)showFb('gem',true,QGEM.ok);}
+  bindNext();
+}
+
+/* ---------- Station 2: Blick ins Metall ---------- */
+var OBS2=[
+  {id:'a',q:'1. Stelle <b>Metall</b> und <b>Metallgitter</b> ein. Die äußeren Elektronen …',o:['bewegen sich frei durch das ganze Metall','bleiben bei ihrem Atom'],a:0,w:'Stelle Metall und Metallgitter ein. Tippe auf „Ein Elektron verfolgen“. Wohin wandert das gelbe Elektron?'},
+  {id:'b',q:'2. Die positiven <b>Atomrümpfe</b> …',o:['bleiben an ihrem Platz und zittern nur','wandern durch das Metall'],a:0,w:'Schau genau auf die roten Kreise mit +. Wandern sie durch das Metall?'},
+  {id:'c',q:'3. Stelle <b>Kunststoff</b> ein. Die Elektronen …',o:['bleiben bei ihren Atomen','bewegen sich frei durch den Stoff'],a:0,w:'Stelle Kunststoff ein und verfolge ein Elektron. Wie weit kommt es?'},
+  {id:'d',q:'4. Schau auf das Ladungskonto. Das Stück Metall ist insgesamt …',o:['ungeladen','positiv geladen','negativ geladen'],a:0,w:'Zähle im Ladungskonto: Wie viele + und wie viele – gibt es?'}
+];
+var FACH2='<div class="merk"><h3>Das Gittermodell der Metalle</h3><ul style="margin:0;padding-left:1.2em"><li>Jedes Metallatom gibt ein Elektron aus seiner Hülle ab. Übrig bleibt ein positiv geladener <span class="k">Atomrumpf</span>.</li><li>Die Atomrümpfe sitzen regelmäßig angeordnet in einem <span class="k">Gitter</span>.</li><li>Die abgegebenen Elektronen heißen <span class="k">freie Elektronen</span>. Sie bewegen sich zwischen den Atomrümpfen.</li></ul></div>';
+var QRUMPF={q:'Warum ist ein Atomrumpf positiv geladen?',o:['Das Metallatom hat ein Elektron abgegeben. Jetzt hat es mehr + als –.','Das Metallatom hat ein Proton dazubekommen.','Im Gitter entsteht neue positive Ladung.'],a:0,
+  ok:'Richtig! Das abgegebene Elektron gehört jetzt zu keinem Atom mehr fest. Es ist ein freies Elektron.',bad:['','Protonen sitzen fest im Kern. Sie wandern nicht von Atom zu Atom.','Ladung entsteht nicht neu. Was hat das Atom abgegeben?']};
+var CMP2=[
+  {id:'e',q:'5. Ein Kupferatom hat 29 Protonen und 29 Elektronen. Es gibt ein Elektron ab. Der Atomrumpf hat dann …',o:['29 Protonen und 28 Elektronen (Ladung +1)','28 Protonen und 29 Elektronen (Ladung –1)','29 Protonen und 29 Elektronen (Ladung 0)'],a:0,w:'Nur ein Elektron geht weg. Die Protonen bleiben im Kern.'},
+  {id:'f',q:'6. In einem Stück Metall sind 28 Atomrümpfe. Es ist ungeladen. Wie viele freie Elektronen gibt es?',o:['28','0','56'],a:0,w:'Ungeladen heißt: gleich viele + und –. Schau ins Ladungskonto.'},
+  {id:'g',q:'7. Warum leitet Kunststoff keine Ladung?',o:['Seine Elektronen sind fest an die Atome gebunden.','Er hat gar keine Elektronen.','Seine Atome sind zu groß.'],a:0,w:'Stelle Kunststoff ein: Was machen die Elektronen dort?'}
+];
+function r2(){var s=st.s2;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Mit der Lupe ins Metall</p><p>Schalte im Steuerpult zwischen <b>„Einzelne Atome“</b> und <b>„Metallgitter“</b> um. Vergleiche dann Metall mit Kunststoff.</p>'+segQHTML(OBS2,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var ru=s.obsOk?FACH2+mcHTML('rumpf',QRUMPF.q,QRUMPF.o,s.rumpf,QRUMPF.a):'';
+  s.cmp=s.cmp||{};var cmp=s.rumpfOk?'<div class="stack"><p class="eyebrow">Teil B · Denke weiter</p>'+segQHTML(CMP2,s.cmp,s.cmpOk)+(s.cmpOk?'':'<div class="row"><button class="btn pri" type="button" id="c2b">Prüfen</button></div>')+'<p class="fb" id="fb2b"></p></div>':'';
+  var own=s.cmpOk?'<div class="q"><p><b>Beschreibe das Gittermodell in zwei Sätzen.</b> Benutze die Wörter <b>Atomrumpf</b> und <b>Elektronen</b>.</p><textarea class="free" id="own2" rows="3" placeholder="In einem Metall …">'+esc(s.own||'')+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c2o">Fertig</button></div>')+'<p class="fb" id="fb2o"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Blick ins Metall</p><h2>Wie sind Metalle aufgebaut?</h2></div>'+obs+ru+cmp+own+
+    (st.done[1]?'<p class="win"><b>Stark!</b> In Metallen gibt es freie Elektronen. Darum können Metalle Ladung leiten.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;},OBS2);
+  if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(OBS2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});
+  else helpMsg('fb2','Gut beobachtet! Im Metall wandern die Elektronen frei, im Kunststoff nicht.');
+  if(s.obsOk){bindMC('rumpf',QRUMPF.a,'s2rumpf',QRUMPF.ok,QRUMPF.bad,function(){s.rumpfOk=true;save();r2();showFb('rumpf',true,QRUMPF.ok);},function(j){s.rumpf=j;});if(s.rumpfOk)showFb('rumpf',true,QRUMPF.ok);}
+  if(s.rumpfOk){bindSegQ(s.cmp,function(){return s.cmpOk;},CMP2);
+    if(!s.cmpOk)$('c2b').addEventListener('click',function(){if(checkSegQ(CMP2,s.cmp,'s2cmp','fb2b',r2)){s.cmpOk=true;save();r2();}});else helpMsg('fb2b','Stark gedacht!');}
+  if(s.cmpOk){$('own2').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c2o').addEventListener('click',function(){var fb=$('fb2o'),t=(s.own||'').trim();if(t.length<30){fb.className='fb bad';fb.textContent='Schreibe zwei ganze Sätze.';return;}if(!/atomr/i.test(t)||!/elektron/i.test(t)){fb.className='fb bad';fb.textContent='Benutze die Wörter „Atomrumpf“ und „Elektronen“.';return;}s.ok=true;finish(1);save();r2();});
+    else helpMsg('fb2o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 3: Ladung im Metall ---------- */
+var OBS3A=[
+  {id:'a',q:'1. Der negativ geladene Stab kommt näher. Die freien Elektronen im Metall …',o:['werden zum anderen Ende geschoben','werden zum Stab gezogen','bleiben, wo sie sind'],a:0,w:'Stelle Versuch A ein und bringe den Stab ganz nah heran. Gleichnamige Ladungen stoßen sich ab.'},
+  {id:'b',q:'2. Das <b>linke Ende</b> (nah am Stab) ist jetzt …',o:['positiv','negativ','ungeladen'],a:0,w:'Links fehlen jetzt Elektronen. Schau auf das Ladungskonto.'},
+  {id:'c',q:'3. Der <b>ganze</b> Metallstab ist dabei …',o:['ungeladen','negativ geladen','positiv geladen'],a:0,w:'Kommen Elektronen dazu oder gehen welche weg? Schau auf „Ganzer Stab“.'}
+];
+var OBS3B=[
+  {id:'d',q:'4. Versuch B: Nach dem Berühren mit der Kugel verteilen sich die zusätzlichen Elektronen …',o:['im ganzen Metall','nur an der Stelle, die berührt wurde'],a:0,w:'Stelle Versuch B ein und berühre mit der Kugel. Wohin wandern die neuen Elektronen?'},
+  {id:'e',q:'5. Fasst du das geladene Metall mit der Hand an, …',o:['fließen die zusätzlichen Elektronen über die Hand ab','bleiben die Elektronen im Metall'],a:0,w:'Berühre zuerst mit der Kugel, dann fasse das Metall mit der Hand an. Was zeigt das Ladungskonto?'}
+];
+var QHAND={q:'Warum kann man einen Metallstab, den man in der Hand hält, durch Reiben nicht aufladen?',o:['Die Elektronen können sich im Metall frei bewegen. Sie fließen über die Hand ab.','Metall hat keine Elektronen.','Beim Reiben von Metall wandern keine Elektronen.'],a:0,
+  ok:'Genau! Metall und dein Körper leiten die Ladung weiter. Hat der Metallstab einen Griff aus Kunststoff, kann man ihn aufladen.',bad:['','Auch Metallatome haben Elektronen. Im Gittermodell sind sie sogar frei beweglich.','Probiere Versuch B: Was passiert mit den zusätzlichen Elektronen, wenn du das Metall anfasst?']};
+var MS3=[
+  {id:'m1',t:'Mission 1',q:'Versuch A: Mach das <b>linke Ende</b> so positiv wie möglich (<b>+7</b>).',check:function(){return M.bar.mode==='near'&&barCounts().L===7;},hint:function(){return M.bar.mode!=='near'?'Stelle zuerst Versuch A ein.':'Bringe den Stab noch näher heran.';}},
+  {id:'m2',t:'Mission 2',q:'Versuch B: Lade den Metallstab auf <b>–8</b> auf. Tipp: Die Kugel kannst du nachladen.',check:function(){var C=barCounts();return M.bar.mode==='touch'&&C.L+C.R===-8;},hint:function(){var C=barCounts();return M.bar.mode!=='touch'?'Stelle zuerst Versuch B ein.':(C.L+C.R>-8?'Berühre noch einmal mit der Kugel. Lade sie vorher nach.':'Das ist zu viel. Tippe auf „Alles zurücksetzen“.');}},
+  {id:'m3',t:'Mission 3',q:'Mach den Metallstab wieder <b>ungeladen</b>, ohne „Alles zurücksetzen“ zu benutzen.',check:function(){var C=barCounts();return M.bar.mode==='touch'&&C.L+C.R===0&&M.bar.hand;},hint:function(){return 'Wie wird man zusätzliche Elektronen los? Denk an deine Hand.';}}
+];
+function r3(){var s=st.s3;
+  var a='<div class="stack"><p class="eyebrow">Teil A · Versuch A: Stab nähern</p><p>Ein Kunststoffstab ist negativ geladen. Bringe ihn mit dem Regler langsam näher an den Metallstab. Beobachte die freien Elektronen und das Ladungskonto.</p>'+segQHTML(OBS3A,s.obsA,s.aOk)+
+    (s.aOk?'':'<div class="row"><button class="btn pri" type="button" id="c3a">Prüfen</button></div>')+'<p class="fb" id="fb3a"></p></div>';
+  var b=s.aOk?'<div class="stack"><p class="eyebrow">Teil B · Versuch B: Berühren und ableiten</p><p>Stelle im Steuerpult <b>Versuch B</b> ein. Berühre das Metall mit der geladenen Kugel. Fasse es danach mit der Hand an.</p>'+segQHTML(OBS3B,s.obsB,s.bOk)+
+    (s.bOk?'':'<div class="row"><button class="btn pri" type="button" id="c3b">Prüfen</button></div>')+'<p class="fb" id="fb3b"></p></div>':'';
+  var mis=s.bOk?'<div class="stack"><p class="eyebrow">Teil C · Missionen</p>'+MS3.map(function(m,i){var open=i===0||s[MS3[i-1].id];if(!open)return '';
+    return '<div class="q"><p class="eyebrow">'+m.t+(s[m.id]?' · geschafft ★':'')+'</p><p>'+m.q+'</p>'+(s[m.id]?'':'<div class="row"><button class="btn pri" type="button" data-m3="'+i+'">Prüfen</button></div>')+'<p class="fb'+(s[m.id]?' ok':'')+'" id="fbm3'+i+'">'+(s[m.id]?'Geschafft!':'')+'</p></div>';}).join('')+'</div>':'';
+  var hd=s.m3?mcHTML('hand',QHAND.q,QHAND.o,s.hand,QHAND.a):'';
+  var own=s.handOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Warum fließt über einen Kunststoffstab keine Ladung ab? Benutze das Wort <b>Elektronen</b>.</p><textarea class="free" id="own" rows="3" placeholder="Über Kunststoff fließt keine Ladung ab, weil …">'+esc(s.own)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c3o">Fertig</button></div>')+'<p class="fb" id="fb3o"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Ladung im Metall</p><h2>Was machen die freien Elektronen?</h2></div>'+a+b+mis+hd+own+
+    (st.done[2]?'<p class="win"><b>Super!</b> Mit dem Gittermodell kannst du erklären, wie sich Ladung in Metallen bewegt.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindSegQ(s.obsA,function(){return s.aOk;},OBS3A);
+  if(!s.aOk)$('c3a').addEventListener('click',function(){if(checkSegQ(OBS3A,s.obsA,'s3a','fb3a',r3)){s.aOk=true;save();r3();}});
+  else helpMsg('fb3a','Richtig! Die Elektronen werden nur verschoben. Der Stab bleibt insgesamt ungeladen.');
+  if(s.aOk){bindSegQ(s.obsB,function(){return s.bOk;},OBS3B);
+    if(!s.bOk)$('c3b').addEventListener('click',function(){if(checkSegQ(OBS3B,s.obsB,'s3b','fb3b',r3)){s.bOk=true;save();r3();}});
+    else helpMsg('fb3b','Genau! Zusätzliche Elektronen verteilen sich im ganzen Metall und fließen über die Hand ab.');}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m3]'),function(bt){bt.addEventListener('click',function(){var i=+bt.dataset.m3,m=MS3[i],ok=m.check();tryInc('s3'+m.id,ok,'');
+    var fb=$('fbm3'+i);if(ok){s[m.id]=true;save();r3();}else{fb.className='fb bad';fb.textContent=m.hint();
+      showHelp(fb,'s3'+m.id,function(){s[m.id]=true;save();r3();});}});});
+  if(s.m3){bindMC('hand',QHAND.a,'s3hand',QHAND.ok,QHAND.bad,function(){s.handOk=true;save();r3();showFb('hand',true,QHAND.ok);},function(j){s.hand=j;});if(s.handOk)showFb('hand',true,QHAND.ok);}
+  if(s.handOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c3o').addEventListener('click',function(){var fb=$('fb3o');var t=(s.own||'').trim();if(t.length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}if(!/elektron/i.test(t)){fb.className='fb bad';fb.textContent='Benutze das Wort „Elektronen“.';return;}s.ok=true;finish(2);save();r3();});
+    else helpMsg('fb3o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Stoffe, durch die elektrische Ladung fließen kann, heißen ',post:'.',o:['Leiter','Isolatoren','Magnete'],a:0},
+  {pre:'Metalle sind gute ',post:'.',o:['Leiter','Isolatoren'],a:0},
+  {pre:'Kunststoff, Glas und trockenes Holz leiten Ladung nicht. Sie heißen ',post:'.',o:['Isolatoren','Leiter'],a:0},
+  {pre:'In einem Metall sitzen die positiv geladenen ',post:' regelmäßig angeordnet in einem Gitter.',o:['Atomrümpfe','Elektronen','Protonen'],a:0},
+  {pre:'Zwischen den Atomrümpfen bewegen sich ',post:'. Darum können Metalle Ladung leiten.',o:['freie Elektronen','Protonen','Atomkerne'],a:0},
+  {pre:'In Isolatoren sind die Elektronen fest an ihre ',post:' gebunden.',o:['Atome','Hände','Leiter'],a:0}
+];
+var WORTE='Leiter · Leiter · Isolatoren · Atomrümpfe · freie Elektronen · Atome';
+var MERK='<div class="merk"><h3>Merksatz: Das Gittermodell der Metalle</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var FD=[
+  {id:'a',q:'„Metalle leiten, weil sie keine Elektronen haben.“',o:['richtig','falsch'],a:1,w:'Denk an das Gittermodell: Was bewegt sich zwischen den Atomrümpfen?'},
+  {id:'b',q:'„Gummi ist ein Isolator.“',o:['richtig','falsch'],a:0,w:'Denk an deinen Leiter-Test.'},
+  {id:'c',q:'„Die Atomrümpfe wandern durch das Metall.“',o:['richtig','falsch'],a:1,w:'Schau in Station 2 auf die roten Kreise.'},
+  {id:'d',q:'„Ein Stück Metall, das niemand aufgeladen hat, ist ungeladen.“',o:['richtig','falsch'],a:0,w:'Denk an das Ladungskonto: gleich viele + und –.'},
+  {id:'e',q:'„Fasst man einen geladenen Metallstab an, fließt die Ladung über die Hand ab.“',o:['richtig','falsch'],a:0,w:'Denk an Versuch B in Station 3.'}
+];
+var KABEL={q:'Ein Stromkabel hat innen Drähte aus Kupfer und außen eine Hülle aus Kunststoff. Warum?',o:['Durch das Kupfer fließt die Ladung. Der Kunststoff ist ein Isolator und schützt uns.','Der Kunststoff leitet die Ladung, das Kupfer macht das Kabel stabil.','Kupfer und Kunststoff leiten beide gleich gut.'],a:0,
+  ok:'Richtig! Kupfer ist ein guter Leiter. Die Hülle aus Kunststoff sorgt dafür, dass die Ladung nicht in deinen Körper fließt.',bad:['','Welcher der beiden Stoffe hat freie Elektronen?','Denk an deinen Leiter-Test in Station 1.']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b></p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: Nur über den Metallstab fließt die Ladung ab.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Beantworte jetzt die Leitfrage in einem Satz: <b>Warum leiten Metalle elektrische Ladung?</b></p><textarea class="free" id="refl" rows="2" placeholder="Metalle leiten Ladung, weil …">'+esc(s.refl)+'</textarea></div>':'';
+  s.fd=s.fd||{};var fd=s.ok?'<div class="stack"><p class="eyebrow">Fehler-Detektiv</p><p>Richtig oder falsch? Prüfe die Aussagen.</p>'+segQHTML(FD,s.fd,s.fdOk)+(s.fdOk?'':'<div class="row"><button class="btn pri" type="button" id="c4f">Prüfen</button></div>')+'<p class="fb" id="fb4f"></p></div>':'';
+  var kab=s.fdOk?mcHTML('kabel',KABEL.q,KABEL.o,s.kabel,KABEL.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+fd+kab+(s.kabelOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindSegQ(s.fd,function(){return s.fdOk;},FD);
+    if(!s.fdOk)$('c4f').addEventListener('click',function(){if(checkSegQ(FD,s.fd,'s4fd','fb4f',r4)){s.fdOk=true;save();r4();}});else helpMsg('fb4f','Alle Fehler gefunden!');}
+  if(s.fdOk){
+    bindMC('kabel',KABEL.a,'s4kabel',KABEL.ok,KABEL.bad,function(){s.kabelOk=true;finish(3);save();r4();showFb('kabel',true,KABEL.ok);},function(j){s.kabel=j;});if(s.kabelOk)showFb('kabel',true,KABEL.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Der warme Draht',task:'Fließen sehr viele Elektronen durch einen dünnen Draht, stoßen sie immer wieder mit den Atomrümpfen zusammen.',q:'Was passiert dabei?',
+   o:['Die Atomrümpfe schwingen stärker. Der Draht wird warm.','Die Atomrümpfe lösen sich auf.','Die Elektronen werden zu Protonen.'],a:0,ok:'Genau! So wird zum Beispiel ein Toaster heiß. Dass die Elektronen behindert werden, nennt man Widerstand.',bad:'Atomrümpfe sitzen fest im Gitter, und Elektronen bleiben Elektronen. Was passiert bei vielen Zusammenstößen?'},
+  {id:'b',title:'Die Türklinke',task:'Du bist mit Gummisohlen über einen Teppich gelaufen und hast Elektronen zu viel. Du fasst an eine Türklinke aus Metall und spürst einen kleinen Schlag.',q:'Warum?',
+   o:['Die zusätzlichen Elektronen springen auf die Metallklinke über und fließen ab.','Die Klinke gibt dir Protonen.','Die Klinke ist ein Isolator und hält die Elektronen fest.'],a:0,ok:'Richtig! Metall ist ein Leiter. Die Elektronen fließen über die Klinke und die Tür ab. Das spürst du als kleinen Schlag.',bad:'Ist Metall ein Leiter oder ein Isolator? Und was kann wandern: Protonen oder Elektronen?'},
+  {id:'c',title:'Der Tanklaster',task:'Beim Befüllen und Entleeren kann sich ein Tanklaster durch Reibung elektrisch aufladen. Darum wird er vorher mit einem Kabel aus Metall mit der Erde verbunden.',q:'Wozu dient das Kabel?',
+   o:['Die Ladung fließt über das Metall zur Erde ab. So entstehen keine gefährlichen Funken.','Das Kabel lädt den Laster noch stärker auf.','Das Kabel ist ein Isolator und hält die Ladung im Laster fest.'],a:0,ok:'Genau! Über den Leiter fließt die Ladung ab, bevor ein Funke den Kraftstoff entzünden kann.',bad:'Ist ein Metallkabel ein Leiter oder ein Isolator? Was passiert dann mit der Ladung?'}
+];
+P5.push(
+  {id:'d',title:'Das Werkzeug',task:'Schraubendreher und Zangen für Elektriker haben Griffe aus Kunststoff.',q:'Warum?',
+   o:['Kunststoff ist ein Isolator. Die Ladung kann nicht in die Hand fließen.','Kunststoff ist ein guter Leiter.','Kunststoff macht das Werkzeug schwerer.'],a:0,ok:'Richtig! Der Griff aus Kunststoff schützt den Elektriker.',bad:'Leitet Kunststoff oder isoliert er?'},
+  {id:'e',title:'Die Bleistiftmine',task:'Eine Bleistiftmine besteht aus Graphit. Graphit ist kein Metall, leitet aber Ladung.',q:'Was folgt daraus?',
+   o:['Nicht nur Metalle leiten. Auch in Graphit gibt es bewegliche Elektronen.','Graphit ist doch ein Metall.','Graphit kann keine Elektronen haben.'],a:0,ok:'Genau! Metalle sind gute Leiter, aber es gibt auch andere Leiter, zum Beispiel Graphit.',bad:'Graphit ist kein Metall. Trotzdem leitet es. Was haben alle Leiter gemeinsam?'});
+var P5TXT='Erkläre mit dem Gittermodell, warum man einen Metallstab mit einem Griff aus Kunststoff durch Reiben aufladen kann.';
+function p5done(){return P5.every(function(x){return st.s5[x.id]===x.a;})&&st.s5.txtOk;}
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Profi-Fälle zum Gittermodell</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    '<div class="q"><h3>Erkläre es</h3><p><b>'+P5TXT+'</b></p><textarea class="free" id="p5t" rows="3" placeholder="Die Elektronen im Metall …">'+esc(st.s5.txt||'')+'</textarea>'+(st.s5.txtOk?'':'<div class="row"><button class="btn pri" type="button" id="c5t">Fertig</button></div>')+'<p class="fb'+(st.s5.txtOk?' ok':'')+'" id="fb5t">'+(st.s5.txtOk?'Gespeichert.':'')+'</p></div>'+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(p5done())finish(4);r5();});});});
+  $('p5t').addEventListener('input',function(){st.s5.txt=this.value;save();});
+  var c5=$('c5t');if(c5)c5.addEventListener('click',function(){var t=(st.s5.txt||'').trim(),fb=$('fb5t');if(t.length<30){fb.className='fb bad';fb.textContent='Schreibe mindestens zwei ganze Sätze.';return;}st.s5.txtOk=true;save();if(p5done())finish(4);r5();});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1obs','Station 1 · Leiter-Test (8 Stoffe)'],['s1gem','Station 1 · Was haben die Leiter gemeinsam?'],['s2obs','Station 2 · Beobachtungen im Metallgitter'],['s2rumpf','Station 2 · Warum ist ein Atomrumpf positiv?'],['s2cmp','Station 2 · Denke weiter'],
+  ['s3a','Station 3 · Geladenen Stab nähern'],['s3b','Station 3 · Berühren und ableiten'],['s3m1','Station 3 · Mission 1 (+7)'],['s3m2','Station 3 · Mission 2 (–8)'],['s3m3','Station 3 · Mission 3 (entladen)'],['s3hand','Station 3 · Metallstab in der Hand'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4fd','Station 4 · Fehler-Detektiv'],['s4kabel','Station 4 · Stromkabel'],['s5a','Profi · Der warme Draht'],['s5b','Profi · Türklinke'],['s5c','Profi · Tanklaster'],['s5d','Profi · Werkzeug'],['s5e','Profi · Bleistiftmine']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  var tested=MATS.filter(function(m){return (st.s1.tested||{})[m[0]];}).length;
+  L.push('LADUNGSLABOR 4 · Wie verhalten sich ruhende Ladungen? · Das Gittermodell der Metalle');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Leiter-Test');L.push('  Im Modell getestet: '+tested+' von 8 Stoffen');L.push('  Vorhersage richtig: '+predScore()+' von 8');
+  OBS1.forEach(function(q){var v=st.s1.obs[q.id];L.push('  '+q.q.replace(/<[^>]+>/g,'')+': '+(v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗')));});
+  L.push('  Gemeinsamkeit der Leiter: '+a(QGEM,st.s1.gem));L.push('');
+  L.push('STATION 2 · Blick ins Metall');segs(OBS2,st.s2.obs);L.push('  Atomrumpf positiv: '+a(QRUMPF,st.s2.rumpf));segs(CMP2,st.s2.cmp||{});L.push('  Mein Gittermodell in zwei Sätzen: '+((st.s2.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 3 · Ladung im Metall');segs(OBS3A,st.s3.obsA);segs(OBS3B,st.s3.obsB);L.push('  Missionen geschafft: '+['m1','m2','m3'].filter(function(k){return st.s3[k];}).length+' von 3');L.push('  Metallstab in der Hand: '+a(QHAND,st.s3.hand));L.push('  Meine Erklärung (Kunststoff): '+((st.s3.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(gp,i){L.push('  '+(i+1)+'. '+gp.pre+gp.o[gp.a]+gp.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Fehler-Detektiv:');segs(FD,st.s4.fd||{});
+  L.push('  Stromkabel: '+a(KABEL,st.s4.kabel));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});L.push('  Erklärung Kunststoffgriff: '+((st.s5.txt||'').trim()||'(leer)'));
+  var data={v:1,app:'LL4',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,own:st.s3.own||'',own2:st.s2.own||'',refl:st.s4.refl||'',tested:tested,pred:predScore(),p5txt:st.s5.txt||'',
+    tries:st.tries,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL4-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-4_'+n+'.txt';}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg'+(q.o.join('').length>34?' long':'')+'" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,list){Array.prototype.forEach.call(list?document.querySelectorAll(list.map(function(q){return '[data-sq="'+q.id+'"]';}).join(',')):document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 4</p><h2 id="stH">Willkommen im Ladungslabor 4!</h2>'+
+    '<p>Heute schaust du in Metalle hinein: Warum leiten sie elektrische Ladung? Teste verschiedene Stoffe, schau mit der Lupe ins Metallgitter und schiebe Elektronen hin und her.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();kick();
+
+})();
+</script>
+</body>
+</html>

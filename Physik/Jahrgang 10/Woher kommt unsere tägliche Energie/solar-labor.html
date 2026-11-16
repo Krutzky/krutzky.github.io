@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Solar-Labor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.gopt span{font-size:15px}
+</style>
+<style>
+.overlay{position:fixed;inset:0;background:rgba(2,12,69,.6);overflow:auto;padding:24px max(16px,env(safe-area-inset-left,0px));z-index:20}
+.overlay .card{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+
+.view canvas{background:transparent}
+#tCv{width:100%;display:block;border-radius:10px}
+.opt:disabled{opacity:.6;cursor:not-allowed}
+table.mt td input.num{width:4.2em}
+table.mt tr{cursor:pointer}
+.reset.t{border-color:#E8892B;color:#FFD9B0}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Solar-Labor</b><span>Warum liefert das Balkonkraftwerk so wenig?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset t" id="teachBtn" type="button">Klassenergebnis</button><button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell"></canvas>
+    <div class="views" id="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="overlay" id="teach" hidden><section class="card"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Lehrkraft · Beamer</p><h2>Klassenergebnis: Welcher Faktor kostet Familie K. am meisten?</h2></div><button class="btn sec" type="button" id="tClose">Schließen</button></div>
+<canvas id="tCv" aria-label="Rangliste der Faktoren"></canvas>
+<p class="muted">Tragt den Prozentwert ein, den jede Gruppe für die Situation von Familie K. meldet. Die Werte bleiben auf diesem Gerät gespeichert.</p>
+<div class="tgrid" id="tIn"></div>
+<div class="row"><button class="btn tip" type="button" id="tModelBtn">Plan B: Beispielwerte aus dem Modell</button><button class="btn sec sm" type="button" id="tClear">Alle Werte löschen</button></div></section></div>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP={title:'Solar-Labor',file:'Solar-Labor',klasse:'10',lesson:'Warum liefert das Balkonkraftwerk so wenig?',welcome:'Willkommen im Solar-Labor!',intro:'Heute findet ihr heraus, welcher Faktor das Balkonkraftwerk von Familie K. am meisten ausbremst.'};
+var KEY='solar-labor-v1',RKEY='solar-labor-resets',TKEY='solar-labor-klasse-v1';
+var STATIONS=[
+  {key:'s1',name:'Vorhersage',scene:'balcony'},
+  {key:'s2',name:'Planen',scene:'setup'},
+  {key:'s3',name:'Messen',scene:'setup'},
+  {key:'s4',name:'Auswerten',scene:'setup'},
+  {key:'s5',name:'Familie K.',scene:'balcony'},
+  {key:'s6',name:'Profi-Zusatz',pro:true,scene:'setup'}
+];
+/* Abschattungs-Muster: Anteil der abgedeckten Fläche je Zelle (4 Zellen in Reihe) */
+var SHADE=[[0,0,0,0],[.25,0,0,0],[.5,0,0,0],[1,0,0,0],[.25,.25,.25,.25]];
+var SHADE_LAB=['nichts abgedeckt','¼ einer Zelle (Ecke)','½ einer Zelle','1 ganze Zelle','Streifen über alle 4 Zellen'];
+var SHADE_SHORT=['0','¼ Zelle','½ Zelle','1 Zelle','Streifen'];
+var GROUPS={
+  A:{rank:'Schatten',name:'Abschattung',lvl:'Basis',p:'s',unit:'',col:'#1A1F36',head:'Was ist abgedeckt?',fix:[0,1,2,3,4],famV:3,famLab:'1 ganze Zelle abgedeckt',
+     fam:'Mittags fällt der Schatten des Nachbarbalkons auf eine ganze Zelle.',task:'Deckt Teile des Moduls mit Pappe ab. Achtet darauf: Die Fläche beim Streifen ist genauso groß wie eine ganze Zelle.'},
+  B:{rank:'Staub',name:'Verschmutzung',lvl:'Basis',p:'n',unit:'Lagen',col:'#B05A12',head:'Lagen Transparentpapier',fix:[0,1,2,3,4],famV:1,famLab:'1 Lage Papier',
+     fam:'Auf dem Modul liegt eine dünne Staubschicht, etwa so viel wie 1 Lage Transparentpapier.',task:'Legt Lagen Transparentpapier flach auf das Modul. Das Papier spielt den Schmutz.'},
+  C:{rank:'Dunst (schwächeres Licht)',name:'Abstand zur Lampe',lvl:'Standard',p:'d',unit:'cm',col:'#1C66C0',head:'Abstand Lampe – Modul in cm',fix:[20,25,30,40,50],famV:25,famLab:'25 cm Abstand',
+     fam:'Es war leicht diesig. Das Sonnenlicht war so schwach wie eure Lampe in 25 cm statt 20 cm Abstand.',task:'Verschiebt die Lampe. Messt den Abstand immer von der Lampe bis zur Moduloberfläche.'},
+  D:{rank:'schräge Ausrichtung',name:'Einfallswinkel',lvl:'Experte',p:'a',unit:'°',col:'#6B3FB0',head:'Winkel in °',fix:null,famV:30,famLab:'30° schräg',
+     fam:'Das Modul steht 30° schräg zur Sonne.',task:'Dreht das Modul aus der Senkrechten zur Lampe heraus. Messt den Winkel mit dem Winkelmesser.'}
+};
+var GKEYS=['A','B','C','D'];
+var st={station:0,done:[false,false,false,false,false,false],guess:null,grp:null,pred:50,model:false,showCauses:false,
+  set:{d:20,a:0,n:0,s:0},row:0,
+  s1:{ok:false},
+  s2:{meas:null,measOk:false,pform:null,pformOk:false,konst:{},konstOk:false,steps:['','','','',''],stepsOk:false},
+  s3:{rows:[],refP:'',refOk:false,ok:false},
+  s4:{cmp:null,cmpOk:false,mc:null,mcOk:false,sent:'',ok:false},
+  s5:{first:null,firstOk:false,why:'',ok:false},
+  s6:{euro:'',euroOk:false,byp:null,bypOk:false,mpp:null,mppOk:false},
+  res:{},tries:{},help:{},t0:null};
+
+/* ---------- Speicher ---------- */
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,grp:st.grp,pred:st.pred,model:st.model,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,res:st.res,tries:st.tries,help:st.help,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  ['station','guess','grp','pred','model','res','tries','help','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
+  if(x.done){st.done=x.done;while(st.done.length<6)st.done.push(false);}
+  ['s1','s2','s3','s4','s5','s6'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});}catch(e){}}
+/* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function num(s){if(s==null)return NaN;s=String(s).trim().replace(/\s/g,'').replace(',','.');if(s===''||!/^-?\d*\.?\d+$/.test(s))return NaN;return parseFloat(s);}
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+function font(px,b){return (b?'bold ':'')+px+'px '+ff();}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* Steuerpult */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+
+/* Stationen-Weg */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+
+/* Aufgabenbausteine */
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Schau noch einmal ins Modell.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+/* Ein MC-Baustein komplett: Objekt Q={q,o,a,ok,bad}, Speicher obj[field], Flag obj[field+'Ok'] */
+function mcBlock(id,Q,obj,field,key,grid){return mcHTML(id,Q.q,Q.o,obj[field],Q.a,grid);}
+function mcBind(id,Q,obj,field,key,rerender){bindMC(id,Q.a,key,Q.ok,Q.bad,function(){if(!obj[field+'Ok']){obj[field+'Ok']=true;save();rerender();showFb(id,true,Q.ok);}},function(j){obj[field]=j;});if(obj[field+'Ok'])showFb(id,true,Q.ok);}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,onChange){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});if(onChange)onChange();});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=(wrong.length>1?wrong.length+' Antworten stimmen noch nicht. ':'')+wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+function segAns(q,v){return v==null?'(keine Antwort)':q.o[v].replace(/<[^>]+>/g,'')+(v===q.a?'  ✓':'  ✗');}
+function strip(t){return String(t).replace(/<[^>]+>/g,'');}
+
+/* Ergebnisse speichern (IServ) */
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return APP.file+'_'+n+'.txt';}
+function ncore(){return STATIONS.filter(function(x){return !x.pro;}).length;}
+function nDone(){return st.done.slice(0,ncore()).filter(Boolean).length;}
+function standInfo(){var N=ncore(),n=nDone(),S=STATIONS[st.station],cur=S?S.name:'';
+  if(n>=N)return '<b>Alle '+N+' Stationen geschafft.</b>'+(st.done[N]?' Profi-Zusatz auch!':(S&&S.pro?' Ihr seid gerade beim Profi-Zusatz ★.':' Wenn noch Zeit ist: Profi-Zusatz ★.'));
+  return '<b>Zwischenstand: '+n+' von '+N+' Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function standLine(){var N=ncore(),n=nDone();return 'Stand: '+(n>=N?'fertig (alle '+N+' Stationen)':'Zwischenstand ('+n+' von '+N+' Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)');}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||APP.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP.title+'“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">'+APP.lesson+'</p><h2 id="stH">'+APP.welcome+'</h2>'+
+    '<p>'+APP.intro+'</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="10a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+function initSave(){$('saveOpen').addEventListener('click',openSave);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+  $('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+  setInterval(remind,30000);}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+/* Versuchsstatistik für die Textdatei */
+function triesLines(L,TL,proPrefix){var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]],pro=x[0].indexOf(proPrefix)===0;if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  return {mins:mins0,help:hk};}
+function bindReset(){$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});}
+
+/* Canvas-Helfer */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(280,Math.min(w*0.62,460))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function vctx(id){var c=$(id),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,0,1,0,0);return {c:c,x:x,w:w};}
+
+
+/* ---------- Physik-Modell: 4 Zellen in Reihe, fester Lastwiderstand ---------- */
+var NVT=1.5*0.02585,ISC=0.30,I0=ISC/(Math.exp(0.56/NVT)-1),RL=6.8,RSH=20;
+function gains(s){var E=Math.pow(25/(s.d+5),2),c=Math.max(0,Math.cos(s.a*Math.PI/180))*(1-0.3*Math.pow(s.a/90,3)),T=Math.pow(0.72,s.n),sh=SHADE[s.s]||SHADE[0];
+  return sh.map(function(f){return 0.012+E*c*T*(1-0.96*f);});}
+function cellV(I,Iph){var lo=-30,hi=0.9;for(var k=0;k<46;k++){var V=(lo+hi)/2,Ic=Iph-I0*(Math.exp(V/NVT)-1)-V/RSH;if(Ic>I)lo=V;else hi=V;}return (lo+hi)/2;}
+function solve(s){var g=gains(s),Iph=g.map(function(x){return x*ISC;}),lo=0,hi=Math.max.apply(null,Iph)*1.5+0.05;
+  for(var k=0;k<46;k++){var I=(lo+hi)/2,V=0;Iph.forEach(function(p){V+=cellV(I,p);});if(V-I*RL>0)lo=I;else hi=I;}var I2=(lo+hi)/2;return {U:I2*RL,I:I2,P:I2*I2*RL};}
+var REF=solve({d:20,a:0,n:0,s:0});
+function noisy(s){var h=fnv(JSON.stringify(s)),r1=(parseInt(h.slice(0,4),16)/65535-0.5),r2=(parseInt(h.slice(4),16)/65535-0.5);var m=solve(s);return {U:m.U*(1+r1*0.012),I:m.I*(1+r2*0.016)};}
+function modelPct(g,v){var s={d:20,a:0,n:0,s:0};s[GROUPS[g].p]=v;return solve(s).P/REF.P*100;}
+
+/* ---------- Messreihe der Gruppe ---------- */
+function G(){return GROUPS[st.grp]||GROUPS.A;}
+function rowVals(){var g=G();if(g.fix)return g.fix.slice();var a=[0];st.s2.steps.forEach(function(x){var v=num(x);if(!isNaN(v))a.push(v);});return a;}
+function rowLabel(v,i){var g=G();if(g.p==='s')return SHADE_LAB[v]+(i===0?' (Referenz)':'');if(g.p==='n')return v+(v===1?' Lage':' Lagen')+(i===0?' (Referenz)':'');return fmt(v,0)+(g.unit==='°'?'°':' '+g.unit)+(i===0?' (Referenz)':'');}
+function ensureRows(){var n=rowVals().length;while(st.s3.rows.length<n)st.s3.rows.push({U:'',I:''});if(st.s3.rows.length>n)st.s3.rows.length=n;}
+function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;var U=num(r.U),I=num(r.I);if(isNaN(U)||isNaN(I))return NaN;return U*I;}/* mW, weil I in mA */
+function refP(){return rowP(0);}
+function pct(i){var p=rowP(i),r=refP();if(isNaN(p)||isNaN(r)||r<=0)return NaN;return p/r*100;}
+function famIndex(){var v=rowVals(),f=G().famV;return v.indexOf(f);}
+function famPct(){var i=famIndex();return i<0?NaN:pct(i);}
+function applyRow(i){var v=rowVals()[i];if(v==null)return;st.row=i;st.set={d:20,a:0,n:0,s:0};st.set[G().p]=v;}
+
+/* ---------- Zeichnen ---------- */
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  if(sc==='balcony')drawBalcony();else drawSetup();}
+
+/* --- Balkon von Familie K. --- */
+function drawBalcony(){
+  var gy=H*0.86;
+  /* Himmel und Hauswand */
+  var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#BFD9F2');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#E7DCCB';ctx.fillRect(0,0,W*0.62,H);ctx.strokeStyle='#CDBFA8';ctx.lineWidth=1;for(var y=18;y<H;y+=22){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W*0.62,y);ctx.stroke();}
+  /* Sonne */
+  var sx=W*0.86,sy=H*0.15;ctx.fillStyle='#F5B82E';ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.fill();
+  for(var k=0;k<10;k++){var an=k*Math.PI/5;line(sx+Math.cos(an)*28,sy+Math.sin(an)*28,sx+Math.cos(an)*38,sy+Math.sin(an)*38,'#F5B82E',3);}
+  /* Nachbarbalkon oben (wirft Schatten) */
+  var nbY=H*0.16;ctx.fillStyle='#9AA3B5';ctx.fillRect(0,nbY,W*0.66,14);ctx.fillStyle='#6B7280';ctx.font=font(12,true);ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('Balkon der Nachbarn',8,nbY-2);
+  /* eigener Balkon */
+  var by=H*0.62;ctx.fillStyle='#B9C2D0';ctx.fillRect(0,gy,W*0.66,10);
+  ctx.strokeStyle='#5B6278';ctx.lineWidth=3;line(0,by,W*0.66,by,'#5B6278',4);for(var x=10;x<W*0.66;x+=18)line(x,by,x,gy,'#5B6278',2);
+  /* Modul am Geländer, leicht schräg */
+  var mx=W*0.12,mw=W*0.42,mh=H*0.30,my=by-mh*0.55;
+  ctx.save();ctx.translate(mx,my);ctx.transform(1,0,-0.18,1,0,0);
+  ctx.fillStyle='#1E3A6E';ctx.fillRect(0,0,mw,mh);ctx.strokeStyle='#C9D3F2';ctx.lineWidth=1;
+  for(var i=1;i<6;i++){ctx.beginPath();ctx.moveTo(mw*i/6,0);ctx.lineTo(mw*i/6,mh);ctx.stroke();}for(var j=1;j<3;j++){ctx.beginPath();ctx.moveTo(0,mh*j/3);ctx.lineTo(mw,mh*j/3);ctx.stroke();}
+  ctx.strokeStyle='#D1D5DB';ctx.lineWidth=3;ctx.strokeRect(0,0,mw,mh);
+  /* Schatten auf der oberen Reihe rechts */
+  ctx.fillStyle='rgba(10,14,30,.55)';ctx.beginPath();ctx.moveTo(mw*0.5,0);ctx.lineTo(mw,0);ctx.lineTo(mw,mh*0.34);ctx.lineTo(mw*0.62,mh*0.34);ctx.closePath();ctx.fill();
+  /* Staub */
+  ctx.fillStyle='rgba(210,190,150,.55)';for(var d=0;d<70;d++){var hx=fnv('d'+d),px=parseInt(hx.slice(0,4),16)/65535*mw,py=parseInt(hx.slice(4),16)/65535*mh;ctx.beginPath();ctx.arc(px,py,1.6,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+  /* Schatten-Keil vom Nachbarbalkon */
+  ctx.fillStyle='rgba(10,14,30,.10)';ctx.beginPath();ctx.moveTo(W*0.30,nbY+14);ctx.lineTo(W*0.66,nbY+14);ctx.lineTo(W*0.56,my+mh*0.34);ctx.lineTo(W*0.36,my);ctx.closePath();ctx.fill();
+  /* Handy-App */
+  var px=W*0.70,py=H*0.38,pw=Math.min(150,W*0.24),ph=pw*1.5;rrect(ctx,px,py,pw,ph,14);ctx.fillStyle='#1A1F36';ctx.fill();rrect(ctx,px+7,py+14,pw-14,ph-28,8);ctx.fillStyle='#FFFFFF';ctx.fill();
+  ctx.fillStyle='#4E5677';ctx.font=font(11,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Mein Balkonkraftwerk',px+pw/2,py+22);
+  ctx.fillStyle='#C8423D';ctx.font=font(Math.round(pw/4.2),true);ctx.fillText('180 W',px+pw/2,py+ph*0.30);
+  ctx.fillStyle='#4E5677';ctx.font=font(11);ctx.fillText('möglich: bis 800 W',px+pw/2,py+ph*0.55);ctx.fillText('heute, 12:30 Uhr',px+pw/2,py+ph*0.66);
+  /* Ursachen markieren */
+  if(st.showCauses||st.station===4){var named=st.station===4;
+    var M=[[mx+mw*0.80,my+mh*0.10,'1',named?'Schatten':''],[mx+mw*0.18,my+mh*0.70,'2',named?'Staub':''],[W*0.70,H*0.08,'3',named?'Dunst':''],[mx-26,my+mh*0.45,'4',named?'30° schräg':'']];
+    M.forEach(function(m){ctx.fillStyle='#E8892B';ctx.beginPath();ctx.arc(m[0],m[1],13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1B1300';ctx.font=font(14,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(m[2],m[0],m[1]+1);if(m[3])tag(m[3],m[0],m[1]+26,'#1A1F36','center','#FFFFFF');});}
+  renderBalconyViews();
+}
+function renderBalconyViews(){
+  $('capA').innerHTML='<b>Datenblatt</b>';$('capB').innerHTML='<b>Was Familie K. beobachtet</b>';
+  var A=vctx('cvA'),x=A.x,w=A.w;x.fillStyle='#FFFFFF';x.fillRect(0,0,w,w);x.fillStyle='#1A1F36';x.textAlign='left';x.textBaseline='top';
+  var f=Math.round(w/15);x.font='bold '+f+'px '+ff();x.fillText('Balkonkraftwerk',w*0.08,w*0.08);x.font=Math.round(w/18)+'px '+ff();
+  [['Module','2 × 400 W'],['Wechselrichter','800 W'],['Zellen je Modul','in Reihe'],['Ertrag ohne Verluste','ca. 700 kWh/Jahr']].forEach(function(r,i){var yy=w*0.24+i*w*0.17;x.fillStyle='#4E5677';x.fillText(r[0],w*0.08,yy);x.fillStyle='#1A1F36';x.font='bold '+Math.round(w/16)+'px '+ff();x.fillText(r[1],w*0.08,yy+w*0.065);x.font=Math.round(w/18)+'px '+ff();});
+  var B=vctx('cvB'),y=B.x,w2=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w2,w2);y.textAlign='left';y.textBaseline='top';var fs=Math.round(w2/19);y.font=fs+'px '+ff();
+  var L=[['1','Schatten vom Nachbarbalkon'],['2','dünne Staubschicht'],['3','leichter Dunst am Himmel'],['4','Modul hängt 30° schräg']];
+  L.forEach(function(r,i){var yy=w2*0.08+i*w2*0.22;y.fillStyle='#E8892B';y.beginPath();y.arc(w2*0.11,yy+fs*0.6,w2*0.055,0,Math.PI*2);y.fill();y.fillStyle='#1B1300';y.textAlign='center';y.font='bold '+fs+'px '+ff();y.fillText(r[0],w2*0.11,yy+fs*0.1);
+    y.textAlign='left';y.fillStyle='#1A1F36';y.font=fs+'px '+ff();wrapText(y,r[1],w2*0.22,yy,w2*0.74,fs*1.25);});
+}
+function wrapText(c,t,x,y,maxW,lh){var words=t.split(' '),l='';words.forEach(function(wd){var test=l?l+' '+wd:wd;if(c.measureText(test).width>maxW&&l){c.fillText(l,x,y);y+=lh;l=wd;}else l=test;});if(l)c.fillText(l,x,y);}
+
+/* --- Versuchsaufbau (Draufsicht) + Schaltung --- */
+function drawSetup(){
+  var s=st.set,topH=H*0.56,ink=col('ink'),soft=col('ink-soft');
+  ctx.fillStyle=col('surface-2');ctx.fillRect(0,0,W,topH);
+  ctx.font=font(12,true);ctx.fillStyle=soft;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Versuchsaufbau von oben',10,8);
+  var cy=topH*0.55,lx=W*0.10,scale=Math.min((W*0.80)/62,9),mxp=lx+s.d*scale+18;
+  /* Licht-Kegel */
+  var a=s.a*Math.PI/180,half=topH*0.30;
+  ctx.fillStyle='rgba(255,214,102,.35)';ctx.beginPath();ctx.moveTo(lx+16,cy-10);ctx.lineTo(mxp,cy-half);ctx.lineTo(mxp,cy+half);ctx.lineTo(lx+16,cy+10);ctx.closePath();ctx.fill();
+  for(var k=-2;k<=2;k++)line(lx+20,cy+k*5,mxp-8,cy+k*half*0.42,'#F5B82E',1.5,[6,5],.8);
+  /* Lampe */
+  rrect(ctx,lx-26,cy-16,40,32,6);ctx.fillStyle='#3A3F55';ctx.fill();ctx.fillStyle='#FFE58A';ctx.fillRect(lx+10,cy-11,6,22);
+  ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Lampe',lx-6,cy+20);
+  /* Modul (gedreht) */
+  var len=half*1.7,dx=Math.sin(a)*len/2,dy=Math.cos(a)*len/2;
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#1E3A6E';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(mxp-dx,cy-dy);ctx.lineTo(mxp+dx,cy+dy);ctx.stroke();
+  if(s.n>0){ctx.strokeStyle='rgba(240,240,240,.95)';for(var p=1;p<=s.n;p++){ctx.lineWidth=2;ctx.beginPath();var o=7+p*3.2,ox=-Math.cos(a)*o,oy=Math.sin(a)*o;ctx.moveTo(mxp-dx+ox,cy-dy+oy);ctx.lineTo(mxp+dx+ox,cy+dy+oy);ctx.stroke();}}
+  ctx.restore();
+  if(SHADE[s.s]&&s.s>0){ctx.save();ctx.strokeStyle='#8B6B3E';ctx.lineWidth=5;var fr=s.s===4?1:s.s===3?0.25:s.s===2?0.125:0.0625;ctx.beginPath();ctx.moveTo(mxp-dx-Math.cos(a)*10,cy-dy+Math.sin(a)*10);ctx.lineTo(mxp-dx+2*dx*fr-Math.cos(a)*10,cy-dy+2*dy*fr+Math.sin(a)*10);ctx.stroke();ctx.restore();}
+  ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Solarmodul',mxp+14,cy-dy-6);
+  /* Senkrechte und Winkel */
+  line(mxp,cy,mxp-Math.cos(a)*70,cy+Math.sin(a)*70,soft,1.5,[4,4],.9);line(mxp,cy,mxp-80,cy,'#F5B82E',1.5,null,.9);
+  if(s.a>0){ctx.save();ctx.strokeStyle='#6B3FB0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mxp,cy,40,Math.PI-0.0001,Math.PI-a,true);ctx.stroke();ctx.restore();tag(fmt(s.a,0)+'°',mxp-56,cy+(a>0?18:0)+8,'#6B3FB0');}
+  /* Maßpfeil Abstand */
+  var ay=topH-20;line(lx+16,ay,mxp,ay,'#1C66C0',2);line(lx+16,ay-6,lx+16,ay+6,'#1C66C0',2);line(mxp,ay-6,mxp,ay+6,'#1C66C0',2);tag(fmt(s.d,0)+' cm',(lx+16+mxp)/2,ay-1,'#1C66C0');
+  /* Schaltung */
+  drawCircuit(topH);
+  renderSetupViews();
+}
+function meter(x,y,w,h,label,val,unit){rrect(ctx,x,y,w,h,10);ctx.fillStyle='#111111';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=3;ctx.stroke();
+  ctx.fillStyle='#9a9a9a';ctx.font=font(10,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(label,x+w/2,y+5);
+  ctx.fillStyle=label.charAt(0)==='S'?'#9FD0FF':'#FFC94D';ctx.font='bold '+Math.round(h*0.40)+'px ui-monospace,Menlo,Consolas,monospace';ctx.textBaseline='middle';ctx.fillText(val+' '+unit,x+w/2,y+h*0.62);}
+function drawCircuit(topH){var y0=topH+12,h=H-topH-20,soft=col('ink-soft'),ink=col('ink');
+  ctx.font=font(12,true);ctx.fillStyle=soft;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Schaltung',10,topH+6);
+  var x1=W*0.08,x2=W*0.48,ya=y0+h*0.30,yb=y0+h*0.85;
+  ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.strokeRect(x1,ya,x2-x1,yb-ya);
+  /* Modul-Symbol */
+  ctx.fillStyle=col('surface');ctx.fillRect(x1-14,(ya+yb)/2-16,28,32);ctx.strokeRect(x1-14,(ya+yb)/2-16,28,32);ctx.fillStyle='#1E3A6E';ctx.fillRect(x1-9,(ya+yb)/2-11,18,22);
+  /* Amperemeter oben, Widerstand rechts, Voltmeter parallel unten */
+  function circ(cx,cy,t){ctx.fillStyle=col('surface');ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=ink;ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,cx,cy+1);}
+  circ((x1+x2)/2,ya,'A');ctx.fillStyle=col('surface');ctx.fillRect(x2-9,(ya+yb)/2-20,18,40);ctx.strokeRect(x2-9,(ya+yb)/2-20,18,40);
+  ctx.fillStyle=soft;ctx.font=font(11,true);ctx.textAlign='left';ctx.textAlign='right';ctx.fillText('Last',x2-14,(ya+yb)/2);var xr=x2+Math.max(34,W*0.05);ctx.beginPath();ctx.moveTo(x2,ya);ctx.lineTo(xr,ya);ctx.lineTo(xr,yb);ctx.lineTo(x2,yb);ctx.stroke();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(x2,ya,3.5,0,Math.PI*2);ctx.arc(x2,yb,3.5,0,Math.PI*2);ctx.fill();circ(xr,(ya+yb)/2,'V');
+  var m=st.model?noisy(st.set):null,mx=W*0.58,mw=Math.min(170,(W-mx-26)/2),mh=Math.min(h*0.70,70);
+  meter(mx,y0+h*0.08,mw,mh,'SPANNUNG U',m?fmt(m.U,2):'–,––','V');meter(mx+mw+12,y0+h*0.08,mw,mh,'STROMSTÄRKE I',m?fmt(m.I*1000,0):'–––','mA');
+  ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(st.model?'Modell-Messwerte (Plan B)':'Messwerte am echten Aufbau ablesen',mx,y0+h*0.08+mh+6);
+}
+function renderSetupViews(){
+  $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Lampe)';$('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · Leistung in % der Referenz':'<b>Eure Messreihe</b>';
+  var A=vctx('cvA'),x=A.x,w=A.w,s=st.set;x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
+  var mw=w*0.84*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.44,mx=(w-mw)/2,my=w*0.24,cw=mw/4;
+  for(var i=0;i<4;i++){x.fillStyle='#1E3A6E';x.fillRect(mx+i*cw+2,my,cw-4,mh);x.strokeStyle='#9CC3F0';x.lineWidth=Math.max(1,w/260);for(var g=1;g<4;g++){x.beginPath();x.moveTo(mx+i*cw+2,my+mh*g/4);x.lineTo(mx+i*cw+cw-2,my+mh*g/4);x.stroke();}
+    var f=(SHADE[s.s]||SHADE[0])[i];if(f>0){x.fillStyle='rgba(139,107,62,.95)';if(s.s===4)x.fillRect(mx+i*cw+2,my,cw-4,mh*f);else if(f===1)x.fillRect(mx+i*cw+2,my,cw-4,mh);else if(f===0.5)x.fillRect(mx+i*cw+2,my,cw-4,mh/2);else x.fillRect(mx+i*cw+2,my,(cw-4)/2,mh/2);}}
+  if(s.n>0){x.fillStyle='rgba(255,255,255,'+Math.min(0.85,0.22*s.n)+')';x.fillRect(mx-4,my-4,mw+8,mh+8);}
+  x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();x.textAlign='center';x.textBaseline='top';
+  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(SHADE_LAB[s.s]+(s.n?' · '+s.n+' Lage'+(s.n>1?'n':''):''),w/2,w*0.08);
+  x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.88);
+  drawGraph();
+}
+function drawGraph(){var B=vctx('cvB'),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var F=ff();
+  if(!st.grp){y.fillStyle='#4E5677';y.font=Math.round(w/16)+'px '+F;y.textAlign='center';y.textBaseline='middle';y.fillText('Wählt zuerst eure Gruppe.',w/2,w/2);return;}
+  var g=G(),vals=rowVals(),L=w*0.16,R=w*0.95,T=w*0.08,Bt=w*0.78;function Y(p){return Bt-(Math.min(120,p)/110)*(Bt-T);}
+  y.strokeStyle='#E3E8F0';y.lineWidth=1;y.fillStyle='#4E5677';y.font=Math.round(w/22)+'px '+F;y.textAlign='right';y.textBaseline='middle';
+  [0,25,50,75,100].forEach(function(p){y.beginPath();y.moveTo(L,Y(p));y.lineTo(R,Y(p));y.stroke();y.fillText(p+' %',L-4,Y(p));});
+  var cat=g.p==='s'||g.p==='n',n=vals.length;
+  var xs=vals.map(function(v,i){if(cat)return L+(i+0.5)*(R-L)/n;var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);return L+(hi>lo?(v-lo)/(hi-lo):0)*(R-L)*0.9+(R-L)*0.05;});
+  y.textAlign='center';y.textBaseline='top';y.fillStyle='#4E5677';
+  vals.forEach(function(v,i){var lab=g.p==='s'?['0','¼','½','1 Zelle','Streifen'][v]:fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
+  y.fillText(g.p==='s'?'abgedeckt':g.p==='n'?'Lagen Papier':g.p==='d'?'Abstand in cm':'Winkel in °',(L+R)/2,Bt+w*0.10);
+  /* Vorhersage */
+  var fi=vals.indexOf(g.famV);if(fi>=0&&st.done[0]){y.strokeStyle='#6B3FB0';y.lineWidth=w/150;y.setLineDash([w/50,w/80]);y.beginPath();y.moveTo(xs[fi]-w*0.06,Y(st.pred));y.lineTo(xs[fi]+w*0.06,Y(st.pred));y.stroke();y.setLineDash([]);y.fillStyle='#6B3FB0';y.textAlign='center';y.textBaseline='bottom';y.fillText('Vorhersage',xs[fi],Y(st.pred)-3);}
+  var pts=vals.map(function(v,i){return isNaN(pct(i))?null:[xs[i],Y(pct(i)),pct(i)];});
+  if(cat){pts.forEach(function(p,i){if(!p)return;var bw=(R-L)/n*0.55;y.fillStyle=(i===st.row&&st.station===2)?'#E8892B':g.col;y.fillRect(p[0]-bw/2,p[1],bw,Bt-p[1]);y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/20)+'px '+F;y.fillText(fmt(p[2],0)+' %',p[0],p[1]-2);y.font=Math.round(w/22)+'px '+F;});}
+  else{y.strokeStyle=g.col;y.lineWidth=w/120;y.beginPath();var first=true;pts.forEach(function(p){if(!p)return;if(first){y.moveTo(p[0],p[1]);first=false;}else y.lineTo(p[0],p[1]);});y.stroke();
+    pts.forEach(function(p,i){if(!p)return;y.fillStyle=(i===st.row&&st.station===2)?'#E8892B':g.col;y.beginPath();y.arc(p[0],p[1],w/55,0,Math.PI*2);y.fill();y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/22)+'px '+F;y.fillText(fmt(p[2],0),p[0],p[1]-w/40);y.font=Math.round(w/22)+'px '+F;});}
+  if(!pts.some(function(p){return p;})){y.fillStyle='#4E5677';y.textAlign='center';y.textBaseline='middle';y.fillText('Noch keine Messwerte',(L+R)/2,T+(Bt-T)*0.2);}
+}
+
+/* ---------- Steuerpult ---------- */
+function renderCtl(){var sc=STATIONS[st.station].scene,h='',pro=STATIONS[st.station].key==='s6';
+  if(sc==='balcony'){h='<label class="chk"><input type="checkbox" id="tCause"'+(st.showCauses||st.station===4?' checked':'')+(st.station===4?' disabled':'')+'> Auffälligkeiten am Balkon markieren</label><p class="muted">Schaut euch das Bild genau an: Was könnte die Leistung verringern?</p>';}
+  else{var p=st.grp?G().p:null,parts=[];
+    function sl(k){if(k==='d')return slider('D','ABSTAND',st.set.d+' cm',15,60,1,st.set.d,'15 cm','60 cm','g');if(k==='a')return slider('W','EINFALLSWINKEL',st.set.a+'°',0,85,1,st.set.a,'0°','85°','g');
+      if(k==='n')return slider('N','LAGEN PAPIER',String(st.set.n),0,4,1,st.set.n,'0','4','g');return '<div class="ctlrow"><span>ABGEDECKT</span>'+segHTML('sS',SHADE_SHORT.map(function(t,i){return [i,t];}),st.set.s)+'</div>';}
+    if(pro)parts=['s','n','d','a'];else if(p)parts=[p];
+    h=parts.map(sl).join('')+(parts.length?'':'<p class="muted">Wählt in Station 1 eure Gruppe.</p>')+
+      '<hr class="sep"><label class="chk"><input type="checkbox" id="tModel"'+(st.model?' checked':'')+'> Plan B: im Modell messen (nur wenn die Lehrkraft es sagt)</label>';}
+  $('ctl').innerHTML=h;
+  if($('tCause'))$('tCause').addEventListener('change',function(){st.showCauses=this.checked;draw();});
+  if($('tModel'))$('tModel').addEventListener('change',function(){st.model=this.checked;save();draw();});
+  if($('DS'))bindSlider('D',function(){return st.set.d;},function(v){st.set.d=v;$('dispD').textContent=v+' cm';},1,15,60);
+  if($('WS'))bindSlider('W',function(){return st.set.a;},function(v){st.set.a=v;$('dispW').textContent=v+'°';},1,0,85);
+  if($('NS'))bindSlider('N',function(){return st.set.n;},function(v){st.set.n=v;$('dispN').textContent=String(v);},1,0,4);
+  bindSeg('sS',function(v){st.set.s=+v;draw();});
+}
+
+/* ---------- Aufgaben ---------- */
+var GUESS=[{k:'A',t:'der <b>Schatten</b> vom Nachbarbalkon'},{k:'B',t:'die dünne <b>Staubschicht</b>'},{k:'C',t:'der leichte <b>Dunst</b> (schwächeres Licht)'},{k:'D',t:'die <b>schräge</b> Ausrichtung (30°)'}];
+function guessName(k){return {A:'A (Schatten)',B:'B (Staub)',C:'C (Dunst)',D:'D (schräg)'}[k]||'';}
+function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+(i+1)+' · '+STATIONS[i].name)+(st.grp&&!STATIONS[i].pro&&i>0?' · Gruppe '+st.grp+': '+G().name:'')+'</p><h2>'+t+'</h2></div>';}
+
+/* Station 1 */
+function r1(){var s=st.s1,g=st.grp?G():null;
+  var fall='<p>Familie K. hat ein <b>Balkonkraftwerk</b> gekauft. Es kann bis zu <b>800 W</b> liefern. Heute scheint mittags die Sonne, aber die App zeigt nur <b>180 W</b>.</p>';
+  var guess='<div class="guess stack"><p class="eyebrow pro">Eure Vermutung</p><p>Welche Ursache kostet Familie K. am meisten Leistung?</p><div class="choice" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. Am Ende der Stunde prüfen wir sie mit den Messwerten der ganzen Klasse.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var grp='<div class="q"><p><b>Eure Gruppe:</b> Welchen Faktor untersucht ihr?</p><div class="choice grid2" id="gg">'+GKEYS.map(function(k){var x=GROUPS[k];return '<button type="button" class="opt'+(st.grp===k?' sel':'')+'" data-k="'+k+'"'+(s.ok?' disabled':'')+'><b>'+k+' · '+x.name+'</b><br><span class="muted">'+x.lvl+'</span></button>';}).join('')+'</div>'+(s.ok?'<p class="muted">Die Gruppe ist festgelegt.</p>':'')+'</div>';
+  var pred=g?'<div class="q"><p><b>Eure Vorhersage</b> für Familie K.: '+g.fam+'</p><p>Wie viel Prozent der Leistung bleiben bei <b>'+g.famLab+'</b> übrig?</p>'+
+    '<div class="lift"><div class="disp"><small>VORHERSAGE</small><span id="dispPr">'+st.pred+' %</span></div><div class="keys"><button class="key" id="Prm" type="button" aria-label="weniger">◀</button><button class="key" id="Prp" type="button" aria-label="mehr">▶</button></div></div>'+
+    '<input type="range" id="PrS" min="0" max="100" step="5" value="'+st.pred+'" aria-label="Vorhersage in Prozent"'+(s.ok?' disabled':'')+'><div class="scale"><span>0 % (nichts mehr)</span><span>100 % (keine Änderung)</span></div>'+
+    (s.ok?'<p class="fb ok">Vorhersage gespeichert: '+st.pred+' %</p>':'<div class="row"><button class="btn pri" type="button" id="c1">Vorhersage speichern</button></div><p class="fb" id="fb1"></p>')+'</div>':'';
+  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+guess+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt plant ihr eure Messung.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.grp=b.dataset.k;st.s3.rows=[];st.s2.stepsOk=false;save();r1();});});
+  if($('PrS')&&!s.ok){var u=function(v){st.pred=Math.max(0,Math.min(100,v));$('PrS').value=st.pred;$('dispPr').textContent=st.pred+' %';save();};
+    $('PrS').addEventListener('input',function(){u(+this.value);});$('Prm').addEventListener('click',function(){u(st.pred-5);});$('Prp').addEventListener('click',function(){u(st.pred+5);});}
+  if($('c1'))$('c1').addEventListener('click',function(){var fb=$('fb1');if(!st.guess){fb.className='fb bad';fb.textContent='Wählt oben zuerst eure Vermutung A, B, C oder D.';return;}s.ok=true;finish(0);save();r1();});
+  bindNext();
+}
+
+/* Station 2: Planen */
+var QMEAS={q:'Was müsst ihr messen, um die Leistung zu bestimmen?',o:['Spannung U <b>und</b> Stromstärke I','nur die Spannung U','nur die Stromstärke I'],a:0,ok:'Genau! Für die Leistung braucht ihr beide Größen.',bad:['','Die Spannung allein reicht nicht: Bei schwachem Licht ändert sie sich kaum, die Stromstärke aber stark.','Mit der Stromstärke allein könnt ihr die Leistung nicht berechnen. Was fehlt?']};
+var QPF={q:'Mit welcher Formel berechnet ihr die elektrische Leistung?',o:['P = U · I','P = U + I','P = U : I'],a:0,ok:'Richtig! Leistung = Spannung mal Stromstärke. Mit I in mA kommt P in mW heraus.',bad:['','Schaut in euer Heft (Stunde 2): Die Größen werden nicht addiert.','Schaut in euer Heft (Stunde 2): Die Größen werden nicht geteilt.']};
+var KONST=[{id:'d',t:'Abstand Lampe – Modul'},{id:'a',t:'Winkel des Moduls'},{id:'s',t:'Abdeckung durch Pappe'},{id:'n',t:'Lagen Transparentpapier'},{id:'L',t:'dieselbe Lampe'},{id:'R',t:'derselbe Lastwiderstand'},{id:'I',t:'die Stromstärke I'}];
+function konstAns(id){if(id==='I')return false;return id!==G().p;}
+function r2(){var s=st.s2,g=G();
+  var meas=mcHTML('meas',QMEAS.q,QMEAS.o,s.meas,QMEAS.a);
+  var pf=s.measOk?mcHTML('pf',QPF.q,QPF.o,s.pform,QPF.a):'';
+  var kon=s.pformOk?'<div class="q"><p><b>Fairer Versuch:</b> Ihr verändert nur <b>'+(g.p==='s'?'die Abdeckung':g.p==='n'?'die Lagen Papier':g.p==='d'?'den Abstand':'den Winkel')+'</b>. Was müsst ihr dabei <b>gleich lassen</b>? Kreuzt alles Passende an.</p>'+
+    KONST.map(function(k){return '<label class="chk"><input type="checkbox" data-k="'+k.id+'"'+(s.konst[k.id]?' checked':'')+(s.konstOk?' disabled':'')+'> '+k.t+'</label>';}).join('')+
+    (s.konstOk?'':'<div class="row"><button class="btn pri" type="button" id="c2k">Prüfen</button></div>')+'<p class="fb" id="fb2k"></p></div>':'';
+  var steps='';
+  if(s.konstOk){if(g.fix){steps='<div class="q"><p><b>Eure Messreihe</b> ist vorgegeben:</p><ol style="margin:0;padding-left:1.2em">'+g.fix.map(function(v,i){return '<li>'+rowLabel(v,i)+'</li>';}).join('')+'</ol><p class="muted">'+g.task+'</p></div>';if(!s.stepsOk){s.stepsOk=true;save();}}
+    else{steps='<div class="q"><p><b>Plant eure Messreihe selbst.</b> Die Referenz ist 0°. Wählt 4 bis 5 weitere Winkel zwischen 5° und 85°, aufsteigend. <b>30°</b> muss dabei sein, denn so schräg steht das Modul von Familie K.</p><div class="row">'+
+      s.steps.map(function(v,i){return '<input class="num" data-st="'+i+'" inputmode="decimal" value="'+esc(v)+'" aria-label="Winkel '+(i+1)+'"'+(s.stepsOk?' disabled':'')+'><span>°</span>';}).join('')+'</div>'+
+      (s.stepsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2s">Plan prüfen</button><button class="btn tip" type="button" id="t2s">Tipp anzeigen</button></div>')+'<p class="fb" id="fb2s"></p><p class="hint" id="h2s" hidden><b>Tipp:</b> Gleichmäßige Schritte machen den Graphen gut lesbar, zum Beispiel 15°, 30°, 45°, 60°, 75°.</p><p class="muted">'+g.task+'</p></div>';}}
+  if(s.stepsOk&&s.konstOk&&s.pformOk)finish(1);
+  $('task').innerHTML=head(1,'Wie messen wir fair?')+'<p>'+g.task+'</p>'+meas+pf+kon+steps+(st.done[1]?'<p class="win"><b>Plan steht!</b> Baut jetzt auf und messt.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  mcBind('meas',QMEAS,s,'meas','s2meas',r2);if(s.measOk)mcBind('pf',QPF,s,'pform','s2pf',r2);
+  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'),function(c){if(c.type==='checkbox')c.addEventListener('change',function(){s.konst[c.dataset.k]=c.checked;save();});});
+  if($('c2k'))$('c2k').addEventListener('click',function(){var wrong=KONST.filter(function(k){return !!s.konst[k.id]!==konstAns(k.id);}),fb=$('fb2k');tryInc('s2konst',!wrong.length,wrong.map(function(k){return k.id;}).join(','));
+    if(!wrong.length){s.konstOk=true;save();r2();return;}var w0=wrong[0];fb.className='fb bad';
+    fb.textContent=w0.id==='I'?'Die Stromstärke messt ihr. Sie darf sich ändern, sie ist euer Ergebnis.':w0.id===g.p?'„'+w0.t+'“ ist genau das, was ihr verändert.':'Noch nicht vollständig: Alles, was ihr nicht untersucht, muss gleich bleiben.';
+    showHelp(fb,'s2konst',function(){KONST.forEach(function(k){s.konst[k.id]=konstAns(k.id);});s.konstOk=true;save();r2();});});
+  if(s.konstOk&&!s.konst._shown){helpMsg('fb2k','Richtig! Nur eine Größe verändern, alles andere gleich lassen. So wird der Versuch fair.');}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-st]'),function(inp){inp.addEventListener('input',function(){s.steps[+inp.dataset.st]=inp.value;save();});});
+  if($('t2s'))$('t2s').addEventListener('click',function(){$('h2s').hidden=false;});
+  if($('c2s'))$('c2s').addEventListener('click',function(){var v=s.steps.map(num).filter(function(x){return !isNaN(x);}),fb=$('fb2s'),err='';
+    if(v.length<4)err='Tragt mindestens 4 Winkel ein.';else if(v.some(function(x){return x<5||x>85;}))err='Alle Winkel müssen zwischen 5° und 85° liegen.';
+    else if(v.some(function(x,i){return i>0&&x<=v[i-1];}))err='Ordnet die Winkel aufsteigend und ohne Doppelte.';else if(v.indexOf(30)<0)err='30° fehlt noch. So schräg steht das Modul von Familie K.';
+    tryInc('s2steps',!err,v.join('/'));if(err){fb.className='fb bad';fb.textContent=err;showHelp(fb,'s2steps',function(){s.steps=['15','30','45','60','75'];s.stepsOk=true;save();r2();});return;}
+    s.steps=v.map(String);while(s.steps.length<5)s.steps.push('');s.stepsOk=true;st.s3.rows=[];save();r2();});
+  bindNext();
+}
+
+/* Station 3: Messen */
+function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
+  var rows=vals.map(function(v,i){var r=s.rows[i],p=rowP(i),q=pct(i),ref=i===0;
+    var pc=ref?(s.refOk?'<b>'+fmt(p,0)+'</b>':'<input class="num" id="refP" inputmode="decimal" value="'+esc(s.refP)+'" aria-label="Leistung der Referenz in mW">'):(isNaN(p)?'–':fmt(p,0));
+    var qc=ref?'100 %':(isNaN(q)||!s.refOk?'–':'<b>'+fmt(q,0)+' %</b>');
+    return '<tr class="'+(i===st.row?'cur':'')+'" data-row="'+i+'"><td style="text-align:left">'+rowLabel(v,i)+'</td><td><input class="num" data-u="'+i+'" inputmode="decimal" value="'+esc(r.U)+'" aria-label="Spannung"></td><td><input class="num" data-ii="'+i+'" inputmode="decimal" value="'+esc(r.I)+'" aria-label="Stromstärke"></td><td class="v">'+pc+'</td><td class="v">'+qc+'</td></tr>';}).join('');
+  var warn=vals.map(function(v,i){var q=pct(i);return i>0&&s.refOk&&q>105?'Zeile '+(i+1)+': mehr als die Referenz? Prüft, ob ihr aus Versehen noch etwas anderes verändert habt (Lampe, Abstand, Raumlicht).':'';}).filter(Boolean);
+  $('task').innerHTML=head(2,'Referenz und Messreihe')+
+    '<p><b>1.</b> Messt zuerst die <b>Referenz</b> unter besten Bedingungen: senkrecht zur Lampe, 20 cm Abstand, nichts abgedeckt. <b>2.</b> Berechnet P für die Referenz selbst. <b>3.</b> Messt dann Zeile für Zeile. Die App rechnet ab Zeile 2 für euch.</p>'+
+    '<p class="muted">Tippt eine Zeile an, dann zeigt das Modell links die passende Einstellung.</p>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in mA</small></th><th>P = U · I<small>in mW</small></th><th>Anteil<small>an P<sub>Ref</sub></small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (s.refOk?'':'<div class="row"><button class="btn pri" type="button" id="c3r">Referenz-Leistung prüfen</button></div>')+'<p class="fb" id="fb3r"></p>'+
+    warn.map(function(t){return '<p class="note">'+t+'</p>';}).join('')+
+    (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c3">Messung abschließen</button></div>')+'<p class="fb" id="fb3"></p>'+
+    '<p class="hint"><b>Messtipps:</b> Lampe nur zum Messen einschalten und nicht anfassen, sie wird heiß. Immer mit angeschlossener Last messen. Kurz warten, bis der Wert ruhig ist.</p>'+
+    (st.done[2]?'<p class="win"><b>Gemessen!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  function upd(){save();var tb=document.querySelectorAll('[data-row]');vals.forEach(function(v,i){var tr=tb[i],p=rowP(i),q=pct(i);if(i>0){tr.children[3].innerHTML=isNaN(p)?'–':fmt(p,0);tr.children[4].innerHTML=isNaN(q)||!s.refOk?'–':'<b>'+fmt(q,0)+' %</b>';}else if(s.refOk){tr.children[3].innerHTML='<b>'+fmt(p,0)+'</b>';}});drawGraph();}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-u],[data-ii]'),function(inp){inp.addEventListener('input',function(){var i=+(inp.dataset.u||inp.dataset.ii);if(inp.dataset.u!=null)s.rows[i].U=inp.value;else s.rows[i].I=inp.value;if(i===0&&s.refOk){s.refOk=false;save();r3();return;}upd();});
+    inp.addEventListener('focus',function(){var i=+(inp.dataset.u||inp.dataset.ii);if(st.row!==i){applyRow(i);Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(tr,j){tr.className=j===i?'cur':'';});renderCtl();draw();}});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(tr){tr.addEventListener('click',function(){var i=+tr.dataset.row;if(st.row===i)return;applyRow(i);Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===i?'cur':'';});renderCtl();draw();});});
+  if($('refP'))$('refP').addEventListener('input',function(){s.refP=this.value;save();});
+  if($('c3r'))$('c3r').addEventListener('click',function(){var fb=$('fb3r'),U=num(s.rows[0].U),I=num(s.rows[0].I),P=num(s.refP);
+    if(isNaN(U)||isNaN(I)){fb.className='fb bad';fb.textContent='Tragt zuerst U und I der Referenz ein.';return;}
+    if(U<=0||U>15||I<=0||I>3000){fb.className='fb bad';fb.textContent='Prüft die Messwerte: Ist U in V und I in mA eingetragen?';return;}
+    var ok=!isNaN(P)&&Math.abs(P-U*I)<=Math.max(1,0.03*U*I);tryInc('s3ref',ok,s.refP);
+    if(ok){s.refOk=true;save();r3();helpMsg('fb3r','Richtig gerechnet! P_Ref = '+fmt(U*I,0)+' mW. Das sind ab jetzt 100 %.');return;}
+    fb.className='fb bad';fb.textContent=(!isNaN(P)&&Math.abs(P-U*I/1000)<0.03*U*I/1000+0.001)?'Fast! Ihr habt in W gerechnet. Gebt P in mW an (I steht in mA).':'Noch nicht. Rechnet P = U · I = '+fmt(U,2)+' V · '+fmt(I,0)+' mA.';
+    showHelp(fb,'s3ref',function(){s.refP=fmt(U*I,0);s.refOk=true;save();r3();});});
+  if($('c3'))$('c3').addEventListener('click',function(){var fb=$('fb3');if(!s.refOk){fb.className='fb bad';fb.textContent='Prüft zuerst die Referenz-Leistung.';return;}
+    var miss=vals.filter(function(v,i){return isNaN(rowP(i));}).length;if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch Messwerte in '+miss+(miss>1?' Zeilen.':' Zeile.');return;}
+    s.ok=true;finish(2);save();r3();});
+  bindNext();
+}
+
+/* Station 4: Auswerten */
+var MC4={
+  A:{q:'Eine ganze Zelle ist nur ¼ der Fläche. Trotzdem bricht die Leistung fast ganz ein. Warum?',o:['Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom, die abgedeckte Zelle bremst ihn für alle.','Die abgedeckte Zelle wird heiß und schaltet das Modul ab.','Das Messgerät misst im Schatten falsch.'],a:0,ok:'Genau! Wie bei einer Kette: Die schwächste Zelle bestimmt den Strom. Der Streifen nimmt jeder Zelle nur ein wenig Licht, deshalb sinkt die Leistung dort viel weniger.',bad:['','Das Modul schaltet nicht ab. Schaut auf die Schaltung: Wie sind die Zellen verbunden?','Das Messgerät misst richtig. Vergleicht „1 Zelle“ und „Streifen“: gleiche Fläche, ganz andere Leistung.']},
+  B:{q:'Was passiert mit jeder weiteren Lage Papier?',o:['Jede Lage lässt nur einen Teil des Lichts durch. Die Leistung sinkt jedes Mal um ungefähr denselben Anteil.','Ab der zweiten Lage ändert sich nichts mehr.','Jede Lage zieht genau gleich viele Milliwatt ab.'],a:0,ok:'Richtig! Darum lohnt sich schon das Putzen einer dünnen Staubschicht.',bad:['','Schaut auf euren Graphen: Sinkt die Leistung nach der zweiten Lage weiter?','Vergleicht die Abnahme von 0 auf 1 Lage mit der von 3 auf 4 Lagen. Ist sie gleich groß?']},
+  C:{q:'Der Abstand verdoppelt sich von 20 cm auf 40 cm. Die Leistung …',o:['sinkt auf deutlich weniger als die Hälfte.','sinkt genau auf die Hälfte.','bleibt fast gleich.'],a:0,ok:'Genau! Das Licht verteilt sich auf eine viel größere Fläche. Auf das Modul trifft deutlich weniger Licht.',bad:['','Schaut in eure Tabelle: Wie viel Prozent sind bei 40 cm übrig?','Schaut in eure Tabelle: Wie viel Prozent sind bei 40 cm übrig?']},
+  D:{q:'Wie hängt die Leistung vom Einfallswinkel ab?',o:['Bei kleinen Winkeln sinkt sie kaum, ab etwa 45° sinkt sie stark.','Sie sinkt mit jedem Grad gleich stark.','Sie ändert sich kaum.'],a:0,ok:'Richtig! Bei schrägem Licht trifft weniger Licht auf dieselbe Fläche, und ein Teil wird zurückgeworfen.',bad:['','Vergleicht den Verlust zwischen 0° und 15° mit dem zwischen 60° und 75°.','Schaut auf den größten Winkel in eurem Graphen.']}
+};
+var SATZ={A:'Je mehr Fläche einer einzelnen Zelle abgedeckt ist, desto …',B:'Je mehr Lagen auf dem Modul liegen, desto …',C:'Je größer der Abstand zur Lampe ist, desto …',D:'Je größer der Einfallswinkel ist, desto …'};
+function cmpAns(){var f=famPct(),d=st.pred-f;return Math.abs(d)<=10?2:(d>0?0:1);}
+function r4(){var s=st.s4,g=G(),f=famPct();
+  var cmpQ={q:'Bei <b>'+g.famLab+'</b> habt ihr <b>'+(isNaN(f)?'–':fmt(f,0)+' %')+'</b> gemessen. Eure Vorhersage war <b>'+st.pred+' %</b>. Eure Vorhersage war also …',o:['zu hoch: Es bleibt weniger Leistung übrig als gedacht.','zu niedrig: Es bleibt mehr Leistung übrig als gedacht.','ungefähr richtig (höchstens 10 Prozentpunkte daneben).'],a:cmpAns(),ok:'Stimmt! Genau dafür messen Physiker: um Vermutungen zu prüfen.',bad:'Vergleicht die beiden Zahlen noch einmal.'};
+  var cmp=mcHTML('cmp',cmpQ.q,cmpQ.o,s.cmp,cmpQ.a);
+  var mc=s.cmpOk?mcHTML('mc4',MC4[st.grp].q,MC4[st.grp].o,s.mc,MC4[st.grp].a):'';
+  var sent=s.mcOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Schreibt zwei Sätze mit euren Messwerten.</p><p class="muted">Satzbausteine: „'+SATZ[st.grp]+'“ · „Bei … sank die Leistung auf … % der Referenzleistung.“</p>'+
+    '<textarea class="free" id="sent" rows="3" placeholder="'+esc(SATZ[st.grp])+'">'+esc(s.sent)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn sec sm" type="button" id="ins">Satzanfang einfügen</button><button class="btn pri" type="button" id="c4">Fertig</button></div>')+'<p class="fb" id="fb4"></p></div>':'';
+  var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Meldet der Lehrkraft: <span class="k">Gruppe '+st.grp+' · '+g.name+' · bei '+g.famLab+': '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
+  $('task').innerHTML=head(3,'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten im Modell-Bereich.</p>'+cmp+mc+sent+report+(st.done[3]?'<p class="win"><b>Ausgewertet!</b> Gleich vergleicht die ganze Klasse.</p>':'')+'<div class="row">'+nextBtn(3)+'</div>';
+  mcBind('cmp',cmpQ,s,'cmp','s4cmp',r4);if(s.cmpOk)mcBind('mc4',MC4[st.grp],s,'mc','s4mc',r4);
+  if($('sent')){$('sent').addEventListener('input',function(){s.sent=this.value;save();});
+    if($('ins'))$('ins').addEventListener('click',function(){var t=$('sent');t.value=SATZ[st.grp].replace(' …','')+' '+(t.value||'');s.sent=t.value;save();t.focus();});
+    if($('c4'))$('c4').addEventListener('click',function(){var fb=$('fb4');if(s.sent.trim().length<40){fb.className='fb bad';fb.textContent='Schreibt zwei ganze Sätze und nennt einen Messwert in %.';return;}if(!/\d/.test(s.sent)){fb.className='fb bad';fb.textContent='Nennt mindestens einen Messwert (eine Zahl in %).';return;}s.ok=true;finish(3);save();r4();});}
+  bindNext();
+}
+
+/* Station 5: Familie K. */
+var Q5={q:'Was sollte Familie K. <b>zuerst</b> ändern?',o:['Das Modul so versetzen, dass kein Schatten mehr darauf fällt.','Das Modul putzen.','Auf einen Tag ohne Dunst warten.','Das Modul genauer zur Sonne ausrichten.'],a:0,
+  ok:'Genau! Der Schatten auf einer ganzen Zelle kostet am meisten Leistung, weil die Zellen in Reihe geschaltet sind. Den Dunst kann Familie K. gar nicht ändern.',bad:['','Putzen hilft, aber vergleicht im Klassenergebnis: Welcher Faktor lässt am wenigsten Leistung übrig?','Den Dunst kann Familie K. nicht ändern. Was kann sie selbst tun?','Ausrichten hilft ein wenig. Bei 30° bleibt aber noch viel Leistung übrig. Was kostet mehr?']};
+function r5(){var s=st.s5;
+  var q=mcHTML('q5',Q5.q,Q5.o,s.first,Q5.a);
+  var why=s.firstOk?'<div class="q"><p><b>Begründet eure Empfehlung</b> mit Messwerten aus eurer Gruppe oder aus dem Klassenergebnis.</p><textarea class="free" id="why5" rows="3" placeholder="Familie K. sollte zuerst …, weil …">'+esc(s.why)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c5">Fertig</button></div>')+'<p class="fb" id="fb5"></p></div>':'';
+  var refl=s.ok?'<div class="merk"><h3>Eure Vermutung vom Anfang</h3><p>Ihr habt vermutet: <span class="k">'+(st.guess?guessName(st.guess):'keine')+'</span>. '+(st.guess==='A'?'Das passt zum Klassenergebnis!':'Das Klassenergebnis zeigt: Der Schatten kostet am meisten.')+'</p></div>':'';
+  $('task').innerHTML=head(4,'Diagnose für Familie K.')+'<p>Die Markierungen links zeigen die vier Ursachen. Nutzt das Klassenergebnis am Beamer.</p>'+q+why+refl+(s.ok?saveCTA(true):'')+(st.done[4]?'<p class="win"><b>Fall gelöst!</b> Schnell fertig? Probiert den Profi-Zusatz.</p>':'')+'<div class="row">'+nextBtn(4)+'</div>';
+  mcBind('q5',Q5,s,'first','s5first',r5);
+  if($('why5')){$('why5').addEventListener('input',function(){s.why=this.value;save();});if($('c5'))$('c5').addEventListener('click',function(){var fb=$('fb5');if(s.why.trim().length<30){fb.className='fb bad';fb.textContent='Schreibt einen ganzen Satz mit „weil“.';return;}s.ok=true;finish(4);save();r5();});}
+  bindCTA();bindNext();
+}
+
+/* Profi-Zusatz */
+var QBYP={q:'Echte Module haben <b>Bypass-Dioden</b>. Sie leiten den Strom an einer verschatteten Zellgruppe vorbei. Was bewirken sie?',o:['Bei Schatten auf einer Zelle fällt nur ein Teil der Leistung weg statt fast alles.','Das Modul liefert dann mehr als 100 %.','Das Modul liefert dann gar nichts mehr.'],a:0,ok:'Richtig! Die anderen Zellgruppen arbeiten weiter. Darum haben Balkonkraftwerke mehrere Bypass-Dioden.',bad:['','Mehr als die Referenz geht nicht, das Licht wird ja nicht mehr.','Das Gegenteil: Die Dioden retten einen Teil der Leistung.']};
+var QMPP={q:'Euer Modul hängt an einem festen Widerstand. Ein echtes Balkonkraftwerk hat einen Wechselrichter, der immer die bestmögliche Leistung einstellt. Die Verluste bei Familie K. sind deshalb …',o:['etwas kleiner als bei euch. Die Reihenfolge der Faktoren bleibt aber gleich.','viel größer als bei euch.','genau gleich groß wie bei euch.'],a:0,ok:'Genau! Das ist eine Fehlerquelle beim Übertragen vom Modellversuch auf die Wirklichkeit.',bad:['','Der Wechselrichter holt das Beste heraus, die Verluste werden also nicht größer.','Der Wechselrichter stellt sich immer neu ein, euer Widerstand nicht. Dann kann es nicht genau gleich sein.']};
+function r6(){var s=st.s6;
+  var euro='<div class="q"><p><b>Was kostet der Schatten?</b> Ohne Verluste liefert das Balkonkraftwerk etwa <b>700 kWh</b> im Jahr. Mit dem Schatten sind es nur <b>55 %</b> davon. Eine kWh kostet <b>0,35 €</b>. Wie viel Geld verliert Familie K. pro Jahr?</p><div class="row"><input class="num'+(s.euroOk?' ok':'')+'" id="eu" inputmode="decimal" value="'+esc(s.euro)+'"'+(s.euroOk?' disabled':'')+'><span>€ pro Jahr</span>'+(s.euroOk?'':'<button class="btn pri" type="button" id="c6e">Prüfen</button>')+'</div><p class="fb" id="fb6e"></p></div>';
+  var byp=mcHTML('byp',QBYP.q,QBYP.o,s.byp,QBYP.a),mpp=mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a);
+  $('task').innerHTML=head(5,'Für Profis')+'<p>Im Steuerpult könnt ihr jetzt alle vier Faktoren gleichzeitig einstellen. Probiert Kombinationen im Modell (Plan B einschalten).</p>'+euro+byp+mpp+(s.euroOk&&s.bypOk&&s.mppOk?saveCTA(true):'');
+  if($('eu'))$('eu').addEventListener('input',function(){s.euro=this.value;save();});
+  if($('c6e'))$('c6e').addEventListener('click',function(){var v=num(s.euro),fb=$('fb6e'),ok=Math.abs(v-110.25)<=2;tryInc('s6euro',ok,s.euro);
+    if(ok){s.euroOk=true;save();r6();helpMsg('fb6e','Richtig! 45 % von 700 kWh = 315 kWh. 315 kWh · 0,35 € = 110,25 € pro Jahr.');return;}
+    fb.className='fb bad';fb.textContent=Math.abs(v-134.75)<=2?'Das ist der Wert für die Energie, die noch ankommt. Gefragt ist der Verlust (45 %).':'Tipp: Verlust = 100 % − 55 % = 45 %. Rechnet erst die kWh, dann mal 0,35 €.';
+    showHelp(fb,'s6euro',function(){s.euro='110,25';s.euroOk=true;save();r6();});});
+  if(s.euroOk)helpMsg('fb6e','Richtig! 45 % von 700 kWh = 315 kWh. 315 kWh · 0,35 € = 110,25 € pro Jahr.');
+  mcBind('byp',QBYP,s,'byp','s6byp',r6);mcBind('mpp',QMPP,s,'mpp','s6mpp',r6);bindCTA();
+}
+
+/* ---------- Lehrkraft: Klassenergebnis ---------- */
+var TG=['A1','A2','B1','B2','C1','C2','D1','D2'];
+function tLoad(){try{return JSON.parse(localStorage.getItem(TKEY)||'{}')||{};}catch(e){return {};}}
+function tSave(o){try{localStorage.setItem(TKEY,JSON.stringify(o));}catch(e){}}
+function openTeach(){var o=tLoad(),box=$('teach');box.hidden=false;
+  $('tIn').innerHTML=TG.map(function(k){var g=GROUPS[k.charAt(0)];return '<label class="ctlrow"><span>GRUPPE '+k+' · '+g.name.toUpperCase()+' · '+g.famLab.toUpperCase()+'</span><span class="row"><input class="num" data-t="'+k+'" inputmode="decimal" value="'+esc(o[k]||'')+'"> %</span></label>';}).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-t]'),function(i){i.addEventListener('input',function(){var x=tLoad();x[i.dataset.t]=i.value;tSave(x);drawTeach();});});
+  drawTeach();}
+function teachRows(){var o=tLoad();return GKEYS.map(function(k){var v=[o[k+'1'],o[k+'2']].map(num).filter(function(x){return !isNaN(x);});return {k:k,g:GROUPS[k],v:v.length?v.reduce(function(a,b){return a+b;},0)/v.length:NaN,n:v.length};});}
+function drawTeach(){var c=$('tCv'),w=c.getBoundingClientRect().width||700,h=Math.round(Math.min(420,w*0.52)),dpr=window.devicePixelRatio||1;c.style.height=h+'px';c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
+  var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=col('surface');x.fillRect(0,0,w,h);
+  var rows=teachRows().filter(function(r){return !isNaN(r.v);}).sort(function(a,b){return a.v-b.v;}),F=ff();
+  x.fillStyle=col('ink');x.font='600 18px '+F;x.textAlign='left';x.textBaseline='top';x.fillText('So viel Leistung bleibt in der Situation von Familie K. übrig',12,8);
+  if(!rows.length){x.fillStyle=col('ink-soft');x.font='16px '+F;x.fillText('Tragt die Werte der Gruppen ein.',12,44);return;}
+  var L=Math.min(260,w*0.34),R=w-70,top=48,bh=Math.min(56,(h-top-24)/4-12);
+  rows.forEach(function(r,i){var y=top+i*(bh+14),bw=(R-L)*Math.min(100,r.v)/100;x.fillStyle=col('ink');x.font='bold 16px '+F;x.textAlign='right';x.textBaseline='middle';
+    x.fillText((i+1)+'. '+r.g.rank,L-12,y+bh/2-9);x.font='14px '+F;x.fillStyle=col('ink-soft');x.fillText(r.g.famLab,L-12,y+bh/2+11);
+    x.fillStyle=col('surface-2');x.fillRect(L,y,R-L,bh);x.fillStyle=r.g.col==='#1A1F36'?col('ink'):r.g.col;x.fillRect(L,y,Math.max(3,bw),bh);
+    x.fillStyle=col('ink');x.textAlign='left';x.font='bold 18px '+F;x.fillText(fmt(r.v,0)+' %',L+bw+8,y+bh/2);});
+  x.fillStyle=col('ink-soft');x.font='13px '+F;x.textAlign='left';x.textBaseline='bottom';x.fillText('Mittelwert der beiden Gruppen je Faktor · Platz 1 = größter Verlust',12,h-4);}
+function bindTeach(){$('teachBtn').addEventListener('click',openTeach);$('tClose').addEventListener('click',function(){$('teach').hidden=true;});
+  $('tModelBtn').addEventListener('click',function(){var o={};TG.forEach(function(k){var g=k.charAt(0);o[k]=fmt(modelPct(g,GROUPS[g].famV)+(k.charAt(1)==='2'?1.5:-1.5),0);});tSave(o);openTeach();});
+  $('tClear').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich leeren?';setTimeout(function(){b._armed=false;b.textContent='Alle Werte löschen';},3000);return;}tSave({});openTeach();});
+  window.addEventListener('resize',function(){if(!$('teach').hidden)drawTeach();});}
+
+/* ---------- Ergebnisse als Text ---------- */
+var TL=[['s2meas','Planen · Was messen?'],['s2pf','Planen · Formel'],['s2konst','Planen · Konstanten'],['s2steps','Planen · eigene Winkel (Gruppe D)'],['s3ref','Messen · P der Referenz berechnet'],['s4cmp','Auswerten · Vorhersage verglichen'],['s4mc','Auswerten · Deutung'],['s5first','Familie K. · Empfehlung'],['s6euro','Profi · Kosten'],['s6byp','Profi · Bypass-Dioden'],['s6mpp','Profi · Wechselrichter']];
+function resText(){
+  var r=st.res||{},d=new Date(),L=[],g=st.grp?G():null;
+  L.push('SOLAR-LABOR · Warum liefert das Balkonkraftwerk so wenig?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Gruppe: '+(g?st.grp+' · '+g.name+' ('+g.lvl+')':'keine gewählt'));
+  L.push(standLine());
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → passt':'  → laut Klassenergebnis meist A (Schatten)'));
+  L.push('VORHERSAGE: bei '+(g?g.famLab:'–')+' bleiben '+st.pred+' %');
+  L.push('');
+  L.push('MESSREIHE'+(st.model?' (im Modell gemessen, Plan B)':''));
+  if(g){rowVals().forEach(function(v,i){var row=st.s3.rows[i]||{},p=rowP(i),q=pct(i);L.push('  '+rowLabel(v,i)+': U = '+(row.U||'–')+' V, I = '+(row.I||'–')+' mA, P = '+(isNaN(p)?'–':fmt(p,0)+' mW')+', Anteil = '+(isNaN(q)?'–':fmt(q,0)+' %'));});
+    L.push('  P der Referenz selbst berechnet: '+(st.s3.refP||'–')+' mW'+(st.s3.refOk?'  ✓':''));L.push('  Wert für Familie K. ('+g.famLab+'): '+(isNaN(famPct())?'–':fmt(famPct(),0)+' %'));}
+  L.push('');
+  L.push('AUSWERTUNG');
+  L.push('  Ergebnissatz: '+((st.s4.sent||'').trim()||'(leer)'));
+  if(st.grp)L.push('  '+strip(MC4[st.grp].q)+' → '+segAns(MC4[st.grp],st.s4.mc));
+  L.push('');
+  L.push('FAMILIE K.');
+  L.push('  Empfehlung: '+segAns(Q5,st.s5.first));L.push('  Begründung: '+((st.s5.why||'').trim()||'(leer)'));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tt=triesLines(L,TL,'s6');
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  L.push('  Kosten des Schattens: '+(st.s6.euro?st.s6.euro+' €'+(st.s6.euroOk?'  ✓':'  ✗'):'(nicht bearbeitet)'));
+  L.push('  Bypass-Dioden: '+(st.s6.byp==null?'(nicht bearbeitet)':segAns(QBYP,st.s6.byp)));L.push('  Wechselrichter: '+(st.s6.mpp==null?'(nicht bearbeitet)':segAns(QMPP,st.s6.mpp)));
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),grp:st.grp,model:st.model,done:st.done,guess:st.guess,pred:st.pred,rows:st.s3.rows,vals:st.grp?rowVals():[],refP:st.s3.refP,fam:isNaN(famPct())?null:Math.round(famPct()),sent:st.s4.sent||'',why:st.s5.why||'',tries:st.tries,help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('SL-v1|'+json));
+  return L.join('\r\n');
+}
+
+/* ---------- Gesamt ---------- */
+var lastSt=null;
+function render(){if(st.station!==lastSt){if(STATIONS[st.station].scene==='setup'&&st.grp&&st.station!==5){ensureRows();applyRow(Math.min(st.row,rowVals().length-1));}if(st.station===5)st.set={d:20,a:0,n:0,s:0};lastSt=st.station;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5,r6][st.station]();resize();}
+bindReset();initSave();bindTeach();
+window.addEventListener('resize',resize);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;if(st.station>0&&!st.grp)st.station=0;
+render();remind();startDialog();
+})();
+
+</script>
+</body>
+</html>

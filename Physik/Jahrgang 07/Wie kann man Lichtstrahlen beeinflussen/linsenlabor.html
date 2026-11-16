@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Linsen-Labor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout: Kopfleiste mit Stationen-Weg · links optische Bank + Blick auf Dia und Schirm (fest) · rechts Steuerpult + Stationsaufgabe; auf schmalen Geräten untereinander.
+   Gleiche Bildsprache wie Parabel-Fahrstuhl und Parabel-Kran, Akzent: Lampenlicht-Orange. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,230px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+/* Erklär-Film */
+.player{display:flex;flex-direction:column;gap:8px;background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.prow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chap{display:flex;gap:6px;flex-wrap:wrap}
+.chap button{width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:14px}
+.chap button.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chap button.seen{border-color:var(--ok)}
+.bar{height:6px;background:var(--line);border-radius:999px;overflow:hidden;flex:1 1 120px}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+.cap{font-size:18px;line-height:1.4;min-height:3.2em;font-weight:700}
+.cap .k{color:var(--accent)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:8px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:30px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:60px;height:56px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}.choice.grid4{grid-template-columns:1fr 1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+.tf{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.tf .why{grid-column:1/-1;font-size:15px}
+@media (max-width:520px){.tf{grid-template-columns:1fr}}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Linsen-Labor</b><span>Wie entsteht mit einer Sammellinse ein Bild?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+
+<main>
+  <section class="card plot" aria-label="Optische Bank">
+    <canvas id="cv" aria-label="Optische Bank mit Leuchte, Dia, Sammellinse und Schirm (Seitenansicht)"></canvas>
+    <div class="player" id="player" hidden>
+      <p class="cap" id="cap"></p>
+      <div class="prow">
+        <button class="btn pri" type="button" id="play">▶ Film abspielen</button>
+        <div class="chap" id="chap" aria-label="Kapitel"></div>
+        <div class="bar" aria-hidden="true"><i id="prog"></i></div>
+        <label class="chk"><input type="checkbox" id="speak"> Vorlesen</label>
+      </div>
+    </div>
+    <div class="views">
+      <div class="view"><canvas id="cvDia" aria-label="Das Dia von vorne"></canvas><small><b>Dia</b> (Gegenstand)</small></div>
+      <div class="view"><canvas id="cvScr" aria-label="Was auf dem Schirm zu sehen ist"></canvas><small><b>Schirm</b>: so sieht das Bild aus</small></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="ctlCard">
+      <p class="eyebrow">Steuerpult</p>
+      <div id="ctlOn" class="ctl">
+        <div class="lift">
+          <div class="disp"><small>SCHIRM HINTER DER LINSE</small><span id="dispS">40,0 cm</span></div>
+          <div class="keys">
+            <button class="key" id="sl" type="button" aria-label="Schirm 0,5 cm näher an die Linse">◀</button>
+            <button class="key" id="sr" type="button" aria-label="Schirm 0,5 cm weiter weg">▶</button>
+          </div>
+        </div>
+        <input type="range" id="s" min="5" max="60" step="0.5" value="40" aria-label="Regler: Abstand Linse–Schirm">
+        <div class="scale"><span>5 cm (nah)</span><span>60 cm (weit)</span></div>
+        <div id="gRow" class="ctl" hidden>
+          <hr class="sep">
+          <div class="row" style="justify-content:space-between"><span class="muted">Dia vor der Linse</span><b id="dispG" style="font-variant-numeric:tabular-nums">30 cm</b></div>
+          <input type="range" id="g" min="5" max="50" step="1" value="30" aria-label="Regler: Abstand Dia–Linse">
+          <div class="scale"><span>5 cm</span><span>50 cm</span></div>
+        </div>
+        <p class="muted" id="gFixed">Das Dia steht <b id="gTxt">30 cm</b> vor der Linse. Die Brennweite der Linse ist f = 10 cm.</p>
+        <label class="chk" id="raysRow"><input type="checkbox" id="tRays"> Röntgenblick: Lichtstrahlen zeigen</label>
+        <label class="chk" id="coverRow" hidden><input type="checkbox" id="tCover"> Obere Hälfte der Linse abdecken</label>
+      </div>
+      <p class="locked" id="ctlOff" hidden></p>
+    </section>
+
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var F=10, A=3, GH=2, FR=2.6;          /* Brennweite, Linsenradius, halbe L-Höhe, halbe Dia-Größe (cm) */
+var STATIONS=[
+  {key:'s1',name:'Beobachten'},
+  {key:'s2',name:'Erklär-Film'},
+  {key:'s3',name:'Scharf stellen'},
+  {key:'s4',name:'Merksatz'},
+  {key:'s5',name:'Profi-Zusatz',pro:true}
+];
+var GUESS=[{k:'A',t:'L'},{k:'B',t:'mirror'},{k:'C',t:'rot'},{k:'D',t:'none'}];
+var TRAIN=[15,20,25,40,50];
+
+var st={station:0,done:[false,false,false,false,false],s:40,g:30,rays:false,cover:false,guess:null,
+  s1:{sharp:false,ans:{},ok:false,tip:0},
+  s2:{seen:[false,false,false,false,false,false],watched:false,ans:{},ok:false},
+  s3:{hits:0,g:null,last:null,tip:0,fin:null,finOk:false,active:false},
+  s4:{gaps:{},ok:false,reell:{},reellOk:false,refl:''},
+  s5:{a:null,b:null},res:{},tries:{},t0:null};
+
+/* ---------- Speicher (nur Bequemlichkeit) ---------- */
+var KEY='linsen-labor-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:{seen:st.s2.seen,watched:st.s2.watched,ans:st.s2.ans,ok:st.s2.ok},s3:{hits:st.s3.hits,tip:st.s3.tip,fin:st.s3.fin,finOk:st.s3.finOk},s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,t0:st.t0}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  if(x.s1)st.s1=x.s1;if(x.s2){st.s2.seen=x.s2.seen||st.s2.seen;st.s2.watched=!!x.s2.watched;st.s2.ans=x.s2.ans||{};st.s2.ok=!!x.s2.ok;}
+  if(x.s3){st.s3.hits=x.s3.hits||0;st.s3.tip=x.s3.tip||0;st.s3.fin=x.s3.fin;st.s3.finOk=!!x.s3.finOk;}
+  if(x.s4)st.s4=x.s4;if(x.s5)st.s5=x.s5;if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.t0)st.t0=x.t0;}catch(e){}}
+
+/* ---------- Versuche zählen ---------- */
+var RKEY='linsen-labor-resets';
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+
+/* ---------- Physik ---------- */
+function binv(g){return 1/F-1/g;}
+function bOf(g){var v=binv(g);return v>0?1/v:Infinity;}
+function blurR(g,s){return A*Math.abs(1-s*binv(g));}
+function isSharp(g,s){var b=bOf(g);return isFinite(b)&&Math.abs(s-b)<=0.5;}
+function fmt(v,d){var r=Math.round(v*Math.pow(10,d||0))/Math.pow(10,d||0);return String(r).replace('.',',');}
+function fmtS(v){return (Math.round(v*2)/2).toFixed(1).replace('.',',');}
+
+/* ---------- Farben & Schrift ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function font(px,b){return (b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+
+/* ---------- Optische Bank (Seitenansicht) ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,VS=1,AY=0;
+var X0=-62,X1=64,PADL=14,PADR=14;
+function X(x){return PADL+(x-X0)/(X1-X0)*(W-PADL-PADR);}
+function Y(y){return AY-y*VS;}
+function resize(){
+  var w=cv.getBoundingClientRect().width||640;
+  var h=Math.round(Math.max(250,Math.min(w*0.52,400)));
+  var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;VS=(H-86)/13;AY=34+6.5*VS;
+  sizeView($('cvDia'));sizeView($('cvScr'));
+  draw();
+}
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function dotPx(x,y,c,r){ctx.beginPath();ctx.arc(x,y,r||5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function lensPath(cover){var hw=Math.max(6,W*0.012),top=Y(A),bot=Y(-A),cx=X(0);
+  ctx.beginPath();ctx.moveTo(cx,top);ctx.quadraticCurveTo(cx+hw*2,AY,cx,bot);ctx.quadraticCurveTo(cx-hw*2,AY,cx,top);ctx.closePath();
+  ctx.fillStyle=col('lens');ctx.globalAlpha=.75;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=col('lens-edge');ctx.lineWidth=2;ctx.stroke();
+  if(cover){ctx.fillStyle=col('axis');ctx.fillRect(cx-hw*1.4,top-4,hw*2.8,AY-top+3);tag('Pappe',cx,top-14,col('axis'));}}
+function base(o){
+  var g=o.g,s=o.s;
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  /* Schiene + Maßstab */
+  var railY=Y(-6.6);
+  ctx.fillStyle=col('rail');ctx.fillRect(X(X0+1),railY,X(X1-1)-X(X0+1),8);
+  ctx.fillStyle=col('ink-soft');ctx.font=font(W<520?10:12);ctx.textAlign='center';ctx.textBaseline='top';
+  for(var x=-60;x<=60;x+=5){var big=x%10===0;line(X(x),railY+8,X(x),railY+(big?16:12),col('rail'),1.2);if(big&&Math.abs(x)<60&&(W>=520||x%20===0))ctx.fillText(Math.abs(x),X(x),railY+18);}
+  ctx.textAlign='left';ctx.fillText('cm',X(X1-1)-14,railY+18);
+  /* optische Achse */
+  line(X(X0+1),AY,X(X1-1),AY,col('axis'),1.2,[6,6],.7);
+  /* Brennpunkte */
+  [-F,F].forEach(function(fx){dotPx(X(fx),AY,col('axis'),3.5);ctx.fillStyle=col('axis');ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('F',X(fx),AY+6);});
+  /* Leuchte */
+  var lx=-g-8.5,lw=6;
+  if(o.lamp!==false){
+    var grd=ctx.createLinearGradient(X(lx+lw),0,X(-g),0);grd.addColorStop(0,'rgba(255,214,102,.55)');grd.addColorStop(1,'rgba(255,214,102,.12)');
+    ctx.fillStyle=grd;ctx.beginPath();ctx.moveTo(X(lx+lw),Y(1.6));ctx.lineTo(X(-g),Y(FR));ctx.lineTo(X(-g),Y(-FR));ctx.lineTo(X(lx+lw),Y(-1.6));ctx.closePath();ctx.fill();
+    ctx.fillStyle=col('navy');roundRect(X(lx),Y(2.4),X(lx+lw)-X(lx),4.8*VS,6);ctx.fill();
+    ctx.beginPath();ctx.arc(X(lx+lw)-3,AY,Math.max(4,VS*0.7),0,Math.PI*2);ctx.fillStyle='#FFD666';ctx.fill();
+    line(X(lx+lw/2),Y(-2.4),X(lx+lw/2),railY,col('rail'),3);
+    ctx.fillStyle=col('ink-soft');ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('Leuchte',X(lx+lw/2),Y(2.4)-4);
+  }
+  /* Dia */
+  var dx=X(-g);
+  ctx.fillStyle='#F2EFE6';ctx.strokeStyle=col('axis');ctx.lineWidth=1.5;ctx.fillRect(dx-3,Y(FR),6,2*FR*VS);ctx.strokeRect(dx-3,Y(FR),6,2*FR*VS);
+  ctx.fillStyle=col('red');ctx.fillRect(dx-2.5,Y(GH),5,2*GH*VS);
+  line(dx,Y(-FR),dx,railY,col('rail'),3);
+  /* Linse */
+  line(X(0),Y(-A),X(0),railY,col('rail'),3);
+  lensPath(o.cover);
+  /* Schirm */
+  if(o.screen!==false){
+    var sx=X(s);
+    ctx.fillStyle=col('surface-2');ctx.strokeStyle=col('axis');ctx.lineWidth=1.5;ctx.fillRect(sx,Y(5),7,10*VS);ctx.strokeRect(sx,Y(5),7,10*VS);
+    if(o.spot)spotOnScreen(g,s,o.cover);
+    line(sx+3.5,Y(-5),sx+3.5,railY,col('rail'),3);
+  }
+  /* Beschriftung oben */
+  var labels=[{x:-g,t:'Dia „L“'},{x:0,t:'Sammellinse'}];if(o.screen!==false)labels.push({x:s,t:'Schirm'});
+  ctx.font=font(12,true);ctx.textBaseline='bottom';ctx.textAlign='center';
+  var lastR=-1e9;labels.sort(function(a,b){return a.x-b.x;}).forEach(function(l){var px=X(l.x),w=ctx.measureText(l.t).width;var yy=14;if(px-w/2<lastR+4)yy=28;else lastR=px+w/2;ctx.fillStyle=col('ink');ctx.fillText(l.t,px,yy+6);});
+  /* Abstände */
+  if(o.dims!==false){
+    var dy=Y(-5.4);
+    dim(-g,0,dy,fmt(g)+' cm');
+    if(o.screen!==false)dim(0,s,dy,fmtS(s)+' cm');
+  }
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function dim(a,b,y,t){var x1=X(a),x2=X(b);if(x2-x1<8)return;var c=col('ink-soft');line(x1,y,x2,y,c,1.2);line(x1,y-4,x1,y+4,c,1.2);line(x2,y-4,x2,y+4,c,1.2);if(x2-x1>34)tag(t,(x1+x2)/2,y,c);}
+/* Lichtfleck auf dem Schirm (Seitenansicht) */
+function spotOnScreen(g,s,cover){
+  var k=-s/g,fac=1-s*binv(g),lo=Math.min(k*FR,-k*FR),hi=Math.max(k*FR,-k*FR);
+  var hmin=cover?0:-A,hmax=A,o1=hmin*fac,o2=hmax*fac;lo+=Math.min(o1,o2);hi+=Math.max(o1,o2);
+  var hgt=hi-lo,alpha=Math.max(.18,Math.min(1,3/Math.max(hgt,.1)))*(cover?.7:1);
+  var x=X(s);ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#FFC94D';ctx.fillRect(x-4,Y(Math.min(hi,5)),5,Math.max(2,(Math.min(hi,5)-Math.max(lo,-5))*VS));ctx.restore();
+}
+/* Strahl von Gegenstandspunkt y über Linsenhöhe h bis zum Schirm bei s */
+function rayTo(g,y,h,s){return {x0:-g,y0:y,x1:0,y1:h,x2:s,y2:y*(-s/g)+h*(1-s*binv(g))};}
+function drawRays(g,s,y,c,cover,alpha,upto){
+  var hs=cover?[0.6,1.4,2.2,2.9]:[-2.8,-1.4,0,1.4,2.8];
+  hs.forEach(function(h){var r=rayTo(g,y,h,s);var p=upto==null?2:upto;
+    if(p<=1){line(X(r.x0),Y(r.y0),X(r.x0+(r.x1-r.x0)*p),Y(r.y0+(r.y1-r.y0)*p),c,2,null,alpha);return;}
+    line(X(r.x0),Y(r.y0),X(r.x1),Y(r.y1),c,2,null,alpha);var q=Math.min(1,p-1);
+    line(X(r.x1),Y(r.y1),X(r.x1+(r.x2-r.x1)*q),Y(r.y1+(r.y2-r.y1)*q),c,2,null,alpha);});
+}
+
+function draw(){
+  if(!W)return;
+  var k=STATIONS[st.station].key;
+  if(k==='s2'){drawFilm();return;}
+  var o={g:st.g,s:st.s,cover:st.cover&&k==='s5',spot:true};
+  base(o);
+  if(st.rays&&k!=='s1'){
+    drawRays(st.g,st.s,GH,col('ray1'),o.cover,.95);drawRays(st.g,st.s,-GH,col('ray2'),o.cover,.95);
+    dotPx(X(-st.g),Y(GH),col('ray1'),5);dotPx(X(-st.g),Y(-GH),col('ray2'),5);
+    var b=bOf(st.g);if(isFinite(b)&&b<=st.s+0.01&&b<X1){var yb=GH*(-b/st.g);dotPx(X(b),Y(yb),col('ray1'),5);dotPx(X(b),Y(-yb),col('ray2'),5);}
+  }
+  renderViews(st.g,st.s,o.cover);
+}
+
+/* ---------- Dia- und Schirmansicht ---------- */
+var off=document.createElement('canvas'),octx=off.getContext('2d');
+function sizeView(c){var w=c.getBoundingClientRect().width||200,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);c._w=w;}
+function lShape(c2,scale){ /* L in Dia-Koordinaten, gezeichnet in einen bereits transformierten Kontext */
+  c2.fillStyle='#FFF3D6';c2.fillRect(-FR,-FR,2*FR,2*FR);
+  c2.fillStyle='#E8432E';c2.fillRect(-1.3,-GH,0.85,2*GH);c2.fillRect(-1.3,-GH,2.6,0.85);
+}
+function renderDia(){var c=$('cvDia'),x=c.getContext('2d'),w=c.width,ppc=w/7;
+  x.setTransform(1,0,0,1,0,0);x.fillStyle=col('room');x.fillRect(0,0,w,w);
+  x.setTransform(ppc,0,0,-ppc,w/2,w/2);lShape(x);x.setTransform(1,0,0,1,0,0);}
+var SAMPLES=(function(){var a=[],n=56,gold=Math.PI*(3-Math.sqrt(5));for(var i=0;i<n;i++){var r=Math.sqrt((i+.5)/n),t=i*gold;a.push([r*Math.cos(t),r*Math.sin(t)]);}return a;})();
+function renderScreen(g,s,cover){
+  var c=$('cvScr'),x=c.getContext('2d'),w=c.width,ppc=w/10.5,k=-s/g,fac=1-s*binv(g);
+  if(off.width!==w){off.width=w;off.height=w;}
+  octx.setTransform(1,0,0,1,0,0);octx.fillStyle='#000';octx.fillRect(0,0,w,w);
+  octx.setTransform(ppc*k,0,0,-ppc*k,w/2,w/2);lShape(octx);octx.setTransform(1,0,0,1,0,0);
+  x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-over';x.globalAlpha=1;x.fillStyle='#000';x.fillRect(0,0,w,w);
+  x.globalCompositeOperation='lighter';
+  var pts=SAMPLES.filter(function(p){return !cover||p[1]>0;});
+  var rpx=A*Math.abs(fac)*ppc;
+  /* Helligkeit: Licht verteilt sich auf die Bildfläche */
+  var bright=Math.min(1.25,Math.pow(Math.max(.35,1/Math.abs(k)),.6))*(cover?.55:1);
+  if(rpx<0.6){x.globalAlpha=Math.min(1,bright);x.drawImage(off,0,0);}
+  else{if('filter' in x)x.filter='blur('+Math.min(12,rpx/5).toFixed(1)+'px)';for(var i=0;i<pts.length;i++){x.globalAlpha=bright/pts.length;x.drawImage(off,pts[i][0]*A*fac*ppc,-pts[i][1]*A*fac*ppc);}}
+  x.filter='none';x.globalCompositeOperation='source-over';x.globalAlpha=1;
+  /* Papier-Schirm: leichte Grundhelligkeit + Rand */
+  x.fillStyle='rgba(255,255,255,.06)';x.fillRect(0,0,w,w);
+}
+function renderViews(g,s,cover){renderDia();renderScreen(g,s,cover);}
+
+/* ---------- Erklär-Film ---------- */
+var FG=30,FB=15;
+var FILM=[
+  {d:7500,t:'Die Leuchte strahlt das Dia an. Von <span class="k">jedem Punkt</span> des L geht Licht in <span class="k">alle Richtungen</span> aus.'},
+  {d:7000,t:'Nur ein Teil dieses Lichts trifft auf die <span class="k">Sammellinse</span>.'},
+  {d:9000,t:'Die Linse lenkt die Strahlen so ab, dass sie sich hinter der Linse wieder <span class="k">in einem Punkt</span> treffen: im <span class="k">Bildpunkt</span>.'},
+  {d:8500,t:'Licht vom <span class="k">oberen</span> Punkt landet <span class="k">unten</span>. Licht vom unteren Punkt (blau) landet oben.'},
+  {d:9000,t:'Die Strahlen <span class="k">kreuzen sich</span> hinter der Linse. Punkt für Punkt entsteht so das Bild. Es steht <span class="k">auf dem Kopf</span>.'},
+  {d:11000,t:'Steht der Schirm nicht am Bildpunkt, kommt das Licht eines Punktes als <span class="k">Fleck</span> an. Die Flecken verschwimmen: Das Bild ist <span class="k">unscharf</span>.'}
+];
+var film={i:0,t:0,playing:false,last:null};
+function easeIO(p){return p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;}
+function filmS(){if(film.i<5)return FB;var p=film.t/FILM[5].d,v=Math.sin(2*Math.PI*p);return FB+(v>0?13:7)*v;}
+function drawFilm(){
+  var i=film.i,p=Math.min(1,film.t/FILM[i].d),c1=col('ray1'),c2=col('ray2');
+  var showScr=i>=4,s=filmS();
+  base({g:FG,s:s,screen:showScr,spot:i===5,dims:false});
+  var P1y=GH,P2y=-GH,bx=X(FB),yb=GH*(-FB/FG);
+  if(i===0){
+    var n=13,R=Math.min(W,H)*0.42*easeIO(p);
+    for(var a=0;a<n;a++){var ang=(-1.35+2.7*a/(n-1));line(X(-FG),Y(P1y),X(-FG)+Math.cos(ang)*R,Y(P1y)+Math.sin(ang)*R,c1,2,null,.9);}
+    dotPx(X(-FG),Y(P1y),c1,6+2*Math.sin(film.t/180));tag('Punkt oben',X(-FG)+8,Y(P1y)-18,c1,'left');
+  } else {
+    if(i===1){var nn=13,RR=Math.min(W,H)*0.42;for(var a2=0;a2<nn;a2++){var an=(-1.35+2.7*a2/(nn-1));line(X(-FG),Y(P1y),X(-FG)+Math.cos(an)*RR,Y(P1y)+Math.sin(an)*RR,c1,2,null,.9-.75*p);}
+      drawRays(FG,FB,P1y,c1,false,1,easeIO(p));}
+    else if(i===2){drawRays(FG,FB,P1y,c1,false,1,1+easeIO(Math.min(1,p*1.15)));
+      if(p>.8){var pulse=1+.3*Math.sin(film.t/120);dotPx(bx,Y(yb),c1,6*pulse);tag('Bildpunkt',bx+10,Y(yb)+16,c1,'left');}}
+    else if(i===3){drawRays(FG,FB,P1y,c1,false,.9,2);dotPx(bx,Y(yb),c1,5);
+      drawRays(FG,FB,P2y,c2,false,1,easeIO(p)*2);dotPx(X(-FG),Y(P2y),c2,6);
+      if(p>.85){dotPx(bx,Y(-yb),c2,6);tag('Bildpunkt',bx+10,Y(-yb)-16,c2,'left');}
+      tag('oben',X(-FG)-8,Y(P1y),c1,'right');tag('unten',X(-FG)-8,Y(P2y),c2,'right');}
+    else if(i===4){drawRays(FG,FB,P1y,c1,false,.9,2);drawRays(FG,FB,P2y,c2,false,.9,2);
+      var cr=X(FB*0.42);ctx.save();ctx.strokeStyle=col('ink');ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.ellipse(cr,AY,Math.max(22,(X(FB)-X(0))*0.33),VS*2.2,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+      tag('Hier kreuzen sie sich',cr,Y(-4.3),col('ink'));
+      var hgt=easeIO(p);ctx.fillStyle=col('red');
+      var top=-yb*hgt,bot=yb*hgt;ctx.fillRect(bx-2.5,Y(Math.max(top,bot)),5,Math.abs(top-bot)*VS);
+      if(p>.6){tag('Bild: auf dem Kopf',bx+12,Y(-3),col('red'),'left');}}
+    else if(i===5){var sx=s;drawRays(FG,sx,P1y,c1,false,.95,2);drawRays(FG,sx,P2y,c2,false,.95,2);
+      var sharp=Math.abs(sx-FB)<0.8;tag(sharp?'scharf ✓':'unscharf',X(sx)+12,Y(4.4),sharp?col('ok'):col('bad'),'left');}
+    dotPx(X(-FG),Y(P1y),c1,6);
+  }
+  renderViews(FG,showScr?s:FB,false);
+  if(!showScr){var c=$('cvScr'),x=c.getContext('2d');x.setTransform(1,0,0,1,0,0);x.fillStyle=col('room');x.fillRect(0,0,c.width,c.width);x.fillStyle='#9AA2BF';x.font=(Math.round(c.width/14))+'px '+getComputedStyle(document.body).fontFamily;x.textAlign='center';x.textBaseline='middle';x.fillText('noch kein Schirm',c.width/2,c.width/2);}
+  $('prog').style.width=Math.round(((i+p)/FILM.length)*100)+'%';
+}
+function setCap(){$('cap').innerHTML='<span class="muted" style="font-weight:400">Szene '+(film.i+1)+' von '+FILM.length+' · </span>'+FILM[film.i].t;
+  Array.prototype.forEach.call($('chap').children,function(b,j){b.className=(j===film.i?'on':'')+(st.s2.seen[j]?' seen':'');});}
+function speak(){try{if(!$('speak').checked||!window.speechSynthesis)return;speechSynthesis.cancel();var tmp=document.createElement('div');tmp.innerHTML=FILM[film.i].t;var u=new SpeechSynthesisUtterance(tmp.textContent);u.lang='de-DE';u.rate=.95;speechSynthesis.speak(u);}catch(e){}}
+function filmLoop(ts){
+  if(!film.playing){film.last=null;return;}
+  if(film.last===null)film.last=ts;var dt=Math.min(100,ts-film.last);film.last=ts;film.t+=dt;
+  if(film.t>=FILM[film.i].d){st.s2.seen[film.i]=true;
+    if(film.i<FILM.length-1){film.i++;film.t=0;setCap();speak();}
+    else{film.t=FILM[film.i].d;film.playing=false;$('play').textContent='↻ Nochmal ansehen';var first=!st.s2.watched;st.s2.watched=true;save();drawFilm();setCap();if(first)r2();return;}}
+  drawFilm();requestAnimationFrame(filmLoop);
+}
+function playFilm(){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(film.playing){film.playing=false;$('play').textContent='▶ Weiter';try{speechSynthesis.cancel();}catch(e){}return;}
+  if(film.i===FILM.length-1&&film.t>=FILM[film.i].d){film.i=0;film.t=0;}
+  if(reduce){film.t=FILM[film.i].d*0.999;}
+  film.playing=true;$('play').textContent='❚❚ Pause';setCap();if(film.t===0)speak();requestAnimationFrame(filmLoop);
+}
+function buildChapters(){var h='';FILM.forEach(function(f,j){h+='<button type="button" data-j="'+j+'" aria-label="Szene '+(j+1)+'">'+(j+1)+'</button>';});$('chap').innerHTML=h;
+  Array.prototype.forEach.call($('chap').children,function(b){b.addEventListener('click',function(){film.i=+b.dataset.j;film.t=0;setCap();if(!film.playing)playFilm();else speak();});});}
+
+/* ---------- Steuerpult ---------- */
+function setS(v){v=Math.max(5,Math.min(60,Math.round(v*2)/2));st.s=v;$('s').value=v;$('dispS').textContent=fmtS(v)+' cm';draw();}
+function setG(v){v=Math.max(5,Math.min(50,Math.round(v)));st.g=v;$('g').value=v;$('dispG').textContent=v+' cm';$('gTxt').textContent=v+' cm';draw();}
+function ctlMode(o){
+  $('ctlOn').hidden=!!o.off;$('ctlOff').hidden=!o.off;if(o.off){$('ctlOff').textContent=o.off;return;}
+  $('gRow').hidden=!o.gFree;$('gFixed').hidden=!!o.gFree;$('raysRow').hidden=!o.rays;$('coverRow').hidden=!o.cover;
+  if(!o.rays){st.rays=false;$('tRays').checked=false;}
+  if(!o.cover){st.cover=false;$('tCover').checked=false;}
+}
+function animateTo(from,to,set,done){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||from===to){set(to);if(done)done();return;}
+  var t0=null,dur=700+Math.abs(to-from)*25;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur);set(from+(to-from)*easeIO(p));if(p<1)requestAnimationFrame(step);else{set(to);if(done)done();}}
+  requestAnimationFrame(step);
+}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;if(film.playing){film.playing=false;try{speechSynthesis.cancel();}catch(e){}}st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function tipBox(list,n){var h='';for(var i=0;i<n&&i<list.length;i++)h+='<p class="hint"><b>Tipp '+(i+1)+':</b> '+list[i]+'</p>';return h;}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+/* kleine Bildchen für die Vermutung */
+function pic(kind){
+  var L='<rect x="22" y="14" width="12" height="52" fill="#E8432E"/><rect x="22" y="54" width="36" height="12" fill="#E8432E"/>';
+  var inner=kind==='L'?L:kind==='mirror'?'<g transform="translate(80,0) scale(-1,1)">'+L+'</g>':kind==='rot'?'<g transform="rotate(180 40 40)">'+L+'</g>':'<text x="40" y="44" text-anchor="middle" font-size="12" fill="#6B7280" font-style="italic">kein Bild</text>';
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="4" y="4" width="72" height="72" rx="6" fill="#F3F4F6" stroke="#9CA3AF" stroke-width="2"/>'+inner+'</svg>';
+}
+function guessName(k){return {A:'A (L wie auf dem Dia)',B:'B (links-rechts vertauscht)',C:'C (auf dem Kopf und seitenverkehrt)',D:'D (kein Bild)'}[k];}
+
+/* ---------- Station 1: Beobachten ---------- */
+var Q1=[
+  {id:'a',q:'Das Bild auf dem Schirm steht …',o:['aufrecht','auf dem Kopf'],a:1,w:'Vergleiche Dia und Schirm: Wo ist beim L oben der lange Strich?'},
+  {id:'b',q:'Links und rechts sind im Bild …',o:['wie beim Dia','vertauscht'],a:1,w:'Wohin zeigt der Fuß des L auf dem Dia, wohin auf dem Schirm?'},
+  {id:'c',q:'Das Bild ist hier …',o:['größer als das Dia','kleiner als das Dia'],a:1,w:'Vergleiche die Größe der beiden Ansichten unten links und rechts.'},
+  {id:'d',q:'Schiebst du den Schirm ein Stück weiter, wird das Bild …',o:['noch schärfer','unscharf'],a:1,w:'Probier es aus: ein paar Mal ▶ drücken.'}
+];
+var TIPS1=['Schau nur auf die rechte Ansicht unten („Schirm“). Ist das L verschwommen, stimmt der Abstand noch nicht.',
+  'Fahre zuerst grob mit dem Regler, dann in kleinen Schritten mit ◀ ▶. Die Kanten des L müssen ganz klar sein.',
+  'Das scharfe Bild liegt irgendwo zwischen 10 cm und 20 cm hinter der Linse.'];
+function r1(){
+  ctlMode({rays:false});if(st.g!==30)setG(30);
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Auf dem Dia steht ein <b>„L“</b>. Was siehst du auf dem Schirm, wenn das Bild scharf ist? Wähle deine Vermutung.</p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.t)+'</button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 4 schaust du, ob sie stimmt.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var qs=st.s1.sharp?'<div class="stack"><p><b>Kreuze an:</b> Was beobachtest du?</p>'+Q1.map(function(q){var v=st.s1.ans[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-q="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(st.s1.ok?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('')+
+    '<div class="row"><button class="btn pri" type="button" id="c1b">Prüfen</button></div><p class="fb" id="fb1b"></p></div>':'';
+  $('task').innerHTML=g+
+   '<div><p class="eyebrow">Station 1 · Beobachten</p><h2>Mach das Bild scharf!</h2></div>'+
+   '<p>Das Dia steht 30 cm vor der Sammellinse. Verschiebe den <b>Schirm</b> (◀ ▶ oder Regler), bis das Bild auf dem Schirm <b>ganz scharf</b> ist.</p>'+
+   (st.s1.sharp?'<p class="win"><b>Scharf gestellt!</b> Der Schirm steht 15 cm hinter der Linse. Nur genau dort ist das Bild scharf.</p>':
+   '<div class="row"><button class="btn pri" type="button" id="c1">Ist mein Bild scharf?</button><button class="btn tip" type="button" id="t1"'+(st.s1.tip>=TIPS1.length?' hidden':'')+'>Tipp anzeigen</button></div><p class="fb" id="fb1"></p><div class="stack">'+tipBox(TIPS1,st.s1.tip)+'</div>')+
+   qs+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  if(!st.s1.sharp){
+    $('c1').addEventListener('click',function(){var fb=$('fb1');tryInc('s1scharf',isSharp(st.g,st.s));
+      if(isSharp(st.g,st.s)){st.s1.sharp=true;save();r1();}
+      else{fb.className='fb bad';fb.textContent=Math.abs(st.s-15)<=2?'Fast! Noch ein kleines Stück. Achte genau auf die Kanten.':'Das Bild ist noch unscharf. Verschiebe den Schirm weiter und beobachte die Schirm-Ansicht.';}});
+    $('t1').addEventListener('click',function(){st.s1.tip++;save();r1();});
+  } else {
+    Array.prototype.forEach.call(document.querySelectorAll('.seg[data-q]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(st.s1.ok)return;st.s1.ans[sg.dataset.q]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});
+    $('c1b').addEventListener('click',function(){var fb=$('fb1b'),miss=0,wrong=[];
+      Q1.forEach(function(q){var v=st.s1.ans[q.id],sg=document.querySelector('.seg[data-q="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q.w);});
+      if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return;}
+      tryInc('s1kreuz',!wrong.length,Q1.filter(function(q){return st.s1.ans[q.id]!==q.a;}).map(function(q){return q.id;}).join(','));
+      if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0];return;}
+      st.s1.ok=true;finish(0);save();r1();$('fb1b').className='fb ok';$('fb1b').textContent='Alles richtig beobachtet! Im Erklär-Film findest du heraus, warum das so ist.';});
+    if(st.s1.ok){$('fb1b').className='fb ok';$('fb1b').textContent='Alles richtig beobachtet! Im Erklär-Film findest du heraus, warum das so ist.';}
+  }
+  bindNext();
+}
+
+/* ---------- Station 2: Erklär-Film ---------- */
+var Q2=[
+  {id:'a',q:'Was ist der Bildpunkt?',o:['Der Brennpunkt der Linse.','Der Punkt, in dem sich das Licht von einem Punkt des Gegenstands hinter der Linse wieder trifft.','Die Mitte der Linse.'],a:1,
+   w:['Achtung, Verwechslungsgefahr! Im Brennpunkt treffen sich parallele Strahlen. Der Bildpunkt hängt davon ab, wo das Dia steht.','','Schau dir Szene 3 noch einmal an: Wo treffen sich die orangen Strahlen?']},
+  {id:'b',q:'Warum steht das Bild auf dem Kopf?',o:['Die Linse spiegelt das Licht wie ein Spiegel.','Der Schirm steht falsch herum.','Die Strahlen kreuzen sich hinter der Linse: Licht von oben landet unten.'],a:2,
+   w:['Eine Linse spiegelt nicht, sie lässt das Licht durch und lenkt es ab. Schau dir Szene 4 und 5 an.','Den Schirm kann man drehen, wie man will. Schau dir Szene 5 an.','']},
+  {id:'c',q:'Warum ist das Bild unscharf, wenn der Schirm nicht am Bildpunkt steht?',o:['Das Licht eines Punktes kommt als Fleck an. Die Flecken verschwimmen.','Dann kommt gar kein Licht mehr an.','Dann ist die Linse zu schwach.'],a:0,
+   w:['','Licht kommt schon an, schau auf den gelben Streifen am Schirm in Szene 6.','Die Linse bleibt gleich. Schau dir Szene 6 an.']}
+];
+function r2(){
+  ctlMode({off:'Im Erklär-Film steuert die App die optische Bank. Schau genau hin!'});
+  $('player').hidden=false;setCap();
+  var qs=st.s2.watched?'<div class="stack"><p><b>Hast du es verstanden?</b> Beantworte die Fragen.</p>'+Q2.map(function(q){var v=st.s2.ans[q.id];return '<div class="q"><p><b>'+q.q+'</b></p><div class="choice" data-q="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===q.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fq'+q.id+'"></p></div>';}).join('')+'</div>':
+    '<p class="note">Schau dir den ganzen Film an (6 Szenen). Danach erscheinen hier drei Fragen.</p>';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 2 · Erklär-Film</p><h2>Warum steht das Bild auf dem Kopf?</h2></div>'+
+   '<p>Starte den Film links unter der optischen Bank. Mit den Zahlen springst du zu einer Szene. Mit „Vorlesen“ liest dir das Gerät den Text vor.</p>'+
+   qs+(st.s2.ok?'<p class="win"><b>Super!</b> Du kannst erklären, wie das Bild entsteht.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  if(st.s2.watched){
+    Array.prototype.forEach.call(document.querySelectorAll('.choice[data-q]'),function(box){var q=Q2.filter(function(x){return x.id===box.dataset.q;})[0];
+      Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s2'+q.id,j===q.a,j);st.s2.ans[q.id]=j;
+        Array.prototype.forEach.call(box.children,function(x){x.className='opt'+(x===b?(j===q.a?' ok':' bad'):'');});
+        var fb=$('fq'+q.id);if(j===q.a){fb.className='fb ok';fb.textContent='Richtig!';}else{fb.className='fb bad';fb.textContent=q.w[j];}
+        var all=Q2.every(function(x){return st.s2.ans[x.id]===x.a;});if(all&&!st.s2.ok){st.s2.ok=true;finish(1);save();r2();}else save();});});});
+  }
+  bindNext();drawFilm();
+}
+
+/* ---------- Station 3: Scharf stellen ---------- */
+var TIPS3=['Schalte den Röntgenblick ein. Dort, wo sich die orangen Strahlen treffen, liegt der Bildpunkt. Dahin gehört der Schirm.',
+  'Steht der Schirm hinter dem Treffpunkt, laufen die Strahlen schon wieder auseinander. Dann musst du näher an die Linse.'];
+function newRound3(){var g;do{g=TRAIN[Math.floor(Math.random()*TRAIN.length)];}while(g===st.s3.last);st.s3.last=g;st.s3.g=g;st.s3.active=true;
+  animateTo(st.g,g,function(v){st.g=v;$('gTxt').textContent=Math.round(v)+' cm';draw();},function(){setG(g);});
+  animateTo(st.s,Math.random()<.5?55:6,function(v){st.s=v;$('s').value=v;$('dispS').textContent=fmtS(v)+' cm';draw();},function(){setS(st.s);});}
+function r3(){
+  ctlMode({rays:true});
+  var dots='';for(var i=0;i<3;i++)dots+='<i class="'+(i<st.s3.hits?'on':'')+'"></i>';
+  var finQ=st.s3.hits>=3?'<div class="q"><p><b>Was hast du herausgefunden?</b> Wie viele Stellen gibt es für den Schirm, an denen das Bild scharf ist?</p><div class="choice" id="fin">'+
+    ['Nur genau eine: dort, wo sich das Licht in den Bildpunkten trifft.','Viele: überall hinter dem Brennpunkt.','Je weiter weg der Schirm, desto schärfer.'].map(function(o,j){return '<button type="button" class="opt'+(st.s3.fin===j?(j===0?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="ffin"></p></div>':'';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 3 · Scharf stellen</p><h2>Werde Scharfsteller-Profi</h2></div>'+
+   '<p>Die App stellt das Dia an eine neue Stelle. Stelle den Schirm so ein, dass das Bild wieder <b>scharf</b> ist. Schaffst du es dreimal?</p>'+
+   (st.s3.hits<3?'<div class="row"><button class="btn sec" type="button" id="new3">'+(st.s3.active?'Neue Position':'Dia verschieben')+'</button><button class="btn pri" type="button" id="c3"'+(st.s3.active?'':' disabled')+'>Ist mein Bild scharf?</button><button class="btn tip" type="button" id="t3"'+(st.s3.tip>=TIPS3.length?' hidden':'')+'>Tipp anzeigen</button></div>':'')+
+   '<p class="fb" id="fb3"></p><div class="stack">'+tipBox(TIPS3,st.s3.tip)+'</div>'+
+   '<div class="row"><span class="muted">Scharf gestellt:</span><span class="dots">'+dots+'</span></div>'+
+   finQ+'<div class="row">'+nextBtn(2)+'</div>';
+  if(st.s3.hits<3){
+    $('new3').addEventListener('click',function(){newRound3();r3();});
+    $('c3').addEventListener('click',function(){var fb=$('fb3'),b=bOf(st.g);tryInc('s3r'+(st.s3.hits+1),isSharp(st.g,st.s));
+      if(isSharp(st.g,st.s)){st.s3.hits++;st.s3.active=false;save();r3();var f2=$('fb3');f2.className='fb ok';f2.textContent='Scharf! Dia '+st.g+' cm vor der Linse → Schirm '+fmt(b,1)+' cm dahinter.'+(st.s3.hits<3?' Hol dir die nächste Position.':'');}
+      else{fb.className='fb bad';fb.textContent='Noch unscharf. Schiebe den Schirm '+(st.s>b?'näher an die Linse.':'weiter weg von der Linse.');}});
+    $('t3').addEventListener('click',function(){st.s3.tip++;save();r3();});
+  }
+  if(st.s3.hits>=3){Array.prototype.forEach.call(document.querySelectorAll('#fin .opt'),function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s3fin',j===0,j);st.s3.fin=j;var fb=$('ffin');
+      Array.prototype.forEach.call(document.querySelectorAll('#fin .opt'),function(x){x.className='opt'+(x===b?(j===0?' ok':' bad'):'');});
+      if(j===0){st.s3.finOk=true;finish(2);save();r3();}else{fb.className='fb bad';fb.textContent='Probier es aus: Schiebe den Schirm vom scharfen Bild weg, nach vorne und nach hinten.';save();}});});
+    if(st.s3.finOk){$('ffin').className='fb ok';$('ffin').textContent='Genau! Zu jeder Dia-Position gehört genau eine Schirm-Position.';}}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Von jedem Punkt des Gegenstands geht Licht in ',post:' aus.',o:['nur eine Richtung','alle Richtungen','Richtung Linse'],a:1},
+  {pre:'Die Sammellinse sammelt dieses Licht hinter der Linse wieder in einem Punkt: dem ',post:'.',o:['Brennpunkt','Bildpunkt','Mittelpunkt'],a:1,w:'Im Brennpunkt treffen sich parallele Strahlen. Hier geht es um Licht von einem Punkt des Dias.'},
+  {pre:'Steht der Schirm genau dort, ist das Bild ',post:'.',o:['scharf','unscharf','dunkel'],a:0},
+  {pre:'Hinter der Linse ',post:' die Lichtstrahlen.',o:['spiegeln sich','kreuzen sich','trennen sich'],a:1},
+  {pre:'Deshalb steht das Bild ',post:' und ist seitenverkehrt.',o:['aufrecht','schief','auf dem Kopf'],a:2},
+  {pre:'Ein Bild, das man auf einem Schirm auffangen kann, heißt ',post:'.',o:['Schattenbild','reelles Bild','Spiegelbild'],a:1}
+];
+var REELL=[
+  {t:'Das Bild eines Beamers an der Tafel',a:1,why:'Die Tafel ist der Schirm.'},
+  {t:'Dein Spiegelbild im Badezimmerspiegel',a:0,why:'Hältst du ein Blatt Papier vor den Spiegel, ist dein Bild darauf nicht zu sehen.'},
+  {t:'Das Bild im Kino auf der Leinwand',a:1,why:'Die Leinwand ist ein riesiger Schirm.'},
+  {t:'Das Bild auf dem Sensor einer Handykamera',a:1,why:'In der Kamera ist eine Sammellinse. Der Sensor fängt das Bild auf wie ein Schirm.'}
+];
+var MERK='<div class="merk"><h3>Merksatz: Punkt für Punkt zum Bild</h3><p>Von jedem Punkt des Gegenstands geht Licht in <span class="k">alle Richtungen</span> aus. Die Sammellinse sammelt dieses Licht hinter der Linse wieder in einem Punkt: dem <span class="k">Bildpunkt</span>. Steht der Schirm genau dort, ist das Bild <span class="k">scharf</span>. Hinter der Linse <span class="k">kreuzen sich</span> die Lichtstrahlen. Deshalb steht das Bild <span class="k">auf dem Kopf</span> und ist seitenverkehrt. Ein Bild, das man auf einem Schirm auffangen kann, heißt <span class="k">reelles Bild</span>.</p></div>';
+function r4(){
+  ctlMode({rays:true,gFree:true});
+  var gObj=st.guess;
+  var refl=st.s4.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (gObj?'<p>Du hast vermutet: <b>'+guessName(gObj)+'</b>.</p>'+(gObj==='C'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist C: Das Bild steht auf dem Kopf und ist seitenverkehrt.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>C</b>.</p>')+
+    '<p>Begründe in einem Satz, warum C richtig ist:</p><textarea class="free" id="refl" rows="3" placeholder="C ist richtig, weil sich die Lichtstrahlen …">'+esc(st.s4.refl)+'</textarea></div>':'';
+  var reell=st.s4.ok?'<div class="stack"><p><b>Bild-Detektiv:</b> Ist das ein reelles Bild? Kann man es auf einem Schirm auffangen?</p>'+REELL.map(function(r,i){var v=st.s4.reell[i];return '<div class="tf"><span>'+r.t+'</span><span class="seg" data-r="'+i+'"><button type="button" data-v="1" class="'+(v===1?(st.s4.reellOk?'ok':'sel'):'')+'">ja</button><button type="button" data-v="0" class="'+(v===0?(st.s4.reellOk?'ok':'sel'):'')+'">nein</button></span><span class="why muted" id="why'+i+'">'+(st.s4.reellOk?r.why:'')+'</span></div>';}).join('')+
+    '<div class="row"><button class="btn pri" type="button" id="c4r">Prüfen</button><span class="fb" id="fb4r"></span></div></div>':'';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div>'+
+   '<p>Wähle die passenden Wörter. Mit der optischen Bank und dem Röntgenblick kannst du alles nachprüfen.</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+
+   refl+reell+(st.s4.reellOk?saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i);var v=st.s4.gaps[i];if(st.s4.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!==''){el.value=v;}
+    el.addEventListener('change',function(){st.s4.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){var wrong=0,empty=0,msg='';GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok){wrong++;if(g.w&&!msg&&+s.value===0)msg=g.w;}});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=msg||(wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Teste mit der optischen Bank!');return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){
+    $('refl').addEventListener('input',function(){st.s4.refl=this.value;save();});
+    Array.prototype.forEach.call(document.querySelectorAll('.seg[data-r]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(st.s4.reellOk)return;st.s4.reell[sg.dataset.r]=+b.dataset.v;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});
+    $('c4r').addEventListener('click',function(){var fb=$('fb4r'),miss=0,wrong=0;
+      REELL.forEach(function(r,i){var v=st.s4.reell[i],sg=document.querySelector('.seg[data-r="'+i+'"]');if(v==null){miss++;return;}var ok=v===r.a;sg.children[v===1?0:1].className=ok?'ok':'bad';if(!ok){wrong++;$('why'+i).textContent='';}else $('why'+i).textContent=r.why;});
+      if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return;}
+      tryInc('s4reell',!wrong,REELL.map(function(x,i){return st.s4.reell[i]!==x.a?String(i):null;}).filter(Boolean).join(','));
+      if(wrong){fb.className='fb bad';fb.textContent=wrong+' Antwort'+(wrong>1?'en stimmen':' stimmt')+' noch nicht. Frag dich: Könnte ich ein Blatt Papier hinhalten und das Bild darauf sehen?';return;}
+      st.s4.reellOk=true;finish(3);save();r4();$('fb4r').className='fb ok';$('fb4r').textContent='Stark! Du bist Bild-Detektiv.';});
+    if(st.s4.reellOk){$('fb4r').className='fb ok';$('fb4r').textContent='Stark! Du bist Bild-Detektiv.';}
+  }
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Die halbe Linse',task:'Stelle das Dia auf 30 cm und den Schirm auf 15 cm. Decke dann die <b>obere Hälfte der Linse</b> mit Pappe ab (Häkchen im Steuerpult).',q:'Was passiert mit dem Bild?',
+   o:['Die obere Hälfte des Bildes fehlt.','Die untere Hälfte des Bildes fehlt.','Das ganze Bild bleibt da, es wird nur dunkler.'],a:2,
+   ok:'Richtig! Jeder Punkt des Dias schickt Licht durch die ganze Linse. Auch durch die untere Hälfte kommt von jedem Punkt Licht zu seinem Bildpunkt. Es ist nur weniger Licht.',bad:'Probier es aus und schau genau auf den Schirm. Tipp: Schalte auch den Röntgenblick ein.'},
+  {id:'b',title:'Zu nah dran',task:'Nimm die Pappe weg. Schiebe das Dia ganz nah an die Linse: <b>8 cm</b>. Das ist näher als der Brennpunkt. Suche mit dem Schirm ein scharfes Bild.',q:'Was findest du heraus?',
+   o:['Ich finde ein scharfes Bild ganz nah an der Linse.','Ich finde ein scharfes Bild ganz weit weg.','Ich finde nirgends ein scharfes Bild auf dem Schirm.'],a:2,
+   ok:'Genau! Steht der Gegenstand näher als der Brennpunkt, laufen die Strahlen hinter der Linse auseinander. Sie treffen sich nie, also gibt es kein Bild auf dem Schirm. Wie eine Lupe trotzdem ein Bild zeigt, lernst du bald.',bad:'Schalte den Röntgenblick ein: Treffen sich die Strahlen hinter der Linse überhaupt?'}
+];
+function r5(){
+  ctlMode({rays:true,gFree:true,cover:true});
+  if(!r5.did){r5.did=1;setG(30);setS(40);}
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Knobel-Experimente</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'" id="fp'+p.id+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eins der beiden Experimente.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();
+      if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse speichern (für IServ) ---------- */
+function yn(v){return v==null?'–':(v?'ja':'nein');}
+function resText(){
+  var r=st.res||{},d=new Date(),L=[];
+  function ans(list,store){return list.map(function(q,i){var v=store[q.id];return '  '+(i+1)+'. '+q.q+' → '+(v==null?'(keine Antwort)':q.o[v])+(v===q.a?'  ✓':(v==null?'':'  ✗'));});}
+  L.push('LINSEN-LABOR · Wie entsteht mit einer Sammellinse ein Bild?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='C'?'  → stimmt':'  → richtig ist C'));
+  L.push('');
+  L.push('STATION 1 · Beobachten');
+  L.push('  Bild scharf gestellt: '+(st.s1.sharp?'ja (Dia 30 cm vor der Linse → Schirm 15 cm dahinter)':'nein'));
+  L=L.concat(ans(Q1,st.s1.ans||{}));L.push('  Tipps benutzt: '+(st.s1.tip||0));
+  L.push('');
+  L.push('STATION 2 · Erklär-Film');
+  L.push('  Film angesehen: '+yn(st.s2.watched));
+  L=L.concat(ans(Q2,st.s2.ans||{}));
+  L.push('');
+  L.push('STATION 3 · Scharf stellen');
+  L.push('  Richtig scharf gestellt: '+st.s3.hits+' von 3   Tipps benutzt: '+(st.s3.tip||0));
+  L.push('  Wie viele Schirm-Stellen sind scharf? '+(st.s3.finOk?'Nur genau eine ✓':'(noch nicht beantwortet)'));
+  L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){var tmp=document.createElement('div');tmp.innerHTML=MERK;L.push('  '+tmp.textContent.replace('Merksatz: Punkt für Punkt zum Bild','Punkt für Punkt zum Bild: '));}
+  else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Meine Begründung, warum C richtig ist: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Bild-Detektiv (reelles Bild?):');
+  REELL.forEach(function(x,i){var v=st.s4.reell?st.s4.reell[i]:null;L.push('   - '+x.t+': '+yn(v==null?null:v===1)+(v==null?'':(v===x.a?'  ✓':'  ✗')));});
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var TL=[['s1scharf','Station 1 · Bild scharf stellen'],['s1kreuz','Station 1 · Eigenschaften ankreuzen'],['s2a','Station 2 · Frage 1 (Bildpunkt)'],['s2b','Station 2 · Frage 2 (auf dem Kopf)'],['s2c','Station 2 · Frage 3 (unscharf)'],
+    ['s3r1','Station 3 · Scharf stellen, Runde 1'],['s3r2','Station 3 · Scharf stellen, Runde 2'],['s3r3','Station 3 · Scharf stellen, Runde 3'],['s3fin','Station 3 · Abschlussfrage'],
+    ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4reell','Station 4 · Bild-Detektiv'],['s5a','Profi · Halbe Linse'],['s5b','Profi · Zu nah dran']];
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];if(!t){if(x[0].charAt(1)!=='5')L.push('  '+x[1]+': nicht bearbeitet');return;}tot++;if(t.first)first++;
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  if(st.t0){var mins=Math.round((Date.now()-st.t0)/60000);L.push('  Bearbeitungszeit seit dem Start: '+mins+' min');}
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,tries:st.tries,tips:{s1:st.s1.tip||0,s3:st.s3.tip||0},film:!!st.s2.watched,
+    refl:st.s4.refl||'',reell:st.s4.reell||{},s5:st.s5,mins:mins0,resets:resets(),s3hits:st.s3.hits,cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Linsen-Labor_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Du bist gerade bei „'+esc(cur)+'“. Alles, was du bis jetzt bearbeitet hast, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Du kannst <b>jederzeit</b> speichern, auch wenn du noch nicht fertig bist. Speicherst du später noch einmal, lade die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name</label><input class="num" style="width:12em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||'7d')+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Linsen-Labor“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichere jetzt deine Ergebnisse und lade sie bei IServ hoch.':'Speichere deine Ergebnisse und lade sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie entsteht mit einer Sammellinse ein Bild?</p><h2 id="stH">Willkommen im Linsen-Labor!</h2>'+
+    '<p>Heute findest du heraus, wie eine Sammellinse ein Bild erzeugt.</p>'+
+    
+    '<div class="abg-row"><label for="stName">Name</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Trage zuerst deinen Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Du kannst den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutze „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Du kannst es nochmal versuchen.');
+          else if(err&&err.code==='rate_limited')msg(false,'Einen Moment, dann nochmal versuchen.');
+          else msg(false,'Speichern klappt hier nicht. Benutze „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();$('player').hidden=STATIONS[st.station].key!=='s2';[r1,r2,r3,r4,r5][st.station]();resize();}
+
+$('s').addEventListener('input',function(){setS(parseFloat(this.value));});
+$('sl').addEventListener('click',function(){setS(st.s-.5);});
+$('sr').addEventListener('click',function(){setS(st.s+.5);});
+$('g').addEventListener('input',function(){setG(parseFloat(this.value));});
+$('tRays').addEventListener('change',function(){st.rays=this.checked;draw();});
+$('tCover').addEventListener('change',function(){st.cover=this.checked;draw();});
+$('play').addEventListener('click',playFilm);
+$('speak').addEventListener('change',function(){if(this.checked&&film.playing)speak();else{try{speechSynthesis.cancel();}catch(e){}}});
+var armed=false;
+$('reset').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();
+});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+buildChapters();setS(40);setG(30);
+render();remind();startDialog();
+})();
+</script>
+</body>
+</html>

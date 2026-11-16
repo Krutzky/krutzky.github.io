@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>7.2 Proportionale und antiproportionale Zuordnung</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Karoheft-Look der ZP10-App. Die Startseite ist ein Stationsraster: Themen als Zeilen, die drei Buchfarben als Spalten. */
+:root{
+  --bg:#EDF1F8; --grid:rgba(35,87,201,.08); --surface:#FFFFFF; --surface-2:#F2F5FB; --ink:#10204A; --ink-soft:#4F5A78; --line:#C9D2E3;
+  --head:#0F1E46; --accent:#FFC93C; --accent-ink:#2A1E00; --blue:#2357C9; --blue-soft:#DDE7FA;
+  --ok:#1F8A5B; --ok-soft:#DCF2E6; --bad:#BC2F2F; --bad-soft:#FBE3E3;
+  --o:#B84E06; --o-soft:#FDE7D4; --p:#B01A6C; --p-soft:#FBDEEC; --l:#5A3DB0; --l-soft:#E8E2F8;
+  --gridline:#D3DCEE;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif; --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;min-height:100vh;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header{background:var(--head);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px;color:#fff;padding-block:14px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:860px;margin:0 auto}
+.top{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#FFD866}
+.brand{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.2}
+.brand em{font-style:normal;background:linear-gradient(transparent 58%,rgba(255,201,60,.55) 58%)}
+nav{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+nav button{background:transparent;border:0;border-radius:10px 10px 0 0;padding:9px 14px;color:#C6D5F5;font-weight:700;white-space:nowrap}
+nav button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px;min-width:0}
+main>section{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 2px 10px rgba(15,30,70,.07);min-width:0}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:26px} h2{font-size:21px} h3{font-size:17px}
+p{margin:0}
+.stack{display:grid;gap:10px}
+.muted{color:var(--ink-soft)}
+.small{font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:700;font-size:17px;transition:transform .08s ease}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--blue-soft);color:var(--blue)}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.btn.sm{padding:8px 14px;font-size:15px}
+/* Farbstufen */
+.c-o{--c:var(--o);--cs:var(--o-soft)} .c-p{--c:var(--p);--cs:var(--p-soft)} .c-l{--c:var(--l);--cs:var(--l-soft)}
+.lv{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--c);background:var(--cs);border-radius:999px;padding:3px 11px;font-size:14px}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:7px;height:7px;border-radius:2px;background:var(--c);opacity:.28}
+.pips i.f{opacity:1}
+/* Stationsraster */
+.gridhead,.st{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,92px);gap:8px;align-items:center}
+.gridhead{padding-inline:2px;font-size:14px}
+.gridhead span{justify-self:center}
+.st{padding-block:10px;border-top:1px solid var(--line)}
+.st h3{margin-bottom:2px}
+.cell{border:2px solid var(--c);background:var(--cs);color:var(--c);border-radius:12px;min-height:58px;padding:6px 4px;font-weight:700;display:grid;place-items:center;line-height:1.15;font-size:14px}
+.cell b{font-family:var(--f-display);font-size:18px}
+.cell.done{background:var(--c);color:var(--surface)}
+.cell.next{box-shadow:0 0 0 3px var(--accent)}
+@media(max-width:600px){.gridhead{display:none}.st{grid-template-columns:repeat(3,minmax(0,1fr))}.st>div:first-child{grid-column:1/-1}.cell .nm{display:block}}
+@media(min-width:601px){.cell .nm{display:none}}
+.nextbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.total{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.total div{height:100%;background:var(--ok);transition:width .3s}
+/* Aufgabe */
+.qhead{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.qt{font-size:19px;line-height:1.4;overflow-wrap:anywhere}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.72em;line-height:1.05;margin-inline:1px}
+.fr span:first-child{border-bottom:1.5px solid currentColor;padding-inline:2px}
+.tw{overflow-x:auto;max-width:100%}
+table.z{border-collapse:collapse;margin-block:2px}
+table.z th,table.z td{border:1.5px solid var(--c,var(--blue));padding:7px 10px;text-align:center;min-width:44px}
+table.z th{background:var(--cs,var(--blue-soft));font-weight:700;font-size:15px;text-align:left;max-width:150px}
+table.z input,.numin{background:var(--surface);border:2px solid var(--line);border-radius:8px;text-align:center;width:66px;padding:5px 2px}
+table.ds td.op{white-space:nowrap;border:0;background:none;color:var(--c);font-weight:700;min-width:36px;padding:0 4px;font-size:15px;position:relative}
+table.z td.v{padding:5px}
+.good{border-color:var(--ok)!important;background:var(--ok-soft)!important}
+.wrong{border-color:var(--bad)!important;background:var(--bad-soft)!important}
+.fix{display:block;font-size:14px;font-weight:700;color:var(--ok)}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:11px 14px}
+.opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.optk{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:14px}
+.numrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.numin{width:130px;text-align:left;padding:10px 12px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg .opt{padding:9px 14px}
+svg.g{display:block;width:100%;max-width:420px;height:auto;touch-action:manipulation}
+svg.g .gl{stroke:var(--gridline);stroke-width:1}
+svg.g .ax{stroke:var(--ink);stroke-width:1.6}
+svg.g text{fill:var(--ink-soft);font-size:11px;font-family:var(--f-body)}
+svg.g .lb{fill:var(--ink);font-weight:700}
+svg.g .cv{stroke:var(--blue);stroke-width:2.5;fill:none}
+svg.g .pt{fill:var(--blue)} svg.g .pt.ok{fill:var(--ok)} svg.g .pt.no{fill:var(--bad)} svg.g .pt.mk{fill:var(--c,var(--blue))}
+svg.g .hit{fill:transparent;cursor:pointer}
+.tip{background:var(--blue-soft);border-radius:12px;padding:10px 14px}
+.fb{border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.fb.y{background:var(--ok-soft)} .fb.n{background:var(--bad-soft)}
+.fb b.h{font-family:var(--f-display)}
+.fb ol{margin:0;padding-left:20px}
+.pr{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.pr div{height:100%;background:var(--c,var(--blue));transition:width .2s}
+/* Ergebnis */
+.big{font-family:var(--f-display);font-size:44px;font-weight:700;line-height:1;color:var(--c,var(--ink))}
+.rv{border-top:1px solid var(--line);padding-block:12px;display:grid;gap:6px}
+.rv .mk{font-weight:700}
+.rv .y{color:var(--ok)} .rv .n{color:var(--bad)}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:10px;align-items:center;font-size:15px}
+.bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar div{height:100%;background:var(--ok)}
+/* Merkzettel */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.m-p{--c:var(--blue);--cs:var(--blue-soft)}
+ol.st3,ul.st3{margin:0;padding-left:20px;display:grid;gap:4px}
+.f{display:grid;gap:4px;font-weight:700;font-size:15px}
+.f input{font-weight:400;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+textarea{position:absolute;left:-9999px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--head);color:#fff;padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+<header><div class="wrap">
+  <div class="top">Jahrgang 7 · Kapitel Zuordnungen</div>
+  <div class="brand">Mathe-Wissensjagd <em>Zuordnungen</em></div>
+  <nav aria-label="Bereiche">
+    <button type="button" data-v="home">Stationen</button>
+    <button type="button" data-v="text">Textaufgaben</button>
+    <button type="button" data-v="exam">Experten</button>
+    <button type="button" data-v="memo">Merkzettel</button>
+  </nav>
+</div></header>
+<main>
+  <section id="vHome"></section>
+  <section id="vText" hidden></section>
+  <section id="vExam" hidden></section>
+  <section id="vMemo" hidden></section>
+  <section id="vTask" hidden></section>
+  <section id="vRes" hidden></section>
+</main>
+<div id="toast" role="status"></div>
+<script>
+/* ---------- Hilfen ---------- */
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const r6=x=>Math.round(x*1e6)/1e6;
+function de(x,d){const r=r6(x);let s=d==null?String(r):r.toFixed(d);return s.replace('.',',');}
+const eur=x=>{const r=r6(x);return (Number.isInteger(r)?String(r):r.toFixed(2).replace('.',','))+' €';};
+const NAMES=['Emir','Lina','Aylin','Jonas','Mia','Noah','Zeynep','Ben','Lea','Yusuf','Amira','Tom'];
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+const lcm=(a,b)=>a*b/gcd(a,b);
+const LV={o:'Orange',p:'Pink',l:'Lila'};
+const LVS=['o','p','l'];
+const TOPICS=[
+ {id:'erk',name:'Zuordnungen erkennen',sub:'proportional, antiproportional oder keins von beiden'},
+ {id:'prop',name:'Proportional',sub:'Tabellen, Faktor und Gerade'},
+ {id:'dp',name:'Dreisatz proportional',sub:'mehr → mehr'},
+ {id:'anti',name:'Antiproportional',sub:'Tabellen, Produkt und Hyperbel'},
+ {id:'da',name:'Dreisatz antiproportional',sub:'mehr → weniger'},
+ {id:'mix',name:'Erst entscheiden, dann rechnen',sub:'Textaufgaben gemischt, wie im Abschlusstest'}
+];
+const GEN=[];
+function gen(t,l,id,make){GEN.push({t,l,id,make});}
+const SET_MSG_P='Du hast antiproportional gerechnet. Hier gilt aber: Mehr davon kostet auch mehr. Also rechnest du links und rechts dasselbe.';
+const SET_MSG_A='Du hast proportional gerechnet. Hier gilt aber: Je mehr, desto weniger Zeit. Also rechnest du rechts das Gegenteil von links.';
+const KINDS=[['Proportional','p'],['Antiproportional','a'],['Keins von beiden','k']];
+function kindQ(q,kind,sol,extra){return Object.assign({type:'mc',q,fix:true,o:KINDS.map(k=>k[0]),c:KINDS.findIndex(k=>k[1]===kind),sol},extra||{});}
+
+/* ---------- Sachsituationen ---------- */
+/* proportional: an=Anzahl, u=Einheit, f=Text, h=Tabellenköpfe, unit=Ergebnis-Einheit */
+const CP=[
+ {u:[2,3,4],h:['Anzahl Hefte','Preis (in €)'],unit:'€',f:(a,b,c)=>`${a} Hefte kosten ${eur(b)}. Wie viel kosten ${c} Hefte?`},
+ {u:[8,9,10,11],h:['Anzahl Kinokarten','Preis (in €)'],unit:'€',f:(a,b,c)=>`${a} Kinokarten kosten ${eur(b)}. Wie teuer sind ${c} Karten?`},
+ {u:[3,4,5,6],h:['Äpfel (in kg)','Preis (in €)'],unit:'€',f:(a,b,c)=>`${a} kg Äpfel kosten ${eur(b)}. Wie viel kosten ${c} kg?`},
+ {u:[7,8,9],h:['Anzahl Pizzen','Preis (in €)'],unit:'€',f:(a,b,c)=>`${a} Pizzen kosten ${eur(b)}. Wie viel kosten ${c} Pizzen?`},
+ {u:[12,15,16,18],h:['Zeit (in h)','Strecke (in km)'],unit:'km',f:(a,b,c)=>{const n=pick(NAMES);return `${n} fährt mit dem Rad gleichmäßig und schafft in ${a} Stunden ${b} km. Wie weit kommt ${n} in ${c} Stunden?`;}},
+ {u:[5,6,8],h:['Anzahl Packungen','Anzahl Kekse'],unit:'Kekse',uf:(u)=>u*5,f:(a,b,c)=>`In ${a} gleichen Packungen sind ${b} Kekse. Wie viele Kekse sind in ${c} Packungen?`}
+];
+/* antiproportional */
+const CA=[
+ {h:['Anzahl Bagger','Zeit (in h)'],unit:'h',f:(a,b,c)=>`${a} Bagger brauchen ${b} Stunden für eine Baugrube. Wie lange brauchen ${c} Bagger?`},
+ {h:['Anzahl Pumpen','Zeit (in h)'],unit:'h',f:(a,b,c)=>`${a} Pumpen leeren einen Teich in ${b} Stunden. Wie lange brauchen ${c} Pumpen?`},
+ {h:['Anzahl Lkw','Anzahl Fahrten'],unit:'Fahrten',f:(a,b,c)=>`${a} Lkw müssen je ${b}-mal fahren, um den Sand zu liefern. Wie oft muss jeder fahren, wenn es ${c} Lkw sind?`},
+ {h:['Anzahl Kinder','Zeit (in min)'],unit:'min',f:(a,b,c)=>`${a} Kinder räumen den Klassenraum in ${b} Minuten auf. Wie lange brauchen ${c} Kinder?`},
+ {h:['Anzahl Maler','Zeit (in Tagen)'],unit:'Tage',f:(a,b,c)=>`${a} Maler streichen ein Haus in ${b} Tagen. Wie lange brauchen ${c} Maler?`},
+ {h:['Anzahl Gewinner','Gewinn pro Person (in €)'],unit:'€',f:(a,b,c)=>`Eine Tippgemeinschaft teilt den Gewinn gerecht. Bei ${a} Personen bekommt jede ${eur(b)}. Wie viel bekommt jede bei ${c} Personen?`}
+];
+function propNums(c){const u=pick(c.u);let a,d;do{a=ri(2,6);d=ri(2,9);}while(a===d);const v=c.uf?u*5:u;return{a,b:a*v,c:d,ans:d*v,v};}
+function antiNums(big){let a,c;do{a=ri(2,big?8:6);c=ri(2,big?10:6);}while(a===c);const k=lcm(a,c)*pick(big?[2,3,4]:[1,2,3]);return{a,b:k/a,c,ans:k/c,k};}
+function solP(n,h){return [`${n.a} → ${n.b} : ${n.a} = ${de(n.b/n.a)} für **1**`,`${n.c} → ${de(n.b/n.a)} · ${n.c} = **${de(n.ans)}**`];}
+function solA(n){return [`Für **1**: ${n.b} · ${n.a} = ${n.k}`,`Für ${n.c}: ${n.k} : ${n.c} = **${de(n.ans)}**`];}
+function dsTable(n,anti,showOps,h){return {head:h,rows:[[n.a,n.b],[1,{a:anti?n.k:n.b/n.a}],[n.c,{a:n.ans}]],l:showOps?[':'+n.a,'·'+n.c]:null,r:showOps?(anti?['·'+n.a,':'+n.c]:[':'+n.a,'·'+n.c]):null};}
+
+/* ---------- Situationen zum Einordnen: Text, Art, Begründung ---------- */
+const SIT={
+ o:[['Anzahl der Brötchen → Preis','p','Doppelt so viele Brötchen kosten doppelt so viel.'],
+    ['Anzahl der Helfer → Zeit zum Aufräumen','a','Doppelt so viele Helfer brauchen nur die halbe Zeit.'],
+    ['Alter eines Kindes → Körpergröße','k','Mit doppeltem Alter ist man nicht doppelt so groß.'],
+    ['Liter Benzin → Preis an der Tankstelle','p','Doppelt so viele Liter kosten doppelt so viel.'],
+    ['Anzahl der Pumpen → Zeit, bis das Becken leer ist','a','Doppelt so viele Pumpen brauchen die halbe Zeit.'],
+    ['Anzahl der Kugeln Eis → Preis','p','Jede Kugel kostet gleich viel, also doppelte Anzahl, doppelter Preis.'],
+    ['Schuhgröße → Note in der Mathearbeit','k','Die beiden Größen haben nichts miteinander zu tun.']],
+ p:[['Wassermenge → Gewicht des Wassers','p','Doppelt so viel Wasser wiegt doppelt so viel.'],
+    ['Geschwindigkeit → Fahrzeit für dieselbe Strecke','a','Bei doppelter Geschwindigkeit braucht man die halbe Zeit.'],
+    ['Anzahl der Personen → Gewinn pro Person bei gleichem Lottogewinn','a','Doppelt so viele Personen bekommen je die Hälfte.'],
+    ['Fahrzeit → Strecke bei gleichbleibendem Tempo','p','In doppelter Zeit schafft man die doppelte Strecke.'],
+    ['Tageszeit → Temperatur draußen','k','Die Temperatur folgt keiner festen Regel zur Uhrzeit.'],
+    ['Anzahl der Tiere → Tage, die das Futter reicht','a','Doppelt so viele Tiere fressen den Vorrat in der halben Zeit.'],
+    ['Handy-Alter in Jahren → Akkulaufzeit','k','Der Akku wird schwächer, aber nicht nach einer festen Regel.']],
+ l:[['Seitenlänge eines Quadrats → Umfang','p','Der Umfang ist 4 · Seitenlänge. Doppelte Seite, doppelter Umfang.'],
+    ['Seitenlänge eines Quadrats → Flächeninhalt','k','Bei doppelter Seite wird die Fläche viermal so groß, nicht doppelt.'],
+    ['Anzahl gleich großer Kreisteile → Winkelgröße eines Teils','a','Doppelt so viele Teile sind nur halb so breit, denn alle zusammen ergeben 360°.'],
+    ['Taxifahrt mit Grundgebühr: gefahrene Kilometer → Preis','k','Wegen der Grundgebühr kostet die doppelte Strecke nicht das Doppelte.'],
+    ['Rechteck mit 20 cm² Fläche: Seite a → Seite b','a','a · b bleibt immer 20. Das Produkt ist gleich.'],
+    ['Höhe eines Baumes → Anzahl seiner Blätter','k','Ein doppelt so hoher Baum hat nicht genau doppelt so viele Blätter.'],
+    ['Streaming-Abo mit festem Monatspreis: Monate → Kosten','p','Jeder Monat kostet gleich viel, und ohne Monat zahlt man nichts.'],
+    ['Handytarif mit Grundpreis plus Preis pro GB: GB → Rechnung','k','Der Grundpreis bleibt gleich. Darum verdoppelt sich die Rechnung nicht.']]
+};
+function sitQ(l){const s=pick(SIT[l]);return kindQ(`Wie hängen diese beiden Größen zusammen?<br>**${s[0]}**`,s[1],[s[2]],{hint:'Stell dir vor, die erste Größe verdoppelt sich. Was passiert dann mit der zweiten?'});}
+
+function tabKind(xs,kind){
+ if(kind==='p'){const k=ri(2,9);return{ys:xs.map(x=>x*k),k};}
+ if(kind==='a'){const m=xs.reduce(lcm,1);const k=m*pick(m>=12?[1,2,3]:[2,3,4,5]);return{ys:xs.map(x=>k/x),k};}
+ const k=ri(2,6),ys=xs.map(x=>x*k);ys[ri(1,xs.length-1)]+=ri(1,2);return{ys};
+}
+function solKind(xs,ys,kind){
+ const q=xs.map((x,i)=>`${ys[i]} : ${x} = ${de(Math.round(ys[i]/x*100)/100)}`).join(' · ');
+ const p=xs.map((x,i)=>`${x} · ${ys[i]} = ${x*ys[i]}`).join(' · ');
+ if(kind==='p')return ['Quotienten: '+q,'Alle Quotienten sind gleich, also **proportional**.'];
+ if(kind==='a')return ['Produkte: '+p,'Alle Produkte sind gleich, also **antiproportional**.'];
+ return ['Quotienten: '+q,'Produkte: '+p,'Weder Quotienten noch Produkte sind gleich, also **keins von beiden**.'];
+}
+const showTab=(xs,ys)=>({head:['1. Größe','2. Größe'],rows:[xs,ys]});
+
+/* ---------- 1 Erkennen ---------- */
+gen('erk','o','e-tab',()=>{const kind=pick(['p','a','k']),xs=[1,2,3,4],{ys}=tabKind(xs,kind);
+ return kindQ('Welche Zuordnung zeigt die Tabelle?',kind,solKind(xs,ys,kind),{show:showTab(xs,ys),hint:'Teile jede untere Zahl durch die obere. Sind die Ergebnisse gleich? Wenn nicht, multipliziere sie.'});});
+gen('erk','o','e-sit',()=>sitQ('o'));
+gen('erk','o','e-regel',()=>{const a=pick([['proportional','doppelt so viel','Zum Doppelten gehört bei proportionalen Zuordnungen immer das Doppelte.'],['antiproportional','die Hälfte','Zum Doppelten gehört bei antiproportionalen Zuordnungen immer die Hälfte.']]);
+ const o=['doppelt so viel','die Hälfte','gleich viel'];return {type:'mc',q:`Eine Zuordnung ist **${a[0]}**. Du verdoppelst die erste Größe. Was gehört dann zur zweiten Größe?`,o,c:o.indexOf(a[1]),fix:true,sol:[a[2]],hint:'Denk an „proportional: mehr → mehr“ und „antiproportional: mehr → weniger“.'};});
+gen('erk','p','e-tab2',()=>{const kind=pick(['p','a','k']),xs=pick([[2,3,5,6],[2,4,5,10],[3,4,6,8],[1,3,4,6]]),{ys}=tabKind(xs,kind);
+ return kindQ('Prüfe die Wertepaare. Welche Zuordnung liegt vor?',kind,solKind(xs,ys,kind),{show:showTab(xs,ys),hint:'Rechne für jede Spalte unten : oben und oben · unten.'});});
+gen('erk','p','e-sit2',()=>sitQ('p'));
+gen('erk','p','e-why',()=>{const kind=pick(['p','a']),xs=[2,3,4,6],{ys,k}=tabKind(xs,kind);
+ const good=kind==='p'?`proportional, weil alle Quotienten gleich ${k} sind`:`antiproportional, weil alle Produkte gleich ${k} sind`;
+ const o=kind==='p'?[good,`proportional, weil die Zahlen immer größer werden`,`antiproportional, weil alle Produkte gleich ${k} sind`,`keins von beiden, weil die Abstände verschieden sind`]:[good,`antiproportional, weil die Zahlen unten kleiner werden`,`proportional, weil alle Quotienten gleich ${k} sind`,`keins von beiden, weil die Abstände verschieden sind`];
+ return {type:'mc',q:'Welche Begründung ist richtig?',o,c:0,show:showTab(xs,ys),sol:solKind(xs,ys,kind),hint:'„Wird größer“ oder „wird kleiner“ reicht als Begründung nie. Du musst rechnen.'};});
+gen('erk','p','e-graph',()=>{const kind=pick(['p','a','k']);let c,txt;
+ if(kind==='p'){c={xmax:6,ymax:12,xs:1,ys:2,lin:[2,0]};txt='Die Punkte liegen auf einer Geraden durch den Ursprung (0|0).';}
+ else if(kind==='a'){c={xmax:6,ymax:12,xs:1,ys:2,hyp:12};txt='Die Punkte liegen auf einer fallenden Kurve, der Hyperbel.';}
+ else {c={xmax:6,ymax:12,xs:1,ys:2,lin:[1.5,2]};txt='Die Gerade geht nicht durch den Ursprung (0|0). Darum ist die Zuordnung nicht proportional.';}
+ c.xl='1. Größe';c.yl='2. Größe';return kindQ('Welche Zuordnung zeigt der Graph?',kind,[txt],{fig:c,hint:'Gerade durch (0|0)? Oder fallende Kurve? Schau genau auf den Anfang der Linie.'});});
+gen('erk','l','e-sit3',()=>sitQ('l'));
+gen('erk','l','e-fehler',()=>{const kind=pick(['p','a']),xs=[1,2,3,4,6],{ys,k}=tabKind(xs,kind);if(kind==='a'&&k<12)return null;const i=ri(1,4),w=ys.slice();w[i]+=pick([1,2]);
+ return {type:'num',q:`Die Zuordnung soll **${kind==='p'?'proportional':'antiproportional'}** sein. Eine Zahl in der unteren Zeile ist falsch. Wie muss sie **richtig** heißen?`,show:showTab(xs,w),ans:ys[i],sol:[kind==='p'?`Der Quotient ist überall ${k}, nur nicht bei ${xs[i]}.`:`Das Produkt ist überall ${k}, nur nicht bei ${xs[i]}.`,kind==='p'?`${xs[i]} · ${k} = **${ys[i]}**`:`${k} : ${xs[i]} = **${ys[i]}**`],hint:kind==='p'?'Berechne alle Quotienten. Welcher fällt aus der Reihe?':'Berechne alle Produkte. Welches fällt aus der Reihe?'};});
+gen('erk','l','e-grund',()=>{const g=pick([3,4,5,6]),p=pick([2,3,4]),n=pick(['Ein Fahrradverleih','Ein Bootsverleih']);const xs=[1,2,3,4],ys=xs.map(x=>g+p*x);
+ const o=[`Nein, zum Doppelten gehört nicht das Doppelte: ${ys[0]} · 2 ist nicht ${ys[1]}.`,'Ja, denn der Preis steigt immer um denselben Betrag.','Ja, denn mehr Stunden kosten mehr Geld.','Nein, denn der Preis wird kleiner.'];
+ return {type:'mc',q:`${n} nimmt ${g} € Grundgebühr plus ${p} € pro Stunde. Ist die Zuordnung **Stunden → Preis** proportional?`,o,c:0,show:{head:['Zeit (in h)','Preis (in €)'],rows:[xs,ys]},sol:[`Quotienten: ${ys[0]} : 1 = ${ys[0]} und ${ys[1]} : 2 = ${de(ys[1]/2)}. Sie sind nicht gleich.`,'Das Paar (0|'+g+') zeigt es auch: Die Gerade beginnt nicht bei (0|0).'],hint:'Vergleiche den Preis für 1 Stunde und für 2 Stunden.'};});
+
+/* ---------- 2 Proportional ---------- */
+gen('prop','o','p-tab',()=>{const k=ri(2,9),giv=pick([1,2]),xs=[1,2,3,4,5];
+ return {type:'table',q:'Die Zuordnung ist proportional. Ergänze die Tabelle.',tab:{head:['1. Größe','2. Größe'],rows:[xs,xs.map(x=>x===giv?x*k:{a:x*k})]},sol:[`Faktor: ${giv*k} : ${giv} = ${k}`,`Jede Zahl oben mal ${k}: ${xs.map(x=>x*k).join(', ')}`],hint:'Berechne zuerst den Wert für 1.'};});
+gen('prop','o','p-faktor',()=>{const k=ri(2,12),xs=[ri(1,2),ri(3,4),ri(5,6)],ys=xs.map(x=>x*k);
+ return {type:'num',q:'Die Zuordnung ist proportional. Wie groß ist der **Proportionalitätsfaktor**?',show:showTab(xs,ys),ans:k,sol:[`${ys[0]} : ${xs[0]} = **${k}**`,'Jedes Wertepaar ergibt denselben Quotienten.'],hint:'Teile eine Zahl von unten durch die Zahl darüber.'};});
+gen('prop','o','p-lesen',()=>{const k=pick([2,3,4,5]),a=ri(2,5);
+ return {type:'num',q:`Der Graph zeigt den Preis für Modellautos. Wie viel kosten **${a} Autos**?`,fig:{xmax:6,ymax:6*k,xs:1,ys:k,lin:[k,0],xl:'Anzahl der Autos',yl:'Preis (in €)'},ans:a*k,unit:'€',sol:[`Geh bei ${a} nach oben bis zur Geraden, dann nach links.`,`Du liest **${a*k} €** ab.`],hint:`Suche auf der Rechtsachse die ${a}.`};});
+gen('prop','p','p-lueck',()=>{const k=pick([1.5,2.5,3.5,4.5,1.2,0.8]),xs=[2,5,8,10],giv=pick([0,1,3]);
+ return {type:'table',q:'Die Zuordnung ist proportional. Ergänze die Tabelle.',tab:{head:['Menge (in kg)','Preis (in €)'],rows:[xs,xs.map((x,i)=>i===giv?r6(x*k):{a:r6(x*k)})]},sol:[`Preis für 1 kg: ${de(xs[giv]*k)} : ${xs[giv]} = ${de(k)} €`,`Dann mal ${de(k)}: ${xs.map(x=>de(x*k)).join(' · ')}`],hint:'Berechne zuerst den Preis für 1 kg.'};});
+gen('prop','p','p-plot',()=>{const k=pick([2,3,4,5]),xs=[1,2,3,4];
+ return {type:'plot',q:`Ein Heft kostet ${k} €. Trage die Punkte für 1, 2, 3 und 4 Hefte ein. Tippe dazu auf die Schnittpunkte im Gitter.`,grid:{xmax:6,ymax:6*k,xs:1,ys:k,xl:'Anzahl Hefte',yl:'Preis (in €)'},pts:xs.map(x=>[x,x*k]),sol:[xs.map(x=>`(${x}|${x*k})`).join(' · '),'Alle Punkte liegen auf einer Geraden durch (0|0).'],hint:`1 Heft kostet ${k} €. Also liegt der erste Punkt bei (1|${k}).`};});
+gen('prop','p','p-rueck',()=>{const k=pick([1.5,2.5,0.5]),y=k===1.5?pick([6,9,12]):k===2.5?pick([10,15,5]):pick([1,2,3]);const a=y/k;
+ return {type:'num',q:`Der Graph zeigt den Preis für Trauben. Wie viel kg bekommst du für **${de(y)} €**?`,fig:{xmax:6,ymax:k*6,xs:1,ys:k*2,lin:[k,0],xl:'Menge (in kg)',yl:'Preis (in €)'},ans:a,unit:'kg',sol:[`Geh bei ${de(y)} € nach rechts bis zur Geraden, dann nach unten.`,`Du liest **${de(a)} kg** ab.`],hint:'Starte diesmal an der Hochachse.'};});
+gen('prop','l','p-dez',()=>{const k=pick([1.2,2.4,3.6,0.4]),xs=[0.5,1.5,2.5,4],giv=pick([1,3]);
+ return {type:'table',q:'Die Zuordnung ist proportional. Ergänze die Tabelle.',tab:{head:['Länge (in m)','Preis (in €)'],rows:[xs,xs.map((x,i)=>i===giv?r6(x*k):{a:r6(x*k)})]},sol:[`Faktor: ${de(xs[giv]*k)} : ${de(xs[giv])} = ${de(k)}`,`Ergebnisse: ${xs.map(x=>de(x*k)).join(' · ')}`],hint:'Teile das bekannte Wertepaar. Der Faktor ist eine Kommazahl.'};});
+gen('prop','l','p-abo',()=>{const k=pick([8,9,10,12,15]),m=pick([7,9,12,18]);
+ return {type:'num',q:`Der Zugang zu einem Musikdienst kostet monatlich ${k} €. Der Graph zeigt die Kosten. Wie teuer sind **${m} Monate**? Lies nicht ab, sondern rechne.`,fig:{xmax:6,ymax:6*k,xs:1,ys:k,lin:[k,0],xl:'Monate',yl:'Kosten (in €)'},ans:k*m,unit:'€',sol:[`Faktor aus dem Graphen: ${k} € pro Monat`,`${m} · ${k} = **${k*m} €**`],hint:'Lies den Wert für 1 Monat ab und multipliziere.'};});
+gen('prop','l','p-vergl',()=>{const pa=pick([2.4,2.8,3.2]),pb=pick([2.2,2.6,3]);if(pa===pb)return null;const am=pick([2,3,5]),bm=pick([4,6,10]);
+ const best=Math.min(pa,pb),win=best===pa?'Laden A':'Laden B';const o=['Laden A','Laden B','Beide gleich teuer'];
+ return {type:'mc',q:`Beim gleichen Apfelsaft kosten in **Laden A** ${am} Liter ${eur(am*pa)}. In **Laden B** kosten ${bm} Liter ${eur(bm*pb)}. Wo ist der Saft günstiger?`,o,c:o.indexOf(win),fix:true,sol:[`A: ${eur(am*pa)} : ${am} = ${eur(pa)} pro Liter`,`B: ${eur(bm*pb)} : ${bm} = ${eur(pb)} pro Liter`,`Also ist **${win}** günstiger.`],hint:'Rechne für beide Läden den Preis für 1 Liter aus.'};});
+
+/* ---------- 3 Dreisatz proportional ---------- */
+gen('dp','o','dp-tab',()=>{const c=pick(CP),n=propNums(c);return {type:'table',q:c.f(n.a,n.b,n.c)+' Fülle die Dreisatz-Tabelle aus.',ds:true,tab:dsTable(n,false,true,c.h),sol:solP(n),hint:`Teile beide Seiten durch ${n.a}, dann kommst du zur 1.`,trap:[]};});
+gen('dp','o','dp-num',()=>{const c=pick(CP),n=propNums(c);return {type:'num',q:c.f(n.a,n.b,n.c),ans:n.ans,unit:c.unit,sol:solP(n),hint:'Rechne zuerst den Wert für 1 aus.',trap:Number.isInteger(n.b*n.a/n.c)?[[n.b*n.a/n.c,SET_MSG_P]]:[]};});
+gen('dp','p','dp-tab2',()=>{const c=pick(CP),n=propNums(c);return {type:'table',q:c.f(n.a,n.b,n.c)+' Fülle die Tabelle aus.',ds:true,tab:dsTable(n,false,false,c.h),sol:solP(n),hint:'Mittlere Zeile: Wert für 1.'};});
+gen('dp','p','dp-g',()=>{const p=pick([12,15,16,20,24]),g=pick([250,500,750,125,200]),ans=p*g/1000;if(ans*100%1>1e-6)return null;const w=pick(['Honig','Käse','Kaffee','Nüsse']);
+ return {type:'num',q:`1 kg ${w} kostet ${eur(p)}. Wie viel kosten **${g} g**?`,ans,unit:'€',sol:[`1 kg = 1000 g`,`1000 g → ${p} €, 1 g → ${p} : 1000 = ${de(p/1000)} €`,`${g} g → ${de(p/1000)} · ${g} = **${eur(ans)}**`],hint:'Rechne die Einheit um: 1 kg sind 1000 g.'};});
+gen('dp','p','dp-rez',()=>{const per=pick([40,50,60,75,80]),a=pick([2,4,6]),c=pick([3,5,8,10]);if(a===c)return null;const w=pick(['Mehl','Zucker','Nudeln']);
+ return {type:'num',q:`Für ${a} Personen braucht man ${a*per} g ${w}. Wie viel braucht man für **${c} Personen**?`,ans:c*per,unit:'g',sol:[`Für 1 Person: ${a*per} : ${a} = ${per} g`,`Für ${c} Personen: ${per} · ${c} = **${c*per} g**`],hint:'Wie viel braucht eine Person?'};});
+gen('dp','p','dp-ml',()=>{const m=pick([40,60,80]),s=pick([60,80,120]),t=pick([100,150,200,250]);const b=pick(['Kirschsaft','Orangensaft']);
+ return {type:'num',q:`Für 100 ml Fruchtmix braucht man ${m} ml ${b}. Wie viel ${b} braucht man für **${t} ml** Fruchtmix?`,ans:m*t/100,unit:'ml',sol:[`Für 1 ml Mix: ${m} : 100 = ${de(m/100)} ml`,`Für ${t} ml: ${de(m/100)} · ${t} = **${de(m*t/100)} ml**`],hint:'Rechne zuerst für 1 ml Mix.'};});
+gen('dp','l','dp-him',()=>{const p=pick([8,9,10,12]),a=pick([1.5,2.5,0.5]),g=pick([200,250,300,750]);const w=pick(['Himbeeren','Heidelbeeren']);const ans=p*g/1000;
+ return {type:'num',q:`${de(a)} kg ${w} kosten ${eur(a*p)}. Wie viel kosten **${g} g**?`,ans,unit:'€',sol:[`1 kg kostet ${eur(a*p)} : ${de(a)} = ${eur(p)}`,`1 g kostet ${p} : 1000 = ${de(p/1000)} €`,`${g} g kosten **${eur(ans)}**`],hint:'Rechne erst den Preis für 1 kg, dann die Gramm.'};});
+gen('dp','l','dp-benz',()=>{const p=pick([0.08,0.1,0.12]),k1=pick([150,200,250,300]),k2=pick([350,400,450,500]);const n=pick(NAMES);
+ return {type:'num',q:`${n}s Familie ist ${k1} km gefahren und hat dafür ${eur(p*k1)} für Benzin bezahlt. Am Wochenende fährt sie ${k2} km. Wie viel kostet das Benzin dann?`,ans:p*k2,unit:'€',sol:[`Für 1 km: ${eur(p*k1)} : ${k1} = ${de(p)} €`,`Für ${k2} km: ${de(p)} · ${k2} = **${eur(p*k2)}**`],hint:'Berechne die Kosten für 1 km.'};});
+gen('dp','l','dp-pack',()=>{const g=pick([60,75,80,120]),a=4,n=pick([10,14,18,22]),pa=500,need=g*n,ans=Math.ceil(need/pa);if(need%pa===0)return null;
+ return {type:'num',q:`Für ${a} Personen braucht man ${a*g} g Mehl. Die Klasse backt für ${n} Personen. Mehl gibt es nur in Packungen zu 500 g. Wie viele Packungen müsst ihr **mindestens** kaufen?`,ans,unit:'Packungen',sol:[`Für 1 Person: ${a*g} : ${a} = ${g} g`,`Für ${n} Personen: ${g} · ${n} = ${need} g`,`${need} : 500 = ${de(need/500)}. Also **${ans} Packungen**, weil halbe Packungen nicht gehen.`],hint:'Berechne die Gesamtmenge. Überlege dann, ob du auf- oder abrunden musst.',trap:[[Math.floor(need/pa),'Damit hast du zu wenig Mehl. Hier musst du aufrunden.']]};});
+gen('dp','l','dp-tempo',()=>{const v=pick([60,80,90,100]),a=pick([1.5,2.5,3.5]),c=pick([4,5,6]);
+ return {type:'num',q:`Ein Auto fährt gleichmäßig und schafft in ${de(a)} Stunden ${de(a*v)} km. Wie weit kommt es in **${c} Stunden**?`,ans:v*c,unit:'km',sol:[`In 1 Stunde: ${de(a*v)} : ${de(a)} = ${v} km`,`In ${c} Stunden: ${v} · ${c} = **${v*c} km**`],hint:'Teile durch die Kommazahl. Es entsteht eine glatte Zahl.'};});
+
+/* ---------- 4 Antiproportional ---------- */
+gen('anti','o','a-tab',()=>{const k=pick([12,24,36,48,60]),xs=k===12?[1,2,3,4,6]:[1,2,3,4,6],giv=pick([0,1]);
+ return {type:'table',q:'Die Zuordnung ist antiproportional. Ergänze die Tabelle.',tab:{head:['1. Größe','2. Größe'],rows:[xs,xs.map((x,i)=>i===giv?k/x:{a:k/x})]},sol:[`Produkt: ${xs[giv]} · ${k/xs[giv]} = ${k}`,`Rechne ${k} geteilt durch die obere Zahl: ${xs.map(x=>k/x).join(', ')}`],hint:'Multipliziere die beiden bekannten Zahlen. Dieses Produkt bleibt immer gleich.'};});
+gen('anti','o','a-prod',()=>{const k=pick([12,18,24,30,36]),xs=[1,2,3],ys=xs.map(x=>k/x);
+ return {type:'num',q:'Die Zuordnung ist antiproportional. Wie groß ist das **Produkt** aus beiden Größen?',show:showTab(xs,ys),ans:k,sol:[`${xs[1]} · ${ys[1]} = **${k}**`,'Jedes Wertepaar ergibt dasselbe Produkt.'],hint:'Multipliziere die beiden Zahlen einer Spalte.'};});
+gen('anti','o','a-halb',()=>{const n=pick([2,3,4]),t=pick([4,6,8,10,12]),f=pick([2,3]);if(t%f)return null;
+ return {type:'num',q:`${n} Bagger brauchen ${t} Stunden. Wie lange brauchen **${n*f} Bagger**?`,ans:t/f,unit:'h',sol:[`Die Anzahl wird ${f===2?'verdoppelt':'verdreifacht'}.`,`Also wird die Zeit ${f===2?'halbiert':'gedrittelt'}: ${t} : ${f} = **${t/f} h**`],hint:'Mehr Bagger, weniger Zeit. Teile die Zeit.',trap:[[t*f,'Du hast mal gerechnet. Mehr Bagger brauchen aber weniger Zeit.']]};});
+gen('anti','p','a-tab2',()=>{const xs=pick([[2,3,4,6],[2,4,5,10],[3,4,6,12],[1,2,5,10]]),m=xs.reduce(lcm,1),k=m*pick([1,2,3]),giv=ri(0,3);
+ return {type:'table',q:'Die Zuordnung ist antiproportional. Ergänze die Tabelle.',tab:{head:['Anzahl Maschinen','Zeit (in h)'],rows:[xs,xs.map((x,i)=>i===giv?k/x:{a:k/x})]},sol:[`Produkt: ${xs[giv]} · ${k/xs[giv]} = ${k}`,`${xs.map(x=>`${k} : ${x} = ${k/x}`).join(' · ')}`],hint:'Berechne zuerst das Produkt.'};});
+gen('anti','p','a-lesen',()=>{const k=pick([12,24]),a=pick([2,3,6]);
+ return {type:'num',q:`Der Graph zeigt, wie lange Bagger für eine Baugrube brauchen. Wie lange brauchen **${a} Bagger**?`,fig:{xmax:6,ymax:k,xs:1,ys:k/6,hyp:k,xl:'Anzahl der Bagger',yl:'Zeit (in h)'},ans:k/a,unit:'h',sol:[`Geh bei ${a} nach oben bis zur Hyperbel, dann nach links.`,`Du liest **${k/a} h** ab. Probe: ${a} · ${k/a} = ${k}`],hint:'Die Kurve fällt, also dauert es mit mehr Baggern kürzer.'};});
+gen('anti','p','a-plot',()=>{const [k,xs,ys]=pick([[12,[1,2,3,6],2],[18,[1,2,3,6],3],[24,[1,2,3,6],4]]);
+ return {type:'plot',q:`Ein Bagger allein braucht ${k} Stunden. Trage die Zeiten für ${xs.join(', ').replace(/, (\d+)$/,' und $1')} Bagger ein. Tippe dazu auf die Schnittpunkte im Gitter.`,grid:{xmax:6,ymax:k,xs:1,ys,xl:'Anzahl der Bagger',yl:'Zeit (in h)'},pts:xs.map(x=>[x,k/x]),sol:[xs.map(x=>`(${x}|${k/x})`).join(' · '),'Die Punkte liegen auf einer fallenden Kurve, der Hyperbel.'],hint:`Rechne für jeden Punkt ${k} : Anzahl der Bagger.`};});
+gen('anti','l','a-dez',()=>{const [k,xs]=pick([[30,[1.5,2.5,5,7.5]],[36,[1.5,2,4,4.5]],[60,[1.5,2.5,4,7.5]],[18,[0.5,1.5,3,4.5]]]),giv=ri(1,2);
+ return {type:'table',q:'Die Zuordnung ist antiproportional. Ergänze die Tabelle.',tab:{head:['Geschwindigkeit (in m/s)','Zeit (in s)'],rows:[xs,xs.map((x,i)=>i===giv?k/x:{a:k/x})]},sol:[`Produkt: ${de(xs[giv])} · ${k/xs[giv]} = ${k}`,`${xs.map(x=>`${k} : ${de(x)} = ${de(k/x)}`).join(' · ')}`],hint:'Das Produkt bleibt gleich, auch bei Kommazahlen.'};});
+gen('anti','l','a-recht',()=>{const k=pick([20,24,36,48]),xs={20:[1,2,4,5,10],24:[1,2,3,4,6],36:[2,3,4,6,9],48:[2,3,4,6,8]}[k],giv=ri(0,4);
+ return {type:'table',q:`Ein Rechteck hat immer den Flächeninhalt **${k} cm²**. Ergänze die fehlenden Seitenlängen.`,tab:{head:['Seite a (in cm)','Seite b (in cm)'],rows:[xs,xs.map((x,i)=>i===giv?k/x:{a:k/x})]},sol:[`a · b = ${k}, also b = ${k} : a`,`${xs.map(x=>`${k} : ${x} = ${k/x}`).join(' · ')}`],hint:'Fläche = a · b. Die Fläche bleibt gleich.'};});
+gen('anti','l','a-punkt',()=>{const k=pick([12,24]),a=pick([2,3,4]),t=pick(k===12?[1,6]:[1,6,8]);if(t===a)return null;
+ return {type:'num',q:`Der Punkt (${a}|${k/a}) liegt auf der Hyperbel. Welcher y-Wert gehört zu **x = ${t}**?`,fig:{xmax:6,ymax:k,xs:1,ys:k/6,hyp:k,xl:'x',yl:'y',mark:[[a,k/a]]},ans:k/t,sol:[`Produkt: ${a} · ${k/a} = ${k}`,`${k} : ${t} = **${k/t}**`],hint:'Das Produkt von x und y bleibt gleich.'};});
+
+/* ---------- 5 Dreisatz antiproportional ---------- */
+gen('da','o','da-tab',()=>{const c=pick(CA.slice(0,5)),n=antiNums(false);return {type:'table',q:c.f(n.a,n.b,n.c)+' Fülle die Dreisatz-Tabelle aus.',ds:true,tab:dsTable(n,true,true,c.h),sol:solA(n),hint:`Für 1 dauert es länger. Rechne also mal ${n.a}.`};});
+gen('da','o','da-num',()=>{const c=pick(CA.slice(0,5)),n=antiNums(false);return {type:'num',q:c.f(n.a,n.b,n.c),ans:n.ans,unit:c.unit,sol:solA(n),hint:'Rechne aus, wie lange es mit nur 1 dauert.',trap:[[n.b*n.c/n.a,SET_MSG_A]]};});
+gen('da','p','da-tab2',()=>{const c=pick(CA.slice(0,5)),n=antiNums(true);return {type:'table',q:c.f(n.a,n.b,n.c)+' Fülle die Tabelle aus.',ds:true,tab:dsTable(n,true,false,c.h),sol:solA(n),hint:'Links geteilt heißt rechts mal.'};});
+gen('da','p','da-num2',()=>{const c=pick(CA),n=antiNums(true);if(c.unit==='€'){n.b*=100;n.k*=100;n.ans*=100;}return {type:'num',q:c.f(n.a,n.b,n.c),ans:n.ans,unit:c.unit,sol:solA(n),hint:'Das Produkt bleibt gleich.',trap:[[n.b*n.c/n.a,SET_MSG_A]]};});
+gen('da','p','da-fahrt',()=>{const n=pick(NAMES),[v1,t1,v2]=pick([[60,10,80],[100,3,60],[80,3,120],[50,6,75],[90,2,60],[120,2,80]]);
+ return {type:'num',q:`Familie ${pick(['Meyer','Yılmaz','Schulz','Toprak'])} fährt mit durchschnittlich ${v1} km/h und braucht ${t1} Stunden. Wie lange dauert dieselbe Strecke mit **${v2} km/h**?`,ans:v1*t1/v2,unit:'h',sol:[`Strecke: ${v1} · ${t1} = ${v1*t1} km`,`Zeit: ${v1*t1} : ${v2} = **${de(v1*t1/v2)} h**`],hint:'Berechne zuerst die Strecke. Sie bleibt gleich.',trap:[[t1*v2/v1,'Schneller fahren heißt weniger Zeit. Du hast proportional gerechnet.']]};});
+gen('da','l','da-schlauch',()=>{const L=pick([60,90,100,120]),t=pick([24,30,36]),k=L*t,c=shuffle([72,80,120,144,150,180,200,240]).find(x=>k%x===0&&x!==L);if(!c)return null;
+ return {type:'num',q:`Pro Minute fließen ${L} Liter aus einem Tank. Nach ${t} Minuten ist er leer. Wie viel Liter müssten pro Minute fließen, damit er nach **${k/c} Minuten** leer ist?`,ans:c,unit:'Liter',sol:[`Inhalt des Tanks: ${L} · ${t} = ${k} Liter`,`${k} : ${k/c} = **${c} Liter** pro Minute`],hint:'Wie viel Liter sind insgesamt im Tank?'};});
+gen('da','l','da-weiter',()=>{let n,T,d,e,rem;for(let i=0;i<40;i++){n=pick([4,6,8]);T=pick([9,10,12,15]);d=pick([2,3,4]);e=pick([1,2,4]);rem=(T-d)*n/(n+e);if(Number.isInteger(rem))return {type:'num',q:`${n} Handwerker würden für einen Umbau ${T} Tage brauchen. Nach ${d} Tagen kommen ${e} weitere dazu. Wie viele Tage dauert der Umbau **insgesamt**?`,ans:d+rem,unit:'Tage',sol:[`Noch offen: ${T} − ${d} = ${T-d} Tage für ${n} Handwerker`,`Arbeit: ${n} · ${T-d} = ${n*(T-d)} Tage für 1 Person`,`${n*(T-d)} : ${n+e} = ${rem} Tage`,`Insgesamt: ${d} + ${rem} = **${d+rem} Tage**`],hint:'Rechne nur mit den Tagen, die nach den ersten noch fehlen.',trap:[[rem,'Das sind nur die restlichen Tage. Zähle die ersten Tage noch dazu.']]};}return null;});
+gen('da','l','da-bruch',()=>{const [txt,mn,a,c]=pick([['{3/4} h',45,4,3],['{3/4} h',45,4,6],['{1/2} h',30,3,2],['1{1/2} h',90,4,3],['1{1/2} h',90,2,6],['{1/4} h',15,4,2]]);
+ return {type:'num',q:`${a} Kinder brauchen ${txt} für die Vorbereitung einer Feier. Wie viele **Minuten** brauchen ${c} Kinder?`,ans:mn*a/c,unit:'min',sol:[`${txt} = ${mn} min`,`Für 1 Kind: ${mn} · ${a} = ${mn*a} min`,`Für ${c} Kinder: ${mn*a} : ${c} = **${mn*a/c} min**`],hint:'Rechne die Zeit zuerst in Minuten um.'};});
+gen('da','l','da-flug',()=>{const [v,t,w]=pick([[600,5,500],[900,4,800],[750,4,600],[800,3,600],[120,2.5,100],[90,4,120]]);
+ return {type:'num',q:`Bei durchschnittlich ${v} km/h dauert eine Reise ${de(t)} Stunden. Wie lange dauert sie bei **${w} km/h**?`,ans:v*t/w,unit:'h',sol:[`Strecke: ${v} · ${de(t)} = ${de(v*t)} km`,`${de(v*t)} : ${w} = **${de(v*t/w)} h**`],hint:'Die Strecke bleibt gleich.',trap:[[t*w/v,'Das wäre proportional gerechnet. Langsamer heißt mehr Zeit, schneller heißt weniger Zeit.']]};});
+
+/* ---------- 6 Gemischt ---------- */
+function decideQ(big){
+ if(Math.random()<.5){const c=pick(CP),n=propNums(c);return {type:'decide',q:c.f(n.a,n.b,n.c),kind:'p',ans:n.ans,unit:c.unit,sol:['Doppelte Anzahl, doppelter Wert: **proportional**.',...solP(n)],hint:'Stelle dir vor, die erste Größe verdoppelt sich.'};}
+ const c=pick(CA),n=antiNums(big);if(c.unit==='€'){n.b*=100;n.k*=100;n.ans*=100;}return {type:'decide',q:c.f(n.a,n.b,n.c),kind:'a',ans:n.ans,unit:c.unit,sol:['Doppelte Anzahl, halber Wert: **antiproportional**.',...solA(n)],hint:'Stelle dir vor, die erste Größe verdoppelt sich.'};
+}
+gen('mix','o','m-dec',()=>decideQ(false));
+gen('mix','o','m-gart0',()=>{const a=pick([2,3,4]),t=pick([6,8,12]),c=pick([2,3,4,6]);if(a===c||(a*t)%c)return null;return {type:'decide',q:`${a} Gärtner erledigen eine Arbeit in ${t} Stunden. Wie lange brauchen ${c} Gärtner für die gleiche Arbeit?`,kind:'a',ans:a*t/c,unit:'h',sol:['Die Arbeit bleibt gleich. Mit mehr Gärtnern geht es schneller: **antiproportional**.',`${a} · ${t} = ${a*t}`,`${a*t} : ${c} = **${a*t/c} h**`],hint:'Was passiert mit der Zeit, wenn doppelt so viele helfen?'};});
+gen('mix','o','m-eis',()=>{const u=pick([2,3,4]),a=pick([2,3,4]),c=pick([5,6,7]);return {type:'decide',q:`${a} Kugeln Eis kosten ${eur(a*u)}. Wie viel kosten ${c} Kugeln?`,kind:'p',ans:c*u,unit:'€',sol:['Doppelt so viele Kugeln kosten doppelt so viel: **proportional**.',`${a*u} : ${a} = ${u} €`,`${u} · ${c} = **${c*u} €**`],hint:'Was passiert mit dem Preis, wenn du doppelt so viele Kugeln nimmst?'};});
+gen('mix','p','m-dec2',()=>decideQ(true));
+gen('mix','p','m-g',()=>{const p=pick([12,16,20]),g=pick([250,500,750]);const w=pick(['Kaffee','Käse']);return {type:'decide',q:`1 kg ${w} kostet ${eur(p)}. Wie viel kosten ${g} g?`,kind:'p',ans:p*g/1000,unit:'€',sol:['Doppelte Menge, doppelter Preis: **proportional**.',`${p} : 1000 · ${g} = **${eur(p*g/1000)}**`],hint:'1 kg sind 1000 g.'};});
+gen('mix','p','m-gart',()=>{const a=pick([3,4,6]),t=pick([4,6,8]),c=pick([2,3,8,12]);if(a===c||(a*t)%c)return null;const k=a*t;return {type:'decide',q:`${a} Gärtner erledigen eine Arbeit in ${t} Stunden. Wie lange brauchen ${c} Gärtner für die gleiche Arbeit?`,kind:'a',ans:k/c,unit:'h',sol:['Mehr Gärtner, weniger Zeit: **antiproportional**.',`${a} · ${t} = ${k}`,`${k} : ${c} = **${k/c} h**`],hint:'Die Arbeit bleibt gleich.'};});
+gen('mix','l','m-him',()=>{const p=pick([9,12,16]),a=pick([1.5,2.5]),g=pick([250,750]);return {type:'decide',q:`${de(a)} kg Erdbeeren kosten ${eur(a*p)}. Wie viel kosten ${g} g Erdbeeren?`,kind:'p',ans:p*g/1000,unit:'€',sol:['**Proportional**.',`1 kg kostet ${eur(p)}.`,`${g} g kosten ${p} : 1000 · ${g} = **${eur(p*g/1000)}**`],hint:'Rechne erst auf 1 kg, dann auf Gramm.'};});
+gen('mix','l','m-bag',()=>{const a=pick([4,6]),t=pick([3.5,4.5,2.5]),c=pick([2,3]);const k=a*t;if(r6(k/c*100)%1)return null;return {type:'decide',q:`${a} Bagger benötigen ${de(t)} Stunden für eine Arbeit. Wie lange benötigen ${c} Bagger dafür?`,kind:'a',ans:k/c,unit:'h',sol:['**Antiproportional**.',`${a} · ${de(t)} = ${de(k)}`,`${de(k)} : ${c} = **${de(k/c)} h**`],hint:'Das Produkt bleibt gleich.'};});
+gen('mix','l','m-keine',()=>{const s=pick([['Lena ist mit 10 Jahren 1,40 m groß. Wie groß ist sie mit 20 Jahren?','Körpergröße wächst nicht gleichmäßig mit dem Alter.'],['Ein Sprinter läuft 100 m in 12 Sekunden. Wie lange braucht er für 10 km?','Auf langen Strecken kann niemand das Sprinttempo halten.'],['Ein Taxi kostet für 2 km insgesamt 9 € inklusive Grundgebühr. Wie viel kosten 4 km genau?','Ohne die Höhe der Grundgebühr kann man nicht verdoppeln.'],['1 Sänger singt ein Lied in 3 Minuten. Wie lange brauchen 3 Sänger?','Mehr Sänger machen das Lied nicht kürzer und nicht länger.']]);
+ const o=['Kann man so nicht berechnen','Mit dem proportionalen Dreisatz','Mit dem antiproportionalen Dreisatz'];return {type:'mc',q:s[0]+' Wie gehst du vor?',o,c:0,fix:true,sol:[s[1],'Prüfe vor dem Rechnen immer, ob die Zuordnung überhaupt proportional oder antiproportional ist.'],hint:'Verdopple die erste Größe. Stimmt die Regel dann wirklich?'};});
+gen('mix','l','m-futter',()=>{const a=pick([4,6,8]),c=pick([12,3,2,16]),t=pick([12,15,18]);if(a===c||(a*t)%c)return null;return {type:'decide',q:`Für ${a} Pferde reicht das Futter ${t} Tage. Wie lange reicht es für ${c} Pferde?`,kind:'a',ans:a*t/c,unit:'Tage',sol:['Mehr Pferde, kürzer reicht das Futter: **antiproportional**.',`${a} · ${t} = ${a*t}`,`${a*t} : ${c} = **${a*t/c} Tage**`],hint:'Der Vorrat bleibt gleich.'};});
+
+/* ---------- Bereich Textaufgaben ---------- */
+const TEXT=[
+ {id:'tp',name:'Mehr → mehr',sub:'Textaufgaben zu proportionalen Zuordnungen'},
+ {id:'ta',name:'Mehr → weniger',sub:'Textaufgaben zu antiproportionalen Zuordnungen'},
+ {id:'tm',name:'Gemischt',sub:'Du musst selbst herausfinden, welche Art es ist'}
+];
+function alias(t,l,ids){ids.forEach(id=>{const g=GEN.find(x=>x.id===id);GEN.push({t,l,id,make:g.make});});}
+alias('tp','o',['dp-num','dp-tab']);alias('tp','p',['dp-g','dp-rez','dp-ml']);alias('tp','l',['dp-him','dp-benz','dp-pack','dp-tempo']);
+alias('ta','o',['da-num','da-tab']);alias('ta','p',['da-num2','da-fahrt']);alias('ta','l',['da-schlauch','da-weiter','da-bruch','da-flug']);
+alias('tm','o',['m-gart0','m-eis']);alias('tm','p',['m-g','m-gart']);alias('tm','l',['m-him','m-bag','m-keine','m-futter']);
+const tips={p:'Wähle die Zahlen aus, die du wirklich brauchst. Rechne dann zur 1.',a:'Das Produkt bleibt gleich. Rechne erst zur 1.'};
+gen('tp','o','t-schoko',()=>{const n=pick(NAMES),g=pick([20,30,50]),u=pick([2,3,4]),a=pick([2,3,4]),c=pick([5,6,7]);return {type:'num',q:`${n} geht mit ${g} € in den Supermarkt. ${a} Tafeln Schokolade kosten dort ${eur(a*u)}. Wie viel kosten ${c} Tafeln?`,ans:c*u,unit:'€',sol:[`Die ${g} € brauchst du hier nicht.`,`1 Tafel: ${a*u} : ${a} = ${u} €`,`${c} Tafeln: ${u} · ${c} = **${c*u} €**`],hint:tips.p};});
+gen('tp','o','t-foto',()=>{const u=pick([4,5,6]),a=pick([2,3,5]),c=pick([4,7,8]);return {type:'num',q:`Die 7c macht ein Fotobuch. Auf jeder Seite sind gleich viele Fotos. Auf ${a} Seiten passen ${a*u} Fotos. Wie viele Fotos passen auf ${c} Seiten?`,ans:c*u,unit:'Fotos',sol:[`1 Seite: ${a*u} : ${a} = ${u} Fotos`,`${c} Seiten: ${u} · ${c} = **${c*u} Fotos**`],hint:tips.p};});
+gen('tp','o','t-fest',()=>{const u=pick([2,3]),a=pick([3,4,6]),c=pick([5,8,10]);return {type:'num',q:`Für das Klassenfest kauft ihr Saft. ${a} Flaschen kosten zusammen ${eur(a*u)}. Ihr braucht aber ${c} Flaschen. Wie viel müsst ihr bezahlen?`,ans:c*u,unit:'€',sol:[`1 Flasche: ${a*u} : ${a} = ${u} €`,`${c} Flaschen: ${u} · ${c} = **${c*u} €**`],hint:tips.p};});
+gen('tp','p','t-waffel',()=>{const g=pick([20,25,30]),a=pick([8,10,12]),c=pick([15,18,30]);return {type:'num',q:`Für ${a} Waffeln braucht man ${a*g} g Mehl. Die Klasse will beim Schulfest ${c} Waffeln backen. Wie viel Mehl braucht sie?`,ans:c*g,unit:'g',sol:[`1 Waffel: ${a*g} : ${a} = ${g} g`,`${c} Waffeln: ${g} · ${c} = **${c*g} g**`],hint:tips.p};});
+gen('tp','p','t-job',()=>{const n=pick(NAMES),u=pick([9,10,11,12]),a=pick([2,3,4]),c=pick([5,6,7]);return {type:'num',q:`${n} trägt Zeitungen aus und bekommt für ${a} Stunden ${eur(a*u)}. Diese Woche arbeitet ${n} ${c} Stunden. Wie viel Geld gibt es dafür?`,ans:c*u,unit:'€',sol:[`1 Stunde: ${a*u} : ${a} = ${u} €`,`${c} Stunden: ${u} · ${c} = **${c*u} €**`],hint:tips.p};});
+gen('tp','p','t-liter',()=>{const v=pick([5,6,7,8]),c=pick([150,250,350,450]);return {type:'num',q:`Ein Auto verbraucht auf 100 km genau ${v} Liter Benzin. Familie Schulz fährt ${c} km in den Urlaub. Wie viel Liter braucht das Auto?`,ans:v*c/100,unit:'Liter',sol:[`1 km: ${v} : 100 = ${de(v/100)} Liter`,`${c} km: ${de(v/100)} · ${c} = **${de(v*c/100)} Liter**`],hint:'Rechne zuerst auf 1 km oder auf 50 km.'};});
+gen('tp','l','t-wechsel',()=>{const u=pick([2,3,4]),a=pick([1.5,2.5]),c=pick([3,4,5]);const k=c*u,sc=k<10?10:k<20?20:50;const n=pick(NAMES);return {type:'num',q:`${de(a)} kg Äpfel kosten ${eur(a*u)}. ${n} kauft ${c} kg und bezahlt mit einem ${sc}-€-Schein. Wie viel Wechselgeld gibt es?`,ans:sc-k,unit:'€',sol:[`1 kg: ${eur(a*u)} : ${de(a)} = ${eur(u)}`,`${c} kg: ${u} · ${c} = ${k} €`,`Wechselgeld: ${sc} − ${k} = **${sc-k} €**`],hint:'Das sind zwei Schritte: erst den Preis, dann das Wechselgeld.',trap:[[k,'Das ist der Preis. Gefragt ist das Wechselgeld.']]};});
+gen('tp','l','t-druck',()=>{const r=pick([8,12,15,20]),a=pick([2,3]),c=pick([60,120,180]);return {type:'num',q:`Ein Drucker schafft in ${a} Minuten ${a*r} Seiten. Wie viele **Minuten** braucht er für ${c} Seiten?`,ans:c/r,unit:'min',sol:[`1 Minute: ${a*r} : ${a} = ${r} Seiten`,`${c} : ${r} = **${de(c/r)} min**`],hint:'Wie viele Seiten schafft er in 1 Minute?'};});
+gen('ta','o','t-bus',()=>{const k=pick([120,180,240]),a=pick([20,24,30]),c=pick([15,16,12,10]);if(k%a||k%c||a===c)return null;return {type:'num',q:`Die Klasse teilt sich die Kosten für einen Bus. Wenn ${a} Kinder mitfahren, zahlt jedes ${eur(k/a)}. Es fahren aber nur ${c} Kinder mit. Wie viel zahlt jetzt jedes Kind?`,ans:k/c,unit:'€',sol:[`Gesamtkosten: ${a} · ${k/a} = ${k} €`,`${k} : ${c} = **${k/c} €**`],hint:'Wie teuer ist der Bus insgesamt?',trap:[[(k/a)*c/a,SET_MSG_A]]};});
+gen('ta','o','t-spar',()=>{const n=pick(NAMES),a=pick([5,4,6]),w=pick([12,10,15]),c=pick([2,3,10]);if((a*w)%c||a===c)return null;return {type:'num',q:`${n} spart für ein Spiel und legt jede Woche ${a} € zurück. So dauert es ${w} Wochen. Wie viele Wochen dauert es bei ${c} € pro Woche?`,ans:a*w/c,unit:'Wochen',sol:[`Preis des Spiels: ${a} · ${w} = ${a*w} €`,`${a*w} : ${c} = **${a*w/c} Wochen**`],hint:'Wie teuer ist das Spiel?'};});
+gen('ta','o','t-kuchen',()=>{const k=pick([24,36]),a=pick([2,3]),c=pick([4,6]);return {type:'num',q:`Ein Blech Kuchen wird gerecht verteilt. Bekommt jedes Kind ${a} Stücke, reicht es für ${k/a} Kinder. Für wie viele Kinder reicht es, wenn jedes ${c} Stücke bekommt?`,ans:k/c,unit:'Kinder',sol:[`Stücke insgesamt: ${a} · ${k/a} = ${k}`,`${k} : ${c} = **${k/c} Kinder**`],hint:'Wie viele Stücke hat das Blech?'};});
+gen('ta','p','t-zelt',()=>{const a=pick([10,12,15]),t=pick([6,8,10]),c=pick([20,24,5,16]);if((a*t)%c||a===c)return null;return {type:'num',q:`Im Zeltlager reicht der Vorrat für ${a} Kinder genau ${t} Tage. Nun sind es ${c} Kinder. Wie viele Tage reicht der Vorrat?`,ans:a*t/c,unit:'Tage',sol:[`Für 1 Kind: ${t} · ${a} = ${a*t} Tage`,`Für ${c} Kinder: ${a*t} : ${c} = **${a*t/c} Tage**`],hint:'Für 1 Kind reicht der Vorrat länger.',trap:[[t*c/a,SET_MSG_A]]};});
+gen('ta','p','t-rate',()=>{const k=pick([480,600,720]),a=pick([12,10]),c=pick([8,6,15]);if(k%a||k%c)return null;return {type:'num',q:`Ein Fahrrad wird in ${a} gleich hohen Raten zu je ${eur(k/a)} bezahlt. Wie hoch ist eine Rate, wenn man es in ${c} Raten bezahlt?`,ans:k/c,unit:'€',sol:[`Preis: ${a} · ${k/a} = ${k} €`,`${k} : ${c} = **${k/c} €**`],hint:'Berechne den Preis des Fahrrads.'};});
+gen('ta','l','t-krank',()=>{const a=pick([6,8,10]),t=pick([6,8,12]),e=pick([1,2,4]);const k=a*t,c=a-e;if(k%c||c<2)return null;return {type:'num',q:`${a} Maler sollen eine Schule in ${t} Tagen streichen. Vor Beginn werden ${e} krank. Wie viele Tage dauert es **länger** als geplant?`,ans:k/c-t,unit:'Tage',sol:[`Es arbeiten noch ${a} − ${e} = ${c} Maler.`,`${a} · ${t} = ${k}, dann ${k} : ${c} = ${k/c} Tage`,`Länger: ${k/c} − ${t} = **${k/c-t} Tage**`],hint:'Berechne die neue Dauer und vergleiche sie mit der alten.',trap:[[k/c,'Das ist die ganze Dauer. Gefragt ist, wie viel länger es dauert.']]};});
+gen('ta','l','t-weg',()=>{const [v,m,w]=pick([[15,40,20],[12,30,18],[10,30,15],[20,18,12]]);return {type:'num',q:`${pick(NAMES)} fährt mit ${v} km/h zur Schule und braucht ${m} Minuten. Wie viele Minuten dauert derselbe Weg mit ${w} km/h?`,ans:v*m/w,unit:'min',sol:[`${v} · ${m} = ${v*m}`,`${v*m} : ${w} = **${de(v*m/w)} min**`],hint:'Die Strecke bleibt gleich, also bleibt das Produkt gleich.'};});
+function wrapDec(l){const kind=pick(['p','a']),gs=gensFor(kind==='p'?'tp':'ta',l).filter(g=>g.id!=='da-weiter'&&g.id!=='t-krank');const q=make(pick(gs));if(q.type!=='num')return null;return {type:'decide',q:q.q,kind,ans:q.ans,unit:q.unit,hint:'Stell dir vor, die erste Größe verdoppelt sich.',sol:[kind==='p'?'Doppelt so viel, doppelter Wert: **proportional**.':'Doppelt so viel, halber Wert: **antiproportional**.',...q.sol]};}
+LVS.forEach(l=>{gen('tm',l,'t-dec',()=>wrapDec(l));gen('tm',l,'t-dec2',()=>wrapDec(l));});
+
+/* ---------- Experten ---------- */
+gen('x','o','x-rest',()=>{const u=pick([2,3,4]),a=pick([3,5]),c=pick([6,8]);const n=pick(NAMES),k=c*u,sc=k<20?20:50;return {type:'num',q:`${a} Hefte kosten ${eur(a*u)}. ${n} kauft ${c} Hefte und bezahlt mit ${sc} €. Wie viel Geld gibt es zurück?`,ans:sc-k,unit:'€',sol:[`1 Heft: ${u} €`,`${c} Hefte: ${k} €`,`Zurück: ${sc} − ${k} = **${sc-k} €**`],trap:[[k,'Das ist der Preis. Gefragt ist das Rückgeld.']]};});
+gen('x','o','x-wie',()=>{const a=pick([2,3,4]),t=pick([6,8,12]),z=pick([2,3,4,6]);const k=a*t;if(k%z||z===t)return null;return {type:'num',q:`${a} Bagger brauchen ${t} Stunden. Die Arbeit soll aber in ${z} Stunden fertig sein. Wie viele Bagger braucht man?`,ans:k/z,unit:'Bagger',sol:[`${a} · ${t} = ${k}`,`${k} : ${z} = **${k/z} Bagger**`]};});
+gen('x','o','x-kg',()=>{const u=pick([2,3,4]),a=pick([3,4]),c=pick([5,7,9]);return {type:'num',q:`Für ${eur(a*u)} bekommt man ${a} kg Kartoffeln. Wie viel kg bekommt man für ${eur(c*u)}?`,ans:c,unit:'kg',sol:[`1 kg kostet ${u} €.`,`${c*u} : ${u} = **${c} kg**`]};});
+gen('x','o','x-gr0',()=>{const g=pick([2,4,5]),p=pick([2,3]),h=pick([3,4,5]);return {type:'num',q:`Eine Bootsfahrt kostet ${g} € Grundgebühr und ${p} € pro Stunde. Was kosten ${h} Stunden?`,ans:g+p*h,unit:'€',sol:[`Stunden: ${p} · ${h} = ${p*h} €`,`Mit Grundgebühr: ${p*h} + ${g} = **${g+p*h} €**`],trap:[[p*h,'Die Grundgebühr fehlt noch.']]};});
+gen('x','p','x-mehr',()=>{const a=pick([3,4,6]),t=pick([8,10,12]),z=pick([4,5,6]);const k=a*t;if(k%z||k/z<=a)return null;return {type:'num',q:`${a} Pumpen leeren ein Becken in ${t} Stunden. Es soll in ${z} Stunden leer sein. Wie viele Pumpen muss man **zusätzlich** aufstellen?`,ans:k/z-a,unit:'Pumpen',sol:[`${a} · ${t} = ${k}`,`${k} : ${z} = ${k/z} Pumpen`,`Zusätzlich: ${k/z} − ${a} = **${k/z-a} Pumpen**`],trap:[[k/z,'So viele braucht man insgesamt. Gefragt sind die zusätzlichen.']]};});
+gen('x','p','x-spar',()=>{const pa=pick([2.4,2.8,3.2]),pb=pick([2.2,2.6,3]);if(pa===pb)return null;const am=pick([2,5]),bm=pick([4,10]),n=pick([10,20]);return {type:'num',q:`In Laden A kosten ${am} Liter Saft ${eur(am*pa)}, in Laden B kosten ${bm} Liter ${eur(bm*pb)}. Wie viel sparst du bei ${n} Litern im günstigeren Laden?`,ans:r6(Math.abs(pa-pb)*n),unit:'€',sol:[`A: ${eur(pa)} pro Liter, B: ${eur(pb)} pro Liter`,`Unterschied pro Liter: ${eur(Math.abs(pa-pb))}`,`${n} Liter: **${eur(Math.abs(pa-pb)*n)}**`]};});
+gen('x','p','x-grund',()=>{const g=pick([3,4,5,6]),p=pick([2,3,4]),a=pick([2,3]),c=pick([5,6,8]);return {type:'num',q:`Ein Fahrradverleih nimmt ${g} € Grundgebühr plus einen festen Preis pro Stunde. ${a} Stunden kosten ${g+p*a} €. Was kosten ${c} Stunden?`,ans:g+p*c,unit:'€',sol:[`Ohne Grundgebühr: ${g+p*a} − ${g} = ${p*a} € für ${a} h`,`1 Stunde: ${p} €`,`${c} Stunden: ${g} + ${p} · ${c} = **${g+p*c} €**`],trap:[[(g+p*a)/a*c,'Die Zuordnung ist nicht proportional. Zieh erst die Grundgebühr ab.']]};});
+gen('x','p','x-tank',()=>{const v=pick([5,6,7,8]),t=pick([40,48,56]);return {type:'num',q:`Ein Auto verbraucht ${v} Liter auf 100 km. Der Tank fasst ${t} Liter. Wie weit kommt das Auto mit vollem Tank? Runde auf ganze km.`,ans:Math.round(t/v*100),unit:'km',sol:[`1 Liter reicht für 100 : ${v} = ${de(Math.round(100/v*100)/100)} km`,`${t} · 100 : ${v} = **${Math.round(t/v*100)} km**`]};});
+gen('x','l','x-ausfall',()=>{for(let i=0;i<60;i++){const n=pick([6,8,10,12]),T=pick([10,12,15]),d=pick([2,3,5]),e=pick([2,3,4]);const r=(T-d)*n/(n-e);if(n-e>1&&Number.isInteger(r))return {type:'num',q:`${n} Arbeiter bauen eine Halle in ${T} Tagen. Nach ${d} Tagen fallen ${e} Arbeiter aus. Wie viele Tage dauert der Bau **insgesamt**?`,ans:d+r,unit:'Tage',sol:[`Noch offen: ${T} − ${d} = ${T-d} Tage`,`${n} · ${T-d} = ${n*(T-d)}`,`${n*(T-d)} : ${n-e} = ${r} Tage`,`Insgesamt: ${d} + ${r} = **${d+r} Tage**`],trap:[[r,'Das sind nur die restlichen Tage.']]};}return null;});
+gen('x','l','x-zaun',()=>{const r=pick([3,4,5]),a=pick([4,6]),t=pick([5,10]),b=pick([3,8]),u=pick([2,3,4]);return {type:'num',q:`${a} Arbeiter bauen in ${t} Tagen ${a*t*r} m Zaun. Wie viele Meter schaffen ${b} Arbeiter in ${u} Tagen?`,ans:b*u*r,unit:'m',sol:[`1 Arbeiter an 1 Tag: ${a*t*r} : ${a} : ${t} = ${r} m`,`${b} · ${u} · ${r} = **${b*u*r} m**`]};});
+gen('x','l','x-zug',()=>{const [v,t,z]=pick([[120,1.5,1],[90,2,1.5],[100,3,2.5],[80,3,2]]);return {type:'num',q:`Ein Zug fährt mit ${v} km/h und braucht ${de(t)} Stunden. Er soll ${(t-z)*60} Minuten früher ankommen. Wie schnell muss er fahren?`,ans:v*t/z,unit:'km/h',sol:[`Strecke: ${v} · ${de(t)} = ${v*t} km`,`Neue Zeit: ${de(z)} h`,`${v*t} : ${de(z)} = **${v*t/z} km/h**`]};});
+gen('x','l','x-tiere',()=>{for(let i=0;i<60;i++){const n=pick([12,15,20]),T=pick([20,24,30]),d=pick([4,5,6,10]),e=pick([3,5,10]);const r=(T-d)*n/(n+e);if(Number.isInteger(r))return {type:'num',q:`Das Futter reicht für ${n} Tiere ${T} Tage. Nach ${d} Tagen kommen ${e} Tiere dazu. Wie viele Tage reicht das restliche Futter jetzt noch?`,ans:r,unit:'Tage',sol:[`Rest für ${n} Tiere: ${T} − ${d} = ${T-d} Tage`,`${n} · ${T-d} = ${n*(T-d)}`,`${n*(T-d)} : ${n+e} = **${r} Tage**`]};}return null;});
+gen('x','l','x-sack',()=>{const t=pick([4,6,8]),a=pick([20,30]),s=pick([3,5]),c=pick([10,40,60]);const r=s*t*a/c;if(!Number.isInteger(r))return null;return {type:'num',q:`Ein Sack Futter reicht für ${a} Kaninchen ${t} Tage. Wie lange reichen ${s} Säcke für ${c} Kaninchen?`,ans:r,unit:'Tage',sol:[`${s} Säcke für ${a} Kaninchen: ${s} · ${t} = ${s*t} Tage`,`${a} · ${s*t} = ${a*s*t}`,`${a*s*t} : ${c} = **${r} Tage**`]};});
+function make(g){for(let i=0;i<80;i++){const q=g.make();if(q){q.t=g.t;q.l=g.l;q.gid=g.id;return q;}}throw new Error('gen '+g.id);}
+function gensFor(t,l){return GEN.filter(g=>g.t===t&&g.l===l);}
+/* Fünf Aufgaben einer Station: jeder Typ kommt vor, dann wird aufgefüllt */
+function buildSet(t,l,n){const gs=shuffle(gensFor(t,l)),out=[];let i=0;while(out.length<n){out.push(make(gs[i%gs.length]));i++;}return out;}
+function buildExpert(l){const xs=shuffle(gensFor('x',l)),ts=shuffle(GEN.filter(g=>['tp','ta','tm'].includes(g.t)&&g.l===l)),ids=new Set(),out=[];const add=g=>{if(out.length<8&&!ids.has(g.id)){ids.add(g.id);out.push(make(g));}};xs.slice(0,5).forEach(add);ts.forEach(add);return out;}
+
+document.documentElement.lang='de';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* Aufgabentexte stammen aus dem Programm und dürfen <br> enthalten */
+const fmt=s=>String(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\{(\d+)\/(\d+)\}/g,'<span class="fr"><span>$1</span><span>$2</span></span>');
+const plain=s=>String(s).replace(/\*\*/g,'').replace(/<br>/g,' ').replace(/\{(\d+)\/(\d+)\}/g,'$1/$2');
+const KEY='wissensjagd-zuordnungen-v1';
+let P={cells:{},kl:[],name:'',kl_:''};
+try{P=Object.assign(P,JSON.parse(localStorage.getItem(KEY))||{});}catch(e){}
+const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}};
+const PASS=6,SIZE=8;
+const pips=l=>{const n=LVS.indexOf(l)+1;return `<span class="pips">${[1,2,3].map(i=>`<i class="${i<=n?'f':''}"></i>`).join('')}</span>`;};
+const lvTag=l=>`<span class="lv c-${l}">${pips(l)} ${LV[l]}</span>`;
+const topic=id=>TOPICS.concat(TEXT).find(t=>t.id===id);
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2400);}
+const VIEWS=['vHome','vText','vExam','vMemo','vTask','vRes'];
+function show(v,tab){VIEWS.forEach(x=>$(x).hidden=x!==v);document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===tab));window.scrollTo(0,0);}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='home')home();if(b.dataset.v==='text')textHome();if(b.dataset.v==='exam')examStart();if(b.dataset.v==='memo')memo();});
+
+/* ---------- Koordinatensystem ---------- */
+function graph(c,o){o=o||{};const W=330,H=270,L=38,R=12,T=24,B=40,pw=W-L-R,ph=H-T-B;
+ const X=x=>L+x/c.xmax*pw,Y=y=>T+ph-y/c.ymax*ph;let s=`<svg class="g" viewBox="0 0 ${W} ${H}" role="img" aria-label="Koordinatensystem: ${esc(c.xl||'x')} nach rechts, ${esc(c.yl||'y')} nach oben">`;
+ for(let x=c.xs;x<=c.xmax+1e-9;x+=c.xs)s+=`<line class="gl" x1="${X(x)}" x2="${X(x)}" y1="${T}" y2="${T+ph}"/><text x="${X(x)}" y="${T+ph+15}" text-anchor="middle">${de(x)}</text>`;
+ for(let y=c.ys;y<=c.ymax+1e-9;y+=c.ys)s+=`<line class="gl" x1="${L}" x2="${L+pw}" y1="${Y(y)}" y2="${Y(y)}"/><text x="${L-6}" y="${Y(y)+4}" text-anchor="end">${de(y)}</text>`;
+ s+=`<line class="ax" x1="${L}" x2="${L+pw}" y1="${T+ph}" y2="${T+ph}"/><line class="ax" x1="${L}" x2="${L}" y1="${T}" y2="${T+ph}"/><text x="${L-6}" y="${T+ph+15}" text-anchor="end">0</text>`;
+ s+=`<text class="lb" x="${L}" y="13">${esc(c.yl||'y')}</text><text class="lb" x="${L+pw}" y="${H-6}" text-anchor="end">${esc(c.xl||'x')}</text>`;
+ if(c.lin){const[m,b]=c.lin,xe=Math.min(c.xmax,(c.ymax-b)/m);s+=`<line class="cv" x1="${X(0)}" y1="${Y(b)}" x2="${X(xe)}" y2="${Y(m*xe+b)}"/>`;}
+ if(c.hyp){const a=Math.max(c.hyp/c.ymax,c.xmax/200);let d='';for(let i=0;i<=80;i++){const x=a+(c.xmax-a)*i/80;d+=(i?'L':'M')+X(x).toFixed(1)+' '+Y(c.hyp/x).toFixed(1);}s+=`<path class="cv" d="${d}"/>`;}
+ (c.mark||[]).forEach(p=>s+=`<circle class="pt mk" cx="${X(p[0])}" cy="${Y(p[1])}" r="5"/>`);
+ (o.pts||[]).forEach(p=>s+=`<circle class="pt ${p[2]||''}" cx="${X(p[0])}" cy="${Y(p[1])}" r="7"/>`);
+ if(o.input)s+=`<rect class="hit" x="0" y="0" width="${W}" height="${H}"/>`;
+ return s+'</svg>';}
+function plotHit(svg,e,c){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();if(!m)return null;const p=pt.matrixTransform(m.inverse());
+ const W=330,H=270,L=38,R=12,T=24,B=40,pw=W-L-R,ph=H-T-B;
+ const x=Math.round((p.x-L)/pw*c.xmax/c.xs)*c.xs,y=Math.round((T+ph-p.y)/ph*c.ymax/c.ys)*c.ys;
+ return x>0&&y>0&&x<=c.xmax&&y<=c.ymax?[x,y]:null;}
+function tabHtml(t,cls){const c=(v,id)=>typeof v==='object'?`<td class="v"><input id="${id}" inputmode="decimal" autocomplete="off" aria-label="Fehlender Wert"></td>`:`<td>${de(v)}</td>`;
+ return `<div class="tw"><table class="z"><tr><th scope="row">${esc(t.head[0])}</th>${t.rows[0].map((v,i)=>c(v,'c0_'+i)).join('')}</tr><tr><th scope="row">${esc(t.head[1])}</th>${t.rows[1].map((v,i)=>c(v,'c1_'+i)).join('')}</tr></table></div>`;}
+function dsHtml(t){const cell=(v,id)=>typeof v==='object'?`<td class="v"><input id="${id}" inputmode="decimal" autocomplete="off" aria-label="Fehlender Wert"></td>`:`<td>${de(v)}</td>`;
+ const op=(a,i)=>a?a[i]||'':'';
+ let h=`<div class="tw"><table class="z ds"><tr><td class="op"></td><th>${esc(t.head[0])}</th><th>${esc(t.head[1])}</th><td class="op"></td></tr>`;
+ t.rows.forEach((r,i)=>{h+=`<tr><td class="op">${i?'↓ '+op(t.l,i-1):''}</td>${cell(r[0],'c'+i+'_0')}${cell(r[1],'c'+i+'_1')}<td class="op">${i?'↓ '+op(t.r,i-1):''}</td></tr>`;});
+ return h+'</table></div>';}
+function parseNum(s){s=String(s).trim().replace(/\s/g,'').replace(/−/g,'-').replace(/[^0-9,.\/-]/g,'');if(!s)return NaN;
+ if(s.includes('/')){const[a,b]=s.split('/').map(x=>parseFloat(x.replace(',','.')));return a/b;}
+ if(/^\d{1,3}\.\d{3}$/.test(s))s=s.replace('.','');return parseFloat(s.replace(',','.'));}
+const same=(a,b)=>Math.abs(a-b)<1e-6;
+function blanks(q){const out=[];const R=q.tab.rows;R.forEach((r,i)=>r.forEach((v,j)=>{if(typeof v==='object')out.push({id:q.ds?'c'+i+'_'+j:(i===0?'c0_':'c1_')+j,a:v.a});}));return out;}
+
+/* ---------- Eine Aufgabe zeigen ---------- */
+let S=null,A=null;
+function render(q,head,cls){
+ A={sel:null,kind:null,pts:[]};
+ let body='';
+ if(q.type==='mc')body=`<div class="opts">${(q.ord=q.fix?q.o.map((_,i)=>i):shuffle(q.o.map((_,i)=>i))).map((oi,k)=>`<button type="button" class="opt" data-i="${oi}" aria-pressed="false"><span class="optk">${'ABCD'[k]}</span><span>${fmt(q.o[oi])}</span></button>`).join('')}</div>`;
+ if(q.type==='num')body=`<div class="numrow"><input class="numin" id="num" inputmode="decimal" autocomplete="off" placeholder="Antwort" aria-label="Deine Antwort"> ${q.unit?`<span>${esc(q.unit)}</span>`:''}</div>`;
+ if(q.type==='table')body=q.ds?dsHtml(q.tab):tabHtml(q.tab);
+ if(q.type==='decide')body=`<div class="stack"><div class="small muted">Schritt 1: Entscheide.</div><div class="seg" id="seg"><button type="button" class="opt" data-k="p" aria-pressed="false">Proportional</button><button type="button" class="opt" data-k="a" aria-pressed="false">Antiproportional</button></div><div class="small muted">Schritt 2: Rechne.</div><div class="numrow"><input class="numin" id="num" inputmode="decimal" autocomplete="off" placeholder="Antwort" aria-label="Deine Antwort"> ${q.unit?`<span>${esc(q.unit)}</span>`:''}</div></div>`;
+ if(q.type==='plot')body=`<div id="plot">${graph(q.grid,{input:true})}</div><div class="row"><span class="small muted">Tippe erneut auf einen Punkt, um ihn zu entfernen.</span></div>`;
+ const box=$('vTask');
+ box.className=cls;
+ box.innerHTML=`<div class="card stack">${head}
+  <div class="qt">${fmt(q.q)}</div>
+  ${q.show?tabHtml(q.show):''}
+  ${q.fig?graph(q.fig):''}
+  ${body}
+  <div id="tipBox"></div><div id="fbBox"></div>
+  <div class="row" id="acts"></div></div>`;
+ box.querySelectorAll('.opts .opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.sel=+b.dataset.i;box.querySelectorAll('.opts .opt').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ box.querySelectorAll('#seg .opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.kind=b.dataset.k;box.querySelectorAll('#seg .opt').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ if(q.type==='plot'){const redraw=()=>{$('plot').innerHTML=graph(q.grid,{input:true,pts:A.pts});bind();};
+  const bind=()=>{const svg=$('plot').querySelector('svg');svg.onclick=e=>{if(A.done)return;const p=plotHit(svg,e,q.grid);if(!p)return;const i=A.pts.findIndex(a=>a[0]===p[0]);if(i>=0&&A.pts[i][1]===p[1])A.pts.splice(i,1);else if(i>=0)A.pts[i]=p;else A.pts.push(p);redraw();};};bind();}
+ box.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const b=$('go');if(b)b.click();}}));
+}
+function answered(q){if(q.type==='mc')return A.sel!=null;if(q.type==='num')return $('num').value.trim()!=='';if(q.type==='decide')return A.kind&&$('num').value.trim()!=='';if(q.type==='plot')return A.pts.length>0;return blanks(q).every(b=>$(b.id).value.trim()!=='');}
+/* liefert Punkte, Höchstpunkte, Text der Schülerantwort */
+function grade(q){
+ if(q.type==='mc'){const ok=A.sel===q.c;return{ok,p:ok?1:0,m:1,txt:A.sel==null?'keine Antwort':q.o[A.sel],right:q.o[q.c]};}
+ if(q.type==='num'){const raw=$('num').value,v=parseNum(raw),ok=same(v,q.ans);const t=(q.trap||[]).find(t=>same(t[0],v));return{ok,p:ok?1:0,m:1,txt:raw.trim()||'keine Antwort',right:(q.unit==='€'?eur(q.ans):de(q.ans)+(q.unit?' '+q.unit:'')),trap:!ok&&t?t[1]:null};}
+ if(q.type==='decide'){const v=parseNum($('num').value),k=A.kind===q.kind,n=same(v,q.ans);return{ok:k&&n,p:(k?1:0)+(n?1:0),m:2,txt:(A.kind?(A.kind==='p'?'proportional':'antiproportional'):'keine Entscheidung')+', '+($('num').value.trim()||'keine Zahl'),right:(q.kind==='p'?'proportional':'antiproportional')+', '+(q.unit==='€'?eur(q.ans):de(q.ans)+(q.unit?' '+q.unit:'')),trap:k?null:'Prüfe erst die Art der Zuordnung: Was passiert, wenn du die erste Größe verdoppelst?'};}
+ if(q.type==='table'){const b=blanks(q);let p=0;b.forEach(x=>{if(same(parseNum($(x.id).value),x.a))p++;});return{ok:p===b.length,p,m:b.length,txt:b.map(x=>$(x.id).value.trim()||'–').join(' · '),right:b.map(x=>de(x.a)).join(' · ')};}
+ const hit=q.pts.filter(p=>A.pts.some(a=>same(a[0],p[0])&&same(a[1],p[1]))).length,extra=A.pts.length-hit,p=Math.max(0,hit-extra);return{ok:hit===q.pts.length&&!extra,p,m:q.pts.length,txt:A.pts.map(a=>`(${de(a[0])}|${de(a[1])})`).join(' · ')||'keine Punkte',right:q.pts.map(a=>`(${de(a[0])}|${de(a[1])})`).join(' · ')};}
+function lock(q,g){A.done=true;const box=$('vTask');
+ box.querySelectorAll('input').forEach(i=>i.disabled=true);
+ if(q.type==='mc')box.querySelectorAll('.opts .opt').forEach(b=>{const i=+b.dataset.i;if(i===q.c)b.classList.add('good');else if(i===A.sel)b.classList.add('wrong');});
+ if(q.type==='num'||q.type==='decide')$('num').classList.add(same(parseNum($('num').value),q.ans)?'good':'wrong');
+ if(q.type==='decide')box.querySelectorAll('#seg .opt').forEach(b=>{if(b.dataset.k===q.kind)b.classList.add('good');else if(b.dataset.k===A.kind)b.classList.add('wrong');});
+ if(q.type==='table')blanks(q).forEach(b=>{const i=$(b.id),o=same(parseNum(i.value),b.a);i.classList.add(o?'good':'wrong');if(!o)i.insertAdjacentHTML('afterend',`<span class="fix">${de(b.a)}</span>`);});
+ if(q.type==='plot'){const pts=A.pts.map(a=>[a[0],a[1],q.pts.some(p=>same(a[0],p[0])&&same(a[1],p[1]))?'ok':'no']);q.pts.forEach(p=>{if(!A.pts.some(a=>same(a[0],p[0])&&same(a[1],p[1])))pts.push([p[0],p[1],'ok']);});$('plot').innerHTML=graph(q.grid,{pts});}
+}
+
+/* ---------- Stationen ---------- */
+function nextCell(list){for(const t of list||TOPICS)for(const l of LVS){const c=P.cells[t.id+l];if(!c||c.best<PASS)return [t.id,l];}return null;}
+function cells(list,nx){return list.map(t=>`<div class="st"><div><h3>${esc(t.name)}</h3><div class="small muted">${esc(t.sub)}</div></div>${LVS.map(l=>{const c=P.cells[t.id+l],d=c&&c.best>=PASS,n=nx&&nx[0]===t.id&&nx[1]===l;return `<button type="button" class="cell c-${l} ${d?'done':''} ${n?'next':''}" data-t="${t.id}" data-l="${l}" aria-label="${esc(t.name)}, ${LV[l]}${c?', beste Runde '+c.best+' von '+SIZE:''}"><span><span class="nm">${LV[l]}</span><br class="nm"><b>${c?c.best+'/'+SIZE:'Start'}</b></span></button>`;}).join('')}</div>`).join('');}
+function home(){
+ const done=TOPICS.reduce((n,t)=>n+LVS.filter(l=>(P.cells[t.id+l]||{}).best>=PASS).length,0),nx=nextCell();
+ $('vHome').innerHTML=`<div class="card stack">
+   <h1>Fit für die Klassenarbeit</h1>
+   <p class="muted">Jede Station hat ${SIZE} Aufgaben mit neuen Zahlen. Ab ${PASS} richtigen ist sie geschafft. Die Farben sind dieselben wie im Buch.</p>
+   <div class="total" role="img" aria-label="${done} von 18 Stationen geschafft"><div style="width:${done/18*100}%"></div></div>
+   <div class="nextbar"><span class="small muted">${done} von 18 Stationen geschafft</span>${nx?`<button type="button" class="btn pri" id="go1">Weiter: ${esc(topic(nx[0]).name)} · ${LV[nx[1]]}</button>`:`<button type="button" class="btn pri" id="go2">Alles geschafft. Jetzt in den Experten-Modus!</button>`}</div>
+  </div>
+  <div class="card">
+   <div class="gridhead"><span></span>${LVS.map(lvTag).join('')}</div>
+   ${cells(TOPICS,nx)}</div>
+  <div class="card stack"><h2>Stand für IServ sichern</h2><div id="saveHome"></div></div>`;
+ $('vHome').querySelectorAll('.cell').forEach(b=>b.onclick=()=>startSet(b.dataset.t,b.dataset.l));
+ if(nx)$('go1').onclick=()=>startSet(nx[0],nx[1]);else $('go2').onclick=examStart;
+ saveBox($('saveHome'));show('vHome','home');}
+function isText(t){return TEXT.some(x=>x.id===t);}
+function startSet(t,l){S={mode:'set',t,l,tab:isText(t)?'text':'home',list:buildSet(t,l,SIZE),i:0,ok:0,wrong:[]};setStep();}
+function setStep(){const q=S.list[S.i],t=topic(S.t);
+ render(q,`<div class="qhead"><b>${esc(t.name)}</b>${lvTag(S.l)}</div><div class="row small muted"><span>Aufgabe ${S.i+1} von ${SIZE}</span><span>· ${S.ok} richtig</span></div><div class="pr"><div style="width:${S.i/SIZE*100}%"></div></div>`,'c-'+S.l);
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">Prüfen</button><button type="button" class="btn sec" id="tip">Tipp</button><button type="button" class="btn ghost" id="idk">Zeig mir den Weg</button>`;
+ $('go').onclick=()=>{if(!answered(q)){toast(q.type==='plot'?'Setze zuerst deine Punkte.':'Trage zuerst deine Antwort ein.');return;}finishQ(q,grade(q));};
+ $('tip').onclick=()=>{$('tipBox').innerHTML=`<div class="tip"><b>Tipp:</b> ${fmt(q.hint||'Rechne zuerst den Wert für 1 aus.')}</div>`;$('tip').hidden=true;};
+ $('idk').onclick=()=>finishQ(q,{ok:false,idk:true});
+ show('vTask',S.tab);}
+function finishQ(q,g){lock(q,g);if(g.ok)S.ok++;
+ $('tipBox').innerHTML='';
+ $('fbBox').innerHTML=`<div class="fb ${g.ok?'y':'n'}"><b class="h">${g.ok?'Richtig!':g.idk?'So geht es:':'Noch nicht ganz.'}</b>${g.trap?`<div>${esc(g.trap)}</div>`:''}${!g.ok&&g.right&&q.type!=='table'&&q.type!=='plot'?`<div>Richtige Antwort: <b>${fmt(g.right)}</b></div>`:''}${q.type==='num'||q.type==='decide'||q.type==='mc'||!g.ok||q.ds?`<ol>${q.sol.map(s=>`<li>${fmt(s)}</li>`).join('')}</ol>`:''}</div>`;
+ const last=S.i===SIZE-1;$('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${last?'Zum Ergebnis':'Nächste Aufgabe'}</button>`;
+ $('nx').onclick=()=>{S.i++;if(last)setEnd();else setStep();};$('nx').focus({preventScroll:true});}
+function setEnd(){const k=S.t+S.l,c=P.cells[k]||{best:0,runs:0};c.best=Math.max(c.best,S.ok);c.runs++;P.cells[k]=c;store();
+ const pass=S.ok>=PASS,t=topic(S.t),nx=nextCell(S.tab==='text'?TEXT:TOPICS),back=S.tab==='text'?textHome:home;
+ $('vRes').className='c-'+S.l;
+ $('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${esc(t.name)}</b>${lvTag(S.l)}</div>
+  <div class="big">${S.ok} von ${SIZE}</div>
+  <p>${pass?(S.ok===SIZE?'Alles richtig. Diese Station sitzt.':'Station geschafft. Stark gemacht!'):'Noch nicht geschafft. Du brauchst '+PASS+' richtige. Schau dir den Merkzettel an und versuche es mit neuen Zahlen.'}</p>
+  <div class="row"><button type="button" class="btn ${pass?'sec':'pri'}" id="r1">Nochmal mit neuen Zahlen</button>${pass&&nx?`<button type="button" class="btn pri" id="r2">Nächste Station</button>`:''}${pass?'':`<button type="button" class="btn sec" id="r4">Zum Merkzettel</button>`}<button type="button" class="btn ghost" id="r3">Zur Übersicht</button></div></div>`;
+ $('r1').onclick=()=>startSet(S.t,S.l);$('r3').onclick=back;if($('r2'))$('r2').onclick=()=>startSet(nx[0],nx[1]);if($('r4'))$('r4').onclick=memo;show('vRes',S.tab);}
+
+/* ---------- Textaufgaben ---------- */
+function textHome(){const done=TEXT.reduce((n,t)=>n+LVS.filter(l=>(P.cells[t.id+l]||{}).best>=PASS).length,0),nx=nextCell(TEXT);
+ $('vText').innerHTML=`<div class="card stack"><h1>Textaufgaben</h1><p class="muted">Hier gibt es nur Textaufgaben. Jede Runde hat ${SIZE} Aufgaben, ab ${PASS} richtigen ist die Station geschafft.</p>
+  <div class="total" role="img" aria-label="${done} von 9 Stationen geschafft"><div style="width:${done/9*100}%"></div></div>
+  <div class="nextbar"><span class="small muted">${done} von 9 Stationen geschafft</span>${nx?`<button type="button" class="btn pri" id="tg">Weiter: ${esc(topic(nx[0]).name)} · ${LV[nx[1]]}</button>`:''}</div></div>
+ <div class="card stack"><h2>So knackst du jede Textaufgabe</h2><ol class="st3"><li><b>Lies genau.</b> Was ist gegeben, was ist gesucht?</li><li><b>Streiche, was du nicht brauchst.</b> Manche Zahlen stehen nur zur Ablenkung im Text.</li><li><b>Entscheide.</b> Verdopple im Kopf: mehr → mehr oder mehr → weniger?</li><li><b>Rechne</b> mit einer Tabelle im Heft zur 1.</li><li><b>Prüfe.</b> Kann das Ergebnis stimmen? Beantworte die Frage in einem Satz.</li></ol></div>
+ <div class="card"><div class="gridhead"><span></span>${LVS.map(lvTag).join('')}</div>${cells(TEXT,nx)}</div>`;
+ $('vText').querySelectorAll('.cell').forEach(b=>b.onclick=()=>startSet(b.dataset.t,b.dataset.l));if(nx)$('tg').onclick=()=>startSet(nx[0],nx[1]);show('vText','text');}
+
+/* ---------- Experten-Modus ---------- */
+function examStart(){
+ $('vExam').innerHTML=`<div class="card stack"><h1>Experten-Modus</h1><p>Das ist die schwerste Runde: 8 knifflige Text- und Knobelaufgaben, ohne Tipps. Erst am Ende siehst du alle Lösungswege. Ab 6 Aufgaben ganz richtig bist du Experte oder Expertin in dieser Farbe.</p>
+  <p class="muted">Nimm dir Heft und Stift. Hier sind auch Aufgaben mit mehreren Schritten dabei.</p><h2>Welche Farbe nimmst du?</h2>
+  <div class="row">${LVS.map(l=>`<button type="button" class="cell c-${l}" style="min-width:104px;padding-inline:14px" data-l="${l}"><b>${LV[l]}</b></button>`).join('')}</div></div>
+  ${P.kl.length?`<div class="card stack"><h2>Deine letzten Runden</h2>${P.kl.slice(-4).reverse().map(k=>`<div class="tr"><span>${esc(k.d)} · ${LV[k.l]}</span><div class="bar"><div style="width:${k.p/k.m*100}%"></div></div><span class="muted">${k.p}/${k.m}</span></div>`).join('')}</div>`:''}`;
+ $('vExam').querySelectorAll('.cell').forEach(b=>b.onclick=()=>{S={mode:'kl',l:b.dataset.l,list:buildExpert(b.dataset.l),i:0,res:[]};klStep();});
+ show('vExam','exam');}
+function klStep(){const q=S.list[S.i],n=S.list.length;
+ render(q,`<div class="qhead"><b>Experten-Aufgabe ${S.i+1} von ${n}</b>${lvTag(S.l)}</div><div class="pr"><div style="width:${S.i/n*100}%"></div></div>`,'c-'+S.l);
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">${S.i===n-1?'Abgeben':'Weiter'}</button>`;
+ $('go').onclick=()=>{if(!answered(q)&&!S.warn){S.warn=true;toast('Noch nicht fertig. Tippe nochmal, um ohne Antwort weiterzugehen.');return;}S.warn=false;S.res.push(grade(q));S.i++;if(S.i<n)klStep();else klEnd();};
+ show('vTask','exam');}
+function klEnd(){const ok=S.res.filter(r=>r.ok).length,n=S.list.length;
+ const d=new Date(),ds=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.';
+ P.kl.push({d:ds,l:S.l,p:ok,m:n});P.kl=P.kl.slice(-12);store();
+ const pass=ok>=6,msg=pass?`Stark! Du bist Experte oder Expertin in ${LV[S.l]}.`+(S.l==='l'?'':' Traust du dich an die nächste Farbe?'):ok>=4?'Fast geschafft. Schau dir die Lösungswege an und versuche es nochmal.':'Diese Runde war schwer. Übe zuerst die Textaufgaben und komm dann wieder.';
+ $('vRes').className='c-'+S.l;
+ $('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>Experten-Modus</b>${lvTag(S.l)}</div><div class="big">${ok} von ${n} richtig</div><p>${msg}</p><div class="row"><button type="button" class="btn pri" id="k1">Neue Expertenrunde</button><button type="button" class="btn sec" id="k3">Zu den Textaufgaben</button></div></div>
+ <div class="card"><h2>Alle Aufgaben mit Lösung</h2>${S.list.map((q,i)=>{const r=S.res[i];return `<div class="rv"><div class="mk ${r.ok?'y':'n'}">Aufgabe ${i+1}: ${r.ok?'richtig':'noch nicht richtig'}</div><div>${fmt(q.q)}</div><div class="small">Deine Antwort: ${esc(plain(r.txt))}</div>${r.ok?'':`<div class="small"><b>Richtig: ${fmt(r.right)}</b></div>`}<ol class="st3 small">${q.sol.map(s=>`<li>${fmt(s)}</li>`).join('')}</ol></div>`;}).join('')}</div>
+ <div class="card stack"><h2>Ergebnis für IServ sichern</h2><div id="saveRes"></div></div>`;
+ $('k1').onclick=examStart;$('k3').onclick=textHome;saveBox($('saveRes'));show('vRes','exam');}
+
+/* ---------- Sichern ---------- */
+function report(){const d=new Date(),pad=n=>String(n).padStart(2,'0'),ds=pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();
+ let t='MATHE-WISSENSJAGD ZUORDNUNGEN – Stand\n====================================\nName:   '+P.name+'\nKlasse: '+P.kl_+'\nDatum:  '+ds+'\n\nStationen (beste Runde von '+SIZE+'):\n';
+ TOPICS.concat(TEXT).forEach(x=>{t+='  '+x.name+': '+LVS.map(l=>LV[l]+' '+((P.cells[x.id+l]||{}).best!=null?P.cells[x.id+l].best:'–')).join(', ')+'\n';});
+ t+='\nExperten-Modus:\n';if(!P.kl.length)t+='  noch keine Runde\n';P.kl.forEach(k=>t+='  '+k.d+' '+LV[k.l]+': '+k.p+' von '+k.m+' richtig\n');
+ const js=JSON.stringify({app:'mathe7-zuordnungen',v:1,name:P.name,kl:P.kl_,datum:ds,stationen:P.cells,experten:P.kl});
+ return t+'\n#DATEN '+js+'\n';}
+function saveBox(el){const top=window.self===window.top;
+ el.innerHTML=`<div class="stack"><div class="fields"><label class="f">Dein Vorname<input id="sN" maxlength="30" value="${esc(P.name)}" autocomplete="given-name"></label><label class="f">Deine Klasse<input id="sK" maxlength="8" value="${esc(P.kl_)}" placeholder="z. B. 7c"></label></div>
+ <div class="row">${top?'<button type="button" class="btn sec" id="sD">Datei speichern</button>':''}<button type="button" class="btn sec" id="sC">Ergebnis kopieren</button></div><p class="small muted">${top?'Lade die Datei in IServ hoch oder füge den kopierten Text dort ein.':'Füge den kopierten Text in IServ ein.'}</p></div>`;
+ const up=()=>{P.name=$('sN').value.trim();P.kl_=$('sK').value.trim();store();return P.name&&P.kl_;};
+ $('sN').oninput=up;$('sK').oninput=up;
+ $('sC').onclick=()=>{if(!up()){toast('Trage zuerst Vorname und Klasse ein.');return;}const t=report();const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();toast(ok?'Kopiert.':'Kopieren ging nicht. Mach bitte einen Screenshot.');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('Kopiert. Füge es jetzt in IServ ein.'),fb);else fb();};
+ if(top)$('sD').onclick=()=>{if(!up()){toast('Trage zuerst Vorname und Klasse ein.');return;}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([report()],{type:'text/plain;charset=utf-8'}));a.download=('Zuordnungen_'+P.kl_+'_'+P.name).replace(/[^\wäöüÄÖÜß-]+/g,'_')+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);toast('Gespeichert. Lade die Datei in IServ hoch.');};}
+
+/* ---------- Merkzettel ---------- */
+function memo(){
+ const ct=(h,x,y)=>`<div class="tw"><table class="z"><tr><th scope="row">${h[0]}</th>${x.map(v=>`<td>${v}</td>`).join('')}</tr><tr><th scope="row">${h[1]}</th>${y.map(v=>`<td>${v}</td>`).join('')}</tr></table></div>`;
+ const dst=(h,r,l,rr)=>dsHtml({head:h,rows:r,l,r:rr});
+ $('vMemo').className='';
+ $('vMemo').innerHTML=`<div class="card stack"><h1>Merkzettel</h1><p class="muted">Das Wichtigste aus dem Kapitel auf einen Blick. Die Zusammenfassung im Buch steht auf Seite 58.</p></div>
+ <div class="card stack"><h2>So gehst du jede Aufgabe an</h2><ol class="st3"><li>Welche beiden Größen gehören zusammen?</li><li>Verdopple im Kopf die erste Größe: Wird die zweite <b>doppelt so groß</b>, <b>halb so groß</b> oder passiert etwas anderes?</li><li>Bei proportional und antiproportional: Tabelle anlegen und zur 1 rechnen.</li><li>Bei „etwas anderes“: Die Aufgabe geht nicht mit dem Dreisatz.</li></ol></div>
+ <div class="two">
+  <div class="card stack m-p"><h2>Proportional</h2><p><b>mehr → mehr</b><br>Zum Doppelten gehört das Doppelte, zum Dreifachen das Dreifache.</p>${ct(['Anzahl','Preis (in €)'],[1,2,3,4],[4,8,12,16])}<p><b>Quotientengleich:</b> 4 : 1 = 8 : 2 = 12 : 3 = 4. Das ist der Proportionalitätsfaktor.</p>${graph({xmax:4,ymax:16,xs:1,ys:4,lin:[4,0],xl:'Anzahl',yl:'Preis (in €)',mark:[[1,4],[2,8],[3,12],[4,16]]})}<p class="small muted">Alle Punkte liegen auf einer Geraden durch (0|0).</p></div>
+  <div class="card stack m-p"><h2>Antiproportional</h2><p><b>mehr → weniger</b><br>Zum Doppelten gehört die Hälfte, zum Dreifachen ein Drittel.</p>${ct(['Bagger','Zeit (in h)'],[1,2,3,4],[12,6,4,3])}<p><b>Produktgleich:</b> 1 · 12 = 2 · 6 = 3 · 4 = 12. Das ist die gesamte Arbeit.</p>${graph({xmax:4,ymax:12,xs:1,ys:2,hyp:12,xl:'Bagger',yl:'Zeit (in h)',mark:[[1,12],[2,6],[3,4],[4,3]]})}<p class="small muted">Alle Punkte liegen auf einer fallenden Kurve, der Hyperbel.</p></div>
+ </div>
+ <div class="two">
+  <div class="card stack m-p"><h2>Dreisatz proportional</h2><p>2 DVDs kosten 18 €. Wie teuer sind 3 DVDs?</p>${dst(['DVDs','Preis (in €)'],[[2,18],[1,9],[3,27]],[':2','·3'],[':2','·3'])}<p>Links und rechts rechnest du <b>dasselbe</b>.</p></div>
+  <div class="card stack m-p"><h2>Dreisatz antiproportional</h2><p>2 Bagger brauchen 12 h. Wie lange brauchen 3 Bagger?</p>${dst(['Bagger','Zeit (in h)'],[[2,12],[1,24],[3,8]],[':2','·3'],['·2',':3'])}<p>Rechts rechnest du das <b>Gegenteil</b> von links.</p></div>
+ </div>
+ <div class="card stack"><h2>Typische Fehler</h2><ul class="st3"><li><b>„Es wird größer, also proportional.“</b> Das reicht nicht. Mit Grundgebühr wächst der Preis auch, ist aber nicht proportional.</li><li><b>Falscher Dreisatz.</b> Prüfe am Ende: Soll das Ergebnis größer oder kleiner werden?</li><li><b>Einheiten vergessen.</b> 1 kg = 1000 g und 1 h = 60 min. Rechne vor dem Dreisatz um.</li><li><b>Falsch gerundet.</b> Bei Packungen oder Personen musst du oft aufrunden.</li></ul></div>`;
+ show('vMemo','memo');}
+home();
+
+</script>
+</body></html>

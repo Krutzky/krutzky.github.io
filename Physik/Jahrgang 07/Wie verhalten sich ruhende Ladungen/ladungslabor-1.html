@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 1</b><span>Was passiert beim Reiben?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Luftballon, Stab mit Papierschnipseln oder Glimmlampe"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 1';
+var STATIONS=[
+  {key:'s1',name:'Luftballon',scene:'balloon'},
+  {key:'s2',name:'Papierschnipsel',scene:'snip'},
+  {key:'s3',name:'Glimmlampe',scene:'lamp'},
+  {key:'s4',name:'Merksatz',scene:'lamp'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'snip'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{obs:{},obsOk:false,verm:'',ok:false},
+  s2:{obs:{},obsOk:false,more:null,moreOk:false,why:null,whyOk:false},
+  s3:{obs:{},obsOk:false,why:null,whyOk:false,app:null,appOk:false},
+  s4:{gaps:{},ok:false,refl:'',pulli:null,pulliOk:false},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[]};
+
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-1-v1',RKEY='ladungslabor-1-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Vorzeichen nach dem Reiben: Kunststoff (mit Wolle oder Seide) negativ, Glas positiv; das Tuch jeweils entgegengesetzt.
+   Gummi-Luftballon an Haaren: Ballon negativ, Haare positiv. */
+var M={};
+function freshModel(){
+  M={bal:{x:430,y:140,str:0,pos:'hand',fall:false,wig:0,tag:''},
+     rod:{kind:'kunststoff',cloth:'wolle',str:0,y:90,ty:90,x:0,tx:0,hold:'up',obj:'stab',rub:0,rubX:0},
+     snips:[],glow:{side:null,t:0},tag:'',lastLamp:''};
+  for(var i=0;i<16;i++){M.snips.push({x:168+i*19+(i%3)*4,y:314-(i%2)*3,w:9+(i%3)*3,rot:((i*37)%30-15),p:0,on:false,lag:(i%5)*0.07});}
+}
+freshModel();
+function strength(str){return Math.max(0,Math.min(1,(str-2)/8));}
+function rodSign(){if(M.rod.str<3)return 0;var s=M.rod.kind==='kunststoff'?-1:1;return M.rod.obj==='tuch'?-s:s;}
+function nLift(){var s=strength(M.rod.str);return s<=0?0:Math.max(2,Math.round(s*M.snips.length));}
+function rodName(){return (M.rod.kind==='kunststoff'?'Kunststoffstab':'Glasstab');}
+function clothName(){return (M.rod.cloth==='wolle'?'Wolltuch':'Seidentuch');}
+
+/* ---------- Zeichnen ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,ORDER=[7,3,11,0,14,5,9,1,12,6,15,2,10,4,13,8];
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return scene()==='lamp';}
+function bg(){return darkScene()?'#141826':col('surface');}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=darkScene()?'#8E97B8':col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='balloon')drawBalloon(c,lupe);else if(sc==='snip')drawSnip(c,lupe);else drawLamp(c,lupe);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='balloon'){zoom(A,{x:190,y:192,s:180},bg());zoom(B,{x:540,y:180,s:230},bg());
+    $('capA').innerHTML='<b>Haare</b> von nah';$('capB').innerHTML='<b>Ballon</b> an der Wand';}
+  else if(sc==='snip'){zoom(A,{x:310,y:M.rod.hold==='snip'?272:300,s:200},bg());
+    var x=B.getContext('2d'),w=B.width,n=M.rod.hold==='snip'?nLift():null;paper(x,w);
+    vtext(x,w,[{t:'angezogene Schnipsel',s:0.07,c:'#4E5677',a:'center'},{t:n==null?'–':String(n),s:0.34,b:true,c:n?'#22865A':'#4E5677',a:'center'},{t:n==null?'Halte den Stab über die Schnipsel.':'von '+M.snips.length+' Schnipseln',s:0.065,c:'#4E5677',a:'center'}]);
+    for(var i=0;i<16;i++){var on=n!=null&&ORDER.indexOf(i)<n;x.fillStyle=on?'#22865A':'#FFFFFF';x.strokeStyle='#8A93A6';x.lineWidth=w*0.006;var cx=w*0.14+(i%8)*w*0.1,cy=w*0.78+Math.floor(i/8)*w*0.09;x.fillRect(cx,cy,w*0.07,w*0.045);x.strokeRect(cx,cy,w*0.07,w*0.045);}
+    $('capA').innerHTML='<b>Schnipsel</b> von nah';$('capB').innerHTML='<b>Zählung</b>';}
+  else{zoom(A,{x:150,y:150,s:150},bg());
+    var x2=B.getContext('2d'),w2=B.width;paper(x2,w2);var logs=st.log.filter(function(l){return l.indexOf('lamp: ')===0;}).slice(-5).map(function(l){return l.slice(6);});
+    vtext(x2,w2,[{t:'Deine Tests',s:0.085,b:true}].concat(logs.length?logs.map(function(l){return {t:l,s:0.06,c:l.indexOf('nicht')>=0?'#4E5677':(l.indexOf('Hand')>=0?'#C8423D':'#1C66C0'),gap:0.015};}):[{t:'Noch kein Test. Reibe und halte die Glimmlampe dran.',s:0.065,c:'#4E5677'}]));
+    $('capA').innerHTML='<b>Glimmlampe</b> von nah';$('capB').innerHTML='<b>Protokoll</b>';}
+}
+function statusInfo(){var sc=scene();
+  if(sc==='balloon'){var b=M.bal;if(b.wig)return ['info','Es wird gerieben …'];if(b.pos==='hand')return ['info','Der Ballon ist in der Hand.'];if(b.pos==='kopf')return b.str>=3?['ok','Die Haare stellen sich zum Ballon hin auf.']:['info','Die Haare bewegen sich nicht.'];return b.str>=3?['ok','Der Ballon bleibt an der Wand kleben.']:['bad','Der Ballon fällt herunter.'];}
+  if(sc==='snip'){if(M.rod.hold!=='snip')return ['info','Der Stab ist hochgehalten.'];var n=nLift();return n?['ok',n+' Schnipsel springen zum Stab.']:['bad','Die Schnipsel bleiben liegen.'];}
+  if(!M.lastLamp)return ['info','Noch nicht getestet.'];return M.lastLamp==='leuchtet nicht'?['bad','Die Glimmlampe bleibt dunkel.']:['ok','Kurz geleuchtet: '+M.lastLamp];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();e.className='status '+s[0];e.textContent=s[1];}
+
+/* Szene 1: Luftballon */
+var HEAD={x:190,y:268,r:58};
+var BPOS={hand:[430,140],kopf:[190,112],wand:[522,150]};
+function drawBalloon(c,lupe){
+  /* Wand + Boden */
+  c.fillStyle=col('surface-2');c.fillRect(560,0,80,340);c.strokeStyle=col('line');c.lineWidth=1.5;
+  for(var yy=0;yy<340;yy+=24){c.beginPath();c.moveTo(560,yy);c.lineTo(640,yy);c.stroke();for(var xx=560+((yy/24)%2?20:0);xx<640;xx+=40){c.beginPath();c.moveTo(xx,yy);c.lineTo(xx,yy+24);c.stroke();}}
+  c.fillStyle=col('line');c.fillRect(0,340,640,32);
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='center';c.textBaseline='bottom';c.fillText('Wand',600,334);}
+  /* Körper */
+  c.fillStyle=col('blue');c.beginPath();c.moveTo(105,372);c.quadraticCurveTo(110,318,190,316);c.quadraticCurveTo(270,318,275,372);c.fill();
+  /* Kopf */
+  c.fillStyle='#E9B98F';c.beginPath();c.arc(HEAD.x,HEAD.y,HEAD.r,0,Math.PI*2);c.fill();c.strokeStyle='#B9865C';c.lineWidth=2;c.stroke();
+  c.fillStyle='#3A2A1A';c.beginPath();c.arc(170,268,4.5,0,Math.PI*2);c.arc(210,268,4.5,0,Math.PI*2);c.fill();
+  c.strokeStyle='#8A5A3A';c.lineWidth=2.5;c.beginPath();c.arc(190,284,13,0.2*Math.PI,0.8*Math.PI);c.stroke();
+  /* Haare */
+  var b=M.bal,s=strength(b.str),bx=b.x,by=b.y,near=Math.max(0,1-Math.hypot(bx-HEAD.x,by-(HEAD.y-HEAD.r))/190);
+  for(var i=0;i<=24;i++){var a=(-168+i*(156/24))*Math.PI/180,x0=HEAD.x+HEAD.r*Math.cos(a),y0=HEAD.y+HEAD.r*Math.sin(a);
+    var dx=Math.cos(a),dy=Math.sin(a),pull=s*near*0.95,fr=s*0.25*((i%3)-1);
+    var tx=bx-x0,ty=(by+40)-y0,tl=Math.hypot(tx,ty)||1;tx/=tl;ty/=tl;
+    var ex=dx*(1-pull)+tx*pull+fr*dy*-1,ey=dy*(1-pull)+ty*pull+fr*dx;var el=Math.hypot(ex,ey);ex/=el;ey/=el;
+    var L=24+pull*16+(i%2)*4,cx1=x0+dx*L*0.5,cy1=y0+dy*L*0.5;
+    c.strokeStyle='#5B3A1E';c.lineWidth=3;c.lineCap='round';c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo(cx1,cy1,x0+ex*L,y0+ey*L);c.stroke();}
+  /* Hand + Schnur */
+  var wig=b.wig?Math.sin(b.wig*Math.PI*6)*22:0;bx+=wig;
+  if(b.pos==='hand'&&!b.fall){c.strokeStyle=col('ink-soft');c.lineWidth=1.5;c.beginPath();c.moveTo(bx,by+48);c.quadraticCurveTo(bx-8,by+90,bx,by+130);c.stroke();
+    c.fillStyle='#E9B98F';c.beginPath();c.ellipse(bx,by+140,16,12,0,0,Math.PI*2);c.fill();}
+  /* Ballon */
+  c.fillStyle='#D8433B';c.beginPath();c.ellipse(bx,by,38,46,0,0,Math.PI*2);c.fill();
+  c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(bx-13,by-18,8,14,-0.4,0,Math.PI*2);c.fill();
+  c.fillStyle='#B0322B';c.beginPath();c.moveTo(bx-6,by+52);c.lineTo(bx+6,by+52);c.lineTo(bx,by+44);c.fill();
+}
+
+/* Szene 2 + 3: Stab, Tuch, Schnipsel, Glimmlampe */
+function rodColor(){return M.rod.kind==='kunststoff'?'#5A6578':'#9FD3E0';}
+function clothColor(){return M.rod.cloth==='wolle'?'#B45F3C':'#C9B8E8';}
+function drawRod(c,x0,y,len){var r=M.rod;
+  if(r.obj==='tuch'&&scene()==='lamp'){ // das Tuch wird getestet
+    c.fillStyle=clothColor();c.beginPath();c.moveTo(x0,y-24);for(var i=0;i<=6;i++)c.quadraticCurveTo(x0+i*22+11,y-32+(i%2)*14,x0+i*22+22,y-24);
+    c.lineTo(x0+154,y+24);for(var j=6;j>=0;j--)c.quadraticCurveTo(x0+j*22+11,y+32-(j%2)*14,x0+j*22,y+24);c.closePath();c.fill();
+    c.fillStyle='#E9B98F';c.beginPath();c.ellipse(x0+170,y,18,24,0,0,Math.PI*2);c.fill();return;}
+  c.fillStyle=rodColor();c.beginPath();if(c.roundRect)c.roundRect(x0,y-9,len,18,9);else c.rect(x0,y-9,len,18);c.fill();
+  if(M.rod.kind==='glas'){c.fillStyle='rgba(255,255,255,.45)';c.fillRect(x0+8,y-6,len-16,4);}
+  c.fillStyle='#4B5568';c.beginPath();if(c.roundRect)c.roundRect(x0+len,y-15,56,30,8);else c.rect(x0+len,y-15,56,30);c.fill();
+  c.fillStyle='#E9B98F';c.beginPath();c.ellipse(x0+len+40,y+4,18,22,0,0,Math.PI*2);c.fill();
+  if(r.rub>0){var cx=x0+40+r.rubX;c.fillStyle=clothColor();c.globalAlpha=.95;c.beginPath();c.moveTo(cx,y-20);c.quadraticCurveTo(cx+30,y-30,cx+60,y-20);c.lineTo(cx+60,y+22);c.quadraticCurveTo(cx+30,y+32,cx,y+22);c.closePath();c.fill();c.globalAlpha=1;}
+}
+function drawSnip(c,lupe){var r=M.rod;
+  c.fillStyle=col('line');c.fillRect(120,322,400,12);c.fillRect(140,334,10,38);c.fillRect(490,334,10,38);
+  if(r.rub<=0){c.fillStyle=clothColor();c.beginPath();c.ellipse(560,316,44,8,0,0,Math.PI*2);c.fill();if(!lupe){c.font='12px '+ff();c.fillStyle=col('ink-soft');c.textAlign='center';c.textBaseline='bottom';c.fillText(clothName(),560,304);}}
+  drawRod(c,160,r.y,290);
+  M.snips.forEach(function(sn){var p=sn.p,ty=r.y+12+(sn.x%7),y=sn.y+(ty-sn.y)*p,rot=sn.rot*(1-p)+(sn.rot*0.3)*p;
+    c.save();c.translate(sn.x,y);c.rotate(rot*Math.PI/180);c.fillStyle='#FFFFFF';c.strokeStyle='#8A93A6';c.lineWidth=1;c.fillRect(-sn.w/2,-3.5,sn.w,7);c.strokeRect(-sn.w/2,-3.5,sn.w,7);c.restore();});
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='bottom';c.fillText(rodName(),160,r.y-16);}
+}
+function drawLamp(c,lupe){var r=M.rod,y=150,tip=232+r.x;
+  /* Hand + Glimmlampe */
+  c.fillStyle='#E9B98F';c.beginPath();c.ellipse(58,y+2,26,34,0,0,Math.PI*2);c.fill();
+  c.fillStyle='rgba(255,255,255,.14)';c.strokeStyle='#9AA6C2';c.lineWidth=2.5;c.beginPath();if(c.roundRect)c.roundRect(80,y-20,124,40,20);else c.rect(80,y-20,124,40);c.fill();c.stroke();
+  c.strokeStyle='#9AA6C2';c.lineWidth=3;c.beginPath();c.moveTo(72,y);c.lineTo(84,y);c.moveTo(200,y);c.lineTo(212,y);c.stroke();
+  var g=M.glow,on=g.t>0;
+  [['L',96],['R',152]].forEach(function(e){var lit=on&&g.side===e[0];c.save();if(lit){c.shadowColor='#FF7A1A';c.shadowBlur=26;}c.fillStyle=lit?'#FF7A1A':'#6B7590';
+    c.beginPath();if(c.roundRect)c.roundRect(e[1],y-7,36,14,4);else c.rect(e[1],y-7,36,14);c.fill();if(lit){c.fillStyle='rgba(255,140,40,.35)';c.beginPath();c.ellipse(e[1]+18,y,30,16,0,0,Math.PI*2);c.fill();}c.restore();});
+  if(!lupe){c.font='bold 13px '+ff();c.textAlign='center';c.textBaseline='top';c.fillStyle='#C9D3F2';c.fillText('Glimmlampe',142,y+30);c.fillText('Hand',58,y+42);
+    c.textBaseline='bottom';c.fillText('Seite zur Hand',114,y-26);c.fillText('Seite zum Gegenstand',190,y-46);
+    c.strokeStyle='#5A6480';c.lineWidth=1;c.beginPath();c.moveTo(114,y-26);c.lineTo(114,y-10);c.moveTo(190,y-46);c.lineTo(170,y-10);c.stroke();}
+  drawRod(c,tip,y,290);
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle='#C9D3F2';c.textAlign='left';c.textBaseline='bottom';c.fillText(r.obj==='tuch'?clothName():rodName(),tip+20,y-30);
+    c.font='12px '+ff();c.fillStyle='#8E97B8';c.textAlign='left';c.textBaseline='bottom';c.fillText('Raum abgedunkelt',8,366);}
+}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0,anim={bal:null,rub:0};
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;var moving=false,b=M.bal,r=M.rod;
+  var tgt=b.fall?[BPOS.wand[0],294]:BPOS[b.pos];if(b.wig>0){tgt=[HEAD.x,HEAD.y-HEAD.r-34];b.wig=Math.max(0,b.wig-dt*1.6);moving=true;}
+  var dx=tgt[0]-b.x,dy=tgt[1]-b.y;if(Math.abs(dx)+Math.abs(dy)>0.6){b.x+=dx*Math.min(1,dt*7);b.y+=dy*Math.min(1,dt*(b.fall?5:7));moving=true;}else{b.x=tgt[0];b.y=tgt[1];}
+  if(r.rub>0){r.rub=Math.max(0,r.rub-dt*2.4);r.rubX=Math.sin((1-r.rub)*Math.PI*4)*90+90;moving=true;}
+  var dyr=r.ty-r.y;if(Math.abs(dyr)>0.5){r.y+=dyr*Math.min(1,dt*6);moving=true;}else r.y=r.ty;
+  var dxr=r.tx-r.x;if(Math.abs(dxr)>0.5){r.x+=dxr*Math.min(1,dt*6);moving=true;}else r.x=r.tx;
+  var n=r.hold==='snip'&&Math.abs(dyr)<6?nLift():0;M.snips.forEach(function(s,i){var want=ORDER.indexOf(i)<n?1:0;
+    var d=want-s.p;if(Math.abs(d)>0.01){s.p+=d*Math.min(1,dt*(want?5:7));moving=true;}else s.p=want;});
+  if(M.glow.t>0){M.glow.t=Math.max(0,M.glow.t-dt);moving=true;}
+  draw();
+  if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+
+
+/* ---------- Aktionen ---------- */
+var MAXR=15;
+function setBalStr(v){var b=M.bal;v=Math.max(0,Math.min(MAXR,v));if(v>b.str){b.wig=1;b.fall=false;}b.str=v;kick();}
+function setBalPos(p){var b=M.bal;b.pos=p;b.fall=false;
+  if(p==='wand'&&b.str<3)setTimeout(function(){if(M.bal.pos==='wand'&&M.bal.str<3){M.bal.fall=true;kick();}},550);
+  kick();}
+function setRodStr(v){var r=M.rod;v=Math.max(0,Math.min(MAXR,v));if(v>r.str)r.rub=1;r.str=v;M.lastLamp='';kick();}
+function setHold(on){var r=M.rod;r.hold=on?'snip':'up';r.ty=on?232:90;
+  if(on)setTimeout(function(){if(M.rod.hold!=='snip')return;var n=nLift();logAct('snip',rodName()+(M.rod.str>=3?' ('+clothName()+', '+M.rod.str+'×)':' ungerieben')+': '+(n?n+' Schnipsel':'keine Schnipsel'));},700);
+  kick();}
+function testLamp(){var r=M.rod,s=rodSign();r.tx=-30;kick();
+  setTimeout(function(){var what=r.obj==='tuch'?clothName():rodName()+(r.str>=3?' ('+clothName()+')':' ungerieben');
+    if(!s){M.lastLamp='leuchtet nicht';}
+    else{M.glow={side:s<0?'R':'L',t:1.3};M.lastLamp=s<0?'Seite zum Gegenstand':'Seite zur Hand';r.str=0;}
+    logAct('lamp',what+': '+M.lastLamp);r.tx=0;kick();renderCtl();},520);}
+function logAct(k,t){st.log.push(k+': '+t);if(st.log.length>60)st.log.shift();save();draw();}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+'×';draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='',r=M.rod;
+  if(sc==='balloon'){h=slider('R','SO OFT AM HAAR GERIEBEN',M.bal.str+'×',0,MAXR,1,M.bal.str,'0 (nicht gerieben)',MAXR+'×','g')+
+    '<div class="ctlrow"><span>BALLON HALTEN</span>'+segHTML('sP',[['hand','in der Hand'],['kopf','über den Kopf'],['wand','an die Wand']],M.bal.pos)+'</div>';}
+  else{h='<div class="ctlrow"><span>STAB</span>'+segHTML('sK',[['kunststoff','Kunststoffstab'],['glas','Glasstab']],r.kind)+'</div>'+
+    '<div class="ctlrow"><span>TUCH ZUM REIBEN</span>'+segHTML('sC',[['wolle','Wolltuch'],['seide','Seidentuch']],r.cloth)+'</div>'+
+    slider('R','SO OFT GERIEBEN',r.str+'×',0,MAXR,1,r.str,'0 (nicht gerieben)',MAXR+'×','g')+
+    (sc==='snip'?'<label class="chk"><input type="checkbox" id="tHold"'+(r.hold==='snip'?' checked':'')+'> Stab über die Schnipsel halten</label>':
+      '<div class="ctlrow"><span>AN DIE GLIMMLAMPE HALTEN</span>'+segHTML('sO',[['stab','den Stab'],['tuch','das Tuch']],r.obj)+'</div><div class="row"><button class="btn pri" type="button" id="bTest">Glimmlampe dranhalten</button></div>');}
+  h+='<p class="status info" id="stat"></p>'+(sc==='balloon'?'':'<p class="muted" style="font-size:14px">Tipp: Du kannst auch mit dem Finger auf dem Stab hin- und herwischen.</p>');
+  $('ctl').innerHTML=h;
+  if(sc==='balloon'){bindSlider('R',function(){return M.bal.str;},setBalStr,1,0,MAXR);bindSeg('sP',setBalPos);}
+  else{bindSlider('R',function(){return r.str;},setRodStr,1,0,MAXR);
+    bindSeg('sK',function(v){r.kind=v;r.str=0;M.lastLamp='';renderCtl();draw();});bindSeg('sC',function(v){r.cloth=v;r.str=0;M.lastLamp='';renderCtl();draw();});
+    if(sc==='snip')$('tHold').addEventListener('change',function(){setHold(this.checked);});
+    else{bindSeg('sO',function(v){r.obj=v;M.lastLamp='';draw();});$('bTest').addEventListener('click',testLamp);}}
+  updStatus();
+}
+/* Wischen auf dem Stab = Reiben */
+(function(){var down=false,lx=0,acc=0,dir=0;
+  cv.addEventListener('pointerdown',function(e){if(scene()==='balloon')return;down=true;lx=e.clientX;acc=0;dir=0;try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+  cv.addEventListener('pointermove',function(e){if(!down)return;var dx=e.clientX-lx;lx=e.clientX;var d=Math.sign(dx);acc+=Math.abs(dx);
+    if(d&&d!==dir&&acc>40){acc=0;setRodStr(M.rod.str+1);var S=$('RS');if(S){S.value=M.rod.str;$('dispR').textContent=M.rod.str+'×';}}if(d)dir=d;});
+  ['pointerup','pointercancel'].forEach(function(n){cv.addEventListener(n,function(){down=false;});});})();
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+/* ---------- Vermutung ---------- */
+function pic(kind){var inner;
+  if(kind==='glue')inner='<path d="M30 20 h20 v12 l6 6 v26 a4 4 0 0 1 -4 4 h-24 a4 4 0 0 1 -4 -4 v-26 l6 -6z" fill="#F3F5FA" stroke="#4E5677" stroke-width="3"/><path d="M34 46 q6 10 12 0" fill="none" stroke="#C9A227" stroke-width="5" stroke-linecap="round"/><circle cx="40" cy="62" r="3" fill="#C9A227"/>';
+  else if(kind==='charge')inner='<circle cx="29" cy="40" r="13" fill="#1C66C0"/><text x="29" y="47" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">–</text><circle cx="51" cy="40" r="13" fill="#C8423D"/><text x="51" y="47" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">+</text>';
+  else if(kind==='magnet')inner='<path d="M24 24 v20 a16 16 0 0 0 32 0 v-20 h-10 v20 a6 6 0 0 1 -12 0 v-20z" fill="#C8423D"/><rect x="24" y="20" width="10" height="8" fill="#9AA3B2"/><rect x="46" y="20" width="10" height="8" fill="#9AA3B2"/>';
+  else inner='<rect x="36" y="16" width="8" height="38" rx="4" fill="#F3F5FA" stroke="#4E5677" stroke-width="2.5"/><circle cx="40" cy="58" r="9" fill="#E8432E"/><rect x="38" y="30" width="4" height="26" fill="#E8432E"/>';
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="4" y="4" width="72" height="72" rx="36" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="4"/>'+inner+'</svg>';}
+var GUESS=[{k:'A',t:'glue',n:'klebrig'},{k:'B',t:'charge',n:'elektrisch geladen'},{k:'C',t:'magnet',n:'magnetisch'},{k:'D',t:'warm',n:'warm'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+
+/* ---------- Station 1: Luftballon ---------- */
+var OBS1=[
+  {id:'a',q:'1. Stelle „so oft gerieben“ auf <b>0</b>. Halte den Ballon über den Kopf. Die Haare …',o:['bewegen sich nicht','stellen sich zum Ballon hin auf'],a:0,w:'Stelle den Regler auf 0 und wähle „über den Kopf“. Schau in die Ansicht „Haare von nah“.'},
+  {id:'b',q:'2. Reibe den Ballon mindestens <b>5-mal</b> am Haar. Halte ihn über den Kopf. Die Haare …',o:['bewegen sich nicht','stellen sich zum Ballon hin auf'],a:1,w:'Stelle den Regler auf 5 oder mehr und schau in die Ansicht „Haare von nah“.'},
+  {id:'c',q:'3. Halte den <b>geriebenen</b> Ballon an die Wand. Er …',o:['bleibt kleben','fällt herunter'],a:0,w:'Stelle den Regler auf 5 oder mehr und wähle dann „an die Wand“.'},
+  {id:'d',q:'4. Stelle den Regler wieder auf <b>0</b>. Halte den Ballon an die Wand. Er …',o:['bleibt kleben','fällt herunter'],a:1,w:'Stelle den Regler auf 0, wähle „in der Hand“ und dann „an die Wand“.'}
+];
+var STARTS=['Ich vermute, dass beim Reiben …','Ich glaube, der Ballon …','Ich denke, es hat mit … zu tun, weil …'];
+function r1(){var s=st.s1;
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Ein Luftballon wird an den Haaren gerieben. Danach bleibt er an der Wand kleben. <b>Warum?</b> Der Ballon ist durch das Reiben …</p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.t)+'<span style="font-size:14px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 4 prüfst du sie.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Beobachten im Modell</p><p>Probiere jeden Schritt links im Modell aus. Mit dem Regler stellst du ein, wie oft der Ballon am Haar gerieben wird.</p>'+segQHTML(OBS1,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p></div>';
+  var verm=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Unsere Leitfrage</p><p class="note"><b>Was passiert mit Gegenständen, wenn man sie aneinander reibt?</b></p>'+
+    '<p>Schreibe deine Vermutung auf. Tippe auf einen Satzanfang:</p><div class="row">'+STARTS.map(function(t,i){return '<button class="btn tip" type="button" data-st="'+i+'">'+t+'</button>';}).join('')+'</div>'+
+    '<textarea class="free" id="verm" rows="3" placeholder="Ich vermute, dass …, weil …">'+esc(s.verm)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1v">Vermutung speichern</button></div>')+'<p class="fb" id="fb1v"></p></div>':'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Luftballon</p><h2>Was passiert beim Reiben?</h2></div>'+obs+verm+(st.done[0]?'<p class="win"><b>Gut beobachtet!</b> In den nächsten Stationen findest du heraus, was beim Reiben passiert.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c1').addEventListener('click',function(){if(checkSegQ(OBS1,s.obs,'s1obs','fb1',r1)){s.obsOk=true;save();r1();}});
+  else helpMsg('fb1','Richtig! Nur der geriebene Ballon zieht die Haare an und bleibt an der Wand kleben.');
+  if(s.obsOk){var ta=$('verm');ta.addEventListener('input',function(){s.verm=this.value;save();});
+    Array.prototype.forEach.call(document.querySelectorAll('[data-st]'),function(b){b.addEventListener('click',function(){ta.value=STARTS[+b.dataset.st].replace(/ …/g,' ').replace(/\s+$/,' ');s.verm=ta.value;save();ta.focus();});});
+    if(!s.ok)$('c1v').addEventListener('click',function(){var fb=$('fb1v');if(s.verm.trim().length<20){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}s.ok=true;finish(0);save();r1();});
+    else helpMsg('fb1v','Gespeichert. Am Ende prüfst du deine Vermutung.');}
+  bindNext();
+}
+
+/* ---------- Station 2: Papierschnipsel ---------- */
+var OBS2=[
+  {id:'a',q:'1. Kunststoffstab, <b>0-mal</b> gerieben, über den Schnipseln. Die Schnipsel …',o:['bleiben liegen','springen zum Stab'],a:0,w:'Stelle den Regler auf 0 und kreuze „Stab über die Schnipsel halten“ an.'},
+  {id:'b',q:'2. Kunststoffstab, mit dem <b>Wolltuch</b> mindestens 5-mal gerieben, über den Schnipseln. Die Schnipsel …',o:['bleiben liegen','springen zum Stab'],a:1,w:'Stelle den Regler auf 5 oder mehr und halte den Stab über die Schnipsel.'},
+  {id:'c',q:'3. <b>Glasstab</b>, mit dem <b>Seidentuch</b> mindestens 5-mal gerieben, über den Schnipseln. Die Schnipsel …',o:['bleiben liegen','springen zum Stab'],a:1,w:'Wähle Glasstab und Seidentuch, stelle den Regler auf 5 oder mehr und halte den Stab über die Schnipsel.'}
+];
+var QMORE={q:'Halte den Stab über die Schnipsel. Stelle einmal 4 und einmal 12 Reibzüge ein. Schau auf die Zählung. Was stellst du fest?',o:['Je öfter man reibt, desto mehr Schnipsel werden angezogen.','Die Zahl der Reibzüge ist egal.','Je öfter man reibt, desto weniger Schnipsel werden angezogen.'],a:0,
+  ok:'Genau! Je öfter man reibt, desto stärker wird der Stab geladen.',bad:['','Vergleiche die Zählung bei 4 und bei 12 Reibzügen.','Vergleiche die Zählung bei 4 und bei 12 Reibzügen.']};
+var QWHY2={q:'Was zeigen die Versuche mit den Papierschnipseln?',o:['Durch Reiben wird der Stab elektrisch geladen. Geladene Gegenstände ziehen leichte Gegenstände an.','Durch Reiben werden Gegenstände magnetisch.','Die Schnipsel kleben am Stab, weil er warm geworden ist.'],a:0,
+  ok:'Richtig! Man sagt: Der Stab ist elektrisch geladen. Geladene Gegenstände ziehen leichte Gegenstände an.',bad:['','Papier ist nicht magnetisch. Ein Magnet zieht keine Papierschnipsel an!','Die Schnipsel springen schon, bevor sie den Stab berühren. Wärme kann das nicht sein.']};
+function r2(){var s=st.s2;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Versuch im Modell</p><p>Wähle Stab und Tuch im Steuerpult. Stelle ein, wie oft gerieben wird, und halte den Stab <b>über die Schnipsel</b>.</p>'+segQHTML(OBS2,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var more=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Je – desto</p>'+mcHTML('more',QMORE.q,QMORE.o,s.more,QMORE.a)+'</div>':'';
+  var why=s.moreOk?mcHTML('why2',QWHY2.q,QWHY2.o,s.why,QWHY2.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Papierschnipsel</p><h2>Was kann ein geriebener Stab?</h2></div>'+obs+more+why+
+    (st.done[1]?'<p class="win"><b>Super!</b> Der geriebene Stab ist <b>elektrisch geladen</b>. Er zieht leichte Gegenstände an.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(OBS2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});
+  else helpMsg('fb2','Gut beobachtet! Nur geriebene Stäbe ziehen die Schnipsel an.');
+  if(s.obsOk){bindMC('more',QMORE.a,'s2more',QMORE.ok,QMORE.bad,function(){s.moreOk=true;save();r2();showFb('more',true,QMORE.ok);},function(j){s.more=j;});if(s.moreOk)showFb('more',true,QMORE.ok);}
+  if(s.moreOk){bindMC('why2',QWHY2.a,'s2why',QWHY2.ok,QWHY2.bad,function(){s.whyOk=true;finish(1);save();r2();showFb('why2',true,QWHY2.ok);},function(j){s.why=j;});if(s.whyOk)showFb('why2',true,QWHY2.ok);}
+  bindNext();
+}
+
+/* ---------- Station 3: Glimmlampe ---------- */
+var L3=['Seite zum Gegenstand','Seite zur Hand','leuchtet nicht'];
+var OBS3=[
+  {id:'a',q:'1. <b>Kunststoffstab</b> mit Wolltuch gerieben. Die Glimmlampe leuchtet an der …',o:L3,a:0,w:'Kunststoffstab und Wolltuch wählen, Regler auf 5 oder mehr, dann „Glimmlampe dranhalten“. Schau auf „Glimmlampe von nah“.'},
+  {id:'b',q:'2. <b>Glasstab</b> mit Seidentuch gerieben. Die Glimmlampe leuchtet an der …',o:L3,a:1,w:'Glasstab und Seidentuch wählen, Regler auf 5 oder mehr, dann testen. Schau ins Protokoll.'},
+  {id:'c',q:'3. Stab <b>nicht</b> gerieben (Regler auf 0). Die Glimmlampe …',o:L3,a:2,w:'Stelle den Regler auf 0 und tippe auf „Glimmlampe dranhalten“.'},
+  {id:'d',q:'4. Reibe den Kunststoffstab mit dem Wolltuch. Teste danach <b>das Wolltuch</b>. Die Glimmlampe leuchtet an der …',o:L3,a:1,w:'Kunststoffstab mit Wolltuch reiben (Regler auf 5 oder mehr). Wähle dann „das Tuch“ und tippe auf „Glimmlampe dranhalten“.'}
+];
+var QWHY3={q:'Was schließt du aus deinen Beobachtungen?',o:['Es gibt zwei verschiedene Arten von Ladung.','Es gibt nur eine Art von Ladung.','Die Glimmlampe leuchtet zufällig mal links, mal rechts.'],a:0,
+  ok:'Genau! Der Kunststoffstab und der Glasstab sind verschieden geladen. Auch Stab und Tuch sind verschieden geladen.',bad:['','Vergleiche Kunststoffstab und Glasstab: Leuchtet die Lampe auf derselben Seite?','Teste mehrmals: Beim Kunststoffstab leuchtet immer dieselbe Seite.']};
+var QAPP={q:'Eine Glimmlampe leuchtet an der Seite zur Hand. Wie ist der Gegenstand geladen?',o:['positiv (+)','negativ (–)','gar nicht'],a:0,ok:'Richtig! Leuchtet die Seite zur Hand, ist der Gegenstand positiv geladen.',bad:['','Schau in die Merkhilfe: Welche Seite leuchtet bei negativer Ladung?','Die Lampe leuchtet. Also ist der Gegenstand geladen.']};
+var MERKHILFE='<div class="merk"><h3>Merkhilfe: So liest man die Glimmlampe</h3><p>Die beiden Ladungsarten heißen <span class="k">positiv (+)</span> und <span class="k">negativ (–)</span>.</p>'+
+  '<ul style="margin:6px 0 0;padding-left:1.2em"><li>Leuchtet die <b>Seite zum Gegenstand</b>, ist der Gegenstand <b>negativ (–)</b> geladen.</li><li>Leuchtet die <b>Seite zur Hand</b>, ist der Gegenstand <b>positiv (+)</b> geladen.</li></ul></div>';
+function r3(){var s=st.s3;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Nachweis mit der Glimmlampe</p><p>Eine <b>Glimmlampe</b> leuchtet kurz auf, wenn man sie an einen geladenen Gegenstand hält. Danach ist der Gegenstand entladen und der Regler springt auf 0. Reibe vor jedem Test neu.</p>'+segQHTML(OBS3,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button></div>')+'<p class="fb" id="fb3"></p></div>';
+  var why=s.obsOk?mcHTML('why3',QWHY3.q,QWHY3.o,s.why,QWHY3.a):'';
+  var app=s.whyOk?MERKHILFE+mcHTML('app3',QAPP.q,QAPP.o,s.app,QAPP.a,false):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Glimmlampe</p><h2>Wie weist man Ladung nach?</h2></div>'+obs+why+app+
+    (st.done[2]?'<p class="win"><b>Stark!</b> Du kannst jetzt mit der Glimmlampe herausfinden, ob ein Gegenstand positiv oder negativ geladen ist.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c3').addEventListener('click',function(){if(checkSegQ(OBS3,s.obs,'s3obs','fb3',r3)){s.obsOk=true;save();r3();}});
+  else helpMsg('fb3','Gut beobachtet! Kunststoffstab und Glasstab bringen verschiedene Seiten zum Leuchten.');
+  if(s.obsOk){bindMC('why3',QWHY3.a,'s3why',QWHY3.ok,QWHY3.bad,function(){s.whyOk=true;save();r3();showFb('why3',true,QWHY3.ok);},function(j){s.why=j;});if(s.whyOk)showFb('why3',true,QWHY3.ok);}
+  if(s.whyOk){bindMC('app3',QAPP.a,'s3app',QAPP.ok,QAPP.bad,function(){s.appOk=true;finish(2);save();r3();showFb('app3',true,QAPP.ok);},function(j){s.app=j;});if(s.appOk)showFb('app3',true,QAPP.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Reibt man zwei Gegenstände aus verschiedenen Stoffen aneinander, zum Beispiel Kunststoff und Wolle, können sie elektrisch ',post:' werden.',o:['geladen','magnetisch','warm'],a:0},
+  {pre:'Elektrisch geladene Gegenstände ',post:' leichte Gegenstände wie Papierschnipsel an.',o:['ziehen','kleben','drücken'],a:0},
+  {pre:'Mit einer ',post:' kann man nachweisen, ob ein Gegenstand elektrisch geladen ist.',o:['Glimmlampe','Lupe','Kompass'],a:0},
+  {pre:'Es gibt ',post:' Arten von Ladung: positive (+) und negative (–) Ladung.',o:['zwei','drei','eine'],a:0},
+  {pre:'Leuchtet die Glimmlampe an der Seite zum Gegenstand, ist er ',post:' geladen.',o:['negativ','positiv'],a:0},
+  {pre:'Beim Reiben werden die beiden Gegenstände ',post:' geladen.',o:['entgegengesetzt','gleich'],a:0}
+];
+var WORTE='geladen · ziehen · Glimmlampe · zwei · negativ · entgegengesetzt';
+var MERK='<div class="merk"><h3>Merksatz: Elektrische Aufladung durch Reibung</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var PULLI={q:'Beim Ausziehen deines Pullovers knistert es und deine Haare stehen ab. Warum?',o:['Pullover und Haare werden durch Reibung elektrisch geladen.','Der Pullover ist magnetisch.','Die Haare sind zu trocken.'],a:0,
+  ok:'Richtig! Pullover und Haare reiben aneinander und werden dabei entgegengesetzt geladen. Das Knistern sind winzige Funken.',bad:['','Ein Pullover ist kein Magnet. Was passiert beim Ausziehen mit Pullover und Haaren?','Trockene Luft hilft zwar, erklärt aber nicht das Abstehen. Was passiert beim Ausziehen?']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='B'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist B: Der Ballon ist elektrisch geladen.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>B</b>.</p>')+
+    (st.s1.verm?'<p class="muted">Deine Vermutung aus Station 1: „'+esc(st.s1.verm)+'“</p>':'')+
+    '<p>Beantworte jetzt die Leitfrage in einem Satz: <b>Was passiert mit Gegenständen, wenn man sie aneinander reibt?</b></p><textarea class="free" id="refl" rows="2" placeholder="Wenn man Gegenstände aneinander reibt, …">'+esc(s.refl)+'</textarea></div>':'';
+  var pulli=s.ok?mcHTML('pulli',PULLI.q,PULLI.o,s.pulli,PULLI.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+pulli+(s.pulliOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindMC('pulli',PULLI.a,'s4pulli',PULLI.ok,PULLI.bad,function(){s.pulliOk=true;finish(3);save();r4();showFb('pulli',true,PULLI.ok);},function(j){s.pulli=j;});if(s.pulliOk)showFb('pulli',true,PULLI.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Der Wasserstrahl',task:'Ein geriebener Kunststoffstab wird neben einen dünnen Wasserstrahl aus dem Wasserhahn gehalten.',q:'Was passiert?',
+   o:['Der Wasserstrahl biegt sich zum Stab hin.','Der Wasserstrahl biegt sich vom Stab weg.','Nichts, Wasser kann man nicht anziehen.'],a:0,ok:'Richtig! Der geladene Stab zieht das Wasser an, genau wie die Papierschnipsel.',bad:'Denk an die Papierschnipsel: Was macht ein geladener Gegenstand mit leichten Dingen?'},
+  {id:'b',title:'Staub auf dem Bildschirm',task:'Auf einem Fernseher sammelt sich schnell Staub, vor allem, wenn man ihn mit einem trockenen Tuch abgewischt hat.',q:'Warum?',
+   o:['Beim Wischen wird der Bildschirm geladen und zieht Staub an.','Das Tuch lässt Staubfussel zurück.','Der Bildschirm ist magnetisch.'],a:0,ok:'Genau! Durch das Reiben mit dem Tuch wird der Bildschirm geladen. Geladene Gegenstände ziehen Staub an.',bad:'Was passiert beim Wischen mit dem Tuch? Denk an Stab und Tuch.'},
+  {id:'c',title:'Der Schlag an der Türklinke',task:'Du läufst mit Gummisohlen über einen Teppich. Dann fasst du die Metall-Türklinke an und spürst einen kleinen Schlag.',q:'Was ist vorher passiert?',
+   o:['Beim Laufen hast du dich durch Reibung elektrisch aufgeladen.','Die Türklinke ist an den Strom angeschlossen.','Der Teppich ist magnetisch.'],a:0,ok:'Richtig! Beim Laufen reiben Schuhe und Teppich aneinander. Du wirst geladen. An der Klinke entlädt sich die Ladung mit einem kleinen Funken.',bad:'Was passiert, wenn Schuhsohlen über den Teppich reiben?'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Ladung im Alltag</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1obs','Station 1 · Beobachtungen am Luftballon'],['s2obs','Station 2 · Versuch Papierschnipsel'],['s2more','Station 2 · Je öfter reiben, desto …'],['s2why','Station 2 · Was zeigen die Schnipsel?'],
+  ['s3obs','Station 3 · Tests mit der Glimmlampe'],['s3why','Station 3 · Zwei Ladungsarten'],['s3app','Station 3 · Glimmlampe ablesen'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4pulli','Station 4 · Pullover'],['s5a','Profi · Wasserstrahl'],['s5b','Profi · Bildschirm'],['s5c','Profi · Türklinke']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  L.push('LADUNGSLABOR 1 · Wie verhalten sich ruhende Ladungen? · Was passiert beim Reiben?');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG (Auswahl): '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='B'?'  → stimmt':'  → richtig ist B'));
+  L.push('MEINE VERMUTUNG (Text): '+((st.s1.verm||'').trim()||'(leer)'));
+  L.push('');
+  L.push('STATION 1 · Luftballon');segs(OBS1,st.s1.obs);L.push('');
+  L.push('STATION 2 · Papierschnipsel');segs(OBS2,st.s2.obs);L.push('  Je – desto: '+a(QMORE,st.s2.more));L.push('  Was zeigen die Schnipsel: '+a(QWHY2,st.s2.why));L.push('');
+  L.push('STATION 3 · Glimmlampe');segs(OBS3,st.s3.obs);L.push('  Schluss: '+a(QWHY3,st.s3.why));L.push('  Ablesen: '+a(QAPP,st.s3.app));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(g,i){L.push('  '+(i+1)+'. '+g.pre+g.o[g.a]+g.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Pullover: '+a(PULLI,st.s4.pulli));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,app:'LL1',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,verm:st.s1.verm||'',obs:{s1:st.s1.obs,s2:st.s2.obs,s3:st.s3.obs},
+    mc:{s2more:st.s2.more,s2why:st.s2.why,s3why:st.s3.why,s3app:st.s3.app,s4pulli:st.s4.pulli},tries:st.tries,refl:st.s4.refl||'',s5:st.s5,help:hk,mins:mins0,resets:resets(),nlog:st.log.length,cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL1-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-1_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 1</p><h2 id="stH">Willkommen im Ladungslabor!</h2>'+
+    '<p>Heute findest du heraus, was beim Reiben passiert. Alle Versuche machst du hier im Modell.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();if(sc==='lamp'){M.rod.y=M.rod.ty=150;}lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();
+
+})();
+
+</script>
+</body>
+</html>

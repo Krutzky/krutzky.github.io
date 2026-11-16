@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rechenprofi Plus und Minus</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+html,body{margin:0}
+
+/* Layout: a single working column over squared exercise-book paper; the grid of Rechenkästchen is the hero. */
+:root{
+  --paper:#F7FAFD; --line:#D3E0EE; --surface:#FFFFFF; --ink:#1C2A4A; --muted:#55627F;
+  --carry:#D3263A; --ok:#17844F; --okbg:#E3F5EB; --badbg:#FCE6E9; --focus:#2B6CD8;
+  --orange:#E97A00; --pink:#CF0A6E; --purple:#6C3A98; --soft:#EEF3F9;
+  --f-head:"Fredoka","Andika","Trebuchet MS",sans-serif;
+  --f-body:"Andika","Segoe UI",system-ui,sans-serif;
+  --cell:clamp(38px,9.4vw,54px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:24px 24px;}
+.wrap{max-width:860px;margin:0 auto;padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
+h1{font-family:var(--f-head);font-weight:600;font-size:1.6rem;margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .pm{color:var(--carry)}
+h2{font-family:var(--f-head);font-weight:600;font-size:1.3rem;margin:0 0 8px}
+h3{font-family:var(--f-head);font-weight:500;font-size:1.1rem;margin:0 0 6px}
+.hright{display:flex;gap:8px;align-items:center}
+.stars{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars svg{width:20px;height:20px;fill:#F2B705}
+button{font:inherit;color:inherit;cursor:pointer}
+.langbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700}
+nav.tabs{display:flex;gap:6px;margin:14px 0 12px;overflow-x:auto}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:10px;font-family:var(--f-head);font-weight:500;font-size:1.02rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 0 var(--line)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lvl{border:2px solid var(--c);background:var(--surface);border-radius:12px;padding:8px 6px;text-align:center;font-family:var(--f-head);font-weight:500;line-height:1.2}
+.lvl small{display:block;font-family:var(--f-body);font-weight:400;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.lvl[aria-pressed="true"]{background:var(--c);color:#fff}
+.lvl[aria-pressed="true"] small{color:#fff}
+.lvl1{--c:var(--orange)} .lvl2{--c:var(--pink)} .lvl3{--c:var(--purple)}
+.taskhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;color:#fff;background:var(--c)}
+.instr{margin:4px 0 12px}
+.word{background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:1.05rem}
+.gridbox{overflow-x:auto;padding:6px 0 4px}
+.cgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-variant-numeric:tabular-nums;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*.6);font-weight:700;position:relative}
+.cell.lab{font-size:calc(var(--cell)*.32);color:var(--muted);font-weight:700}
+.cell.sign{color:var(--ink)}
+.cell.in{cursor:pointer;background:color-mix(in srgb,var(--surface) 70%,transparent);border-radius:6px;margin:3px;width:calc(var(--cell) - 6px);height:calc(var(--cell) - 6px);border:2px dashed var(--muted)}
+.cell.in.active{border:3px solid var(--focus);background:var(--surface)}
+.cell.carry{font-size:calc(var(--cell)*.42);color:var(--carry)}
+.cell.carry.in{border-color:var(--carry);border-width:1.5px;width:calc(var(--cell) - 18px);height:calc(var(--cell) - 18px);margin:9px}
+.cell.carry.in.active{border-width:3px}
+.cell.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.cell.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.cell.sol{color:var(--focus)}
+.cell.hl{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:4px}
+.rule{grid-column:1/-1;height:3px;background:var(--ink);border-radius:2px;margin:0 2px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px auto 0;max-width:520px}
+.keypad button{border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:52px;font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.keypad button.wide{grid-column:span 2;font-size:1rem}
+.keypad button:active{transform:translateY(1px)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-family:var(--f-head);font-weight:500;font-size:1.05rem;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:#FFF4CC;color:#5A4500;border-color:#E8CF6A}
+:root[data-theme="dark"] .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}}
+.choices{display:grid;gap:8px;margin:8px 0}
+.choice{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.choice.ok{border-color:var(--ok);background:var(--okbg)}
+.choice.bad{border-color:var(--carry);background:var(--badbg)}
+.msg{margin-top:12px;border-radius:12px;padding:10px 14px;font-weight:700}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--carry)}
+.msg.info{background:var(--soft);color:var(--ink);font-weight:400}
+.tipcard{margin-top:12px;border:2px solid #E8CF6A;background:#FFFBEA;color:#3D3000;border-radius:14px;padding:12px 14px}
+:root[data-theme="dark"] .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.tipcard b{font-family:var(--f-head);font-weight:600}
+.claimed{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.progress{color:var(--muted);font-size:.9rem;text-align:center;margin-top:10px;font-variant-numeric:tabular-nums}
+/* explanation */
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px}
+.term{background:var(--soft);border-radius:12px;padding:12px;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.term .eq{font-size:1.4rem;font-weight:700;margin:4px 0}
+.term .lbl{font-size:.85rem;color:var(--muted)}
+.player{display:grid;gap:12px}
+.steptext{background:var(--soft);border-radius:12px;padding:12px 14px;min-height:4.5em}
+.stepnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.stepnav .count{color:var(--muted);font-variant-numeric:tabular-nums;min-width:4em;text-align:center}
+.section{margin-bottom:16px}
+/* merkzettel */
+.merk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.merk ol{margin:0;padding-left:1.3em;display:grid;gap:4px}
+.err{display:grid;gap:10px}
+.erritem{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;background:var(--badbg);border-radius:12px;padding:10px 12px}
+.erritem .ex{font-variant-numeric:tabular-nums;font-weight:700}
+.erritem .ex s{color:var(--carry)}
+.gloss{width:100%;border-collapse:collapse;font-size:.95rem}
+.gloss td,.gloss th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+/* tip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.fcard{perspective:900px;min-height:190px;border:none;background:none;padding:0;text-align:left}
+.fin{position:relative;width:100%;height:100%;min-height:190px;transition:transform .45s;transform-style:preserve-3d}
+.fcard[aria-pressed="true"] .fin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.front{background:var(--surface)}
+.front .q{font-family:var(--f-head);font-weight:600;font-size:1.15rem}
+.front .hint{margin-top:auto;font-size:.82rem;color:var(--muted)}
+.back{background:#FFFBEA;color:#3D3000;transform:rotateY(180deg);border-color:#E8CF6A;font-size:.98rem;overflow:auto}
+:root[data-theme="dark"] .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex:none}
+@media (prefers-reduced-motion: reduce){.fin{transition:none}}
+@media (max-width:520px){.erritem{grid-template-columns:1fr} .keypad{grid-template-columns:repeat(5,1fr)} .keypad button.wide{grid-column:span 5} .levels{gap:6px} .lvl{font-size:.92rem}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1 id="apptitle"></h1>
+    <div class="hright">
+      <div class="stars" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17.4l-6.1 3.4 1.4-6.7-5-4.6 6.8-.8z"/></svg><span id="starcount">0</span></div>
+      <button class="langbtn" id="langbtn" type="button"></button>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+const DEFAULT_LANG = "de";
+/* ---------- texts ---------- */
+const PLACES = {de:["Einer","Zehner","Hunderter","Tausender","Zehntausender","Hunderttausender"],
+                tr:["birler","onlar","yüzler","binler","on binler","yüz binler"]};
+const ABBR = ["E","Z","H","T","ZT","HT"];
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ");
+const T = {
+de:{
+  title:'Rechenprofi <span class="pm">+ −</span>', other:"Türkçe",
+  tabs:["Üben","Erklärung","Merkzettel","Tippkarten"],
+  lv:[["Stufe 1","orange"],["Stufe 2","pink"],["Stufe 3","lila"]],
+  solvedN:n=>`${n} gelöst`,
+  modes:{add:"Schriftlich addieren",sub:"Schriftlich subtrahieren",gap:"Lückenaufgabe",est:"Überschlag",error:"Fehlerdetektiv",word:"Sachaufgabe"},
+  iAdd:"Rechne schriftlich. Tippe auf ein Kästchen und gib die Ziffer ein. Überträge darfst du in die kleinen roten Kästchen schreiben.",
+  iSub:"Subtrahiere schriftlich mit dem Ergänzungsverfahren: Rechne in jeder Spalte von unten nach oben. Überträge kommen in die kleinen roten Kästchen.",
+  iGap:"Welche Ziffer fehlt? Tippe auf das leere Kästchen und gib die Ziffer ein.",
+  iEst:"Welcher Überschlag passt? Runde an der größten Stelle der kleinsten Zahl.",
+  iErr:"Mia hat schriftlich gerechnet. Stimmt ihr Ergebnis? Mache zuerst einen Überschlag.",
+  iErr2:"Rechne die Aufgabe richtig in der leeren Ergebniszeile.",
+  iWord:"Lies die Aufgabe genau. Welche Rechnung passt?",
+  iWord2:"Richtig! Rechne jetzt schriftlich.",
+  check:"Prüfen", tip:"Tipp", next:"Nächste Aufgabe", show:"Lösung zeigen", del:"Löschen",
+  yes:"Stimmt", no:"Stimmt nicht",
+  ok:["Richtig! Super gerechnet.","Klasse, alles richtig!","Genau! Du bist ein Rechenprofi.","Richtig! Weiter so."],
+  bad:"Noch nicht ganz. Die rot markierten Kästchen stimmen nicht. Prüfe diese Spalten noch einmal.",
+  bad2:"Schau dir den Tipp an oder lass dir die Lösung zeigen.",
+  empty:"Fülle zuerst die Ergebniszeile aus.",
+  solShown:"Hier ist die Lösung. Vergleiche Spalte für Spalte und rechne dann die nächste Aufgabe.",
+  estBad:"Das passt nicht. Runde jede Zahl an der größten Stelle der kleinsten Zahl und rechne dann im Kopf.",
+  errRightOk:"Richtig erkannt: Mias Ergebnis stimmt!",
+  errRightBad:"Leider falsch: Mias Ergebnis stimmt doch. Prüfe mit der Probe.",
+  errWrongOk:"Gut aufgepasst! Mias Ergebnis ist falsch. Rechne jetzt richtig.",
+  errWrongBad:"Schau noch einmal genau hin. Vergleiche mit deinem Überschlag.",
+  miaRes:r=>`Mias Ergebnis: ${fmt(r)}`,
+  wordBad:"Diese Rechnung passt nicht zur Geschichte. Lies noch einmal: Kommt etwas dazu oder wird etwas weniger?",
+  answer:"Antwort",
+  tipGen:{add:"Schreibe die Zahlen stellengerecht. Beginne rechts bei den Einern und rechne Spalte für Spalte nach links. Ist eine Spaltensumme 10 oder mehr, schreibst du die Einer unten hin und die 1 als Übertrag in die nächste Spalte.",
+          sub:"Rechne in jeder Spalte von unten nach oben: Was muss ich zur unteren Ziffer dazurechnen, um die obere zu bekommen? Geht das nicht, ergänzt du bis zur oberen Ziffer + 10 und schreibst 1 als Übertrag in die nächste Spalte.",
+          gap:"Rechne die Spalte mit dem leeren Kästchen ganz normal. Denk an den Übertrag aus der Spalte rechts davon.",
+          est:"Die kleinste Zahl entscheidet: Hat sie Tausender als größte Stelle, rundest du beide Zahlen auf Tausender."},
+  colAdd:(pl,parts,tot,r,c,next)=> c? `${pl}: ${parts} = ${tot}. Schreibe ${r} hin und den Übertrag ${c} in die ${next}-Spalte.` : `${pl}: ${parts} = ${tot}. Schreibe ${tot} hin.`,
+  colSub:(pl,lower,s,m,r,c,next)=> (lower? `${pl}: Rechne unten zusammen: ${lower} = ${s}. `:`${pl}: `) + (c? `${s} + ? = ${m%10} geht nicht. Ergänze bis ${m+10*c}: ${s} + ${r} = ${m+10*c}. Schreibe ${r} hin und den Übertrag ${c} unter die ${next}-Spalte.` : `${s} + ? = ${m}. Es fehlen ${r}. Schreibe ${r} hin.`),
+  carryWord:"Übertrag",
+  explainTitle:"So rechnest du schriftlich",
+  termAdd:["Summand","Summand","Wert der Summe"], termSub:["Minuend","Subtrahend","Wert der Differenz"],
+  addEx:"Beispiel Addition", subEx:"Beispiel Subtraktion (Ergänzungsverfahren)",
+  back:"Zurück", fwd:"Weiter", newEx:"Neues Beispiel",
+  stepStart:(ov)=>`Schreibe die Zahlen stellengerecht untereinander: Einer unter Einer, Zehner unter Zehner usw. Mache zuerst einen Überschlag: ${ov}.`,
+  stepStartSub:(ov)=>`Schreibe die größere Zahl oben hin, die kleinere stellengerecht darunter. Überschlag: ${ov}.`,
+  stepEnd:(r,ov)=>`Fertig! Das Ergebnis ist ${fmt(r)}. Vergleiche mit dem Überschlag ${ov}: Das passt.`,
+  stepEndSub:(r,probe)=>`Fertig! Das Ergebnis ist ${fmt(r)}. Probe mit der Umkehraufgabe: ${probe}.`,
+  merkTitle:"Merkzettel",
+  merkAdd:["Zahlen stellengerecht untereinander schreiben: Einer unter Einer, Zehner unter Zehner.","Rechts bei den Einern beginnen.","Spaltensumme 10 oder mehr: Einer hinschreiben, Zehner als Übertrag in die nächste Spalte.","Ergebnis mit dem Überschlag vergleichen."],
+  merkSub:["Größere Zahl oben, kleinere stellengerecht darunter.","Rechts bei den Einern beginnen und von unten nach oben ergänzen: 3 + ? = 8.","Geht das nicht, bis zur nächsten Zahl mit 1 davor ergänzen (bis 12, 13, …) und 1 als Übertrag unter die nächste Spalte schreiben.","Den Übertrag zur unteren Ziffer der nächsten Spalte dazurechnen.","Probe: Ergebnis + Subtrahend = Minuend."],
+  errTitle:"Typische Fehler",
+  errs:[
+    ["Nicht stellengerecht geschrieben","345 + 72 linksbündig: <s>1 065</s> → richtig 417"],
+    ["Übertrag vergessen","58 + 27 = <s>75</s> → richtig 85"],
+    ["Ganze Spaltensumme hingeschrieben","58 + 27 = <s>715</s> → richtig 85"],
+    ["Ziffern vertauscht (oben minus unten egal)","52 − 18 = <s>46</s> → richtig 34"],
+    ["Übertrag bei der Subtraktion nicht dazugerechnet","52 − 18 = <s>44</s> → richtig 34"],
+    ["Bei einer 0 oben falsch ergänzt","400 − 123: oben 0 heißt bis 10 ergänzen → richtig 277"]],
+  glossTitle:"Fachbegriffe",
+  gloss:[["Summand + Summand = Wert der Summe","Addition"],["Minuend − Subtrahend = Wert der Differenz","Subtraktion"],["Überschlag","ungefähres Ergebnis mit gerundeten Zahlen"],["Probe","Kontrolle mit der Umkehraufgabe"],["Übertrag","Zahl, die in die nächste Spalte wandert"],["E · Z · H · T · ZT","Einer · Zehner · Hunderter · Tausender · Zehntausender"]],
+  cardsTitle:"Tippkarten", tapHint:"Tippe zum Umdrehen",
+  cards:[
+    ["Wie schreibe ich die Zahlen auf?","Stellengerecht: Einer unter Einer, Zehner unter Zehner. Die Zahlen stehen rechtsbündig untereinander."],
+    ["Wo fange ich an?","Immer rechts bei den Einern. Dann gehst du Spalte für Spalte nach links."],
+    ["Was ist ein Übertrag beim Addieren?","Ist die Summe einer Spalte 10 oder mehr, schreibst du die Einer unten hin. Die Zehner kommen als Übertrag in die nächste Spalte. Beispiel: 8 + 7 = 15 → 5 hinschreiben, 1 übertragen."],
+    ["Wie ergänze ich beim Subtrahieren?","Rechne von unten nach oben: 3 + ? = 8. Die fehlende Zahl 5 ist das Ergebnis dieser Spalte."],
+    ["Und wenn das Ergänzen nicht geht?","Ist die untere Ziffer größer als die obere, ergänzt du bis zur oberen Ziffer + 10: 6 + ? = 12 → 6. Schreibe den Übertrag 1 unter die nächste Spalte und rechne ihn dort zur unteren Ziffer dazu."],
+    ["Oben steht eine 0?","Dann ergänzt du bis 10. Beispiel: 4 + ? = 10 → 6, Übertrag 1."],
+    ["Mehrere Zahlen abziehen?","Addiere in jeder Spalte zuerst alle unteren Ziffern und den Übertrag. Dann ergänzt du bis zur oberen Ziffer."],
+    ["Wie mache ich einen Überschlag?","Runde die Zahlen an der größten Stelle der kleinsten Zahl und rechne im Kopf. Liegt dein Ergebnis in der Nähe, passt es wahrscheinlich."],
+    ["Wie mache ich die Probe?","Bei der Subtraktion rechnest du: Ergebnis + Subtrahend = Minuend. Stimmt das, hast du richtig gerechnet."]],
+  words:{
+    add2:(a,b)=>[`Emre hat einen Schrittzähler. Am Montag läuft er ${fmt(a)} Schritte, am Dienstag ${fmt(b)} Schritte. Wie viele Schritte läuft er an beiden Tagen zusammen?`, r=>`Emre läuft zusammen ${fmt(r)} Schritte.`],
+    add3:(a,b,c)=>[`Familie Yılmaz fährt in den Urlaub. Am ersten Tag fährt sie ${fmt(a)} km, am zweiten Tag ${fmt(b)} km und am dritten Tag ${fmt(c)} km. Wie viele Kilometer fährt sie insgesamt?`, r=>`Familie Yılmaz fährt insgesamt ${fmt(r)} km.`],
+    sub1:(a,b)=>[`Im Fußballstadion gibt es ${fmt(a)} Plätze. ${fmt(b)} Plätze sind schon besetzt. Wie viele Plätze sind noch frei?`, r=>`Es sind noch ${fmt(r)} Plätze frei.`],
+    sub2:(a,b,c)=>[`Die Schule möchte ${fmt(a)} € für einen neuen Spielplatz sammeln. Die Klasse 5a hat schon ${fmt(b)} € gesammelt, die Klasse 5b ${fmt(c)} €. Wie viel Geld fehlt noch?`, r=>`Es fehlen noch ${fmt(r)} €.`]
+  }
+},
+tr:{
+  title:'Hesap Ustası <span class="pm">+ −</span>', other:"Deutsch",
+  tabs:["Alıştırma","Açıklama","Not kâğıdı","İpucu kartları"],
+  lv:[["Seviye 1","turuncu"],["Seviye 2","pembe"],["Seviye 3","mor"]],
+  solvedN:n=>`${n} çözüldü`,
+  modes:{add:"Alt alta toplama",sub:"Alt alta çıkarma",gap:"Eksik rakam",est:"Tahmini hesap (Überschlag)",error:"Hata dedektifi",word:"Problem"},
+  iAdd:"Alt alta topla. Bir kutuya dokun ve rakamı yaz. Eldeleri (Übertrag) küçük kırmızı kutulara yazabilirsin.",
+  iSub:"Tamamlama yöntemiyle (Ergänzungsverfahren) alt alta çıkar: Her sütunda aşağıdan yukarıya hesapla. Eldeler küçük kırmızı kutulara yazılır.",
+  iGap:"Hangi rakam eksik? Boş kutuya dokun ve rakamı yaz.",
+  iEst:"Hangi tahmini hesap uygun? En küçük sayının en büyük basamağına göre yuvarla.",
+  iErr:"Mia alt alta işlem yapmış. Sonucu doğru mu? Önce tahmini hesap yap.",
+  iErr2:"İşlemi boş sonuç satırında doğru olarak hesapla.",
+  iWord:"Soruyu dikkatlice oku. Hangi işlem uygun?",
+  iWord2:"Doğru! Şimdi alt alta hesapla.",
+  check:"Kontrol et", tip:"İpucu", next:"Sonraki soru", show:"Çözümü göster", del:"Sil",
+  yes:"Doğru", no:"Yanlış",
+  ok:["Doğru! Harika hesapladın.","Süper, hepsi doğru!","Aynen öyle! Sen bir hesap ustasısın.","Doğru! Böyle devam et."],
+  bad:"Henüz tam değil. Kırmızı işaretli kutular yanlış. Bu sütunları bir daha kontrol et.",
+  bad2:"İpucuna bak ya da çözümü göster.",
+  empty:"Önce sonuç satırını doldur.",
+  solShown:"İşte çözüm. Sütun sütun karşılaştır, sonra sonraki soruya geç.",
+  estBad:"Bu uygun değil. Her sayıyı en küçük sayının en büyük basamağına göre yuvarla, sonra aklından hesapla.",
+  errRightOk:"Doğru bildin: Mia'nın sonucu doğru!",
+  errRightBad:"Maalesef olmadı: Mia'nın sonucu aslında doğru. Sağlama ile kontrol et.",
+  errWrongOk:"Dikkatli baktın! Mia'nın sonucu yanlış. Şimdi doğru hesapla.",
+  errWrongBad:"Bir daha dikkatlice bak. Tahmini hesabınla karşılaştır.",
+  miaRes:r=>`Mia'nın sonucu: ${fmt(r)}`,
+  wordBad:"Bu işlem hikâyeye uymuyor. Tekrar oku: Bir şey ekleniyor mu, yoksa azalıyor mu?",
+  answer:"Cevap",
+  tipGen:{add:"Sayıları basamaklarına göre yaz. Sağdan, birlerden başla ve sütun sütun sola doğru hesapla. Bir sütunun toplamı 10 veya daha fazlaysa birleri aşağıya, 1'i elde olarak bir sonraki sütuna yaz.",
+          sub:"Her sütunda aşağıdan yukarıya hesapla: Üstteki rakamı bulmak için alttaki rakama ne eklemeliyim? Olmuyorsa üstteki rakam + 10'a kadar tamamla ve 1'i elde olarak bir sonraki sütuna yaz.",
+          gap:"Boş kutunun olduğu sütunu normal şekilde hesapla. Sağdaki sütundan gelen eldeyi unutma.",
+          est:"En küçük sayı karar verir: En büyük basamağı binler ise iki sayıyı da binlere yuvarlarsın."},
+  colAdd:(pl,parts,tot,r,c,next)=> c? `${pl}: ${parts} = ${tot}. ${r} yaz, ${c} elde olarak ${next} sütununa geçer.` : `${pl}: ${parts} = ${tot}. ${tot} yaz.`,
+  colSub:(pl,lower,s,m,r,c,next)=> (lower? `${pl}: Alttakileri topla: ${lower} = ${s}. `:`${pl}: `) + (c? `${s} + ? = ${m%10} olmaz. ${m+10*c}'e kadar tamamla: ${s} + ${r} = ${m+10*c}. ${r} yaz ve ${c} eldeyi ${next} sütununun altına yaz.` : `${s} + ? = ${m}. ${r} eksik. ${r} yaz.`),
+  carryWord:"elde",
+  explainTitle:"Alt alta işlem nasıl yapılır?",
+  termAdd:["toplanan (Summand)","toplanan (Summand)","toplam (Wert der Summe)"], termSub:["eksilen (Minuend)","çıkan (Subtrahend)","fark (Wert der Differenz)"],
+  addEx:"Toplama örneği", subEx:"Çıkarma örneği (tamamlama yöntemi)",
+  back:"Geri", fwd:"İleri", newEx:"Yeni örnek",
+  stepStart:(ov)=>`Sayıları basamaklarına göre alt alta yaz: birler birlerin altına, onlar onların altına. Önce tahmini hesap yap: ${ov}.`,
+  stepStartSub:(ov)=>`Büyük sayıyı üste, küçük sayıyı basamaklarına göre altına yaz. Tahmini hesap: ${ov}.`,
+  stepEnd:(r,ov)=>`Bitti! Sonuç ${fmt(r)}. Tahmini hesapla karşılaştır: ${ov}. Uyuyor.`,
+  stepEndSub:(r,probe)=>`Bitti! Sonuç ${fmt(r)}. Ters işlemle sağlama (Probe): ${probe}.`,
+  merkTitle:"Not kâğıdı",
+  merkAdd:["Sayıları basamaklarına göre alt alta yaz: birler birlerin altına, onlar onların altına.","Sağdan, birlerden başla.","Sütun toplamı 10 veya daha fazlaysa: birleri yaz, onluğu elde olarak bir sonraki sütuna geçir.","Sonucu tahmini hesapla karşılaştır."],
+  merkSub:["Büyük sayı üstte, küçük sayı basamaklarına göre altında.","Sağdan, birlerden başla ve aşağıdan yukarıya tamamla: 3 + ? = 8.","Olmuyorsa önüne 1 gelen sayıya kadar tamamla (12'ye, 13'e …) ve 1'i elde olarak bir sonraki sütunun altına yaz.","Eldeyi bir sonraki sütunda alttaki rakama ekle.","Sağlama: fark + çıkan = eksilen."],
+  errTitle:"Sık yapılan hatalar",
+  errs:[
+    ["Basamaklara göre yazılmamış","345 + 72 sola hizalı: <s>1 065</s> → doğrusu 417"],
+    ["Elde unutulmuş","58 + 27 = <s>75</s> → doğrusu 85"],
+    ["Sütun toplamının tamamı yazılmış","58 + 27 = <s>715</s> → doğrusu 85"],
+    ["Rakamlar yer değiştirmiş (küçükten büyük çıkarılmış)","52 − 18 = <s>46</s> → doğrusu 34"],
+    ["Çıkarmada elde eklenmemiş","52 − 18 = <s>44</s> → doğrusu 34"],
+    ["Üstte 0 varken yanlış tamamlanmış","400 − 123: üstte 0, yani 10'a kadar tamamla → doğrusu 277"]],
+  glossTitle:"Terimler (Almanca – Türkçe)",
+  gloss:[["Summand + Summand = Wert der Summe","toplanan + toplanan = toplam"],["Minuend − Subtrahend = Wert der Differenz","eksilen − çıkan = fark"],["Überschlag","tahmini hesap (yuvarlanmış sayılarla)"],["Probe","sağlama (ters işlemle kontrol)"],["Übertrag","elde (bir sonraki sütuna geçen sayı)"],["E · Z · H · T · ZT","birler · onlar · yüzler · binler · on binler"]],
+  cardsTitle:"İpucu kartları", tapHint:"Çevirmek için dokun",
+  cards:[
+    ["Sayıları nasıl yazarım?","Basamaklarına göre: birler birlerin altına, onlar onların altına. Sayılar sağa hizalı yazılır."],
+    ["Nereden başlarım?","Her zaman sağdan, birler basamağından başla. Sonra sütun sütun sola doğru ilerle."],
+    ["Toplamada elde (Übertrag) nedir?","Bir sütunun toplamı 10 veya daha fazlaysa birleri aşağıya yaz. Onluk, elde olarak bir sonraki sütuna geçer. Örnek: 8 + 7 = 15 → 5'i yaz, 1 elde."],
+    ["Çıkarmada nasıl tamamlarım?","Aşağıdan yukarıya hesapla: 3 + ? = 8. Eksik sayı olan 5 bu sütunun sonucudur."],
+    ["Tamamlama olmuyorsa?","Alttaki rakam üsttekinden büyükse, üstteki rakam + 10'a kadar tamamla: 6 + ? = 12 → 6. 1 eldeyi bir sonraki sütunun altına yaz ve orada alttaki rakama ekle."],
+    ["Üstte 0 mı var?","O zaman 10'a kadar tamamlarsın. Örnek: 4 + ? = 10 → 6, 1 elde."],
+    ["Birden fazla sayı mı çıkarılıyor?","Her sütunda önce alttaki tüm rakamları ve eldeyi topla. Sonra üstteki rakama kadar tamamla."],
+    ["Tahmini hesap (Überschlag) nasıl yapılır?","Sayıları en küçük sayının en büyük basamağına göre yuvarla ve aklından hesapla. Sonucun buna yakınsa büyük ihtimalle doğrudur."],
+    ["Sağlama (Probe) nasıl yapılır?","Çıkarmada şunu hesapla: fark + çıkan = eksilen. Bu doğruysa doğru hesaplamışsın."]],
+  words:{
+    add2:(a,b)=>[`Emre'nin bir adımsayarı var. Pazartesi ${fmt(a)} adım, salı ${fmt(b)} adım atıyor. İki günde toplam kaç adım atıyor?`, r=>`Emre toplam ${fmt(r)} adım atıyor.`],
+    add3:(a,b,c)=>[`Yılmaz ailesi tatile gidiyor. Birinci gün ${fmt(a)} km, ikinci gün ${fmt(b)} km, üçüncü gün ${fmt(c)} km yol gidiyor. Toplam kaç kilometre yol gidiyor?`, r=>`Yılmaz ailesi toplam ${fmt(r)} km yol gidiyor.`],
+    sub1:(a,b)=>[`Futbol stadyumunda ${fmt(a)} koltuk var. ${fmt(b)} koltuk dolu. Kaç koltuk hâlâ boş?`, r=>`Hâlâ ${fmt(r)} koltuk boş.`],
+    sub2:(a,b,c)=>[`Okul yeni bir oyun parkı için ${fmt(a)} € toplamak istiyor. 5a sınıfı ${fmt(b)} €, 5b sınıfı ${fmt(c)} € topladı. Daha ne kadar para gerekiyor?`, r=>`Daha ${fmt(r)} € gerekiyor.`]
+  }
+}};
+const store = {get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+let lang = store.get("rp-lang",null) || DEFAULT_LANG;
+const L = () => T[lang];
+
+/* ---------- math ---------- */
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const dig=(n,p)=>Math.floor(n/10**p)%10;
+const len=n=>String(n).length;
+function calcAdd(nums){
+  const result=nums.reduce((a,b)=>a+b,0); const cols=[]; let c=0;
+  for(let p=0;p<len(result);p++){
+    const ds=nums.filter(n=>len(n)>p).map(n=>dig(n,p)); const tot=ds.reduce((a,b)=>a+b,0)+c;
+    cols.push({p,ds,cin:c,tot,r:tot%10,cout:Math.floor(tot/10)}); c=Math.floor(tot/10);
+  }
+  return {result,cols};
+}
+function calcSub(nums){
+  const [m,...subs]=nums; const result=m-subs.reduce((a,b)=>a+b,0); const cols=[]; let c=0;
+  for(let p=0;p<len(m);p++){
+    const md=dig(m,p); const ds=subs.filter(n=>len(n)>p).map(n=>dig(n,p)); const s=ds.reduce((a,b)=>a+b,0)+c;
+    const cout=s>md?Math.ceil((s-md)/10):0; const r=md+10*cout-s;
+    cols.push({p,md,ds,cin:c,s,r,cout}); c=cout;
+  }
+  return {result,cols};
+}
+const calc=(kind,nums)=>kind==="add"?calcAdd(nums):calcSub(nums);
+const nCarries=(k,nums)=>calc(k,nums).cols.filter(c=>c.cout>0).length;
+function overschlag(kind,nums){
+  const place=10**(len(Math.min(...nums))-1); const rd=n=>Math.round(n/place)*place;
+  const rs=nums.map(rd); const val=kind==="add"?rs.reduce((a,b)=>a+b,0):rs[0]-rs.slice(1).reduce((a,b)=>a+b,0);
+  return {rs,val,str:rs.map(fmt).join(kind==="add"?" + ":" − ")+" = "+fmt(val)};
+}
+function gen(fn,test,tries=400){for(let i=0;i<tries;i++){const v=fn();if(test(v))return v}return fn()}
+
+/* ---------- task generators ---------- */
+function makeTask(level){
+  const r=Math.random();
+  if(level===1){
+    if(r<.5) return {mode:"calc",kind:"add",nums:gen(()=>Math.random()<.3?[rnd(100,899),rnd(12,98)]:[rnd(100,799),rnd(100,499)],n=>n[0]+n[1]<1000&&nCarries("add",n)<=1)};
+    return {mode:"calc",kind:"sub",nums:gen(()=>{const a=rnd(300,999);return [a,rnd(100,a-50)]},n=>nCarries("sub",n)<=1&&n[0]-n[1]>=10)};
+  }
+  if(level===2){
+    if(r<.32) return {mode:"calc",kind:"add",nums:gen(()=>Math.random()<.5?[rnd(1000,6999),rnd(1000,2999)]:[rnd(1000,4999),rnd(100,999),rnd(100,999)],n=>nCarries("add",n)>=2)};
+    if(r<.64) return {mode:"calc",kind:"sub",nums:gen(()=>{const a=Math.random()<.3?rnd(2,9)*1000+rnd(0,9)*10+rnd(0,9):rnd(2000,9999);return [a,rnd(300,a-200)]},n=>nCarries("sub",n)>=2&&n[0]>n[1])};
+    if(r<.84) return makeGap();
+    return makeEst();
+  }
+  if(r<.25) return {mode:"calc",kind:"add",nums:gen(()=>{const k=rnd(3,4);return Array.from({length:k},()=>Math.random()<.5?rnd(10000,39999):rnd(100,9999))},n=>n.reduce((a,b)=>a+b,0)<100000&&nCarries("add",n)>=3)};
+  if(r<.5) return {mode:"calc",kind:"sub",nums:gen(()=>[rnd(20000,99999),rnd(1000,9999),rnd(100,9999)],n=>n[0]-n[1]-n[2]>100&&nCarries("sub",n)>=2)};
+  if(r<.75) return makeError();
+  return makeWord();
+}
+function makeGap(){
+  const kind=Math.random()<.5?"add":"sub";
+  const nums=kind==="add"?gen(()=>[rnd(1000,8999),rnd(100,999)],n=>n[0]+n[1]<10000&&nCarries("add",n)>=1):gen(()=>{const a=rnd(2000,9999);return [a,rnd(200,a-100)]},n=>nCarries("sub",n)>=1);
+  const {result}=calc(kind,nums);
+  const rows=[...nums.map((n,i)=>({i,n})),{i:"res",n:result}];
+  const row=pick(rows); const p=rnd(0,len(row.n)-1);
+  return {mode:"gap",kind,nums,gap:{row:row.i,p,val:dig(row.n,p)}};
+}
+function makeEst(){
+  const kind=Math.random()<.5?"add":"sub";
+  const nums=kind==="add"?[rnd(1000,8999),rnd(1000,8999)]:gen(()=>[rnd(4000,9999),rnd(1000,3999)],n=>n[0]>n[1]);
+  const place=1000; const ov=overschlag(kind,nums);
+  const flip=(n,rd)=>rd>=n?rd-place:rd+place;
+  const opts=[ov.str];
+  const alt=(rs)=>{const v=kind==="add"?rs[0]+rs[1]:rs[0]-rs[1];return rs.map(fmt).join(kind==="add"?" + ":" − ")+" = "+fmt(v)};
+  opts.push(alt([flip(nums[0],ov.rs[0]),ov.rs[1]])); opts.push(alt([ov.rs[0],flip(nums[1],ov.rs[1])]));
+  return {mode:"est",kind,nums,opts:shuffle(opts.map((s,i)=>({s,ok:i===0})))};
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function wrongResult(kind,nums){
+  const {cols,result}=calc(kind,nums); let w;
+  if(kind==="add"){ // carry forgotten
+    w=Number(cols.map(c=>c.tot-c.cin).map(v=>v%10).reverse().join(""));
+  } else {
+    if(Math.random()<.5){ // carry not added
+      w=Number(cols.map(c=>{const s=c.ds.reduce((a,b)=>a+b,0);return ((c.md-s)%10+10)%10}).reverse().join(""));
+    } else { // swap digits (two numbers only)
+      w=Number(cols.map(c=>Math.abs(c.md-c.ds.reduce((a,b)=>a+b,0))%10).reverse().join(""));
+    }
+  }
+  return w;
+}
+function makeError(){
+  const kind=Math.random()<.5?"add":"sub";
+  const nums=kind==="add"?gen(()=>[rnd(1000,9999),rnd(1000,9999)],n=>nCarries("add",n)>=2):gen(()=>{const a=rnd(3000,9999);return [a,rnd(1000,a-500)]},n=>nCarries("sub",n)>=2);
+  const {result}=calc(kind,nums); const isRight=Math.random()<.35;
+  let shown=isRight?result:wrongResult(kind,nums); if(shown===result&&!isRight) shown=result+(kind==="add"?100:-100);
+  return {mode:"error",kind,nums,shown,isRight:shown===result,phase:1};
+}
+function makeWord(){
+  const t=pick(["add2","add3","sub1","sub2"]); let kind,nums,opts;
+  if(t==="add2"){nums=gen(()=>[rnd(4000,15000),rnd(3000,12000)],n=>nCarries("add",n)>=2);kind="add";opts=[[`${fmt(nums[0])} + ${fmt(nums[1])}`,1],[`${fmt(Math.max(...nums))} − ${fmt(Math.min(...nums))}`,0]];}
+  if(t==="add3"){nums=gen(()=>[rnd(400,1300),rnd(400,1300),rnd(400,1300)],n=>nCarries("add",n)>=2);kind="add";opts=[[`${fmt(nums[0])} + ${fmt(nums[1])} + ${fmt(nums[2])}`,1],[`${fmt(nums[0])} + ${fmt(nums[1])} − ${fmt(nums[2])}`,0],[`${fmt(nums[0])} − ${fmt(nums[1])} − ${fmt(nums[2])}`,0]];}
+  if(t==="sub1"){nums=gen(()=>{const a=rnd(20,60)*1000+rnd(0,999);return [a,rnd(8000,a-2000)]},n=>nCarries("sub",n)>=2);kind="sub";opts=[[`${fmt(nums[0])} − ${fmt(nums[1])}`,1],[`${fmt(nums[0])} + ${fmt(nums[1])}`,0]];}
+  if(t==="sub2"){nums=gen(()=>[rnd(15,30)*1000+rnd(0,9)*100,rnd(2000,7999),rnd(2000,7999)],n=>n[0]-n[1]-n[2]>500&&nCarries("sub",n)>=2);kind="sub";opts=[[`${fmt(nums[0])} − ${fmt(nums[1])} − ${fmt(nums[2])}`,1],[`${fmt(nums[0])} + ${fmt(nums[1])} + ${fmt(nums[2])}`,0],[`${fmt(nums[0])} − ${fmt(nums[1])} + ${fmt(nums[2])}`,0]];}
+  return {mode:"word",kind,nums,wt:t,opts:shuffle(opts.map(([s,ok])=>({s,ok:!!ok}))),phase:1};
+}
+
+/* ---------- state ---------- */
+let stats=store.get("rp-stats",{stars:0,solved:[0,0,0]});
+let level=store.get("rp-level",1);
+let tab=0;
+let task=null; let ent=null; let active=null; let attempts=0; let tipLevel=0; let done=false; let feedback=null; let marks=null;
+function save(){store.set("rp-stats",stats);store.set("rp-level",level);store.set("rp-lang",lang)}
+
+function newTask(){
+  task=makeTask(level); const c=calc(task.kind,task.nums); task.result=c.result; task.cols=c.cols;
+  const W=Math.max(...task.nums.map(len),len(task.result)); task.W=W;
+  ent={res:Array(W).fill(""),carry:Array(W+1).fill(""),gap:""}; active={role:task.mode==="gap"?"gap":"res",p:0};
+  attempts=0; tipLevel=0; done=false; feedback=null; marks=null; task.solShown=false; task.picked=null;
+}
+
+/* ---------- grid ---------- */
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e}
+function buildGrid(o){
+  // o: {kind, nums, W, resMode:'input'|'show'|'none'|'partial', resShow:Set, carryMode:'input'|'show'|'none'|'partial', carryShow:Set, carries:[], gap, hlP}
+  const W=o.W; const g=el("div","cgrid"); g.style.gridTemplateColumns=`repeat(${W+1},var(--cell))`;
+  const add=(cls,txt,attrs={})=>{const c=el("div","cell "+(cls||""),txt===undefined?"":String(txt));for(const k in attrs)c.setAttribute(k,attrs[k]);g.appendChild(c);return c};
+  add("lab","");
+  for(let p=W-1;p>=0;p--){const c=add("lab",ABBR[p]);c.title=PLACES[lang][p];if(o.hlP===p)c.classList.add("hl")}
+  o.nums.forEach((n,i)=>{
+    add("sign",i===0?"":(o.kind==="add"?"+":"−"));
+    for(let p=W-1;p>=0;p--){
+      let txt=p<len(n)?dig(n,p):"";
+      if(o.gap&&o.gap.row===i&&o.gap.p===p){gapCell(add,p);continue}
+      const c=add("",txt); if(o.hlP===p)c.classList.add("hl");
+    }
+  });
+  // carry row
+  add("","");
+  for(let p=W-1;p>=0;p--){
+    const cv=o.carries?o.carries[p]:0;
+    if(o.carryMode==="input"&&p>0){
+      const c=add("carry in",ent.carry[p],{tabindex:"0","data-role":"carry","data-p":p,role:"button","aria-label":`${L().carryWord} ${PLACES[lang][p]}`});
+      if(active&&active.role==="carry"&&active.p===p)c.classList.add("active");
+      if(o.carrySol&&cv){c.textContent=cv;c.classList.add("sol")}
+    } else if((o.carryMode==="show"||(o.carryMode==="partial"&&o.carryShow&&o.carryShow.has(p)))&&cv){add("carry",cv)}
+    else add("carry","");
+  }
+  const rule=el("div","rule"); g.appendChild(rule);
+  add("","");
+  for(let p=W-1;p>=0;p--){
+    const rv=p<len(o.result)?dig(o.result,p):"";
+    if(o.gap&&o.gap.row==="res"&&o.gap.p===p){gapCell(add,p);continue}
+    if(o.resMode==="input"){
+      const c=add("in",ent.res[p],{tabindex:"0","data-role":"res","data-p":p,role:"button","aria-label":PLACES[lang][p]});
+      if(active&&active.role==="res"&&active.p===p)c.classList.add("active");
+      if(marks&&marks[p])c.classList.add(marks[p]);
+      if(o.resSol){c.textContent=rv;c.classList.add("sol");c.classList.remove("bad")}
+    } else if(o.resMode==="show"){add("",o.shown!==undefined?(p<len(o.shown)?dig(o.shown,p):""):rv)}
+    else if(o.resMode==="partial"){const c=add("",o.resShow.has(p)?rv:"");if(o.hlP===p)c.classList.add("hl")}
+    else add("","");
+  }
+  return g;
+}
+function gapCell(add,p){
+  const c=add("in",ent.gap,{tabindex:"0","data-role":"gap","data-p":p,role:"button","aria-label":"?"});
+  c.classList.add("active"); if(marks&&marks.gap)c.classList.add(marks.gap);
+}
+
+/* ---------- render ---------- */
+const view=document.getElementById("view");
+function renderShell(){
+  document.documentElement.lang=lang;
+  document.getElementById("apptitle").innerHTML=L().title;
+  document.getElementById("langbtn").textContent=L().other;
+  document.getElementById("starcount").textContent=stats.stars;
+  const tabs=document.getElementById("tabs"); tabs.innerHTML="";
+  L().tabs.forEach((name,i)=>{const b=el("button","",name);b.type="button";b.setAttribute("role","tab");b.setAttribute("aria-selected",i===tab);b.onclick=()=>{tab=i;render()};tabs.appendChild(b)});
+}
+function render(){renderShell();view.innerHTML="";[renderPractice,renderExplain,renderMerk,renderCards][tab]()}
+
+function renderPractice(){
+  const lv=el("div","levels");
+  [1,2,3].forEach(n=>{const b=el("button",`lvl lvl${n}`,`${L().lv[n-1][0]}<small>${L().lv[n-1][1]} · ${L().solvedN(stats.solved[n-1])}</small>`);b.type="button";b.setAttribute("aria-pressed",level===n);b.onclick=()=>{level=n;save();newTask();render()};lv.appendChild(b)});
+  view.appendChild(lv);
+  const p=el("section","panel"); view.appendChild(p);
+  const head=el("div","taskhead");
+  const chip=el("span","chip",L().lv[level-1][0]); chip.style.setProperty("--c",`var(--${["orange","pink","purple"][level-1]})`);
+  const modeName=task.mode==="calc"?L().modes[task.kind]:L().modes[task.mode];
+  head.append(chip,el("h2","",modeName)); head.lastChild.style.margin="0"; p.appendChild(head);
+
+  const showKeypad=()=>{
+    const kp=el("div","keypad");
+    [1,2,3,4,5,6,7,8,9,0].forEach(d=>{const b=el("button","",d);b.type="button";b.onclick=()=>typeDigit(String(d));kp.appendChild(b)});
+    const del=el("button","wide",L().del);del.type="button";del.onclick=()=>typeDigit("");kp.appendChild(del);
+    p.appendChild(kp);
+  };
+  const gridWrap=(opts)=>{const box=el("div","gridbox");box.appendChild(buildGrid(Object.assign({kind:task.kind,nums:task.nums,W:task.W,result:task.result,carries:carriesOf(task)},opts)));p.appendChild(box);box.addEventListener("click",onCellClick)};
+
+  if(task.mode==="calc"){
+    p.appendChild(el("p","instr",task.kind==="add"?L().iAdd:L().iSub));
+    gridWrap({resMode:"input",carryMode:"input",resSol:task.solShown,carrySol:task.solShown});
+    if(!done)showKeypad();
+  }
+  if(task.mode==="gap"){
+    p.appendChild(el("p","instr",L().iGap));
+    gridWrap({resMode:"show",carryMode:"none",gap:task.gap});
+    if(!done)showKeypad();
+  }
+  if(task.mode==="est"){
+    p.appendChild(el("p","instr",L().iEst));
+    p.appendChild(el("p","word",task.nums.map(fmt).join(task.kind==="add"?" + ":" − ")));
+    const ch=el("div","choices");
+    task.opts.forEach((o,i)=>{const b=el("button","choice",o.s);b.type="button";if(task.picked!=null&&(task.picked===i||(done&&o.ok)))b.classList.add(o.ok?"ok":"bad");b.disabled=done;b.onclick=()=>pickEst(i);ch.appendChild(b)});
+    p.appendChild(ch);
+  }
+  if(task.mode==="error"){
+    p.appendChild(el("p","instr",task.phase===1?L().iErr:L().iErr2));
+    if(task.phase===1){
+      gridWrap({resMode:"show",carryMode:"none",shown:task.shown});
+      if(!done){const ch=el("div","actions");const y=el("button","btn",L().yes);y.type="button";y.onclick=()=>judge(true);const n=el("button","btn",L().no);n.type="button";n.onclick=()=>judge(false);ch.append(y,n);p.appendChild(ch)}
+    } else {
+      p.appendChild(el("span","claimed",L().miaRes(task.shown)+" ✗"));
+      gridWrap({resMode:"input",carryMode:"input",resSol:task.solShown,carrySol:task.solShown});
+      if(!done)showKeypad();
+    }
+  }
+  if(task.mode==="word"){
+    const [text,ans]=L().words[task.wt](...task.nums);
+    p.appendChild(el("p","word",text));
+    if(task.phase===1){
+      p.appendChild(el("p","instr",L().iWord));
+      const ch=el("div","choices");
+      task.opts.forEach((o,i)=>{const b=el("button","choice",o.s);b.type="button";if(task.picked===i)b.classList.add(o.ok?"ok":"bad");b.onclick=()=>pickWord(i);ch.appendChild(b)});
+      p.appendChild(ch);
+    } else {
+      p.appendChild(el("p","instr",L().iWord2));
+      gridWrap({resMode:"input",carryMode:"input",resSol:task.solShown,carrySol:task.solShown});
+      if(!done)showKeypad(); else p.appendChild(el("p","msg info",`<b>${L().answer}:</b> ${ans(task.result)}`));
+    }
+  }
+  // actions
+  const act=el("div","actions");
+  const needsCheck=(task.mode==="calc"||task.mode==="gap"||(task.mode==="error"&&task.phase===2)||(task.mode==="word"&&task.phase===2));
+  if(!done){
+    const tb=el("button","btn tip",L().tip);tb.type="button";tb.onclick=()=>{tipLevel=Math.min(tipLevel+1,2);render()};act.appendChild(tb);
+    if(needsCheck){const cb=el("button","btn primary",L().check);cb.type="button";cb.onclick=check;act.appendChild(cb)}
+    if(attempts>=2&&needsCheck&&task.mode!=="gap"){const sb=el("button","btn",L().show);sb.type="button";sb.onclick=showSolution;act.appendChild(sb)}
+    if(attempts>=2&&task.mode==="gap"){const sb=el("button","btn",L().show);sb.type="button";sb.onclick=()=>{ent.gap=String(task.gap.val);marks={gap:"ok"};done=true;feedback={cls:"info",text:L().solShown};render()};act.appendChild(sb)}
+  } else {
+    const nb=el("button","btn good",L().next);nb.type="button";nb.onclick=()=>{newTask();render()};act.appendChild(nb);
+  }
+  p.appendChild(act);
+  if(feedback)p.appendChild(el("div","msg "+feedback.cls,feedback.text));
+  if(tipLevel>0&&!done)p.appendChild(el("div","tipcard",tipText()));
+}
+function carriesOf(t){const arr=[];t.cols.forEach(c=>{arr[c.p+1]=c.cout});return arr}
+
+/* ---------- interaction ---------- */
+function onCellClick(e){const c=e.target.closest(".cell.in");if(!c||done)return;active={role:c.dataset.role,p:Number(c.dataset.p)};render()}
+function typeDigit(d){
+  if(done||!active)return;
+  if(active.role==="gap"){ent.gap=d;if(marks)marks.gap=null;render();return}
+  ent[active.role][active.p]=d; if(marks&&active.role==="res")marks[active.p]=null;
+  if(d!==""){
+    if(active.role==="res"&&active.p<task.W-1)active={role:"res",p:active.p+1};
+    else if(active.role==="carry")active={role:"res",p:active.p};
+  }
+  render();
+}
+document.addEventListener("keydown",e=>{
+  if(tab!==0||done)return;
+  if(/^[0-9]$/.test(e.key)){typeDigit(e.key);e.preventDefault()}
+  else if(e.key==="Backspace"||e.key==="Delete"){typeDigit("");e.preventDefault()}
+  else if(e.key==="Enter"&&!(e.target&&e.target.tagName==="BUTTON")){check();e.preventDefault()}
+  else if(e.key==="ArrowLeft"&&active&&active.role==="res"&&active.p<task.W-1){active.p++;render()}
+  else if(e.key==="ArrowRight"&&active&&active.role==="res"&&active.p>0){active.p--;render()}
+});
+function success(){
+  done=true; stats.stars+=attempts===0&&tipLevel===0?2:1; stats.solved[level-1]++; save();
+  feedback={cls:"ok",text:pick(L().ok)}; render();
+}
+function fail(){attempts++;feedback={cls:"bad",text:L().bad+(attempts>=2?" "+L().bad2:"")};render()}
+function check(){
+  if(done)return;
+  if(task.mode==="gap"){
+    if(ent.gap===""){feedback={cls:"bad",text:L().empty};render();return}
+    if(Number(ent.gap)===task.gap.val){marks={gap:"ok"};success()}else{marks={gap:"bad"};fail()}
+    return;
+  }
+  if(!(task.mode==="calc"||task.phase===2))return;
+  if(ent.res.every(v=>v==="")){feedback={cls:"bad",text:L().empty};render();return}
+  marks={}; let allOk=true;
+  for(let p=0;p<task.W;p++){
+    const exp=p<len(task.result)?String(dig(task.result,p)):null; const v=ent.res[p];
+    const ok=exp===null?(v===""||v==="0"):v===exp;
+    if(exp!==null||v!=="")marks[p]=ok?"ok":"bad"; if(!ok)allOk=false;
+  }
+  allOk?success():fail();
+}
+function showSolution(){task.solShown=true;done=true;marks={};feedback={cls:"info",text:L().solShown};render()}
+function pickEst(i){task.picked=i;if(task.opts[i].ok){success()}else{attempts++;feedback={cls:"bad",text:L().estBad};if(attempts>=2){done=true}render()}}
+function judge(saysRight){
+  if(task.isRight&&saysRight){success();feedback={cls:"ok",text:L().errRightOk};render();return}
+  if(task.isRight&&!saysRight){done=true;feedback={cls:"bad",text:L().errRightBad};render();return}
+  if(!task.isRight&&!saysRight){task.phase=2;feedback={cls:"ok",text:L().errWrongOk};render();return}
+  attempts++;feedback={cls:"bad",text:L().errWrongBad};render();
+}
+function pickWord(i){task.picked=i;if(task.opts[i].ok){task.phase=2;feedback=null}else{feedback={cls:"bad",text:L().wordBad}}render()}
+
+/* ---------- tips ---------- */
+function colText(t,col){
+  const pl=PLACES[lang][col.p]; const pln=PLACES[lang][col.p+1]||"";
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+  if(t.kind==="add"){
+    const parts=[...col.ds.map(String),...(col.cin?[`${col.cin} (${L().carryWord})`]:[])].join(" + ");
+    return L().colAdd(cap(pl),parts,col.tot,col.r,col.cout,pln);
+  }
+  const lowerParts=[...col.ds.map(String),...(col.cin?[`${col.cin} (${L().carryWord})`]:[])];
+  const lower=lowerParts.length>1?lowerParts.join(" + "):"";
+  return L().colSub(cap(pl),lower,col.s,col.md+0,col.r,col.cout,pln);
+}
+function tipText(){
+  const gen=L().tipGen;
+  if(task.mode==="est")return `<b>${L().tip}:</b> ${gen.est}`;
+  if(task.mode==="gap"){const col=task.cols[task.gap.p];return `<b>${L().tip}:</b> ${gen.gap}`+(tipLevel>1&&col?`<br>${colText(task,col)}`:"")}
+  if(task.mode==="word"&&task.phase===1)return `<b>${L().tip}:</b> ${L().wordBad.split(". ").slice(1).join(". ")}`;
+  if(task.mode==="error"&&task.phase===1){const ov=overschlag(task.kind,task.nums);return `<b>${L().tip}:</b> ${L().modes.est}: ${ov.str}`}
+  let s=`<b>${L().tip}:</b> ${task.kind==="add"?gen.add:gen.sub}`;
+  if(tipLevel>1){
+    let target=task.cols.find(c=>{const v=ent.res[c.p];return v===""||v!==String(c.r)});
+    if(target)s+=`<br><br>${colText(task,target)}`;
+  }
+  return s;
+}
+
+/* ---------- explanation ---------- */
+const ex={add:{nums:[4758,2694],step:0},sub:{nums:[8342,2576],step:0}};
+function stepsFor(kind,nums){
+  const {cols,result}=calc(kind,nums); const ov=overschlag(kind,nums); const steps=[];
+  steps.push({text:kind==="add"?L().stepStart(ov.str):L().stepStartSub(ov.str),res:new Set(),car:new Set(),hl:null});
+  const res=new Set(),car=new Set();
+  cols.forEach(c=>{
+    if(kind==="sub"&&c.p>=len(result)&&c.r===0)return;
+    res.add(c.p); if(c.cout)car.add(c.p+1);
+    steps.push({text:colText({kind},c),res:new Set(res),car:new Set(car),hl:c.p});
+  });
+  const probe=`${fmt(result)} + ${nums.slice(1).map(fmt).join(" + ")} = ${fmt(nums[0])}`;
+  steps.push({text:kind==="add"?L().stepEnd(result,ov.str):L().stepEndSub(result,probe),res:new Set(res),car:new Set(car),hl:null});
+  return {steps,result};
+}
+function renderExplain(){
+  const p=el("section","panel"); view.appendChild(p);
+  p.appendChild(el("h2","",L().explainTitle));
+  const terms=el("div","terms");
+  const tAdd=L().termAdd, tSub=L().termSub;
+  terms.appendChild(el("div","term",`<div class="eq">325 + 143 = 468</div><div class="lbl">${tAdd[0]} + ${tAdd[1]} = ${tAdd[2]}</div>`));
+  terms.appendChild(el("div","term",`<div class="eq">468 − 143 = 325</div><div class="lbl">${tSub[0]} − ${tSub[1]} = ${tSub[2]}</div>`));
+  p.appendChild(terms);
+  ["add","sub"].forEach(kind=>{
+    const sec=el("div","section player");
+    sec.appendChild(el("h3","",kind==="add"?L().addEx:L().subEx));
+    const st=ex[kind]; const {steps,result}=stepsFor(kind,st.nums); const s=steps[Math.min(st.step,steps.length-1)];
+    const W=Math.max(...st.nums.map(len),len(result));
+    const carries=[];calc(kind,st.nums).cols.forEach(c=>{carries[c.p+1]=c.cout});
+    const box=el("div","gridbox");
+    box.appendChild(buildGrid({kind,nums:st.nums,W,result,carries,resMode:"partial",resShow:s.res,carryMode:"partial",carryShow:s.car,hlP:s.hl}));
+    sec.appendChild(box);
+    sec.appendChild(el("div","steptext",s.text));
+    const nav=el("div","stepnav");
+    const b1=el("button","btn",L().back);b1.type="button";b1.disabled=st.step===0;b1.onclick=()=>{st.step--;render()};
+    const cnt=el("span","count",`${st.step+1} / ${steps.length}`);
+    const b2=el("button","btn primary",L().fwd);b2.type="button";b2.disabled=st.step>=steps.length-1;b2.onclick=()=>{st.step++;render()};
+    const b3=el("button","btn",L().newEx);b3.type="button";b3.onclick=()=>{st.nums=kind==="add"?gen(()=>[rnd(1000,8999),rnd(1000,8999)],n=>nCarries("add",n)>=2&&n[0]+n[1]<10000):gen(()=>{const a=rnd(3000,9999);return [a,rnd(1000,a-500)]},n=>nCarries("sub",n)>=2);st.step=0;render()};
+    nav.append(b1,cnt,b2,b3); sec.appendChild(nav);
+    p.appendChild(sec);
+  });
+}
+function renderMerk(){
+  const p=el("section","panel"); view.appendChild(p);
+  p.appendChild(el("h2","",L().merkTitle));
+  const m=el("div","merk");
+  const a=el("div","");a.appendChild(el("h3","",L().modes.add));const ol=el("ol");L().merkAdd.forEach(x=>ol.appendChild(el("li","",x)));a.appendChild(ol);
+  const b=el("div","");b.appendChild(el("h3","",L().modes.sub));const ol2=el("ol");L().merkSub.forEach(x=>ol2.appendChild(el("li","",x)));b.appendChild(ol2);
+  m.append(a,b); p.appendChild(m);
+  const e=el("div","section");e.style.marginTop="18px";e.appendChild(el("h3","",L().errTitle));
+  const list=el("div","err");L().errs.forEach(([t,x])=>list.appendChild(el("div","erritem",`<span>${t}</span><span class="ex">${x}</span>`)));
+  e.appendChild(list);p.appendChild(e);
+  const g=el("div","section");g.appendChild(el("h3","",L().glossTitle));
+  const tbl=el("table","gloss");L().gloss.forEach(([a,b])=>tbl.appendChild(el("tr","",`<td><b>${a}</b></td><td>${b}</td>`)));
+  const tw=el("div","");tw.style.overflowX="auto";tw.appendChild(tbl);g.appendChild(tw);p.appendChild(g);
+}
+function renderCards(){
+  const p=el("section","panel"); view.appendChild(p);
+  p.appendChild(el("h2","",L().cardsTitle));
+  const grid=el("div","cards");
+  L().cards.forEach(([q,a],i)=>{
+    const b=el("button","fcard");b.type="button";b.setAttribute("aria-pressed","false");
+    b.innerHTML=`<div class="fin"><div class="face front"><span class="num">${i+1}</span><span class="q">${q}</span><span class="hint">${L().tapHint}</span></div><div class="face back">${a}</div></div>`;
+    b.onclick=()=>b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");
+    grid.appendChild(b);
+  });
+  p.appendChild(grid);
+}
+document.getElementById("langbtn").onclick=()=>{lang=lang==="de"?"tr":"de";save();render()};
+newTask(); render();
+</script>
+
+</body>
+</html>

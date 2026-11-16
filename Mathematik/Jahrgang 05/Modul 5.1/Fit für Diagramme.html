@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Fit für Diagramme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Karoheft-Look der ZP10-App. Die Startseite ist ein Stationsraster: Themen als Zeilen, die drei Buchfarben als Spalten. */
+:root{
+  --bg:#EDF1F8; --grid:rgba(35,87,201,.08); --surface:#FFFFFF; --surface-2:#F2F5FB; --ink:#10204A; --ink-soft:#4F5A78; --line:#C9D2E3;
+  --head:#0F1E46; --accent:#FFC93C; --accent-ink:#2A1E00; --blue:#2357C9; --blue-soft:#DDE7FA;
+  --ok:#1F8A5B; --ok-soft:#DCF2E6; --bad:#BC2F2F; --bad-soft:#FBE3E3;
+  --o:#B84E06; --o-soft:#FDE7D4; --p:#B01A6C; --p-soft:#FBDEEC; --l:#5A3DB0; --l-soft:#E8E2F8;
+  --gridline:#D3DCEE;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif; --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;min-height:100vh;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header{background:var(--head);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px;color:#fff;padding-block:14px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:860px;margin:0 auto}
+.top{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#FFD866}
+.brand{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.2}
+.brand em{font-style:normal;background:linear-gradient(transparent 58%,rgba(255,201,60,.55) 58%)}
+nav{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+nav button{background:transparent;border:0;border-radius:10px 10px 0 0;padding:9px 14px;color:#C6D5F5;font-weight:700;white-space:nowrap}
+nav button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px;min-width:0}
+main>section{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 2px 10px rgba(15,30,70,.07);min-width:0}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:26px} h2{font-size:21px} h3{font-size:17px}
+p{margin:0}
+.stack{display:grid;gap:10px}
+.muted{color:var(--ink-soft)}
+.small{font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:700;font-size:17px;transition:transform .08s ease}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--blue-soft);color:var(--blue)}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.btn.sm{padding:8px 14px;font-size:15px}
+/* Farbstufen */
+.c-o{--c:var(--o);--cs:var(--o-soft)} .c-p{--c:var(--p);--cs:var(--p-soft)} .c-l{--c:var(--l);--cs:var(--l-soft)}
+.lv{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--c);background:var(--cs);border-radius:999px;padding:3px 11px;font-size:14px}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:7px;height:7px;border-radius:2px;background:var(--c);opacity:.28}
+.pips i.f{opacity:1}
+/* Stationsraster */
+.gridhead,.st{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,92px);gap:8px;align-items:center}
+.gridhead{padding-inline:2px;font-size:14px}
+.gridhead span{justify-self:center}
+.st{padding-block:10px;border-top:1px solid var(--line)}
+.st h3{margin-bottom:2px}
+.cell{border:2px solid var(--c);background:var(--cs);color:var(--c);border-radius:12px;min-height:58px;padding:6px 4px;font-weight:700;display:grid;place-items:center;line-height:1.15;font-size:14px}
+.cell b{font-family:var(--f-display);font-size:18px}
+.cell.done{background:var(--c);color:var(--surface)}
+.cell.next{box-shadow:0 0 0 3px var(--accent)}
+@media(max-width:600px){.gridhead{display:none}.st{grid-template-columns:repeat(3,minmax(0,1fr))}.st>div:first-child{grid-column:1/-1}.cell .nm{display:block}}
+@media(min-width:601px){.cell .nm{display:none}}
+.nextbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.total{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.total div{height:100%;background:var(--ok);transition:width .3s}
+/* Aufgabe */
+.qhead{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.qt{font-size:19px;line-height:1.4;overflow-wrap:anywhere}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.72em;line-height:1.05;margin-inline:1px}
+.fr span:first-child{border-bottom:1.5px solid currentColor;padding-inline:2px}
+.tw{overflow-x:auto;max-width:100%}
+table.z{border-collapse:collapse;margin-block:2px}
+table.z th,table.z td{border:1.5px solid var(--c,var(--blue));padding:7px 10px;text-align:center;min-width:44px}
+table.z th{background:var(--cs,var(--blue-soft));font-weight:700;font-size:15px;text-align:left;max-width:150px}
+table.z input,.numin{background:var(--surface);border:2px solid var(--line);border-radius:8px;text-align:center;width:66px;padding:5px 2px}
+table.ds td.op{white-space:nowrap;border:0;background:none;color:var(--c);font-weight:700;min-width:36px;padding:0 4px;font-size:15px;position:relative}
+table.z td.v{padding:5px}
+.good{border-color:var(--ok)!important;background:var(--ok-soft)!important}
+.wrong{border-color:var(--bad)!important;background:var(--bad-soft)!important}
+.fix{display:block;font-size:14px;font-weight:700;color:var(--ok)}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:11px 14px}
+.opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.optk{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:14px}
+.numrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.numin{width:130px;text-align:left;padding:10px 12px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg .opt{padding:9px 14px}
+svg.g{display:block;width:100%;max-width:420px;height:auto;touch-action:manipulation}
+svg.g .gl{stroke:var(--gridline);stroke-width:1}
+svg.g .ax{stroke:var(--ink);stroke-width:1.6}
+svg.g text{fill:var(--ink-soft);font-size:11px;font-family:var(--f-body)}
+svg.g .lb{fill:var(--ink);font-weight:700}
+svg.g .cv{stroke:var(--blue);stroke-width:2.5;fill:none}
+svg.g .pt{fill:var(--blue)} svg.g .pt.ok{fill:var(--ok)} svg.g .pt.no{fill:var(--bad)} svg.g .pt.mk{fill:var(--c,var(--blue))}
+svg.g .hit{fill:transparent;cursor:pointer}
+.tip{background:var(--blue-soft);border-radius:12px;padding:10px 14px}
+.fb{border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.fb.y{background:var(--ok-soft)} .fb.n{background:var(--bad-soft)}
+.fb b.h{font-family:var(--f-display)}
+.fb ol{margin:0;padding-left:20px}
+.pr{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.pr div{height:100%;background:var(--c,var(--blue));transition:width .2s}
+/* Ergebnis */
+.big{font-family:var(--f-display);font-size:44px;font-weight:700;line-height:1;color:var(--c,var(--ink))}
+.rv{border-top:1px solid var(--line);padding-block:12px;display:grid;gap:6px}
+.rv .mk{font-weight:700}
+.rv .y{color:var(--ok)} .rv .n{color:var(--bad)}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:10px;align-items:center;font-size:15px}
+.bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar div{height:100%;background:var(--ok)}
+/* Merkzettel */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.m-p{--c:var(--blue);--cs:var(--blue-soft)}
+ol.st3,ul.st3{margin:0;padding-left:20px;display:grid;gap:4px}
+.f{display:grid;gap:4px;font-weight:700;font-size:15px}
+.f input{font-weight:400;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+textarea{position:absolute;left:-9999px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--head);color:#fff;padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Ergänzungen Diagramm-App */
+.big2{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.15}
+.hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center}
+.streak{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 9px;font-weight:700}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{border:1.5px dashed var(--line);border-radius:999px;padding:3px 10px;font-size:14px;color:var(--ink-soft)}
+.badge.on{border:1.5px solid var(--c);background:var(--cs);color:var(--c);font-weight:700}
+.fig{min-width:0}.fig p{margin-bottom:6px}
+svg.dg{max-width:440px;touch-action:none;user-select:none;-webkit-user-select:none}
+.fig svg.dg,.opt svg.dg,.three svg.dg,.m-p svg.dg,.rv svg.dg{touch-action:auto}
+svg.dg .tt{fill:var(--ink);font-weight:700;font-size:13px;font-family:var(--f-display)}
+svg.dg .cat{fill:var(--ink);font-size:11px}
+svg.dg .sbar{fill:var(--blue-soft);stroke:var(--blue);stroke-width:1.4}
+svg.dg .dbar{fill:var(--cs,var(--blue-soft));stroke:var(--c,var(--blue));stroke-width:2}
+svg.dg .dbar.no{fill:var(--bad-soft);stroke:var(--bad)}
+svg.dg .dbar.ok{fill:var(--ok-soft);stroke:var(--ok)}
+svg.dg .ghost{fill:none;stroke:var(--ok);stroke-width:2.5;stroke-dasharray:6 4}
+svg.dg .hi{fill:none;stroke:var(--c,var(--blue));stroke-width:3}
+svg.dg .hit{fill:transparent;cursor:ns-resize}
+svg.dg .hit:focus-visible{outline:none;stroke:var(--blue);stroke-width:2}
+svg.dg .tk{fill:var(--accent);stroke:var(--ink);stroke-width:1}
+svg.dg .tke{fill:var(--ink)}svg.dg .tkm{fill:none;stroke:var(--ink);stroke-width:1.3}
+svg.dg .tkh{fill:none;stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+svg.tally line{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.tallybox{display:inline-flex;gap:14px;align-items:center;flex-wrap:wrap}
+td.tl{text-align:left!important}
+svg.mini{width:96px;height:auto;display:block}
+svg.mini .ax{stroke:var(--ink);stroke-width:1.6}
+svg.mini text{fill:var(--ink);font-size:11px;font-family:var(--f-body)}
+.opts.wide{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.opts.rowo{grid-template-columns:repeat(3,minmax(0,1fr))}
+.optb{min-width:0;flex:1}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.ur{display:flex;flex-wrap:wrap;gap:6px}
+.ur span{background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:2px 8px;font-size:15px}
+.marktext{font-size:19px;line-height:1.95}
+.mk{border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:0 8px;font-weight:700}
+.mk[aria-pressed="true"]{border-color:var(--c);background:var(--cs);color:var(--c)}
+.pick{display:grid;gap:6px}
+.wait{border:2px dashed var(--line);border-radius:12px;padding:30px 16px;text-align:center;color:var(--ink-soft)}
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.three>div{min-width:0;display:grid;gap:6px;align-content:start}
+.mk2{font-weight:700}.mk2.y{color:var(--ok)}.mk2.n{color:var(--bad)}
+.fb ul.st3,.fb ol.st3{padding-left:20px}
+.conf{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+.conf i{position:absolute;top:-60px;width:9px;border-radius:2px;animation:fall 1.7s ease-in forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(420deg)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+<header><div class="wrap">
+  <div class="top">Klasse 5 · Kapitel 1 Zahlen und Daten</div>
+  <div class="brand">Fit für <em>Diagramme</em></div>
+  <nav aria-label="Bereiche">
+    <button type="button" data-v="home">Stationen</button>
+    <button type="button" data-v="text">Textdetektive</button>
+    <button type="button" data-v="exam">Experten</button>
+    <button type="button" data-v="memo">Merkzettel</button>
+  </nav>
+</div></header>
+<main>
+  <section id="vHome"></section>
+  <section id="vText" hidden></section>
+  <section id="vExam" hidden></section>
+  <section id="vMemo" hidden></section>
+  <section id="vTask" hidden></section>
+  <section id="vRes" hidden></section>
+</main>
+<div id="toast" role="status"></div>
+<script>
+/* ---------- Hilfen ---------- */
+const $=id=>document.getElementById(id);
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const de=x=>{const r=Math.round(x*100)/100,s=String(r).split('.');return s[0].replace(/\B(?=(\d{3})+$)/g,' ')+(s[1]?','+s[1]:'');};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>String(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const plain=s=>String(s).replace(/\*\*/g,'').replace(/<br>/g,' ').replace(/<[^>]+>/g,'');
+const sum=a=>a.reduce((x,y)=>x+y,0);
+function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(!s)return NaN;if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return parseFloat(s.replace(',','.'));}
+const same=(a,b)=>Math.abs(a-b)<1e-6;
+const LV={o:'Orange',p:'Pink',l:'Lila'},LVS=['o','p','l'];
+const TOPICS=[
+ {id:'typ',name:'Diagrammtyp erkennen',sub:'Ich kann Säulen-, Balken- und Bilddiagramme unterscheiden.',page:16},
+ {id:'achse',name:'Achsen verstehen',sub:'Ich weiß, was an welche Achse gehört und wie sie eingeteilt ist.',page:16},
+ {id:'wert',name:'Werte ablesen',sub:'Ich kann Zahlen aus einem Diagramm ablesen.',page:16},
+ {id:'bild',name:'Bilddiagramme',sub:'Ich nutze die Erklärung: Wie viel zählt ein Bild?',page:16},
+ {id:'liste',name:'Strichliste und Tabelle',sub:'Ich kann Daten zählen und in eine Häufigkeitstabelle schreiben.',page:12},
+ {id:'zeich',name:'Diagramm zeichnen',sub:'Ich kann Daten in Diagrammen darstellen.',page:16}
+];
+const TEXT=[
+ {id:'tm',name:'Zahlen im Text finden',sub:'Welche Zahlen gehören ins Diagramm, welche nicht?',page:16},
+ {id:'tt',name:'Vom Text in die Tabelle',sub:'Ich hole die Angaben aus dem Text heraus.',page:12},
+ {id:'td',name:'Vom Text ins Diagramm',sub:'Ich zeichne ein Diagramm nur aus einem Text.',page:16},
+ {id:'tc',name:'Passen Text und Diagramm?',sub:'Ich vergleiche und finde Fehler.',page:16}
+];
+const GEN=[];
+function gen(t,l,id,make){(Array.isArray(l)?l:[l]).forEach(x=>GEN.push({t,l:x,id,make:()=>make(x)}));}
+const KL=()=>pick(['5a','5b','5c','5d']);
+const NM=['Emir','Lina','Aylin','Jonas','Mia','Noah','Zeynep','Ben','Lea','Yusuf','Amira','Tom','Elif','Finn'];
+
+/* ---------- Sachsituationen (alle Daten sind ausgedacht) ---------- */
+const svy=(s,f,cl,cats)=>({s,f,cl,vl:'Anzahl',u:'Kinder',cats,min:1,max:10,sv:1,sent:[(c,n)=>`${n} Kinder nennen ${c}.`,(c,n)=>`Für ${c} stimmen ${n} Kinder.`,(c,n)=>`${c}: ${n} Stimmen.`]});
+const CTX=[
+ svy('Lieblingssport','Was ist dein Lieblingssport?','Sportart',['Fußball','Schwimmen','Tanzen','Basketball','Turnen','Judo']),
+ svy('Lieblingsobst','Welches Obst isst du am liebsten?','Obst',['Äpfel','Bananen','Erdbeeren','Trauben','Kirschen','Melonen']),
+ svy('Lieblingstiere','Welches Haustier findest du am besten?','Tier',['Hunde','Katzen','Hamster','Fische','Vögel','Kaninchen']),
+ svy('Schulweg','Wie kommst du zur Schule?','Verkehrsmittel',['Bus','Fahrrad','Auto','Bahn','Roller']),
+ svy('Lieblingsfächer','Was ist dein Lieblingsfach?','Fach',['Mathe','Sport','Kunst','Musik','Englisch','Deutsch']),
+ svy('Beliebte AGs','Welche AG möchtest du besuchen?','AG',['Theater','Robotik','Chor','Schach','Garten','Kochen']),
+ svy('Ausflugsziele','Wohin soll der Ausflug gehen?','Ziel',['Zoo','Freibad','Kino','Kletterpark','Museum']),
+ svy('Pausensnacks','Was isst du in der Pause am liebsten?','Snack',['Brot','Apfel','Müsliriegel','Brezel','Joghurt','Möhren']),
+ {s:'Gelesene Bücher',cl:'Name',vl:'Bücher',u:'Bücher',cats:NM,names:1,min:1,max:2,intro:'Die Lese-AG zählt, wie viele Bücher jedes Kind in den Ferien gelesen hat.',sent:[(c,n)=>`${c} hat ${n} Bücher gelesen.`,(c,n)=>`Bei ${c} waren es ${n} Bücher.`]},
+ {s:'Tore beim Turnier',cl:'Name',vl:'Tore',u:'Tore',cats:NM,names:1,min:1,max:2,intro:'Beim Fußballturnier wird notiert, wer wie viele Tore geschossen hat.',sent:[(c,n)=>`${c} hat ${n} Tore geschossen.`,(c,n)=>`${c} trifft ${n}-mal ins Tor.`]},
+ {s:'Regentage',cl:'Monat',vl:'Tage',u:'Regentage',cats:['Januar','Februar','März','April','Mai','Juni'],seq:1,min:1,max:5,intro:'Die Wetter-AG schreibt auf, an wie vielen Tagen es geregnet hat.',sent:[(c,n)=>`Im ${c} gab es ${n} Regentage.`,(c,n)=>`Für den ${c} stehen ${n} Regentage im Heft.`]},
+ {s:'Verkaufte Waffeln',cl:'Tag',vl:'Waffeln',u:'Waffeln',cats:['Montag','Dienstag','Mittwoch','Donnerstag','Freitag'],seq:1,min:2,max:20,intro:'Die Schülerfirma verkauft in der Pause Waffeln.',sent:[(c,n)=>`Am ${c} wurden ${n} Waffeln verkauft.`,(c,n)=>`Am ${c} gingen ${n} Waffeln weg.`]},
+ {s:'Spenden der Klassen',cl:'Klasse',vl:'Euro',u:'Euro',cats:['5a','5b','5c','5d','5e','5f'],min:5,max:100,intro:'Die Klassen sammeln Geld für das Tierheim.',sent:[(c,n)=>`Die Klasse ${c} hat ${n} Euro gesammelt.`,(c,n)=>`Von der Klasse ${c} kamen ${n} Euro.`]},
+ {s:'Verkaufte Eiskugeln',cl:'Monat',vl:'Kugeln',u:'Kugeln',cats:['April','Mai','Juni','Juli','August','September'],seq:1,min:20,max:100,intro:'Eine Eisdiele zählt ihre verkauften Kugeln.',sent:[(c,n)=>`Im ${c} wurden ${n} Kugeln verkauft.`,(c,n)=>`Für den ${c} stehen ${n} Kugeln in der Liste.`]},
+ {s:'Bücher in der Bücherei',cl:'Art',vl:'Bücher',u:'Bücher',cats:['Krimis','Comics','Sachbücher','Tierbücher','Romane'],min:10,max:50,intro:'Die Schulbücherei zählt ihre Bücher.',sent:[(c,n)=>`Es gibt ${n} ${c}.`,(c,n)=>`Im Regal stehen ${n} ${c}.`]},
+ {s:'Gäste im Freibad',cl:'Monat',vl:'Gäste',u:'Gäste',cats:['Mai','Juni','Juli','August','September'],seq:1,min:50,max:1000,intro:'Das Freibad zählt jeden Monat seine Gäste.',sent:[(c,n)=>`Im ${c} kamen ${n} Gäste.`,(c,n)=>`Für den ${c} zählte das Freibad ${n} Gäste.`]}
+];
+const CFG={o:{st:[1,2],n:[3,4],k:8},p:{st:[2,5,10],n:[4,5],k:9},l:{st:[10,20,50,100],n:[4,6],k:9}};
+/* erzeugt einen Datensatz */
+function D(l,o){o=o||{};const c=CFG[l],step=o.step||pick(c.st),n=o.n||ri(c.n[0],c.n[1]);
+ const C=pick(CTX.filter(x=>x.min<=step&&x.max>=step&&x.cats.length>=n&&(!o.sv||x.sv)));
+ const pool=shuffle(Array.from({length:c.k-1},(_,i)=>i+2)).slice(0,n);
+ const vals=pool.map(k=>k*step),top=step*(Math.max(...pool)+1);
+ const cats=C.seq?C.cats.slice(0,n):shuffle(C.cats).slice(0,n);
+ const kl=KL(),title=C.sv?`${C.s} ${step<=2?'in Klasse '+kl:step<=5?'im Jahrgang 5':'im Jahrgang 5'}`:C.s;
+ const fmtv=v=>de(v);
+ return {C,kl,kind:o.kind||'col',cats,vals,step,top,lab:o.lab||1,vl:C.vl,cl:C.cl,title,u:C.u,fv:fmtv};}
+const iMax=d=>d.vals.indexOf(Math.max(...d.vals)),iMin=d=>d.vals.indexOf(Math.min(...d.vals));
+const others=(a,b)=>a.filter(x=>x!==b);
+function mixChart(d,k){return Object.assign({},d,{kind:k||d.kind});}
+
+/* ---------- Texte bauen ---------- */
+function intro(d){return d.C.sv?`Die Klasse ${d.kl} fragt: „${d.C.f}“`:d.C.intro;}
+const NOISE=[
+ {t:n=>`Die Auswertung dauerte ${n} Minuten.`,w:'eine Zeit',r:[10,45]},
+ {t:n=>`Das Ergebnis hängt in Raum ${n} aus.`,w:'eine Raumnummer',r:[101,219]},
+ {t:n=>`Sie schreiben die Liste am ${n}. März.`,w:'ein Datum',r:[3,28]},
+ {t:n=>`Dafür brauchen sie ${n} Blatt Papier.`,w:'die Anzahl der Blätter',r:[11,39]}
+];
+function sentences(d,o){o=o||{};const out=[];const sf=pick(d.C.sent);d.cats.forEach((c,i)=>out.push({s:sf(c,'§'),n:d.vals[i],i}));return o.mix?shuffle(out):out;}
+function noiseFor(d,n){return shuffle(NOISE).slice(0,n).map(x=>{let v;do{v=ri(x.r[0],x.r[1]);}while(d.vals.includes(v));return {s:x.t('§'),n:v,w:x.w};});}
+function textParts(d,o){o=o||{};const sen=sentences(d,o),nz=noiseFor(d,o.noise||0);
+ let list=sen.map(x=>Object.assign({ok:true},x));
+ nz.forEach(x=>list.splice(ri(0,list.length),0,x));
+ return {list,dist:nz.map(x=>x.n),noise:nz};}
+const textStr=p=>p.list.map(x=>x.s.replace('§',de(x.n))).join(' ');
+const dataTable=(d)=>`<div class="tw"><table class="z"><tr><th scope="row">${esc(d.cl)}</th>${d.cats.map(c=>`<td>${esc(c)}</td>`).join('')}</tr><tr><th scope="row">${esc(d.vl)}</th>${d.vals.map(v=>`<td>${de(v)}</td>`).join('')}</tr></table></div>`;
+
+/* ---------- Diagramme ---------- */
+const CW=340,CH=282;
+function geo(c){const bar=c.kind==='bar',L=bar?78:46,R=16,T=44,B=46,pw=CW-L-R,ph=CH-T-B;return{bar,L,R,T,B,pw,ph};}
+function ticks(c){if(c.labels)return c.labels.map((v,i)=>({v,i}));const out=[];for(let i=0;i*c.step<=c.top+1e-9;i++)out.push({v:i*c.step,i});return out;}
+function shortCat(s,n){return n>=6&&s.length>7?s.slice(0,6)+'.':s;}
+function chart(c,o){o=o||{};const g=geo(c),{L,T,pw,ph,bar}=g,tk=ticks(c),nt=tk.length-1,n=c.cats.length;
+ const maxV=c.labels?null:c.top,min=c.min||0;
+ const pos=v=>c.labels?(()=>{const a=c.labels;for(let i=0;i<a.length-1;i++)if(v>=a[i]&&v<=a[i+1])return (i+(v-a[i])/(a[i+1]-a[i]))/nt;return 1;})():(v-min)/(maxV-min);
+ const VX=v=>L+pos(v)*pw,VY=v=>T+ph-pos(v)*ph,slot=(bar?ph:pw)/n,bw=slot*.56;
+ const tt=o.hideTitle?'':(c.title||'');
+ let s=`<svg class="g dg" viewBox="0 0 ${CW} ${CH}" role="img" aria-label="${esc(({col:'Säulendiagramm',bar:'Balkendiagramm'})[c.kind]+': '+(tt||'ohne Überschrift')+'. '+c.cats.map((x,i)=>o.draw?x:x+' '+de(c.vals[i])).join(', '))}">`;
+ if(tt)s+=`<text class="tt" x="${CW/2}" y="16" text-anchor="middle">${esc(tt)}</text>`;
+ tk.forEach(t=>{const v=c.labels?t.v:t.v,show=c.labels||(t.i%(c.lab||1)===0);
+  if(c.labels||c.min==null||t.v>=(c.min||0)){if(!bar){const y=T+ph-t.i/nt*ph;s+=`<line class="gl" x1="${L}" x2="${L+pw}" y1="${y}" y2="${y}"/>`;if(show)s+=`<text x="${L-6}" y="${y+4}" text-anchor="end">${de(v)}</text>`;}
+  else{const x=L+t.i/nt*pw;s+=`<line class="gl" x1="${x}" x2="${x}" y1="${T}" y2="${T+ph}"/>`;if(show)s+=`<text x="${x}" y="${T+ph+15}" text-anchor="middle">${de(v)}</text>`;}}});
+ const rectFor=(i,v)=>{if(bar){const y=T+slot*i+(slot-bw)/2;return{x:L,y,w:Math.max(0,VX(v)-L),h:bw};}const x=L+slot*i+(slot-bw)/2,y=VY(v);return{x,y,w:bw,h:Math.max(0,T+ph-y)};};
+ const vals=o.draw||c.vals;
+ vals.forEach((v,i)=>{const r=rectFor(i,v);const cls=o.draw?(o.bad&&o.bad.includes(i)?'dbar no':(o.bad?'dbar ok':'dbar')):'sbar';s+=`<rect class="${cls}" data-b="${i}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`;});
+ (o.ghost||[]).forEach((v,i)=>{if(v==null)return;const r=rectFor(i,v);s+=`<rect class="ghost" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}"/>`;});
+ c.cats.forEach((x,i)=>{if(bar)s+=`<text class="cat" x="${L-6}" y="${T+slot*i+slot/2+4}" text-anchor="end">${esc(shortCat(x,99))}</text>`;else s+=`<text class="cat" x="${L+slot*i+slot/2}" y="${T+ph+15}" text-anchor="middle">${esc(shortCat(x,n))}</text>`;});
+ s+=`<line class="ax" x1="${L}" x2="${L+pw}" y1="${T+ph}" y2="${T+ph}"/><line class="ax" x1="${L}" x2="${L}" y1="${T}" y2="${T+ph}"/>`;
+ const up=bar?c.cl:c.vl,right=bar?c.vl:c.cl,upL=o.upL!==undefined?o.upL:up,rightL=o.rightL!==undefined?o.rightL:right;
+ s+=`<text class="lb" x="${L}" y="36">${esc(upL)}</text><text class="lb" x="${L+pw}" y="${CH-8}" text-anchor="end">${esc(rightL)}</text>`;
+ const H={title:[CW/2-120,3,240,19],hoch:[L-34,T-4,38,ph+8],right:[L-2,T+ph-3,pw+6,24],bar:null};
+ if(o.hi==='bar'){const r=rectFor(0,vals[0]);s+=`<rect class="hi" x="${r.x-3}" y="${r.y-3}" width="${r.w+6}" height="${r.h+6}" rx="4"/>`;}
+ else if(o.hi&&H[o.hi]){const h=H[o.hi];s+=`<rect class="hi" x="${h[0]}" y="${h[1]}" width="${h[2]}" height="${h[3]}" rx="6"/>`;}
+ if(o.input)for(let i=0;i<n;i++){const hx=bar?L:L+slot*i,hy=bar?T+slot*i:T-10,hw=bar?pw+10:slot,hh=bar?slot:ph+14;s+=`<rect class="hit" tabindex="0" role="slider" aria-label="${esc(c.cats[i])}" aria-valuenow="${vals[i]}" data-i="${i}" x="${hx}" y="${hy}" width="${hw}" height="${hh}"/>`;}
+ return s+'</svg>';}
+function token(cx,cy,half){const r=10,id='h'+Math.random().toString(36).slice(2,8);
+ const face=`<circle class="tk" cx="${cx}" cy="${cy}" r="${r}"/><circle class="tke" cx="${cx-3.5}" cy="${cy-2.5}" r="1.4"/><circle class="tke" cx="${cx+3.5}" cy="${cy-2.5}" r="1.4"/><path class="tkm" d="M${cx-4.5} ${cy+3}q4.5 4 9 0"/>`;
+ return half?`<clipPath id="${id}"><rect x="${cx-r-1}" y="${cy-r-1}" width="${r+1}" height="${2*r+2}"/></clipPath><g clip-path="url(#${id})">${face}</g><circle class="tkh" cx="${cx}" cy="${cy}" r="${r}"/>`:face;}
+/* c.per = Wert eines Bildes */
+function pic(c){const n=c.cats.length,L=86,rowH=30,H=52+n*rowH,W=340;
+ let s=`<svg class="g dg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bilddiagramm: ${esc(c.title)}. Ein Bild steht für ${c.per} ${esc(c.u)}. ${c.cats.map((x,i)=>x+' '+(c.vals[i]/c.per)+' Bilder').join(', ')}">`;
+ s+=`<text class="tt" x="4" y="16">${esc(c.title)}</text>${token(W-132,12)}<text class="lb" x="${W-117}" y="16">= ${de(c.per)} ${esc(c.u)}</text><line class="gl" x1="0" x2="${W}" y1="30" y2="30"/>`;
+ c.cats.forEach((x,i)=>{const y=52+i*rowH-4,m=c.vals[i]/c.per,f=Math.floor(m);s+=`<text class="cat" x="4" y="${y+4}">${esc(x)}</text>`;for(let k=0;k<f;k++)s+=token(L+k*25+10,y);if(m>f)s+=token(L+f*25+10,y,true);});
+ return s+'</svg>';}
+function tally(n){const g=Math.floor(n/5),r=n%5,gw=34;let x=2,s='',W=g*gw+r*7+6;
+ for(let i=0;i<g;i++){for(let k=0;k<4;k++)s+=`<line x1="${x+k*7}" x2="${x+k*7}" y1="3" y2="23"/>`;s+=`<line x1="${x-3}" x2="${x+24}" y1="21" y2="5"/>`;x+=gw;}
+ for(let k=0;k<r;k++)s+=`<line x1="${x+k*7}" x2="${x+k*7}" y1="3" y2="23"/>`;
+ return `<svg class="tally" viewBox="0 0 ${Math.max(W,8)} 26" width="${Math.max(W,8)}" height="26" role="img" aria-label="Strichliste mit ${n} Strichen">${s}</svg>`;}
+const tallyTable=(cats,vals,head)=>`<div class="tw"><table class="z"><tr><th>${esc(head||'Antwort')}</th><th>Strichliste</th></tr>${cats.map((c,i)=>`<tr><td>${esc(c)}</td><td class="tl">${tally(vals[i])}</td></tr>`).join('')}</table></div>`;
+function axisOnly(labels){const W=90,H=150,T=10,B=12,ph=H-T-B,n=labels.length-1;let s=`<svg class="mini" viewBox="0 0 ${W} ${H}" role="img" aria-label="Hochachse mit den Zahlen ${labels.join(', ')}"><line class="ax" x1="44" x2="44" y1="${T}" y2="${T+ph}"/>`;labels.forEach((v,i)=>{const y=T+ph-i/n*ph;s+=`<line class="ax" x1="40" x2="48" y1="${y}" y2="${y}"/><text x="36" y="${y+4}" text-anchor="end">${v}</text>`;});return s+'</svg>';}
+
+/* ---------- Aufgaben-Bausteine ---------- */
+/* mc: rechts = richtige Antwort, falsch = [[Text, warum]] */
+function MC(q,right,wrong,x){const o=[right].concat(wrong.map(w=>w[0])),why=[null].concat(wrong.map(w=>w[1]));return Object.assign({type:'mc',q,o,c:0,why},x||{});}
+function NUM(q,ans,x){return Object.assign({type:'num',q,ans},x||{});}
+const readTraps=(d,i)=>{const v=d.vals[i],t=[];
+ if(d.step>1)t.push([v/d.step,`Du hast die Kästchen gezählt. Das sind ${de(v/d.step)} Kästchen. Ein Kästchen steht aber für ${d.step}. Also ${de(v/d.step)} · ${d.step} = ${de(v)}.`]);
+ d.vals.forEach((w,j)=>{if(j!==i)t.push([w,`${de(w)} ist der Wert von ${d.cats[j]}. Suche zuerst den richtigen Namen an der Achse.`]);});
+ t.push([v+d.step,'Du bist eine Linie zu hoch gerutscht. Lege ein Lineal von der Spitze gerade zur Achse.']);
+ t.push([v-d.step,'Du bist eine Linie zu tief gerutscht. Lege ein Lineal von der Spitze gerade zur Achse.']);return t;};
+const hRead=d=>d.kind==='bar'?'Gehe vom Namen waagerecht bis zum Ende des Balkens und dann gerade nach unten zur Achse.':'Gehe von der Spitze der Säule waagerecht nach links zur Hochachse.';
+const stepTxt=d=>`Die Achse ist in ${d.step}er-Schritten eingeteilt.`;
+const TYPN={col:'Säulendiagramm',bar:'Balkendiagramm',pic:'Bilddiagramm'};
+const TYPW={col:'Ein Säulendiagramm hat senkrechte Säulen, die von unten nach oben wachsen.',bar:'Ein Balkendiagramm hat waagerechte Balken, die von links nach rechts wachsen.',pic:'Ein Bilddiagramm zeigt Werte mit kleinen Bildern und einer Erklärung dazu.'};
+const anyFig=(d,k)=>k==='pic'?pic(picOf(d)):chart(mixChart(d,k));
+function picOf(d,per){per=per||d.step;return Object.assign({},d,{per});}
+function picD(l,o){o=o||{};const per=pick({o:[1,2],p:[2,5,10],l:[10,20,50]}[l]),half=l!=='o';const d=D(l,{step:per});if(half)d.vals=d.vals.map((v,i)=>i%2&&per%2===0?v+per/2:v);d.per=per;return d;}
+
+/* ===== Station: Diagrammtyp ===== */
+gen('typ',['o','p'],'t-name',l=>{const k=pick(['col','bar','pic']),d=D(l,{step:l==='o'?1:2});if(k==='pic'){d.per=d.step;}
+ return MC('Wie heißt dieses Diagramm?',TYPN[k],others(['col','bar','pic'],k).map(x=>[TYPN[x],`Das passt nicht. ${TYPW[k]}`]),{fig:anyFig(d,k),hint:'Schau, wie die Werte dargestellt sind: stehend, liegend oder als Bilder?',sol:[TYPW[k]]});});
+gen('typ','o','t-part',()=>{const d=D('o'),p=pick([['title','Überschrift','Sie steht ganz oben und sagt, worum es im Diagramm geht.'],['hoch','Hochachse','Sie geht senkrecht nach oben. Dort stehen meist die Zahlen.'],['bar','Säule','Die Höhe der Säule zeigt den Wert.'],['right','Rechtsachse','Sie geht waagerecht nach rechts. Dort stehen beim Säulendiagramm die Namen.']]);
+ const all=[['Überschrift','Sie steht ganz oben im Diagramm.'],['Hochachse','Sie geht senkrecht nach oben.'],['Säule','Das ist einer der hohen Streifen im Diagramm.'],['Rechtsachse','Sie geht waagerecht nach rechts.']].filter(x=>x[0]!==p[1]);
+ return MC('Wie heißt der markierte Teil des Säulendiagramms?',p[1],all,{fig:chart(d,{hi:p[0]}),hint:'Achte auf den farbigen Rahmen.',sol:[p[2]]});});
+const FACTS={o:[
+ ['Wie stehen die Säulen in einem Säulendiagramm?','Senkrecht, von unten nach oben',[['Waagerecht, von links nach rechts','Das sind die Balken im Balkendiagramm.'],['Im Kreis','Ein solches Diagramm gehört nicht zu diesem Thema.']],'Stell dir eine Säule in einer Kirche vor: Sie steht aufrecht.'],
+ ['Wie liegen die Balken in einem Balkendiagramm?','Waagerecht, von links nach rechts',[['Senkrecht, von unten nach oben','So stehen die Säulen im Säulendiagramm.'],['Schräg','Balken sind immer gerade und parallel zur Achse.']],'Ein Balken liegt wie ein Holzbalken auf dem Boden.'],
+ ['Wie heißt ein Bilddiagramm noch?','Piktogramm',[['Strichliste','Eine Strichliste ist eine Zählhilfe, kein Diagramm.'],['Tabelle','Eine Tabelle besteht aus Zeilen und Spalten mit Zahlen.']],'Das Wort kommt von „Pikto“ für Bild.'],
+ ['Was verrät die Höhe einer Säule?','Den Wert',[['Die Überschrift','Die Überschrift steht als Text oben.'],['Den Namen','Der Name steht an der Achse unter der Säule.']],'Je größer der Wert, desto höher die Säule.']],
+ p:[['Was brauchst du beim Bilddiagramm unbedingt?','Eine Erklärung, wie viel ein Bild zählt',[['Eine Hochachse mit Zahlen','Das braucht ein Säulendiagramm. Beim Bilddiagramm zählst du die Bilder.'],['Möglichst bunte Bilder','Die Farbe verändert den Wert nicht.']],'Ein Bild kann für 1, 2 oder mehr stehen.'],
+ ['Wo liest du beim Balkendiagramm die Zahlen ab?','An der waagerechten Achse',[['An der senkrechten Achse','Dort stehen beim Balkendiagramm die Namen.'],['In der Überschrift','Dort steht, worum es geht, aber keine Werte.']],'Die Balken wachsen nach rechts.'],
+ ['Warum sollen alle Säulen gleich breit sein?','Damit nur die Höhe den Wert zeigt',[['Damit es schöner aussieht','Es geht nicht ums Aussehen. Breitere Säulen würden größer wirken.'],['Damit das Diagramm voller ist','Die Breite sagt nichts über den Wert.']],'Was soll man beim Vergleichen ansehen?']],
+ l:[['Wann ist ein Balkendiagramm oft praktischer als ein Säulendiagramm?','Wenn die Namen sehr lang sind',[['Wenn es nur Zahlen bis 10 gibt','Die Größe der Zahlen entscheidet das nicht.'],['Wenn es keine Überschrift gibt','Jedes Diagramm braucht eine Überschrift.']],'Wo ist links neben der Achse mehr Platz?'],
+ ['Wann ist ein Bilddiagramm ungenau?','Wenn ein Bild für viele steht und Teile geschätzt werden',[['Wenn wenige Werte vorkommen','Wenige Werte kann man gut zeichnen.'],['Wenn es eine Erklärung gibt','Die Erklärung macht es erst lesbar.']],'Wie zeichnest du 37, wenn ein Bild für 10 steht?']]};
+gen('typ',['o','p','l'],'t-fact',l=>{const f=pick(FACTS[l]);return MC(f[0],f[1],f[2],{hint:f[3],sol:[f[1]+'.']});});
+gen('typ','o','t-desc',()=>{const n=pick(NM),c=pick([['col',`${n} zeichnet für jedes Tier einen senkrechten Streifen.`],['bar',`${n} zeichnet für jedes Tier einen waagerechten Streifen.`],['pic',`${n} malt für je 2 Kinder ein Smiley.`]]);
+ return MC(`${c[1]} Welches Diagramm entsteht?`,TYPN[c[0]],others(['col','bar','pic'],c[0]).map(x=>[TYPN[x],TYPW[x]]),{hint:'Senkrecht = stehend. Waagerecht = liegend.',sol:[TYPW[c[0]]]});});
+gen('typ','p','t-same',()=>{const d=D('p',{step:2,n:4}),same_=Math.random()<.5,e=Object.assign({},d,{kind:'bar',vals:d.vals.slice()});if(!same_){const a=e.vals[0];e.vals[0]=e.vals[1];e.vals[1]=a;}
+ const yes='Ja, beide zeigen dieselben Werte',no=`Nein, ${d.cats[0]} und ${d.cats[1]} sind vertauscht`;
+ return MC('Zeigen beide Diagramme dieselben Daten?',same_?yes:no,[[same_?no:yes,same_?'Vergleiche Wert für Wert: Alle Zahlen stimmen überein.':`Vergleiche Wert für Wert: Bei ${d.cats[0]} und ${d.cats[1]} passt es nicht.`]],{fig:`<div class="pair">${chart(d)}${chart(e)}</div>`,hint:'Lies für jeden Namen in beiden Diagrammen den Wert ab.',sol:[`Säulendiagramm: ${d.cats.map((c,i)=>c+' '+d.vals[i]).join(', ')}.`,`Balkendiagramm: ${e.cats.map((c,i)=>c+' '+e.vals[i]).join(', ')}.`],fixo:true});});
+gen('typ','p','t-pickfig',()=>{const k=pick(['col','bar','pic']),d=D('p',{step:2,n:3});d.per=2;const o=shuffle(['col','bar','pic']);
+ return {type:'mc',q:`Welches Bild zeigt ein **${TYPN[k]}**?`,o:o.map(x=>anyFig(d,x)),ot:o.map(x=>TYPN[x]),c:o.indexOf(k),why:o.map(x=>`Das ist ein ${TYPN[x]}. ${TYPW[k]}`),wide:1,fixo:true,hint:'Senkrecht, waagerecht oder Bilder?',sol:[TYPW[k]]};});
+gen('typ','l','t-conv',()=>{const d=D('l',{n:4}),same=mixChart(d,'bar'),sw=Object.assign({},same,{vals:[d.vals[1],d.vals[0],d.vals[2],d.vals[3]]}),of=Object.assign({},same,{vals:d.vals.map((v,i)=>i===iMax(d)?v-d.step:v)});
+ const a=shuffle([[same,1],[sw,0],[of,0]]);return {type:'mc',q:'Welches Balkendiagramm zeigt dieselben Daten wie das Säulendiagramm?',fig:chart(d),o:a.map(x=>chart(x[0])),ot:a.map((x,i)=>'Diagramm '+'ABC'[i]),c:a.findIndex(x=>x[1]),why:a.map(x=>x[0]===sw?`Hier sind ${d.cats[0]} und ${d.cats[1]} vertauscht.`:`Hier ist ein Balken um ${d.step} zu kurz.`),wide:1,fixo:true,hint:'Vergleiche zuerst den längsten Balken und dann alle anderen.',sol:[d.cats.map((c,i)=>c+': '+de(d.vals[i])).join(', ')+'.']};});
+gen('typ','l','t-false',()=>{const d=D('l',{n:4}),hi=iMax(d),lo=iMin(d),r=d.cats.find((c,i)=>i!==hi&&i!==lo),w=d.vals[hi]-d.vals[lo];
+ const tr=[`${d.cats[hi]} hat den größten Wert.`,`Zwischen ${d.cats[hi]} und ${d.cats[lo]} liegen ${de(w)} ${d.u}.`,`Die Achse ist in ${d.step}er-Schritten eingeteilt.`],f=`${d.cats[lo]} hat den größten Wert.`;
+ return MC('Welche Aussage ist **falsch**?',f,tr.map(x=>[x,'Diese Aussage stimmt. Prüfe sie im Diagramm.']),{fig:chart(d),hint:'Prüfe jede Aussage einzeln im Diagramm.',sol:[`${d.cats[lo]} hat den kleinsten Wert, nicht den größten.`]});});
+
+/* ===== Station: Achsen ===== */
+gen('achse','o','a-hoch',()=>{const d=D('o');return MC('Was steht in diesem Säulendiagramm an der Hochachse?',`Die Zahlen (${d.vl})`,[[`Die Namen (${d.cl})`,`Die Namen stehen unten an der Rechtsachse.`],['Die Überschrift','Die Überschrift steht ganz oben.']],{fig:chart(d),hint:'Die Hochachse geht senkrecht nach oben.',sol:['Beim Säulendiagramm stehen die Zahlen meistens an der Hochachse und die Namen unten.']});});
+gen('achse','o','a-right',()=>{const d=D('o');return MC('Was steht in diesem Säulendiagramm an der Rechtsachse?',`Die Namen (${d.cl})`,[[`Die Zahlen (${d.vl})`,'Die Zahlen stehen links an der Hochachse.'],['Die Erklärung der Bilder','Eine Erklärung gibt es nur beim Bilddiagramm.']],{fig:chart(d),hint:'Die Rechtsachse geht waagerecht nach rechts.',sol:['Unter jeder Säule steht, wozu sie gehört.']});});
+const stepQ=(d)=>NUM(`In welchen Schritten ist die Achse für ${d.vl} eingeteilt?`,d.step,{fig:chart(d),hint:'Lies zwei Zahlen ab, die nebeneinander stehen. Wie groß ist der Abstand von Linie zu Linie?',trap:d.lab>1?[[d.step*d.lab,`Das ist der Abstand der beschrifteten Linien. Dazwischen liegt noch ${d.lab===2?'eine Linie':'mehr'}. Teile ${d.step*d.lab} durch ${d.lab}.`]]:[[1,`Eine Linie weiter heißt hier nicht +1. Schau auf die Zahlen: 0, ${d.step}, ${2*d.step}, …`]],sol:[d.lab>1?`Nur jede ${d.lab}. Linie ist beschriftet: Von 0 bis ${d.step*d.lab} sind es ${d.lab} Kästchen.`:`Die Zahlen an der Achse sind 0, ${d.step}, ${2*d.step}, …`,`Ein Kästchen steht also für ${d.step}.`]});
+gen('achse','o','a-step',()=>stepQ(D('o',{step:2})));
+gen('achse','p','a-step2',()=>stepQ(D('p',{step:pick([5,10]),kind:pick(['col','bar'])})));
+gen('achse','o','a-null',()=>MC('Bei welcher Zahl beginnt die Hochachse in einem Säulendiagramm?','Bei 0',[['Beim kleinsten Wert','Dann wären die Säulen nicht vergleichbar.'],['Bei 1','Eine Säule mit dem Wert 1 braucht schon ein Stück Höhe. Sie beginnt bei 0.']],{hint:'Wo steht eine Säule mit dem Wert null?',sol:['Die Säulen wachsen von 0 aus nach oben.']}));
+gen('achse',['o','p'],'a-even',l=>{const s=l==='o'?2:5,g=[0,s,2*s,3*s,4*s],b=[g,[0,s,2*s,4*s,8*s],[0,2*s,s,3*s,4*s]],o=shuffle([0,1,2]);
+ return {type:'mc',q:'Welche Hochachse ist richtig eingeteilt?',o:o.map(i=>axisOnly(b[i])),ot:o.map((_,i)=>'Achse '+'ABC'[i]),c:o.indexOf(0),why:o.map(i=>i===1?'Die Abstände sind gleich groß, die Zahlen wachsen aber unterschiedlich stark.':'Die Zahlen stehen nicht der Größe nach.'),row:1,fixo:true,hint:'Von Strich zu Strich muss immer gleich viel dazukommen.',sol:[`Die Einteilung muss gleichmäßig sein: immer +${s}.`]};});
+gen('achse','p','a-bar',()=>{const d=D('p',{kind:'bar'});return MC('Was steht bei diesem Balkendiagramm an der senkrechten Achse?',`Die Namen (${d.cl})`,[[`Die Zahlen (${d.vl})`,'Beim Balkendiagramm sind die Achsen getauscht: Die Zahlen stehen unten.'],['Die Überschrift','Die Überschrift steht ganz oben.']],{fig:chart(d),hint:'Balken wachsen nach rechts. Wo müssen also die Zahlen stehen?',sol:['Säulendiagramm: Zahlen senkrecht, Namen waagerecht.','Balkendiagramm: genau umgekehrt.']});});
+const scaleOpts=s=>({5:[[1,'Dann brauchst du zu viele Kästchen. Das Diagramm wird viel zu hoch.'],[20,'Dann liegen die meisten Werte zwischen den Linien. Das kannst du nicht genau zeichnen.']],2:[[1,'Das geht zwar, aber es wird unnötig hoch.'],[7,'7er-Schritte sind unpraktisch. Die Werte liegen nicht auf den Linien.']],10:[[1,'Dann brauchst du zu viele Kästchen. Das Diagramm wird viel zu hoch.'],[25,'Dann liegen die Werte zwischen den Linien.']],20:[[1,'Dann brauchst du viel zu viele Kästchen.'],[15,'15er-Schritte treffen die Werte nicht.']],50:[[1,'Dann brauchst du viel zu viele Kästchen.'],[30,'30er-Schritte treffen die Werte nicht.']],100:[[1,'Dann brauchst du viel zu viele Kästchen.'],[70,'70er-Schritte treffen die Werte nicht.']],1:[[5,'Die Werte liegen nicht auf 5er-Linien.'],[3,'Die Werte liegen nicht auf 3er-Linien.']]}[s]);
+gen('achse',['p','l'],'a-scale',l=>{const d=D(l,{step:l==='p'?pick([5,10]):pick([20,50,100])}),o=scaleOpts(d.step);
+ return MC(`Du willst diese Werte zeichnen: ${d.vals.map(de).join(', ')}. Welche Einteilung der Hochachse passt am besten?`,`${d.step}er-Schritte`,o.map(x=>[`${x[0]}er-Schritte`,x[1]]),{hint:'Alle Werte sollen genau auf einer Linie liegen, und das Diagramm soll aufs Blatt passen.',sol:[`Alle Werte sind Vielfache von ${d.step}.`,`Mit ${d.step}er-Schritten brauchst du ${Math.max(...d.vals)/d.step} Kästchen bis zum größten Wert.`]});});
+gen('achse','p','a-top',()=>{const d=D('p',{step:5}),max=Math.max(...d.vals)+ri(1,4),ans=Math.ceil(max/5)*5;return NUM(`Der größte Wert ist ${max}. Die Hochachse ist in 5er-Schritten eingeteilt. Bis zu welcher Zahl musst du die Achse mindestens zeichnen?`,ans,{hint:'Zähle in 5er-Schritten, bis du den größten Wert erreicht oder überholt hast.',trap:[[max,`Die Zahl ${max} liegt nicht auf einer 5er-Linie. Du musst bis zur nächsten Linie gehen.`],[ans-5,`Bei ${ans-5} ist die Achse noch zu kurz, denn ${max} ist größer.`]],sol:[`5er-Schritte: …, ${ans-5}, ${ans}.`,`${ans} ist die erste Linie, die ${max} erreicht.`]});});
+gen('achse','l','a-partial',()=>stepQ(D('l',{step:pick([10,20,50]),lab:2})));
+gen('achse','l','a-kast',()=>{const s=pick([20,50,100]),k=ri(4,9),h=k*s;return NUM(`1 Kästchen steht für ${s}. Wie viele Kästchen hoch wird die Säule für ${de(h)}?`,k,{unit:'Kästchen',hint:`Wie oft passt ${s} in ${de(h)}?`,trap:[[h,'Das ist der Wert. Gesucht ist die Höhe in Kästchen.'],[h/10,'Teile durch den Wert eines Kästchens, nicht durch 10.']],sol:[`${de(h)} : ${s} = ${k}`,`Die Säule wird ${k} Kästchen hoch.`]});});
+gen('achse','l','a-bad',()=>{const d=D('l',{n:4,step:10}),lb=[0,10,20,40,80,100];const c=Object.assign({},d,{labels:lb,vals:d.vals.map(v=>Math.min(v,100))});
+ return MC('Was ist an diesem Diagramm falsch?','Die Hochachse ist nicht gleichmäßig eingeteilt',[['Die Säulen sind gleich breit','Gleich breite Säulen sind richtig.'],['Die Überschrift fehlt','Die Überschrift ist vorhanden.'],['An der Rechtsachse stehen Namen','Das ist richtig so.']],{fig:chart(c),hint:'Schau auf die Zahlen an der Hochachse: Wie groß sind die Sprünge?',sol:[`Die Sprünge sind +10, +10, +20, +40, +20.`,'Richtig wäre überall derselbe Schritt, zum Beispiel immer +20.']});});
+gen('achse','l','a-trunc',()=>{const s=pick([10,20]),b=s*5,v=[b+s,b+3*s,b+2*s,b+4*s],C=pick(CTX.filter(x=>x.min<=s&&x.max>=s&&x.cats.length>=4));const cats=C.seq?C.cats.slice(0,4):shuffle(C.cats).slice(0,4),c={kind:'col',cats,vals:v,step:s,top:b+5*s,min:b,vl:C.vl,cl:C.cl,title:C.s+(C.sv?' im Jahrgang 5':''),u:C.u,labels:[b,b+s,b+2*s,b+3*s,b+4*s,b+5*s]};
+ const r=cats[3],f=cats[0];return MC(`Es sieht so aus, als hätte ${r} viermal so viel wie ${f}. Warum täuscht das?`,`Die Hochachse beginnt bei ${b} und nicht bei 0`,[['Die Säulen sind zu breit','Die Breite ändert den Wert nicht.'],['Es fehlt die Überschrift','Die Überschrift ist da.']],{fig:chart(c),hint:'Welche Zahl steht unten an der Hochachse?',sol:[`Die echten Werte sind ${de(v[3])} und ${de(v[0])}.`,'Fängt die Achse nicht bei 0 an, wirken Unterschiede größer, als sie sind.']});});
+
+/* ===== Station: Ablesen ===== */
+gen('wert',['o','p','l'],'w-col',l=>{const d=D(l,{lab:l==='l'?pick([1,2]):1}),i=ri(0,d.cats.length-1);return NUM(`Lies ab: Welchen Wert hat **${d.cats[i]}**?`,d.vals[i],{unit:d.u,fig:chart(d),hint:hRead(d)+(d.step>1?` ${stepTxt(d)}`:''),trap:readTraps(d,i),sol:[hRead(d),`${d.cats[i]}: ${de(d.vals[i])} ${d.u}.`]});});
+gen('wert',['o','p','l'],'w-bar',l=>{const d=D(l,{kind:'bar',lab:l==='l'?pick([1,2]):1}),i=ri(0,d.cats.length-1);return NUM(`Lies im Balkendiagramm ab: Welchen Wert hat **${d.cats[i]}**?`,d.vals[i],{unit:d.u,fig:chart(d),hint:hRead(d),trap:readTraps(d,i),sol:[hRead(d),`${d.cats[i]}: ${de(d.vals[i])} ${d.u}.`]});});
+gen('wert',['o','p'],'w-max',l=>{const d=D(l,{kind:pick(['col','bar'])}),hi=Math.random()<.5,i=hi?iMax(d):iMin(d);return MC(`Wer oder was hat den **${hi?'größten':'kleinsten'}** Wert?`,d.cats[i],shuffle(others(d.cats,d.cats[i])).slice(0,3).map(c=>[c,`${c} hat ${de(d.vals[d.cats.indexOf(c)])}. Schau nach dem ${hi?'längsten':'kürzesten'} Streifen.`]),{fig:chart(d),hint:`Suche den ${hi?'längsten':'kürzesten'} Streifen.`,sol:[`${d.cats[i]} hat ${de(d.vals[i])} ${d.u}.`]});});
+gen('wert',['o','p','l'],'w-diff',l=>{const d=D(l,{kind:pick(['col','bar'])}),a=iMax(d),b=iMin(d),w=d.vals[a]-d.vals[b];return NUM(`Wie groß ist der Unterschied zwischen **${d.cats[a]}** und **${d.cats[b]}**?`,w,{unit:d.u,fig:chart(d),hint:'Lies beide Werte ab und rechne großer Wert minus kleiner Wert.',trap:[[d.vals[a],'Das ist nur der größere Wert. Ziehe noch den kleineren ab.'],[d.vals[b],'Das ist nur der kleinere Wert.'],[d.vals[a]+d.vals[b],'Du hast addiert. Unterschied heißt: minus rechnen.'],[w/d.step,`Das sind die Kästchen. Ein Kästchen steht für ${d.step}.`]],sol:[`${d.cats[a]}: ${de(d.vals[a])}, ${d.cats[b]}: ${de(d.vals[b])}`,`${de(d.vals[a])} − ${de(d.vals[b])} = ${de(w)}`]});});
+gen('wert',['p','l'],'w-sum',l=>{const d=D(l,{n:4}),t=sum(d.vals);return NUM(`Wie viele ${d.u} sind es **insgesamt**?`,t,{fig:chart(d),hint:'Lies alle Werte ab und addiere sie.',trap:[[Math.max(...d.vals),'Das ist nur der größte Wert.'],[t/d.step,`Du hast Kästchen addiert. Ein Kästchen steht für ${d.step}.`]],sol:[d.vals.map(de).join(' + ')+' = '+de(t)]});});
+gen('wert',['p','l'],'w-half',l=>{const s=l==='p'?10:pick([20,100]),d=D(l,{step:s}),i=ri(0,d.cats.length-1);d.vals[i]+=s/2;return NUM(`Die Spitze von **${d.cats[i]}** liegt genau zwischen zwei Linien. Welchen Wert hat ${d.cats[i]}?`,d.vals[i],{unit:d.u,fig:chart(d),hint:`Die Mitte zwischen zwei Linien ist die Hälfte von ${s} mehr.`,trap:[[d.vals[i]-s/2,'Das ist die Linie darunter. Die Spitze liegt höher.'],[d.vals[i]+s/2,'Das ist die Linie darüber. Die Spitze liegt tiefer.']],sol:[`Ein Kästchen steht für ${s}, ein halbes für ${s/2}.`,`${de(d.vals[i]-s/2)} + ${s/2} = ${de(d.vals[i])}`]});});
+gen('wert','o','w-count',()=>{const d=D('o');return NUM(`Wie viele ${d.cl==='Name'?'Namen':'Einträge'} zeigt das Diagramm?`,d.cats.length,{fig:chart(d),hint:'Zähle die Säulen.',sol:[`Das Diagramm hat ${d.cats.length} Säulen.`]});});
+gen('wert','l','w-mult',()=>{const s=pick([10,20,50]),a=ri(2,3)*s,f=pick([2,3,4]),d=D('l',{step:s,n:4});const rest=shuffle([1,2,3,4,5,6,7,8].map(x=>x*s).filter(v=>v!==a&&v!==a*f));d.vals=[a,a*f,rest[0],rest[1]];d.top=s*(Math.ceil(Math.max(...d.vals)/s)+1);
+ return NUM(`Wie viel mal so groß ist der Wert von **${d.cats[1]}** wie der von **${d.cats[0]}**?`,f,{unit:'-mal',fig:chart(d),hint:'Teile den großen Wert durch den kleinen.',trap:[[a*f-a,'Das ist der Unterschied. Gefragt ist: Wie oft passt der kleine Wert in den großen?']],sol:[`${de(a*f)} : ${de(a)} = ${f}`]});});
+
+/* ===== Station: Bilddiagramm ===== */
+gen('bild',['o','p','l'],'b-val',l=>{const d=picD(l),i=ri(0,d.cats.length-1),m=d.vals[i]/d.per;return NUM(`Wie viele ${d.u} zeigt das Bilddiagramm bei **${d.cats[i]}**?`,d.vals[i],{unit:d.u,fig:pic(d),hint:'Lies zuerst die Erklärung oben rechts.',trap:d.per>1?[[m,`Das ist die Anzahl der Bilder. Jedes Bild steht aber für ${d.per}. Rechne ${de(m)} · ${d.per}.`],[Math.floor(m),`Das ist die Anzahl der Bilder. Jedes Bild steht aber für ${d.per}.`],[Math.floor(m)*d.per,'Das halbe Bild zählt auch: die Hälfte des Bild-Werts.']].filter(x=>!same(x[0],d.vals[i])):[],sol:[`Ein Bild steht für ${d.per}.`,`${de(m)} · ${d.per} = ${de(d.vals[i])}`]});});
+gen('bild',['o','p','l'],'b-count',l=>{const per=pick({o:[2],p:[5,10],l:[20,50]}[l]),m=ri(3,7),half=l!=='o'&&Math.random()<.5,mm=m+(half?.5:0),v=mm*per;return NUM(`Ein Bild steht für ${per}. Wie viele Bilder musst du für den Wert ${de(v)} zeichnen?`,mm,{unit:'Bilder',hint:`Wie oft passt ${per} in ${de(v)}?`+(half?' Ein halbes Bild ist erlaubt.':''),trap:[[v,'Das wären zu viele. Jedes Bild zählt mehr als 1.']],sol:[`${de(v)} : ${per} = ${de(mm)}`]});});
+gen('bild',['o','p','l'],'b-diff',l=>{const d=picD(l),a=iMax(d),b=iMin(d),w=d.vals[a]-d.vals[b];return NUM(`Wie viel mehr hat **${d.cats[a]}** als **${d.cats[b]}**?`,w,{unit:d.u,fig:pic(d),hint:'Rechne beide Werte aus und ziehe sie voneinander ab.',trap:d.per>1?[[w/d.per,`Das ist der Unterschied in Bildern. Ein Bild steht für ${d.per}.`]]:[],sol:[`${d.cats[a]}: ${de(d.vals[a])}, ${d.cats[b]}: ${de(d.vals[b])}`,`${de(d.vals[a])} − ${de(d.vals[b])} = ${de(w)}`]});});
+gen('bild',['p','l'],'b-total',l=>{const d=picD(l,{}),t=sum(d.vals);return NUM(`Wie viele ${d.u} sind es zusammen?`,t,{fig:pic(d),hint:'Rechne jede Zeile aus und addiere.',sol:[d.vals.map(de).join(' + ')+' = '+de(t)]});});
+gen('bild',['p','l'],'b-legend',l=>{const per=pick({p:[2,5,10],l:[10,20,50]}[l]),m=ri(3,7),v=per*m;return NUM(`Bei ${pick(NM)} stehen ${m} Bilder. Das bedeutet ${de(v)} Punkte. Wie viel zählt ein Bild?`,per,{hint:`Teile den Wert durch die Anzahl der Bilder.`,trap:[[v-m,'Hier musst du teilen, nicht abziehen.']],sol:[`${de(v)} : ${m} = ${per}`]});});
+gen('bild','o','b-legendq',()=>{const d=picD('o');return MC('Wo findest du, wie viel ein Bild wert ist?','In der Erklärung beim Diagramm',[['In der Überschrift','Die Überschrift sagt nur, worum es geht.'],['Man zählt immer 1','Ein Bild kann auch für 2 oder mehr stehen.']],{fig:pic(d),hint:'Schau oben rechts neben das Beispielbild.',sol:[`Hier steht ein Bild für ${d.per}.`]});});
+
+/* ===== Station: Strichliste ===== */
+const urliste=d=>{let a=[];d.cats.forEach((c,i)=>{for(let k=0;k<d.vals[i];k++)a.push(c);});return shuffle(a);};
+const urHtml=a=>`<div class="ur">${a.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+function smallD(l){const d=D(l,{step:1,sv:1,n:l==='o'?3:l==='p'?4:5});const m={o:[2,7],p:[3,9],l:[4,11]}[l];d.vals=d.cats.map(()=>ri(m[0],m[1]));return d;}
+gen('liste',['o','p','l'],'l-read',l=>{const n=ri(...{o:[4,9],p:[8,14],l:[12,23]}[l]);return NUM('Wie viele Striche zeigt diese Strichliste?',n,{fig:`<div class="tallybox">${tally(n)}</div>`,hint:'Jedes Bündel mit dem schrägen Strich zählt 5.',trap:[[Math.floor(n/5)*4+n%5,'Der schräge Strich zählt mit. Ein Bündel hat 5 Striche, nicht 4.'],[Math.floor(n/5)+n%5,'Ein Bündel zählt 5, nicht 1.']].filter(x=>x[0]!==n),sol:[`${Math.floor(n/5)} Bündel · 5 = ${Math.floor(n/5)*5}`,`Dazu ${n%5} einzelne Striche: ${n}`]});});
+gen('liste',['o','p','l'],'l-count',l=>{const d=smallD(l),a=urliste(d),i=ri(0,d.cats.length-1);return NUM(`Das ist die Urliste einer Umfrage. Wie oft kommt **${d.cats[i]}** vor?`,d.vals[i],{fig:urHtml(a),hint:'Gehe die Liste von vorne durch und mache für jedes Wort einen Strich.',trap:[[a.length,'Das ist die Zahl aller Antworten. Zähle nur dieses eine Wort.']],sol:[`${d.cats[i]} kommt ${d.vals[i]}-mal vor.`]});});
+gen('liste',['o','p','l'],'l-table',l=>{const d=smallD(l),a=urliste(d);return {type:'fill',q:'Zähle die Antworten aus der Urliste. Trage die Häufigkeit ein.',fig:urHtml(a),d,ans:d.vals,hint:'Streiche in Gedanken jedes gezählte Wort durch. Prüfe am Ende: Alle Zahlen zusammen ergeben die Anzahl der Antworten.',sol:[`Es gibt ${a.length} Antworten.`,d.vals.join(' + ')+' = '+a.length]};});
+gen('liste',['o','p'],'l-which',l=>{const n=ri(...{o:[6,9],p:[11,14]}[l]),a=[n,n-1,n-5>0?n+1:n+2],o=shuffle(a);return {type:'mc',q:`Welche Strichliste zeigt die Zahl **${n}**?`,o:o.map(x=>`<span class="tallybox">${tally(x)}</span>`),ot:o.map(x=>x+' Striche'),c:o.indexOf(n),why:o.map(x=>`Diese Strichliste zeigt ${x}.`),fixo:true,hint:'Zähle in 5er-Schritten und dann die einzelnen Striche.',sol:[`${n} = ${Math.floor(n/5)} · 5 + ${n%5}`]};});
+gen('liste',['p','l'],'l-total',l=>{const d=smallD(l),t=sum(d.vals);return NUM('Wie viele Kinder wurden insgesamt befragt?',t,{fig:tallyTable(d.cats,d.vals,d.cl),hint:'Zähle jede Zeile und addiere dann.',trap:[[d.cats.length,'Das ist die Zahl der Zeilen.']],sol:[d.vals.join(' + ')+' = '+t]});});
+gen('liste','l','l-rest',()=>{const d=smallD('l'),m=ri(0,d.cats.length-1),t=sum(d.vals),s=t-d.vals[m],txt=d.cats.map((c,i)=>i===m?`<td>${esc(c)}</td><td><b>?</b></td>`:`<td>${esc(c)}</td><td>${d.vals[i]}</td>`);
+ return NUM(`Es wurden ${t} Kinder befragt. Wie viele Kinder nennen **${d.cats[m]}**?`,d.vals[m],{fig:`<div class="tw"><table class="z"><tr><th>${esc(d.cl)}</th><th>Häufigkeit</th></tr>${txt.map(x=>`<tr>${x}</tr>`).join('')}</table></div>`,hint:'Alle Antworten zusammen ergeben die Gesamtzahl.',trap:[[s,'Das ist die Summe der bekannten Werte. Ziehe sie von der Gesamtzahl ab.']],sol:[`Bekannt sind ${s} Antworten.`,`${t} − ${s} = ${d.vals[m]}`]});});
+gen('liste','l','l-span',()=>{const a=Array.from({length:7},()=>ri(9,14));while(Math.max(...a)===Math.min(...a))a[0]=ri(9,14);const mx=Math.max(...a),mn=Math.min(...a);return NUM(`Das Alter von sieben Kindern: ${a.join('; ')}. Wie groß ist die Spannweite?`,mx-mn,{unit:'Jahre',hint:'Spannweite = Maximum minus Minimum.',trap:[[mx,'Das ist das Maximum. Ziehe noch das Minimum ab.'],[mn,'Das ist das Minimum.']],sol:[`Maximum: ${mx}, Minimum: ${mn}`,`${mx} − ${mn} = ${mx-mn}`]});});
+
+/* ===== Station: Zeichnen ===== */
+function drawQ(d,q,pk,x){return Object.assign({type:'draw',q,d,pk:pk||{}},x||{},{sol:(x&&x.sol)||[ 'Finde den größten Wert und plane die Achse.','Zeichne jede Säule genau bis zu ihrem Wert.',`Richtige Werte: ${d.cats.map((c,i)=>c+' '+de(d.vals[i])).join(', ')}.`]});}
+const titles=d=>[[d.title,1],[`${d.cl} und ${d.vl}`,0],[`Mein Diagramm`,0]];
+const pkSteps=d=>({step:{right:d.step,wrong:scaleOpts(d.step)}});
+const pkAll=d=>({axis:true,step:{right:d.step,wrong:scaleOpts(d.step)},title:true});
+const hintDraw=d=>`Tippe in die ${d.kind==='bar'?'Zeile':'Spalte'}, um ${d.kind==='bar'?'den Balken':'die Säule'} bis zur richtigen Linie zu ziehen.`;
+gen('zeich','o','z-tab',()=>{const d=D('o',{step:1});return drawQ(d,`Zeichne das Säulendiagramm zu dieser Tabelle.${''}`,null,{fig:dataTable(d),hint:hintDraw(d)});});
+gen('zeich','o','z-tab2',()=>{const d=D('o',{step:2});return drawQ(d,'Zeichne das Säulendiagramm. Achtung: Ein Kästchen steht für 2.',null,{fig:dataTable(d),hint:'Ein Kästchen steht für 2. Der Wert 6 ist also 3 Kästchen hoch.'});});
+gen('zeich','o','z-bar',()=>{const d=D('o',{step:1,kind:'bar'});return drawQ(d,'Zeichne das Balkendiagramm. Die Zahlen stehen hier unten.',null,{fig:dataTable(d),hint:hintDraw(d)});});
+gen('zeich','p','z-pick',()=>{const d=D('p',{step:pick([5,10])});return drawQ(d,'Wähle zuerst die Einteilung. Zeichne dann das Säulendiagramm.',pkSteps(d),{fig:dataTable(d),hint:'Alle Werte sollen auf einer Linie liegen.'});});
+gen('zeich','p','z-pickbar',()=>{const d=D('p',{step:pick([2,5]),kind:'bar'});return drawQ(d,'Wähle zuerst die Einteilung. Zeichne dann das Balkendiagramm.',pkSteps(d),{fig:dataTable(d),hint:'Der längste Balken muss aufs Blatt passen.'});});
+gen('zeich','p','z-given',()=>{const d=D('p',{step:pick([5,10]),kind:pick(['col','bar'])});return drawQ(d,`Zeichne das ${TYPN[d.kind]}. Ein Kästchen steht für ${d.step}.`,null,{fig:dataTable(d),hint:hintDraw(d)});});
+gen('zeich','l','z-all',()=>{const d=D('l',{kind:pick(['col','bar'])});return drawQ(d,`Baue das ${TYPN[d.kind]} selbst: Achsen, Einteilung, Überschrift, dann die ${d.kind==='bar'?'Balken':'Säulen'}.`,pkAll(d),{fig:`<p class="small">Thema: ${esc(d.C.s)}</p>`+dataTable(d),hint:'Überlege zuerst: Stehen die Zahlen unten oder links?'});});
+const placeName={10:'Zehner',100:'Hunderter',1000:'Tausender'};
+function roundedD(l){const s=pick([10,100]),d=D('l',{step:s,n:4}),raw=d.vals.map(v=>v+ri(1,s/2-1)*pick([-1,1]));return {d,raw,s};}
+gen('zeich','l','z-round',()=>{const {d,raw,s}=roundedD('l');const t=`<div class="tw"><table class="z"><tr><th scope="row">${esc(d.cl)}</th>${d.cats.map(c=>`<td>${esc(c)}</td>`).join('')}</tr><tr><th scope="row">${esc(d.vl)}</th>${raw.map(v=>`<td>${de(v)}</td>`).join('')}</tr></table></div>`;
+ return drawQ(d,`Runde alle Werte auf **${placeName[s]}**. Zeichne dann das Säulendiagramm. Ein Kästchen steht für ${s}.`,null,{fig:t,hint:'Schau auf die Ziffer rechts neben der Rundungsstelle: 0 bis 4 abrunden, 5 bis 9 aufrunden.',raw,sol:[`Gerundet: ${raw.map((v,i)=>de(v)+' ≈ '+de(d.vals[i])).join(', ')}.`,'Dann zeichnest du die gerundeten Werte.']});});
+
+/* ===== Text: Zahlen finden ===== */
+function markQ(l){const d=D(l,{n:l==='o'?3:4,step:pick({o:[1,2],p:[2,5],l:[5,10,20]}[l])}),p=textParts(d,{noise:l==='o'?1:l==='p'?2:3,mix:l!=='o'});
+ const parts=[intro(d)+' '];p.list.forEach(x=>{const b=x.s.split('§');parts.push(b[0]);parts.push(x.ok?{n:x.n,ok:true}:{n:x.n,ok:false,why:`${de(x.n)} ist ${x.w}. Das gehört nicht ins Diagramm.`});parts.push(b[1]+' ');});
+ return {type:'mark',q:`Tippe alle Zahlen an, die ins Diagramm „${d.title}“ gehören.`,parts,hint:'Frage dich bei jeder Zahl: Sagt sie etwas über das Thema des Diagramms?',sol:[`Ins Diagramm gehören: ${d.cats.map((c,i)=>c+' '+de(d.vals[i])).join(', ')}.`,p.noise.length?`Nicht dazu gehören: ${p.noise.map(x=>de(x.n)+' ('+x.w+')').join(', ')}.`:'']};}
+gen('tm',['o','p','l'],'m1',markQ);gen('tm',['o','p','l'],'m2',markQ);
+gen('tm',['o','p','l'],'m-topic',l=>{const d=D(l,{n:3}),p=textParts(d,{noise:1});return MC(`${intro(d)} ${textStr(p)}<br>Was wäre die beste Überschrift für ein Diagramm?`,d.title,[[`${d.cl} und ${d.vl}`,'Die Überschrift soll das Thema nennen, nicht nur die Achsen.'],['Unser Ergebnis','Das ist zu ungenau. Man weiß nicht, worum es geht.']],{hint:'Worum geht es in dem Text?',sol:[`Das Thema ist: ${d.title}.`]});});
+gen('tm',['o','p','l'],'m-axis',l=>{const d=D(l,{n:3}),p=textParts(d,{});return MC(`${intro(d)} ${textStr(p)}<br>Du zeichnest ein Säulendiagramm. Was kommt an die **Rechtsachse**?`,`${d.cl}: ${d.cats.join(', ')}`,[[`${d.vl}: ${d.vals.map(de).join(', ')}`,'Die Zahlen gehören an die Hochachse.'],[d.title,'Das ist die Überschrift.']],{hint:'Unter jeder Säule steht, wozu sie gehört.',sol:['Hochachse: die Zahlen.','Rechtsachse: die Namen.']});});
+gen('tm','l','m-miss',()=>{const d=D('l',{n:4,step:pick([5,10])}),i=ri(0,3),sen=sentences(d).filter(x=>x.i!==i);const t=sen.map(x=>x.s.replace('§',de(x.n))).join(' ');return MC(`Thema: ${d.title}. Es gibt vier Säulen: ${d.cats.join(', ')}.<br>${t}<br>Warum kannst du das Diagramm noch nicht fertig zeichnen?`,`Der Wert für ${d.cats[i]} fehlt`,[['Die Überschrift fehlt','Die Überschrift steht oben: '+d.title+'.'],[`Die Werte sind zu groß`,'Große Werte zeichnest du mit einer passenden Einteilung.']],{hint:'Hake jeden Namen im Text ab.',sol:[`Zu ${d.cats[i]} steht keine Zahl im Text.`]});});
+
+/* ===== Text: in die Tabelle ===== */
+function relText(){const C=pick(CTX.filter(x=>x.sv&&x.cats.length>=4)),cats=shuffle(C.cats).slice(0,4);let a,k,r;do{a=ri(3,6);k=ri(2,4);r=ri(2,9);}while(new Set([a,2*a,a+k,r]).size<4);
+ const vals=[a,2*a,a+k,r],t=sum(vals),kl=KL();
+ return {vals,cats,C,kl,txt:`Die Klasse ${kl} fragt: „${C.f}“ Insgesamt antworten ${t} Kinder. ${a} Kinder nennen ${cats[0]}. Für ${cats[1]} stimmen doppelt so viele. ${cats[2]} bekommt ${k} Stimmen mehr als ${cats[0]}. Der Rest nennt ${cats[3]}.`,
+  sol:[`${cats[0]}: ${a}`,`${cats[1]}: 2 · ${a} = ${2*a}`,`${cats[2]}: ${a} + ${k} = ${a+k}`,`${cats[3]}: ${t} − ${a} − ${2*a} − ${a+k} = ${r}`],t};}
+gen('tt',['o','p'],'t-fill',l=>{const d=D(l,{n:l==='o'?3:4}),p=textParts(d,{noise:l==='o'?0:1,mix:true});return {type:'fill',q:`${intro(d)} ${textStr(p)}<br><b>Trage die Werte in die Tabelle ein.</b>`,d,ans:d.vals,dist:p.dist,hint:'Suche im Text zuerst den Namen. Die Zahl steht im selben Satz.',sol:d.cats.map((c,i)=>`${c}: ${de(d.vals[i])}`)};});
+gen('tt','o','t-fill2',()=>{const d=D('o',{n:4}),p=textParts(d,{mix:true});return {type:'fill',q:`${intro(d)} ${textStr(p)}<br><b>Trage die Werte in die Tabelle ein.</b>`,d,ans:d.vals,dist:[],hint:'Die Reihenfolge im Text kann anders sein als in der Tabelle.',sol:d.cats.map((c,i)=>`${c}: ${de(d.vals[i])}`)};});
+gen('tt','p','t-fill3',()=>{const d=D('p',{n:5}),p=textParts(d,{noise:2,mix:true});return {type:'fill',q:`${intro(d)} ${textStr(p)}<br><b>Trage die Werte in die Tabelle ein.</b>`,d,ans:d.vals,dist:p.dist,hint:'Nicht jede Zahl im Text gehört in die Tabelle.',sol:d.cats.map((c,i)=>`${c}: ${de(d.vals[i])}`)};});
+gen('tt','l','t-rel',()=>{const r=relText(),d={cats:r.cats,vals:r.vals,cl:r.C.cl,vl:'Anzahl',step:1};return {type:'fill',q:`${r.txt}<br><b>Trage alle Werte in die Tabelle ein.</b>`,d,ans:r.vals,dist:[r.t],hint:'Nicht jede Zahl steht direkt im Text. „Doppelt so viele“ heißt mal 2. Der Rest bleibt von der Gesamtzahl übrig.',sol:r.sol};});
+gen('tt','l','t-rest',()=>{const r=relText();return NUM(`${r.txt}<br>Wie viele Kinder nennen **${r.cats[3]}**?`,r.vals[3],{hint:'Rechne zuerst die anderen drei Werte aus.',trap:[[r.t,'Das ist die Gesamtzahl. Ziehe die anderen Stimmen ab.']],sol:r.sol});});
+gen('tt','l','t-dbl',()=>{const r=relText();return NUM(`${r.txt}<br>Wie viele Stimmen bekommt **${r.cats[1]}**?`,r.vals[1],{hint:'„Doppelt so viele“ bedeutet: mal 2.',trap:[[r.vals[0],`Das sind die Stimmen für ${r.cats[0]}. ${r.cats[1]} hat doppelt so viele.`],[r.vals[0]+2,'„Doppelt“ heißt mal 2, nicht plus 2.']].filter(x=>x[0]!==r.vals[1]),sol:[`2 · ${r.vals[0]} = ${r.vals[1]}`]});});
+
+/* ===== Text: ins Diagramm ===== */
+gen('td','o','d-1',()=>{const d=D('o',{step:1,n:pick([3,4])}),p=textParts(d,{mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Zeichne das Säulendiagramm.</b>`,null,{hint:'Suche im Text zu jeder Säule die passende Zahl.'});});
+gen('td','o','d-2',()=>{const d=D('o',{step:2,n:pick([3,4])}),p=textParts(d,{noise:1});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Zeichne das Säulendiagramm.</b> Ein Kästchen steht für 2.`,null,{dist:p.dist,hint:'Eine Zahl im Text gehört nicht ins Diagramm.'});});
+gen('td','o','d-3',()=>{const d=D('o',{step:1,kind:'bar',n:3}),p=textParts(d,{mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Zeichne das Balkendiagramm.</b>`,null,{hint:hintDraw(d)});});
+gen('td','p','d-4',()=>{const d=D('p',{step:pick([5,10])}),p=textParts(d,{noise:1,mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Wähle die Einteilung und zeichne das Säulendiagramm.</b>`,pkSteps(d),{dist:p.dist,hint:'Schreibe dir die Zahlen zuerst ins Heft.'});});
+gen('td','p','d-5',()=>{const d=D('p',{step:pick([2,5]),kind:'bar'}),p=textParts(d,{noise:1,mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Wähle die Einteilung und zeichne das Balkendiagramm.</b>`,pkSteps(d),{dist:p.dist,hint:'Beim Balkendiagramm stehen die Zahlen unten.'});});
+gen('td','p','d-6',()=>{const d=D('p',{step:10,n:4}),p=textParts(d,{noise:2,mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Zeichne das Säulendiagramm.</b> Ein Kästchen steht für 10.`,null,{dist:p.dist,hint:'Zwei Zahlen im Text sind nur Ablenkung.'});});
+gen('td','l','d-7',()=>{const d=D('l',{kind:pick(['col','bar'])}),p=textParts(d,{noise:2,mix:true});return drawQ(d,`${intro(d)} ${textStr(p)}<br><b>Baue das ${TYPN[d.kind]} selbst.</b>`,pkAll(d),{dist:p.dist,hint:'Hole zuerst die Zahlen aus dem Text und plane dann die Achsen.'});});
+gen('td','l','d-8',()=>{const r=relText(),d={C:r.C,kl:r.kl,kind:'col',cats:r.cats,vals:r.vals,step:1,top:Math.max(...r.vals)+1,lab:1,vl:'Anzahl',cl:r.C.cl,title:`${r.C.s} in Klasse ${r.kl}`,u:'Kinder'};return drawQ(d,`${r.txt}<br><b>Rechne die Werte aus und zeichne das Säulendiagramm.</b>`,null,{hint:'Rechne zuerst im Heft: doppelt so viele, mehr als, Rest.',dist:[r.t],sol:r.sol});});
+gen('td','l','d-9',()=>{const {d,raw,s}=roundedD('l'),t=d.cats.map((c,i)=>pick(d.C.sent)(c,de(raw[i]))).join(' ');return drawQ(d,`${d.C.sv?intro(d):d.C.intro} ${t}<br><b>Runde auf ${placeName[s]} und zeichne das Säulendiagramm.</b> Ein Kästchen steht für ${s}.`,null,{raw,hint:'Runde zuerst jede Zahl im Heft.',sol:[`Gerundet: ${raw.map((v,i)=>de(v)+' ≈ '+de(d.vals[i])).join(', ')}.`]});});
+
+/* ===== Text: Passt es? ===== */
+gen('tc',['o','p','l'],'c-sent',l=>{const d=D(l,{n:4,kind:pick(['col','bar'])}),i=ri(0,3),j=(i+1)%4,w=d.vals[i]+d.step*(d.vals.includes(d.vals[i]+d.step)?-1:1),sv=pick(d.C.sent);const wv=d.vals.includes(w)||w<=0?d.vals[i]+d.step*20:w;
+ return MC('Welcher Satz passt zum Diagramm?',sv(d.cats[i],de(d.vals[i])),[[sv(d.cats[j],de(d.vals[i]===d.vals[j]?wv:d.vals[i])),`Im Diagramm hat ${d.cats[j]} den Wert ${de(d.vals[j])}.`],[sv(d.cats[i],de(wv)),`Im Diagramm hat ${d.cats[i]} den Wert ${de(d.vals[i])}.`]],{fig:chart(d),hint:'Prüfe Name und Zahl in jedem Satz.',sol:[`${d.cats[i]}: ${de(d.vals[i])} ${d.u}.`]});});
+gen('tc',['o','p','l'],'c-wrong',l=>{const d=D(l,{n:4}),i=ri(0,3),e=d.vals.slice();let v=e[i]+d.step*pick([1,2]);while(e.includes(v))v+=d.step;e[i]=v;const c=Object.assign({},d,{vals:e,top:Math.max(d.top,d.step*(Math.ceil(v/d.step)+1))}),p=textParts(d,{});
+ return MC(`${intro(d)} ${textStr(p)}<br>Ein Wert im Diagramm passt nicht zum Text. Welcher?`,d.cats[i],shuffle(others(d.cats,d.cats[i])).map(x=>[x,`${x} stimmt: Text und Diagramm zeigen ${de(d.vals[d.cats.indexOf(x)])}.`]),{fig:chart(c),hint:'Hake Wert für Wert ab.',sol:[`Im Text steht bei ${d.cats[i]}: ${de(d.vals[i])}. Im Diagramm steht ${de(v)}.`]});});
+gen('tc',['p','l'],'c-more',l=>{const d=D(l,{n:4}),a=iMax(d),b=iMin(d),w=d.vals[a]-d.vals[b],r=`${d.cats[a]} liegt ${de(w)} ${d.u} vor ${d.cats[b]}.`;return MC('Welche Aussage stimmt?',r,[[`${d.cats[b]} liegt ${de(w)} ${d.u} vor ${d.cats[a]}.`,'Das ist umgekehrt. Schau, welcher Streifen länger ist.'],[`${d.cats[a]} liegt ${de(w+d.step)} ${d.u} vor ${d.cats[b]}.`,`Der Unterschied ist ${de(w)}. Du bist vielleicht eine Linie verrutscht.`]],{fig:chart(d),hint:'Lies beide Werte ab und rechne die Differenz.',sol:[`${de(d.vals[a])} − ${de(d.vals[b])} = ${de(w)}`]});});
+gen('tc','l','c-claim',()=>{const d=D('l',{n:4,step:pick([20,50])}),n=pick(NM),k=d.vals[iMax(d)]/d.step;return MC(`${n} sagt: „Die höchste Säule hat den Wert ${k}, denn sie ist ${k} Kästchen hoch.“ Stimmt das?`,`Nein, ein Kästchen steht für ${d.step}. Der Wert ist ${de(k*d.step)}.`,[[`Ja, ${k} Kästchen bedeuten ${k}.`,'Kästchen und Wert sind hier verschieden. Schau auf die Zahlen an der Achse.'],['Nein, man muss die Kästchen von oben zählen.','Säulen beginnen unten bei 0.']],{fig:chart(d),hint:'Schau auf die Zahlen an der Hochachse.',sol:[`${k} · ${d.step} = ${de(k*d.step)}`]});});
+gen('tc','l','c-fig',()=>{const r=relText(),b={kind:'col',cats:r.cats,vals:r.vals,step:1,top:Math.max(...r.vals)+1,lab:1,vl:'Anzahl',cl:r.C.cl,title:'',u:'Kinder'},w1=Object.assign({},b,{vals:[r.vals[0],r.vals[0]+2,r.vals[2],r.vals[3]]}),w2=Object.assign({},b,{vals:[r.vals[0],r.vals[1],r.vals[0]+r.vals[2],r.vals[3]]}),a=shuffle([[b,1],[w1,2],[w2,3]]);w2.top=Math.max(...w2.vals)+1;
+ if(new Set(a.map(x=>x[0].vals.join())).size<3)w1.vals[3]+=1;
+ return {type:'mc',q:`${r.txt}<br>Welches Diagramm passt?`,o:a.map(x=>chart(x[0])),ot:a.map((_,i)=>'Diagramm '+'ABC'[i]),c:a.findIndex(x=>x[1]===1),why:a.map(x=>x[1]===2?`„Doppelt so viele“ heißt mal 2, nicht plus 2.`:`Bei ${r.cats[2]} wurde falsch gerechnet.`),wide:1,fixo:true,hint:'Rechne die vier Werte zuerst aus.',sol:r.sol};});
+gen('tc','o','c-title',()=>{const d=D('o',{n:3});return MC('Das Diagramm hat keine Überschrift. Welche passt am besten?',d.title,[['Mathe','Das ist viel zu allgemein.'],[`${d.cats[0]} gewinnt`,'Das wäre ein Ergebnis, aber nicht das Thema.']],{fig:chart(d,{hideTitle:true}),hint:'Schau, was an den Achsen steht.',sol:['Die Überschrift nennt das Thema des Diagramms.']});});
+gen('tc','o','c-max',()=>{const d=D('o',{n:3}),p=textParts(d,{}),i=iMax(d);return MC(`${intro(d)} ${textStr(p)}<br>Welche Säule wird am höchsten?`,d.cats[i],others(d.cats,d.cats[i]).map(c=>[c,`${c} hat nur ${d.vals[d.cats.indexOf(c)]}.`]),{hint:'Die größte Zahl gibt die höchste Säule.',sol:[`${d.cats[i]} hat mit ${de(d.vals[i])} den größten Wert.`]});});
+
+/* ---------- Fortschritt ---------- */
+const KEY='wissensjagd-diagramme-v1';
+let P={cells:{},kl:[],name:'',kl_:'',stars:0,best:0,err:{}};
+try{P=Object.assign(P,JSON.parse(localStorage.getItem(KEY))||{});}catch(e){}
+const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}};
+const PASS=6,SIZE=8;
+const pips=l=>{const n=LVS.indexOf(l)+1;return `<span class="pips">${[1,2,3].map(i=>`<i class="${i<=n?'f':''}"></i>`).join('')}</span>`;};
+const lvTag=l=>`<span class="lv c-${l}">${pips(l)} ${LV[l]}</span>`;
+const topic=id=>TOPICS.concat(TEXT).find(t=>t.id===id);
+const passed=(t,l)=>(P.cells[t+l]||{}).best>=PASS;
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2400);}
+const VIEWS=['vHome','vText','vExam','vMemo','vTask','vRes'];
+function show(v,tab){VIEWS.forEach(x=>$(x).hidden=x!==v);document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===tab));window.scrollTo(0,0);}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{({home,text:textHome,exam:examStart,memo})[b.dataset.v]();});
+function rank(n){return n>=30?'Daten-Meister':n>=18?'Diagramm-Profi':n>=9?'Daten-Detektiv':n>=3?'Spürnase':'Einsteiger';}
+const RANKS=[[3,'Spürnase'],[9,'Daten-Detektiv'],[18,'Diagramm-Profi'],[30,'Daten-Meister']];
+function doneAll(){return TOPICS.concat(TEXT).reduce((n,t)=>n+LVS.filter(l=>passed(t.id,l)).length,0);}
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const w=document.createElement('div');w.className='conf';const col=['var(--o)','var(--p)','var(--l)','var(--accent)','var(--ok)'];for(let i=0;i<36;i++){const s=document.createElement('i');s.style.left=ri(2,98)+'%';s.style.background=pick(col);s.style.animationDelay=ri(0,500)+'ms';s.style.height=ri(14,48)+'px';w.appendChild(s);}document.body.appendChild(w);setTimeout(()=>w.remove(),2400);}
+
+/* ---------- Eine Aufgabe zeigen ---------- */
+let S=null,A=null;
+function render(q,head,cls){A={sel:null,picks:{},bars:null,marked:new Set()};
+ let body='';
+ if(q.type==='mc'){q.ord=q.fixo?q.o.map((_,i)=>i):shuffle(q.o.map((_,i)=>i));body=`<div class="opts ${q.wide?'wide':''} ${q.row?'rowo':''}">${q.ord.map((oi,k)=>`<button type="button" class="opt" data-i="${oi}" aria-pressed="false"><span class="optk">${'ABCD'[k]}</span><span class="optb">${fmt(q.o[oi])}</span></button>`).join('')}</div>`;}
+ if(q.type==='num')body=`<div class="numrow"><input class="numin" id="num" inputmode="decimal" autocomplete="off" placeholder="Antwort" aria-label="Deine Antwort"> ${q.unit?`<span>${esc(q.unit)}</span>`:''}</div>`;
+ if(q.type==='fill')body=`<div class="tw"><table class="z"><tr><th scope="row">${esc(q.d.cl||'Antwort')}</th>${q.d.cats.map(c=>`<td>${esc(c)}</td>`).join('')}</tr><tr><th scope="row">${esc(q.d.vl||'Anzahl')}</th>${q.d.cats.map((c,i)=>`<td class="v"><input id="f${i}" inputmode="numeric" autocomplete="off" aria-label="Wert für ${esc(c)}"></td>`).join('')}</tr></table></div>`;
+ if(q.type==='mark')body='';
+ if(q.type==='draw')body=drawHtml(q);
+ const box=$('vTask');box.className=cls;
+ const qtext=q.type==='mark'?`<div class="qt">${fmt(q.q)}</div><p class="marktext">${q.parts.map((p,i)=>typeof p==='string'?esc(p):`<button type="button" class="mk" data-m="${i}" aria-pressed="false">${de(p.n)}</button>`).join('')}</p>`:`<div class="qt">${fmt(q.q)}</div>`;
+ box.innerHTML=`<div class="card stack">${head}${qtext}${q.fig?`<div class="fig">${q.fig}</div>`:''}${body}<div id="tipBox"></div><div id="fbBox"></div><div class="row" id="acts"></div></div>`;
+ box.querySelectorAll('.opts .opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.sel=+b.dataset.i;box.querySelectorAll('.opts .opt').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ box.querySelectorAll('.mk').forEach(b=>b.onclick=()=>{if(A.done)return;const i=+b.dataset.m;if(A.marked.has(i))A.marked.delete(i);else A.marked.add(i);b.setAttribute('aria-pressed',A.marked.has(i));});
+ if(q.type==='draw')bindDraw(q);
+ box.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const b=$('go');if(b)b.click();}}));
+}
+/* --- Zeichnen --- */
+const drawCfg=q=>{const d=q.d,s=q.pk.step?A.picks.step:d.step;if(!s)return null;const mx=Math.max(...d.vals),top=s*(Math.ceil(mx/s)+1);return Object.assign({},d,{step:s,top,lab:top/s>12?Math.ceil(top/s/10):1});};
+const pickRow=(k,lab,opts)=>`<div class="pick"><div class="small"><b>${lab}</b></div><div class="seg" data-p="${k}">${opts.map((o,i)=>`<button type="button" class="opt" data-v="${esc(o[1])}" aria-pressed="false">${esc(o[0])}</button>`).join('')}</div></div>`;
+function drawHtml(q){const d=q.d;let h='';q._t=null;
+ if(q.pk.axis)h+=pickRow('axis',`Was kommt an die ${d.kind==='bar'?'senkrechte Achse':'Hochachse'}?`,shuffle([[d.vl,d.kind==='bar'?'v':'r'],[d.cl,d.kind==='bar'?'r':'v']]));
+ if(q.pk.step)h+=pickRow('step','Welche Einteilung wählst du? Ein Kästchen steht für …',shuffle([q.pk.step.right].concat(q.pk.step.wrong.map(x=>x[0]))).map(v=>[String(v),v]));
+ if(q.pk.title){q._t=titles(d);h+=pickRow('title','Welche Überschrift passt?',shuffle(q._t).map(t=>[t[0],t[1]?'r':'n'+t[0]]));}
+ return `<div class="stack">${h}<div id="plot"></div><div class="small muted" id="drawHelp">${d.kind==='bar'?'Tippe in eine Zeile: So lang wird der Balken.':'Tippe in eine Spalte: So hoch wird die Säule.'} Du kannst auch ziehen.</div></div>`;}
+function drawPlot(q){const c=drawCfg(q),el=$('plot');if(!el)return;
+ if(!c){el.innerHTML=`<div class="wait">Wähle oben die Einteilung. Dann erscheint hier dein Diagramm.</div>`;$('drawHelp').hidden=true;return;}
+ $('drawHelp').hidden=false;
+ if(!A.bars||A.barsStep!==c.step){A.bars=c.cats.map(()=>0);A.barsStep=c.step;}
+ const ax=q.pk.axis?A.picks.axis:'r',up=c.kind==='bar'?c.cl:c.vl,rt=c.kind==='bar'?c.vl:c.cl;
+ const opts={input:true,draw:A.bars,hideTitle:!!q.pk.title&&A.picks.title===undefined};
+ if(q.pk.axis){if(ax===undefined){opts.upL='?';opts.rightL='?';}else if(ax==='v'){opts.upL=rt;opts.rightL=up;}}
+ if(q.pk.title&&A.picks.title!==undefined){c.title=A.picks.titleText;}
+ else if(q.pk.title)c.title='';
+ el.innerHTML=chart(c,opts);
+ const svg=el.querySelector('svg'),g=geo(c),set=(i,v)=>{v=Math.max(0,Math.min(c.top,v));A.bars[i]=v;const r=svg.querySelector(`[data-b="${i}"]`);const pos=v/c.top;if(g.bar)r.setAttribute('width',pos*g.pw);else{const h=pos*g.ph;r.setAttribute('height',h);r.setAttribute('y',g.T+g.ph-h);}svg.querySelector(`.hit[data-i="${i}"]`).setAttribute('aria-valuenow',v);};
+ const fromEvt=e=>{const m=svg.getScreenCTM();if(!m)return null;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const p=pt.matrixTransform(m.inverse()),n=c.cats.length;let i,frac;if(g.bar){i=Math.floor((p.y-g.T)/(g.ph/n));frac=(p.x-g.L)/g.pw;}else{i=Math.floor((p.x-g.L)/(g.pw/n));frac=(g.T+g.ph-p.y)/g.ph;}if(i<0||i>=n)return null;return {i,v:Math.round(frac*c.top/c.step)*c.step};};
+ let drag=null;
+ svg.addEventListener('pointerdown',e=>{if(A.done)return;const h=fromEvt(e);if(!h)return;drag=h.i;try{svg.setPointerCapture(e.pointerId);}catch(x){}set(h.i,h.v);e.preventDefault();});
+ svg.addEventListener('pointermove',e=>{if(drag==null||A.done)return;const h=fromEvt(e);if(h){const m=svg.getScreenCTM().inverse(),pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;set(drag,h.v);}});
+ const end=()=>{drag=null;};svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+ svg.querySelectorAll('.hit').forEach(r=>r.addEventListener('keydown',e=>{if(A.done)return;const i=+r.dataset.i,up_=['ArrowUp','ArrowRight'].includes(e.key),dn=['ArrowDown','ArrowLeft'].includes(e.key);if(up_||dn){e.preventDefault();set(i,A.bars[i]+(up_?c.step:-c.step));}}));
+}
+function bindDraw(q){const box=$('vTask');box.querySelectorAll('.seg').forEach(s=>{const k=s.dataset.p;s.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(A.done)return;s.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));if(k==='step')A.picks.step=+b.dataset.v;else{A.picks[k]=b.dataset.v;if(k==='title')A.picks.titleText=b.textContent;}drawPlot(q);});});drawPlot(q);}
+function answered(q){if(q.type==='mc')return A.sel!=null;if(q.type==='num')return $('num').value.trim()!=='';if(q.type==='fill')return q.d.cats.every((_,i)=>$('f'+i).value.trim()!=='');if(q.type==='mark')return A.marked.size>0;
+ if(q.type==='draw'){if(q.pk.axis&&A.picks.axis===undefined)return false;if(q.pk.step&&!A.picks.step)return false;if(q.pk.title&&A.picks.title===undefined)return false;return A.bars&&A.bars.every(v=>v>0);}return true;}
+/* Bewertung: ok, Antwort, richtige Lösung, Erklärungen zum Fehler */
+function grade(q){
+ if(q.type==='mc'){const ok=A.sel===q.c,tx=i=>q.ot?q.ot[i]:plain(q.o[i]);return{ok,txt:A.sel==null?'keine Antwort':tx(A.sel),right:tx(q.c),msgs:!ok&&A.sel!=null&&q.why&&q.why[A.sel]?[q.why[A.sel]]:[]};}
+ if(q.type==='num'){const raw=$('num').value,v=parseNum(raw),ok=same(v,q.ans),t=(q.trap||[]).find(t=>same(t[0],v));return{ok,txt:raw.trim()||'keine Antwort',right:de(q.ans)+(q.unit?(q.unit.startsWith('-')?q.unit:' '+q.unit):''),msgs:!ok&&t?[t[1]]:[]};}
+ if(q.type==='fill'){const v=q.d.cats.map((_,i)=>parseNum($('f'+i).value)),bad=[];const msgs=[];v.forEach((x,i)=>{if(!same(x,q.ans[i])){bad.push(i);if((q.dist||[]).includes(x))msgs.push(`${de(x)} gehört nicht zu ${q.d.cats[i]}. Diese Zahl ist im Text nur eine Ablenkung.`);else{const j=q.ans.findIndex((a,k)=>k!==i&&same(a,x));if(j>=0)msgs.push(`${de(x)} gehört zu ${q.d.cats[j]}, nicht zu ${q.d.cats[i]}. Lies den Satz mit dem Namen noch einmal.`);else msgs.push(`Bei ${q.d.cats[i]} stimmt ${isNaN(x)?'dein Eintrag':de(x)} nicht. Richtig ist ${de(q.ans[i])}.`);}}});
+  return{ok:!bad.length,bad,txt:v.map(x=>isNaN(x)?'–':de(x)).join(' · '),right:q.d.cats.map((c,i)=>c+' '+de(q.ans[i])).join(', '),msgs:msgs.slice(0,3)};}
+ if(q.type==='mark'){const nb=[],ms=[];q.parts.forEach((p,i)=>{if(typeof p==='string')return;if(p.ok&&!A.marked.has(i))nb.push(p);if(!p.ok&&A.marked.has(i))ms.push(p.why);});const msgs=ms.slice();if(nb.length)msgs.push(`Dir fehlt noch: ${nb.map(p=>de(p.n)).join(', ')}.`);const right=q.parts.filter(p=>p.ok).map(p=>de(p.n)).join(', ');return{ok:!msgs.length,txt:q.parts.filter((p,i)=>A.marked.has(i)).map(p=>de(p.n)).join(', ')||'nichts markiert',right,msgs};}
+ /* draw */
+ const d=q.d,msgs=[];let ok=true;
+ if(q.pk.axis&&A.picks.axis!=='r'){ok=false;msgs.push(d.kind==='bar'?'Achsen vertauscht: Beim Balkendiagramm gehören die Namen an die senkrechte Achse und die Zahlen nach unten.':'Achsen vertauscht: Beim Säulendiagramm gehören die Zahlen an die Hochachse und die Namen nach unten.');}
+ if(q.pk.step&&A.picks.step!==d.step){ok=false;const w=q.pk.step.wrong.find(x=>x[0]===A.picks.step);msgs.push(`Einteilung ${A.picks.step}: ${w?w[1]:''} Besser sind ${d.step}er-Schritte.`);}
+ if(q.pk.title&&A.picks.title!=='r'){ok=false;msgs.push(`Die Überschrift soll das Thema nennen. Hier passt „${d.title}“.`);}
+ const st=A.barsStep,v=A.bars||d.cats.map(()=>0),bad=[];
+ d.vals.forEach((x,i)=>{if(!same(v[i],x)){bad.push(i);ok=false;}});
+ if(!q.pk.step||A.picks.step===d.step){const done={};bad.forEach(i=>{if(done[i]||msgs.length>=4)return;const u=v[i],x=d.vals[i];const j=d.vals.findIndex((a,k)=>k!==i&&same(a,u)&&same(v[k],x));
+  if(j>=0){done[j]=1;msgs.push(`${d.cats[i]} und ${d.cats[j]} sind vertauscht. Prüfe, zu welchem Namen jede Zahl gehört.`);}
+  else if((q.dist||[]).some(z=>same(z,u)))msgs.push(`${de(u)} ist im Text nur eine Ablenkung. Für ${d.cats[i]} gilt ${de(x)}.`);
+  else if(q.raw&&same(u,q.raw[i]))msgs.push(`Bei ${d.cats[i]} hast du nicht gerundet.`);
+  else if(d.step>1&&same(u,x*d.step))msgs.push(`${d.cats[i]}: Du bist ${de(x)} Kästchen hoch gegangen. Ein Kästchen steht aber für ${d.step}. Der Wert ${de(x)} ist nur ${de(x/d.step)} Kästchen hoch.`);
+  else if(d.step>1&&same(u/d.step,x/d.step/d.step))msgs.push(`${d.cats[i]}: Der Wert ${de(x)} liegt bei der Zahl ${de(x)} an der Achse.`);
+  else if(same(Math.abs(u-x),d.step))msgs.push(`${d.cats[i]}: Du bist eine Linie zu ${u>x?'hoch':'tief'}. Du hast ${de(u)} gezeichnet, richtig ist ${de(x)}.`);
+  else msgs.push(`${d.cats[i]}: Du hast ${de(u)} gezeichnet, richtig ist ${de(x)}.`);});}
+ return{ok,bad,txt:(A.bars?d.cats.map((c,i)=>c+' '+de(v[i])).join(', '):'nichts gezeichnet'),right:d.cats.map((c,i)=>c+' '+de(d.vals[i])).join(', '),msgs,sameStep:st===d.step};}
+function lock(q,g){A.done=true;const box=$('vTask');box.querySelectorAll('input').forEach(i=>i.disabled=true);
+ if(q.type==='mc')box.querySelectorAll('.opts .opt').forEach(b=>{const i=+b.dataset.i;if(i===q.c)b.classList.add('good');else if(i===A.sel)b.classList.add('wrong');});
+ if(q.type==='num')$('num').classList.add(g.ok?'good':'wrong');
+ if(q.type==='fill')q.d.cats.forEach((_,i)=>{const e=$('f'+i),o=same(parseNum(e.value),q.ans[i]);e.classList.add(o?'good':'wrong');if(!o)e.insertAdjacentHTML('afterend',`<span class="fix">${de(q.ans[i])}</span>`);});
+ if(q.type==='mark')box.querySelectorAll('.mk').forEach(b=>{const i=+b.dataset.m,p=q.parts[i];if(p.ok)b.classList.add('good');else if(A.marked.has(i))b.classList.add('wrong');b.disabled=true;});
+ if(q.type==='draw'){box.querySelectorAll('.seg .opt').forEach(b=>{b.disabled=true;const k=b.parentNode.dataset.p,v=b.dataset.v,r=k==='step'?String(q.d.step):'r';const sel=b.getAttribute('aria-pressed')==='true';if(v===r)b.classList.add('good');else if(sel)b.classList.add('wrong');});
+  const c=drawCfg(q);if(c&&A.bars&&!g.idk&&g.sameStep){c.title=q.d.title;$('plot').innerHTML=chart(c,{draw:A.bars,bad:g.bad,ghost:g.ok?[]:q.d.vals.map((v,i)=>g.bad.includes(i)?v:null),upL:(c.kind==='bar'?c.cl:c.vl),rightL:(c.kind==='bar'?c.vl:c.cl)});$('drawHelp').textContent=g.ok?'':'Rot: deine Zeichnung. Grün gestrichelt: so ist es richtig.';$('drawHelp').hidden=g.ok;}
+  else{$('plot').innerHTML=chart(q.d);$('drawHelp').textContent='So sieht das richtige Diagramm aus.';$('drawHelp').hidden=false;}}
+}
+const RIGHT=['Richtig!','Genau!','Stark!','Sauber abgelesen!','Das sitzt!','Super gemacht!'];
+function fbHtml(q,g){const sol=(q.sol||[]).filter(Boolean);return `<div class="fb ${g.ok?'y':'n'}"><b class="h">${g.ok?pick(RIGHT):g.idk?'So geht es:':'Noch nicht ganz.'}</b>${(g.msgs||[]).length?`<ul class="st3">${g.msgs.map(m=>`<li>${fmt(m)}</li>`).join('')}</ul>`:''}${!g.ok&&g.right&&q.type!=='draw'&&q.type!=='fill'?`<div>Richtige Antwort: <b>${esc(g.right)}</b></div>`:''}${sol.length&&!g.ok?`<div><b>So geht es richtig:</b></div><ol class="st3">${sol.map(s=>`<li>${fmt(s)}</li>`).join('')}</ol>`:''}${g.ok&&sol.length?`<div class="small">${fmt(sol[sol.length-1])}</div>`:''}</div>`;}
+
+/* ---------- Stationen ---------- */
+function nextCell(list){for(const t of list||TOPICS)for(const l of LVS){if(!passed(t.id,l))return [t.id,l];}return null;}
+function cells(list,nx){return list.map(t=>`<div class="st"><div><h3>${esc(t.name)}</h3><div class="small muted">${esc(t.sub)}</div></div>${LVS.map(l=>{const c=P.cells[t.id+l],d=passed(t.id,l),n=nx&&nx[0]===t.id&&nx[1]===l;return `<button type="button" class="cell c-${l} ${d?'done':''} ${n?'next':''}" data-t="${t.id}" data-l="${l}" aria-label="${esc(t.name)}, ${LV[l]}${d?', geschafft':''}"><span><span class="nm">${LV[l]}<br></span><b>${c?c.best+'/'+SIZE:'Los'}</b></span></button>`;}).join('')}</div>`).join('');}
+function badges(){const all=TOPICS.concat(TEXT);return `<div class="badges">${all.map(t=>{const top=[...LVS].reverse().find(l=>passed(t.id,l));return `<span class="badge ${top?'c-'+top+' on':''}" title="${esc(t.name)}">${top?'★':'☆'} ${esc(t.name)}</span>`;}).join('')}</div>`;}
+function statusCard(){const n=doneAll(),nx=RANKS.find(r=>n<r[0]);return `<div class="card hud"><div><div class="big2">${P.stars}</div><div class="small muted">Sterne</div></div><div><div class="big2">${rank(n)}</div><div class="small muted">${nx?`Noch ${nx[0]-n} Stationen bis ${nx[1]}`:'Höchster Rang erreicht'}</div></div><div><div class="big2">${P.best}</div><div class="small muted">Beste Serie</div></div></div>`;}
+function home(){
+ const done=TOPICS.reduce((n,t)=>n+LVS.filter(l=>passed(t.id,l)).length,0),nx=nextCell();
+ $('vHome').innerHTML=`<div class="card stack"><h1>Fit für Diagramme</h1>
+  <p class="muted">Jede Station hat ${SIZE} Aufgaben mit neuen Daten. Ab ${PASS} richtigen ist sie geschafft. Die Farben sind dieselben wie im Buch. Bei einem Fehler zeigt dir die App genau, was nicht gestimmt hat.</p>
+  <div class="total" role="img" aria-label="${done} von 18 Stationen geschafft"><div style="width:${done/18*100}%"></div></div>
+  <div class="nextbar"><span class="small muted">${done} von 18 Stationen geschafft</span>${nx?`<button type="button" class="btn pri" id="go1">Weiter: ${esc(topic(nx[0]).name)} · ${LV[nx[1]]}</button>`:`<button type="button" class="btn pri" id="go2">Weiter zu den Textaufgaben</button>`}</div></div>
+  ${statusCard()}
+  <div class="card"><div class="gridhead"><span></span>${LVS.map(lvTag).join('')}</div>${cells(TOPICS,nx)}</div>
+  <div class="card stack"><h2>Deine Abzeichen</h2><p class="small muted">Ein Stern für jedes Thema. Er bekommt die Farbe deiner höchsten Stufe.</p>${badges()}</div>
+  <div class="card stack"><h2>Stand für IServ sichern</h2><div id="saveHome"></div></div>`;
+ $('vHome').querySelectorAll('.cell').forEach(b=>b.onclick=()=>startSet(b.dataset.t,b.dataset.l));
+ if(nx)$('go1').onclick=()=>startSet(nx[0],nx[1]);else $('go2').onclick=textHome;
+ saveBox($('saveHome'));show('vHome','home');}
+const isText=t=>TEXT.some(x=>x.id===t);
+function buildSet(t,l,n){const pool=GEN.filter(g=>g.t===t&&g.l===l);let out=[];while(out.length<n)out=out.concat(shuffle(pool));out=out.slice(0,n);for(let i=1;i<n;i++)if(out[i].id===out[i-1].id){const j=out.findIndex((x,k)=>k>i&&x.id!==out[i].id&&(k+1>=n||out[k+1].id!==out[i-1].id));if(j>0){[out[i],out[j]]=[out[j],out[i]];}}return out.map(g=>Object.assign(g.make(),{gid:g.id,g,tp:t}));}
+function startSet(t,l){S={mode:'set',t,l,tab:isText(t)?'text':'home',list:buildSet(t,l,SIZE),i:0,ok:0,wrong:[],run:0};setStep();}
+function setStep(){const q=S.list[S.i],t=topic(S.t),N=S.list.length,fx=S.mode==='fix';
+ render(q,`<div class="qhead"><b>${fx?'Fehler-Training: ':''}${esc(t.name)}</b>${lvTag(S.l)}</div><div class="row small muted"><span>Aufgabe ${S.i+1} von ${N}</span><span>· ${S.ok} richtig</span>${S.run>=2?`<span class="streak">${S.run} in Folge</span>`:''}</div><div class="pr"><div style="width:${S.i/N*100}%"></div></div>`,'c-'+S.l);
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">Prüfen</button><button type="button" class="btn sec" id="tip">Tipp</button><button type="button" class="btn ghost" id="idk">Zeig mir den Weg</button>`;
+ $('go').onclick=()=>{if(!answered(q)){toast(q.type==='draw'?'Zeichne zuerst alle Werte und triff alle Auswahlen.':q.type==='mark'?'Tippe zuerst Zahlen im Text an.':'Trage zuerst deine Antwort ein.');return;}finishQ(q,grade(q));};
+ $('tip').onclick=()=>{$('tipBox').innerHTML=`<div class="tip"><b>Tipp:</b> ${fmt(q.hint||'Lies die Aufgabe noch einmal langsam.')}</div>`;$('tip').hidden=true;};
+ $('idk').onclick=()=>finishQ(q,{ok:false,idk:true,right:null,msgs:[]});
+ show('vTask',S.tab);}
+function finishQ(q,g){if(q.type==='mc'&&g.idk)g.right=q.ot?q.ot[q.c]:plain(q.o[q.c]);lock(q,g);
+ if(g.ok){S.ok++;S.run++;P.stars++;if(S.run>P.best)P.best=S.run;}else{S.run=0;S.wrong.push(q.g);P.err[S.t]=(P.err[S.t]||0)+1;}store();
+ $('tipBox').innerHTML='';$('fbBox').innerHTML=fbHtml(q,g);
+ if(g.ok&&(S.run===3||S.run===5||S.run===8))toast(`${S.run} richtige in Folge!`);
+ const last=S.i===S.list.length-1;$('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${last?'Zum Ergebnis':'Nächste Aufgabe'}</button>`;
+ $('nx').onclick=()=>{S.i++;if(last)setEnd();else setStep();};$('nx').focus({preventScroll:true});}
+function setEnd(){const fx=S.mode==='fix',t=topic(S.t),k=S.t+S.l,back=S.tab==='text'?textHome:home;
+ $('vRes').className='c-'+S.l;
+ if(fx){const n=S.list.length;$('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>Fehler-Training: ${esc(t.name)}</b>${lvTag(S.l)}</div><div class="big">${S.ok} von ${n}</div><p>${S.ok===n?'Alle Fehler aufgeholt. Das ist echtes Lernen!':'Gut, dass du drangeblieben bist. Jeder neue Versuch festigt dein Wissen.'}</p><div class="row"><button type="button" class="btn pri" id="r1">Neue Runde dieser Station</button><button type="button" class="btn ghost" id="r3">Zur Übersicht</button></div></div>`;if(S.ok===n)confetti();const a=S.t,b=S.l;$('r1').onclick=()=>startSet(a,b);$('r3').onclick=back;show('vRes',S.tab);return;}
+ const wasDone=passed(S.t,S.l),c=P.cells[k]||{best:0,runs:0};c.best=Math.max(c.best,S.ok);c.runs++;P.cells[k]=c;store();
+ const pass=S.ok>=PASS,list=S.tab==='text'?TEXT:TOPICS,nx=nextCell(list),w=S.wrong.slice(),pg=t.page,uebung={o:17,p:18,l:19}[S.l];
+ $('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${esc(t.name)}</b>${lvTag(S.l)}</div><div class="big">${S.ok} von ${SIZE}</div>
+  <p>${pass?(S.ok===SIZE?'Alles richtig. Diese Station sitzt.':'Station geschafft. Stark gemacht!'):`Noch nicht geschafft. Du brauchst ${PASS} richtige. Schau dir die Regel an und versuche es nochmal.`}</p>
+  ${w.length?`<div class="tip"><b>Fehler-Training:</b> Übe genau die ${w.length===1?'Aufgabenart':w.length+' Aufgabenarten'}, die noch nicht geklappt ${w.length===1?'hat':'haben'}, mit neuen Daten.</div>`:''}
+  <p class="small muted">Im Buch: Regel auf Seite ${pg}, weitere Übungen in deiner Farbe auf Seite ${uebung}.</p>
+  <div class="row">${w.length?`<button type="button" class="btn pri" id="r5">Fehler-Training starten</button>`:''}<button type="button" class="btn ${pass||w.length?'sec':'pri'}" id="r1">Nochmal mit neuen Daten</button>${pass&&nx?`<button type="button" class="btn ${w.length?'sec':'pri'}" id="r2">Nächste Station</button>`:''}${pass?'':`<button type="button" class="btn sec" id="r4">Zum Merkzettel</button>`}<button type="button" class="btn ghost" id="r3">Zur Übersicht</button></div></div>`;
+ const a=S.t,b=S.l;$('r1').onclick=()=>startSet(a,b);$('r3').onclick=back;if($('r2'))$('r2').onclick=()=>startSet(nx[0],nx[1]);if($('r4'))$('r4').onclick=memo;
+ if($('r5'))$('r5').onclick=()=>{S={mode:'fix',t:a,l:b,tab:isText(a)?'text':'home',list:w.map(g=>Object.assign(g.make(),{g})),i:0,ok:0,wrong:[],run:0};setStep();};
+ if(pass&&!wasDone)confetti();show('vRes',S.tab);}
+
+/* ---------- Textaufgaben ---------- */
+function textHome(){const done=TEXT.reduce((n,t)=>n+LVS.filter(l=>passed(t.id,l)).length,0),nx=nextCell(TEXT);
+ $('vText').innerHTML=`<div class="card stack"><h1>Textdetektive</h1><p class="muted">Hier holst du die Daten selbst aus dem Text. Jede Runde hat ${SIZE} Aufgaben, ab ${PASS} richtigen ist die Station geschafft.</p>
+  <div class="total" role="img" aria-label="${done} von 12 Stationen geschafft"><div style="width:${done/12*100}%"></div></div>
+  <div class="nextbar"><span class="small muted">${done} von 12 Stationen geschafft</span>${nx?`<button type="button" class="btn pri" id="tg">Weiter: ${esc(topic(nx[0]).name)} · ${LV[nx[1]]}</button>`:''}</div></div>
+  <div class="card stack"><h2>So wird aus einem Text ein Diagramm</h2><ol class="st3"><li><b>Thema finden.</b> Worum geht es? Das wird die Überschrift.</li><li><b>Zahlen herausholen.</b> Welche Zahl gehört zu welchem Namen?</li><li><b>Ablenkung streichen.</b> Zeit, Raum und Datum gehören meist nicht dazu.</li><li><b>Achsen planen.</b> Finde den größten Wert und wähle eine gleichmäßige Einteilung.</li><li><b>Zeichnen und prüfen.</b> Vergleiche am Ende jede Säule mit dem Text.</li></ol></div>
+  <div class="card"><div class="gridhead"><span></span>${LVS.map(lvTag).join('')}</div>${cells(TEXT,nx)}</div>`;
+ $('vText').querySelectorAll('.cell').forEach(b=>b.onclick=()=>startSet(b.dataset.t,b.dataset.l));if(nx)$('tg').onclick=()=>startSet(nx[0],nx[1]);show('vText','text');}
+
+/* ---------- Experten ---------- */
+function buildExpert(l){const ts=['typ','achse','wert','bild','liste','zeich','td','tc'];return shuffle(ts.map(t=>{const g=pick(GEN.filter(x=>x.t===t&&x.l===l));return Object.assign(g.make(),{tp:t});}));}
+function examStart(){
+ $('vExam').innerHTML=`<div class="card stack"><h1>Experten-Modus</h1><p>Das ist die Probe für die nächste Klassenarbeit: 8 gemischte Aufgaben aus allen Stationen, ohne Tipps. Erst am Ende siehst du alle Lösungen. Ab 6 richtigen bist du Experte oder Expertin in dieser Farbe.</p><h2>Welche Farbe nimmst du?</h2>
+  <div class="row">${LVS.map(l=>`<button type="button" class="cell c-${l}" style="min-width:104px;padding-inline:14px" data-l="${l}"><b>${LV[l]}</b></button>`).join('')}</div></div>
+  ${P.kl.length?`<div class="card stack"><h2>Deine letzten Runden</h2>${P.kl.slice(-4).reverse().map(k=>`<div class="tr"><span>${esc(k.d)} · ${LV[k.l]}</span><div class="bar"><div style="width:${k.p/k.m*100}%"></div></div><span class="muted">${k.p}/${k.m}</span></div>`).join('')}</div>`:''}`;
+ $('vExam').querySelectorAll('.cell').forEach(b=>b.onclick=()=>{S={mode:'kl',l:b.dataset.l,list:buildExpert(b.dataset.l),i:0,res:[]};klStep();});show('vExam','exam');}
+function klStep(){const q=S.list[S.i],n=S.list.length;
+ render(q,`<div class="qhead"><b>Experten-Aufgabe ${S.i+1} von ${n}</b>${lvTag(S.l)}</div><div class="pr"><div style="width:${S.i/n*100}%"></div></div>`,'c-'+S.l);
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">${S.i===n-1?'Abgeben':'Weiter'}</button>`;
+ $('go').onclick=()=>{if(!answered(q)&&!S.warn){S.warn=true;toast('Noch nicht fertig. Tippe nochmal, um ohne Antwort weiterzugehen.');return;}S.warn=false;let g;if(!answered(q)){g={ok:false,txt:'keine vollständige Antwort',right:rightOf(q),msgs:[]};}else g=grade(q);S.res.push(g);S.i++;if(S.i<n)klStep();else klEnd();};show('vTask','exam');}
+function rightOf(q){if(q.type==='mc')return q.ot?q.ot[q.c]:plain(q.o[q.c]);if(q.type==='num')return de(q.ans);if(q.type==='mark')return q.parts.filter(p=>p.ok).map(p=>de(p.n)).join(', ');const d=q.d;return d.cats.map((c,i)=>c+' '+de((q.ans||d.vals)[i])).join(', ');}
+function klEnd(){const ok=S.res.filter(r=>r.ok).length,n=S.list.length,d=new Date(),ds=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.';
+ P.kl.push({d:ds,l:S.l,p:ok,m:n});P.kl=P.kl.slice(-12);S.list.forEach((q,i)=>{if(!S.res[i].ok)P.err[q.tp]=(P.err[q.tp]||0)+1;});P.stars+=ok;store();
+ const pass=ok>=6,msg=pass?`Stark! Du bist Experte oder Expertin in ${LV[S.l]}.`+(S.l==='l'?'':' Traust du dich an die nächste Farbe?'):ok>=4?'Fast geschafft. Schau dir die Lösungen an und versuche es nochmal.':'Diese Runde war schwer. Übe zuerst die Stationen und komm dann wieder.';
+ $('vRes').className='c-'+S.l;
+ $('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>Experten-Modus</b>${lvTag(S.l)}</div><div class="big">${ok} von ${n} richtig</div><p>${msg}</p><div class="row"><button type="button" class="btn pri" id="k1">Neue Expertenrunde</button><button type="button" class="btn sec" id="k3">Zu den Stationen</button></div></div>
+ <div class="card"><h2>Alle Aufgaben mit Lösung</h2>${S.list.map((q,i)=>{const r=S.res[i];return `<div class="rv"><div class="mk2 ${r.ok?'y':'n'}">Aufgabe ${i+1}: ${r.ok?'richtig':'noch nicht richtig'}</div><div>${fmt(q.q)}</div><div class="small">Deine Antwort: ${esc(plain(r.txt))}</div>${r.ok?'':`<div class="small">Richtig: <b>${esc(r.right||rightOf(q))}</b></div>${(r.msgs||[]).map(m=>`<div class="small">${fmt(m)}</div>`).join('')}${(q.sol||[]).filter(Boolean).length?`<ol class="st3 small">${q.sol.filter(Boolean).map(s=>`<li>${fmt(s)}</li>`).join('')}</ol>`:''}`}</div>`;}).join('')}</div>
+ <div class="card stack"><h2>Ergebnis für IServ sichern</h2><div id="saveRes"></div></div>`;
+ if(pass)confetti();$('k1').onclick=examStart;$('k3').onclick=home;saveBox($('saveRes'));show('vRes','exam');}
+
+/* ---------- Sichern ---------- */
+function report(){const d=new Date(),pad=n=>String(n).padStart(2,'0'),ds=pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();
+ let t='FIT FÜR DIAGRAMME – Stand\n=========================\nName:   '+P.name+'\nKlasse: '+P.kl_+'\nDatum:  '+ds+'\nSterne: '+P.stars+'\n\nStationen (beste Runde von '+SIZE+'):\n';
+ TOPICS.concat(TEXT).forEach(x=>{t+='  '+x.name+': '+LVS.map(l=>LV[l]+' '+((P.cells[x.id+l]||{}).best!=null?P.cells[x.id+l].best:'–')).join(', ')+'\n';});
+ t+='\nFehler je Thema:\n';TOPICS.concat(TEXT).forEach(x=>{if(P.err[x.id])t+='  '+x.name+': '+P.err[x.id]+'\n';});
+ t+='\nExperten-Modus:\n';if(!P.kl.length)t+='  noch keine Runde\n';P.kl.forEach(k=>t+='  '+k.d+' '+LV[k.l]+': '+k.p+' von '+k.m+' richtig\n');
+ return t+'\n#DATEN '+JSON.stringify({app:'mathe5-diagramme',v:1,name:P.name,kl:P.kl_,datum:ds,stationen:P.cells,fehler:P.err,experten:P.kl})+'\n';}
+function saveBox(el){const top=window.self===window.top;
+ el.innerHTML=`<div class="stack"><div class="fields"><label class="f">Dein Vorname<input id="sN" maxlength="30" value="${esc(P.name)}" autocomplete="given-name"></label><label class="f">Deine Klasse<input id="sK" maxlength="8" value="${esc(P.kl_)}" placeholder="z. B. 5c"></label></div>
+ <div class="row">${top?'<button type="button" class="btn sec" id="sD">Datei speichern</button>':''}<button type="button" class="btn sec" id="sC">Ergebnis kopieren</button></div><p class="small muted">${top?'Lade die Datei in IServ hoch oder füge den kopierten Text dort ein.':'Füge den kopierten Text in IServ ein.'}</p></div>`;
+ const up=()=>{P.name=$('sN').value.trim();P.kl_=$('sK').value.trim();store();return P.name&&P.kl_;};$('sN').oninput=up;$('sK').oninput=up;
+ $('sC').onclick=()=>{if(!up()){toast('Trage zuerst Vorname und Klasse ein.');return;}const t=report(),fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();toast(ok?'Kopiert. Füge es jetzt in IServ ein.':'Kopieren hat nicht geklappt.');};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>toast('Kopiert. Füge es jetzt in IServ ein.'),fb);else fb();};
+ if(top)$('sD').onclick=()=>{if(!up()){toast('Trage zuerst Vorname und Klasse ein.');return;}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([report()],{type:'text/plain;charset=utf-8'}));a.download=('Diagramme_'+P.kl_+'_'+P.name).replace(/[^\wäöüÄÖÜß-]+/g,'_')+'.txt';a.click();};}
+
+/* ---------- Merkzettel ---------- */
+function memo(){const ex={kind:'col',title:'Lieblingsobst in Klasse 5x',cats:['Äpfel','Trauben','Kirschen'],vals:[6,3,4],step:1,top:7,lab:1,vl:'Anzahl',cl:'Obst',u:'Kinder'},ex2={kind:'col',title:'Verkaufte Waffeln',cats:['Mo','Di','Mi','Do'],vals:[20,35,15,30],step:5,top:40,lab:2,vl:'Waffeln',cl:'Tag',u:'Waffeln'};
+ $('vMemo').className='';
+ $('vMemo').innerHTML=`<div class="card stack"><h1>Merkzettel</h1><p class="muted">Das Wichtigste auf einen Blick. Im Buch findest du die Regeln auf Seite 16 und die Zusammenfassung auf Seite 30. Die Strichliste steht auf Seite 12.</p></div>
+ <div class="card stack"><h2>Die drei Diagrammtypen</h2><div class="three"><div><h3>Säulendiagramm</h3>${chart(ex)}<p class="small">Die Säulen stehen senkrecht.</p></div><div><h3>Balkendiagramm</h3>${chart(mixChart(ex,'bar'))}<p class="small">Die Balken liegen waagerecht.</p></div><div><h3>Bilddiagramm</h3>${pic(Object.assign({},ex,{per:1}))}<p class="small">Auch Piktogramm genannt. Die Erklärung sagt, was ein Bild zählt.</p></div></div></div>
+ <div class="two"><div class="card stack m-p"><h2>Säulendiagramm zeichnen</h2><ol class="st3"><li><b>Achsen festlegen:</b> Die Anzahl steht meist an der Hochachse.</li><li><b>Größten Wert suchen</b> und eine gleichmäßige Einteilung wählen.</li><li><b>Breite planen:</b> Wie viele Säulen? Wie breit? Wie viel Platz dazwischen?</li><li><b>Säulen einzeichnen</b> und beschriften.</li><li><b>Überschrift</b> dazuschreiben.</li></ol></div>
+ <div class="card stack m-p"><h2>Kästchen sind nicht immer 1</h2>${chart(ex2)}<p>Hier steht <b>ein Kästchen für 5</b>. Nur jede zweite Linie hat eine Zahl. Die Säule für Dienstag ist 7 Kästchen hoch: 7 · 5 = 35.</p></div></div>
+ <div class="two"><div class="card stack m-p"><h2>Strichliste und Tabelle</h2><p>In der <b>Strichliste</b> fasst du Antworten zusammen. Jeder fünfte Strich geht schräg durch die vier anderen:</p><div class="tallybox">${tally(5)} ${tally(8)}</div><p>In der <b>Häufigkeitstabelle</b> steht die Zahl dazu: 5 und 8.</p></div>
+ <div class="card stack m-p"><h2>Runden vor dem Zeichnen</h2><p>Große Zahlen rundest du zuerst.</p><ol class="st3"><li>Rundungsstelle finden.</li><li>Die Ziffer rechts daneben ansehen.</li><li><b>0 bis 4:</b> abrunden. <b>5 bis 9:</b> aufrunden.</li></ol><p>2 638 auf Hunderter: 2 638 ≈ 2 600 (Ziffer 3).</p></div></div>
+ <div class="card stack"><h2>Typische Fehler</h2><ul class="st3"><li><b>Kästchen zählen.</b> Schau zuerst auf die Zahlen an der Achse: Wie viel ist ein Kästchen wert?</li><li><b>Achsen vertauscht.</b> Säulen: Zahlen links. Balken: Zahlen unten.</li><li><b>Ungleiche Einteilung.</b> Von Linie zu Linie kommt immer gleich viel dazu.</li><li><b>Falsche Zahl aus dem Text.</b> Datum, Uhrzeit und Raumnummer gehören nicht ins Diagramm.</li><li><b>Überschrift vergessen.</b> Ohne Überschrift weiß niemand, worum es geht.</li><li><b>Erklärung übersehen.</b> Beim Bilddiagramm zählt ein Bild oft mehr als 1.</li></ul></div>`;
+ show('vMemo','memo');}
+home();
+</script>
+</body></html>

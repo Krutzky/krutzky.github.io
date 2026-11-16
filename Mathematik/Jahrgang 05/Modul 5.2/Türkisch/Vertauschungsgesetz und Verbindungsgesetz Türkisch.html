@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hesaplama Dersi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Karoheft-Look der ZP10-App. Die Startseite ist ein Stationsraster: Themen als Zeilen, die drei Buchfarben als Spalten. */
+:root{
+  --bg:#EDF1F8; --grid:rgba(35,87,201,.08); --surface:#FFFFFF; --surface-2:#F2F5FB; --ink:#10204A; --ink-soft:#4F5A78; --line:#C9D2E3;
+  --head:#0F1E46; --accent:#FFC93C; --accent-ink:#2A1E00; --blue:#2357C9; --blue-soft:#DDE7FA;
+  --ok:#1F8A5B; --ok-soft:#DCF2E6; --bad:#BC2F2F; --bad-soft:#FBE3E3;
+  --o:#B84E06; --o-soft:#FDE7D4; --p:#B01A6C; --p-soft:#FBDEEC; --l:#5A3DB0; --l-soft:#E8E2F8;
+  --gridline:#D3DCEE;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif; --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1230; --grid:rgba(140,170,255,.06); --surface:#121C42; --surface-2:#18245A; --ink:#ECF0FA; --ink-soft:#A6B0D2; --line:#2C3A78;
+  --head:#060C24; --accent:#FFCF4D; --accent-ink:#231800; --blue:#7FAAF5; --blue-soft:#1C2B66;
+  --ok:#4CC48A; --ok-soft:#113A2A; --bad:#F58A8A; --bad-soft:#431C24;
+  --o:#F7A25F; --o-soft:#3B2614; --p:#F58CC4; --p-soft:#431B38; --l:#B89AF0; --l-soft:#2A1E52; --gridline:#26346F; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background-color:var(--bg);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:22px 22px;color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;min-height:100vh;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+header{background:var(--head);background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:22px 22px;color:#fff;padding-block:14px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:860px;margin:0 auto}
+.top{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#FFD866}
+.brand{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.2}
+.brand em{font-style:normal;background:linear-gradient(transparent 58%,rgba(255,201,60,.55) 58%)}
+nav{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+nav button{background:transparent;border:0;border-radius:10px 10px 0 0;padding:9px 14px;color:#C6D5F5;font-weight:700;white-space:nowrap}
+nav button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
+main{max-width:860px;margin:0 auto;padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px;min-width:0}
+main>section{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 2px 10px rgba(15,30,70,.07);min-width:0}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.2;text-wrap:balance}
+h1{font-size:26px} h2{font-size:21px} h3{font-size:17px}
+p{margin:0}
+.stack{display:grid;gap:10px}
+.muted{color:var(--ink-soft)}
+.small{font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:12px;padding:12px 20px;font-weight:700;font-size:17px;transition:transform .08s ease}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--blue-soft);color:var(--blue)}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--ink)}
+.btn.sm{padding:8px 14px;font-size:15px}
+/* Farbstufen */
+.c-o{--c:var(--o);--cs:var(--o-soft)} .c-p{--c:var(--p);--cs:var(--p-soft)} .c-l{--c:var(--l);--cs:var(--l-soft)}
+.lv{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--c);background:var(--cs);border-radius:999px;padding:3px 11px;font-size:14px}
+.pips{display:inline-flex;gap:2px}
+.pips i{width:7px;height:7px;border-radius:2px;background:var(--c);opacity:.28}
+.pips i.f{opacity:1}
+/* Stationsraster */
+.gridhead,.st{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,92px);gap:8px;align-items:center}
+.gridhead{padding-inline:2px;font-size:14px}
+.gridhead span{justify-self:center}
+.st{padding-block:10px;border-top:1px solid var(--line)}
+.st h3{margin-bottom:2px}
+.cell{border:2px solid var(--c);background:var(--cs);color:var(--c);border-radius:12px;min-height:58px;padding:6px 4px;font-weight:700;display:grid;place-items:center;line-height:1.15;font-size:14px}
+.cell b{font-family:var(--f-display);font-size:18px}
+.cell.done{background:var(--c);color:var(--surface)}
+.cell.next{box-shadow:0 0 0 3px var(--accent)}
+@media(max-width:600px){.gridhead{display:none}.st{grid-template-columns:repeat(3,minmax(0,1fr))}.st>div:first-child{grid-column:1/-1}.cell .nm{display:block}}
+@media(min-width:601px){.cell .nm{display:none}}
+.nextbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.total{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.total div{height:100%;background:var(--ok);transition:width .3s}
+/* Aufgabe */
+.qhead{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.qt{font-size:19px;line-height:1.4;overflow-wrap:anywhere}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.72em;line-height:1.05;margin-inline:1px}
+.fr span:first-child{border-bottom:1.5px solid currentColor;padding-inline:2px}
+.tw{overflow-x:auto;max-width:100%}
+table.z{border-collapse:collapse;margin-block:2px}
+table.z th,table.z td{border:1.5px solid var(--c,var(--blue));padding:7px 10px;text-align:center;min-width:44px}
+table.z th{background:var(--cs,var(--blue-soft));font-weight:700;font-size:15px;text-align:left;max-width:150px}
+table.z input,.numin{background:var(--surface);border:2px solid var(--line);border-radius:8px;text-align:center;width:66px;padding:5px 2px}
+table.ds td.op{white-space:nowrap;border:0;background:none;color:var(--c);font-weight:700;min-width:36px;padding:0 4px;font-size:15px;position:relative}
+table.z td.v{padding:5px}
+.good{border-color:var(--ok)!important;background:var(--ok-soft)!important}
+.wrong{border-color:var(--bad)!important;background:var(--bad-soft)!important}
+.fix{display:block;font-size:14px;font-weight:700;color:var(--ok)}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:11px 14px}
+.opt[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-soft)}
+.optk{flex:none;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:var(--surface-2);font-weight:700;font-size:14px}
+.numrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.numin{width:130px;text-align:left;padding:10px 12px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg .opt{padding:9px 14px}
+svg.g{display:block;width:100%;max-width:420px;height:auto;touch-action:manipulation}
+svg.g .gl{stroke:var(--gridline);stroke-width:1}
+svg.g .ax{stroke:var(--ink);stroke-width:1.6}
+svg.g text{fill:var(--ink-soft);font-size:11px;font-family:var(--f-body)}
+svg.g .lb{fill:var(--ink);font-weight:700}
+svg.g .cv{stroke:var(--blue);stroke-width:2.5;fill:none}
+svg.g .pt{fill:var(--blue)} svg.g .pt.ok{fill:var(--ok)} svg.g .pt.no{fill:var(--bad)} svg.g .pt.mk{fill:var(--c,var(--blue))}
+svg.g .hit{fill:transparent;cursor:pointer}
+.tip{background:var(--blue-soft);border-radius:12px;padding:10px 14px}
+.fb{border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.fb.y{background:var(--ok-soft)} .fb.n{background:var(--bad-soft)}
+.fb b.h{font-family:var(--f-display)}
+.fb ol{margin:0;padding-left:20px}
+.pr{height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.pr div{height:100%;background:var(--c,var(--blue));transition:width .2s}
+/* Ergebnis */
+.big{font-family:var(--f-display);font-size:44px;font-weight:700;line-height:1;color:var(--c,var(--ink))}
+.rv{border-top:1px solid var(--line);padding-block:12px;display:grid;gap:6px}
+.rv .mk{font-weight:700}
+.rv .y{color:var(--ok)} .rv .n{color:var(--bad)}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:10px;align-items:center;font-size:15px}
+.bar{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}
+.bar div{height:100%;background:var(--ok)}
+/* Merkzettel */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:640px){.two{grid-template-columns:minmax(0,1fr)}}
+.m-p{--c:var(--blue);--cs:var(--blue-soft)}
+ol.st3,ul.st3{margin:0;padding-left:20px;display:grid;gap:4px}
+.f{display:grid;gap:4px;font-weight:700;font-size:15px}
+.f input{font-weight:400;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:9px 12px;width:100%}
+.fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px}
+textarea{position:absolute;left:-9999px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--head);color:#fff;padding:10px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Ergänzungen Diagramm-App */
+.big2{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.15}
+.hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center}
+.streak{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 9px;font-weight:700}
+.badges{display:flex;flex-wrap:wrap;gap:6px}
+.badge{border:1.5px dashed var(--line);border-radius:999px;padding:3px 10px;font-size:14px;color:var(--ink-soft)}
+.badge.on{border:1.5px solid var(--c);background:var(--cs);color:var(--c);font-weight:700}
+.fig{min-width:0}.fig p{margin-bottom:6px}
+svg.dg{max-width:440px;touch-action:none;user-select:none;-webkit-user-select:none}
+.fig svg.dg,.opt svg.dg,.three svg.dg,.m-p svg.dg,.rv svg.dg{touch-action:auto}
+svg.dg .tt{fill:var(--ink);font-weight:700;font-size:13px;font-family:var(--f-display)}
+svg.dg .cat{fill:var(--ink);font-size:11px}
+svg.dg .sbar{fill:var(--blue-soft);stroke:var(--blue);stroke-width:1.4}
+svg.dg .dbar{fill:var(--cs,var(--blue-soft));stroke:var(--c,var(--blue));stroke-width:2}
+svg.dg .dbar.no{fill:var(--bad-soft);stroke:var(--bad)}
+svg.dg .dbar.ok{fill:var(--ok-soft);stroke:var(--ok)}
+svg.dg .ghost{fill:none;stroke:var(--ok);stroke-width:2.5;stroke-dasharray:6 4}
+svg.dg .hi{fill:none;stroke:var(--c,var(--blue));stroke-width:3}
+svg.dg .hit{fill:transparent;cursor:ns-resize}
+svg.dg .hit:focus-visible{outline:none;stroke:var(--blue);stroke-width:2}
+svg.dg .tk{fill:var(--accent);stroke:var(--ink);stroke-width:1}
+svg.dg .tke{fill:var(--ink)}svg.dg .tkm{fill:none;stroke:var(--ink);stroke-width:1.3}
+svg.dg .tkh{fill:none;stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3}
+svg.tally line{stroke:var(--ink);stroke-width:2;stroke-linecap:round}
+.tallybox{display:inline-flex;gap:14px;align-items:center;flex-wrap:wrap}
+td.tl{text-align:left!important}
+svg.mini{width:96px;height:auto;display:block}
+svg.mini .ax{stroke:var(--ink);stroke-width:1.6}
+svg.mini text{fill:var(--ink);font-size:11px;font-family:var(--f-body)}
+.opts.wide{grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr))}
+.opts.rowo{grid-template-columns:repeat(3,minmax(0,1fr))}
+.optb{min-width:0;flex:1}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.ur{display:flex;flex-wrap:wrap;gap:6px}
+.ur span{background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:2px 8px;font-size:15px}
+.marktext{font-size:19px;line-height:1.95}
+.mk{border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:0 8px;font-weight:700}
+.mk[aria-pressed="true"]{border-color:var(--c);background:var(--cs);color:var(--c)}
+.pick{display:grid;gap:6px}
+.wait{border:2px dashed var(--line);border-radius:12px;padding:30px 16px;text-align:center;color:var(--ink-soft)}
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.three>div{min-width:0;display:grid;gap:6px;align-content:start}
+.mk2{font-weight:700}.mk2.y{color:var(--ok)}.mk2.n{color:var(--bad)}
+.fb ul.st3,.fb ol.st3{padding-left:20px}
+.conf{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+.conf i{position:absolute;top:-60px;width:9px;border-radius:2px;animation:fall 1.7s ease-in forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(420deg)}}
+/* Ergänzungen Rechengesetze */
+.eq{font-family:var(--f-display);font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+.qt .eq{display:inline-block;margin-top:4px;font-size:22px;white-space:normal}
+.big-t{font-size:19px;line-height:1.5}
+.big2{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.15}
+.hud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center}
+.streak{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:0 9px;font-weight:700}
+.fig{min-width:0}
+svg.tree{display:block;width:100%;max-width:300px;height:auto}
+svg.tree .tb{fill:var(--surface);stroke:var(--ink);stroke-width:1.5}
+svg.tree .tb.m{fill:var(--surface-2)}
+svg.tree .tv{fill:var(--ink);font-family:var(--f-display);font-size:15px;font-weight:700}
+svg.tree .tl{stroke:var(--ink-soft);stroke-width:1.6}
+svg.tree .tc{fill:var(--blue);stroke:none}
+svg.tree .to{fill:#fff;font-weight:700;font-size:13px;font-family:var(--f-body)}
+.pair2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;align-items:start}
+.opts.wide{grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))}
+.opts{display:grid}
+.optb{min-width:0;flex:1}
+.optb .eq{white-space:normal}
+.fields2{display:grid;gap:10px}
+.fl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:20px}
+.numin.sm{width:96px;text-align:center;padding:8px 6px}
+.fl .fix{display:inline;margin-left:4px}
+.lines{display:grid;gap:12px}
+.ln{display:grid;gap:6px;padding-block:8px;border-top:1px solid var(--line)}
+.ln .eq{font-size:20px;white-space:normal}
+.opt.sm{padding:7px 12px;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font-family:var(--f-display);font-weight:700;font-size:22px;min-width:64px;padding:10px 14px;border-radius:14px;border:2px solid var(--c,var(--blue));background:var(--surface);color:var(--ink)}
+.chip.on{background:var(--c,var(--blue));color:var(--surface)}
+.chip:disabled{opacity:.85;cursor:default}
+.plus{font-weight:700;color:var(--ink-soft);font-size:20px}
+.steps{display:grid;gap:6px;background:var(--surface-2);border-radius:12px;padding:10px 14px}
+.steps .eq{font-size:19px}
+.lw{display:inline-block;font-size:13px;font-weight:700;border-radius:999px;padding:1px 9px;margin-left:6px;color:var(--c);background:var(--cs)}
+.lw.c-ok{color:var(--ok);background:var(--ok-soft)}
+.badtx{color:var(--bad);font-weight:700}
+.rulep{font-size:19px;line-height:2.3}
+.gapw{display:inline-flex;gap:6px;flex-wrap:wrap;border:2px dashed var(--line);border-radius:12px;padding:3px 5px;margin-inline:3px;vertical-align:middle;line-height:1.3}
+.merk{border:2px solid var(--l);background:var(--l-soft);border-radius:12px;padding:12px 14px;font-weight:700;font-size:18px;color:var(--ink)}
+.tip.tc1{background:var(--o-soft)}.tip.tc2{background:var(--p-soft)}
+.tip.warn{background:var(--bad-soft)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}
+.fcard{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:16px}
+.fcard.next{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent)}
+.fcard.done{border-color:var(--l);background:var(--l-soft)}
+.fnum{font-family:var(--f-display);font-weight:700;font-size:22px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--l);color:var(--surface)}
+.fst{font-size:24px;color:var(--accent)}
+.linkb{background:none;border:0;color:var(--blue);text-decoration:underline;padding:0}
+.vocab{display:grid;gap:12px}
+.vocab .eq{font-size:26px}
+.c1{color:var(--o)}.c2{color:var(--p)}.c3{color:var(--l)}
+.laws{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.laws>div{display:grid;gap:4px;background:var(--surface-2);border-radius:12px;padding:12px}
+.laws .eq{font-size:20px;white-space:normal}
+.conf{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:30}
+.conf i{position:absolute;top:-60px;width:9px;border-radius:2px;animation:fall 1.7s ease-in forwards}
+@keyframes fall{to{transform:translateY(112vh) rotate(420deg)}}
+.path{display:flex;align-items:center;gap:0;margin-top:10px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.pst{flex:none;min-width:34px;height:34px;padding-inline:8px;border-radius:17px;display:grid;place-items:center;font-weight:700;font-size:14px;background:rgba(255,255,255,.12);color:#fff;border:2px solid rgba(255,255,255,.35)}
+.pst.done{background:var(--ok);border-color:var(--ok)}
+.pst.now{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pln{flex:1 1 12px;min-width:8px;height:2px;background:rgba(255,255,255,.35)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+<header><div class="wrap">
+  <div class="top">5. sınıf · Ders: Hesaplama özellikleri · Kitap s. 38</div>
+  <div class="brand">Matematik dersi <em>Akıllıca hesaplamak</em></div>
+  <div class="path" id="path" aria-label="Fortschritt"></div>
+</div></header>
+<main>
+  <section id="vIn"></section><section id="vLearn" hidden></section><section id="vHome" hidden></section><section id="vMemo" hidden></section><section id="vTask" hidden></section><section id="vRes" hidden></section>
+</main>
+<div id="toast" role="status"></div>
+<script>
+const LANG='tr';const APPKEY='stunde-rechengesetze-v1';
+/* ---------- Sprache und Hilfen ---------- */
+const TRK=LANG==='tr';
+const t=(d,r)=>TRK?r:d;
+const $=id=>document.getElementById(id);
+const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const sum=a=>a.reduce((x,y)=>x+y,0);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>String(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+const plain=s=>String(s).replace(/\*\*/g,'').replace(/<br>/g,' ').replace(/<[^>]+>/g,'');
+function parseNum(s){s=String(s).trim().replace(/\s/g,'').replace(/\./g,'');if(!/^-?\d+$/.test(s))return NaN;return parseInt(s,10);}
+const M='−';
+const term=(n,ops)=>n.map((v,i)=>i?` ${ops?ops[i-1]:'+'} ${v}`:String(v)).join('');
+const LV={o:'Orange',p:'Pink',l:t('Lila','Mor')},LVS=['o','p','l'];
+const LAW={v:t('Vertauschungsgesetz','Değişme özelliği'),b:t('Verbindungsgesetz','Birleşme özelliği'),k:t('Klammerregel','Parantez kuralı')};
+const LAWF={v:t('Vertauschungsgesetz (Kommutativgesetz)','Değişme özelliği (Vertauschungsgesetz)'),b:t('Verbindungsgesetz (Assoziativgesetz)','Birleşme özelliği (Verbindungsgesetz)'),k:t('Klammerregel','Parantez kuralı (Klammerregel)')};
+const NOT=t('Das stimmt nicht','Bu doğru değil');
+
+/* ---------- Zahlen ---------- */
+const NZ=(lo,hi)=>{let a;do a=ri(lo,hi);while(a%10===0);return a;};
+function pair10(lo,hi,mx){let a,b;do{a=NZ(lo,hi);b=(10-a%10)+10*ri(0,mx==null?3:mx);}while(b<2||b===a);return[a,b];}
+function pair100(){let a;do a=ri(12,88);while(a%10===0||a===50);return[a,100-a];}
+function filler(nums,lo,hi,base){base=base||10;let n,tries=0;do{n=NZ(lo,hi);tries++;}while(tries<200&&(nums.includes(n)||nums.some(x=>(x+n)%base===0||(x+n)%10===0)));return n;}
+/* friendly set: liefert Zahlen und die Paare */
+function fset(l){
+ if(l==='o'){const p=pair10(11,48,1),f=filler(p,11,49);return{n:shuffle([...p,f]),pairs:[p],base:10};}
+ if(l==='p'){let p1,p2;do{p1=pair10(11,58,2);p2=pair10(11,58,2);}while(new Set([...p1,...p2]).size<4||(p1[0]+p2[0])%10===0||(p1[0]+p2[1])%10===0);const n=shuffle([...p1,...p2]);return{n,pairs:[p1,p2],base:10};}
+ let p1,p2;do{p1=pair100();p2=pair100();}while(new Set([...p1,...p2]).size<4||[p1[0]+p2[0],p1[0]+p2[1],p1[1]+p2[0],p1[1]+p2[1]].some(x=>x%10===0));const f=filler([...p1,...p2],11,89,100);return{n:shuffle([...p1,...p2,f]),pairs:[p1,p2],base:100};}
+const round=(x,b)=>x%b===0;
+const NAMES=['Louis','Mika','Karl','Aylin','Emir','Lina','Zeynep','Yusuf','Mia','Noah','Elif','Ben'];
+
+/* ---------- Rechenbaum ---------- */
+/* n = drei Zahlen, o = 'L' (zuerst die ersten beiden) oder 'R', ops = Rechenzeichen [erstes, zweites] im Baum, mid/end = Beschriftung */
+function tree(n,o,ops,mid,end,cls){ops=ops||['+','+'];const bx=[14,108,202],bw=46,bh=30,c=i=>bx[i]+bw/2;
+ let s=`<svg class="tree ${cls||''}" viewBox="0 0 262 196" role="img" aria-label="${esc(t('Rechenbaum','İşlem ağacı'))}">`;
+ const box=(x,y,txt,k)=>`<rect class="tb ${k||''}" x="${x}" y="${y}" width="${bw}" height="${bh}" rx="5"/><text class="tv" x="${x+bw/2}" y="${y+20}" text-anchor="middle">${esc(txt)}</text>`;
+ const p=o==='L'?[0,1]:[1,2],q=o==='L'?2:0,mx=(c(p[0])+c(p[1]))/2,fx=(mx+c(q))/2;
+ s+=`<line class="tl" x1="${c(p[0])}" y1="36" x2="${mx}" y2="62"/><line class="tl" x1="${c(p[1])}" y1="36" x2="${mx}" y2="62"/><line class="tl" x1="${mx}" y1="74" x2="${mx}" y2="84"/>`;
+ s+=`<line class="tl" x1="${mx}" y1="114" x2="${fx}" y2="140"/><line class="tl" x1="${c(q)}" y1="36" x2="${fx}" y2="140"/><line class="tl" x1="${fx}" y1="152" x2="${fx}" y2="160"/>`;
+ n.forEach((v,i)=>s+=box(bx[i],6,v));
+ s+=`<circle class="tc" cx="${mx}" cy="68" r="9"/><text class="to" x="${mx}" y="72.5" text-anchor="middle">${ops[0]}</text>`;
+ s+=box(mx-bw/2,84,mid==null?'':mid,'m');
+ s+=`<circle class="tc" cx="${fx}" cy="146" r="9"/><text class="to" x="${fx}" y="150.5" text-anchor="middle">${ops[1]}</text>`;
+ s+=box(fx-bw/2,160,end==null?'':end,'m');
+ return s+'</svg>';}
+
+/* ---------- Aufgaben-Bausteine ---------- */
+function MC(q,right,wrong,x){const o=[right].concat(wrong.map(w=>w[0])),why=[null].concat(wrong.map(w=>w[1]));return Object.assign({type:'mc',q,o,c:0,why},x||{});}
+const NUM=(q,ans,x)=>Object.assign({type:'num',q,ans},x||{});
+const MULTI=(q,fields,x)=>Object.assign({type:'multi',q,fields},x||{});
+const TIPS=(a,b)=>[a,b];
+const GEN=[];
+function gen(t_,l,id,make){(Array.isArray(l)?l:[l]).forEach(x=>GEN.push({t:t_,l:x,id,make:()=>make(x)}));}
+
+/* ===== Station 1: Gesetz erkennen ===== */
+const lawOpts=(k,extra)=>{const keys=['v','b','k'].concat(extra?['x']:[]);return keys;};
+function lawMC(eq,k,extra,sol){const keys=['v','b','k'].concat(extra?['x']:[]);const name=x=>x==='x'?NOT:LAW[x];
+ const why={v:t('Beim Vertauschungsgesetz wechseln die Zahlen ihren Platz.','Değişme özelliğinde sayıların yerleri değişir.'),b:t('Beim Verbindungsgesetz bleiben die Zahlen am Platz. Nur die Klammer wird anders gesetzt.','Birleşme özelliğinde sayılar yerinde kalır. Sadece parantez farklı konur.'),k:t('Bei der Klammerregel wird die Klammer ausgerechnet.','Parantez kuralında önce parantezin içi hesaplanır.'),x:t('Bei Minus gelten die Gesetze nicht.','Çıkarmada bu özellikler geçerli değildir.')};
+ return MC(t(`Welche Regel wurde hier benutzt?<br><span class="eq">${eq}</span>`,`Burada hangi kural kullanıldı?<br><span class="eq">${eq}</span>`),name(k),keys.filter(x=>x!==k).map(x=>[name(x),t('Das passt nicht. ','Bu uymuyor. ')+why[k]]),{tips:TIPS(t('Vergleiche links und rechts: Haben die Zahlen den Platz getauscht? Oder hat sich nur die Klammer bewegt?','Sol ve sağ tarafı karşılaştır: Sayılar yer mi değiştirdi? Yoksa sadece parantez mi kaydı?'),t('Tauschen = Vertauschungsgesetz. Klammer verschieben = Verbindungsgesetz. Klammer ausrechnen = Klammerregel.','Yer değiştirme = Değişme özelliği. Parantezi kaydırma = Birleşme özelliği. Parantezi hesaplama = Parantez kuralı.')),sol:sol||[why[k]]});}
+gen('law',['o','p','l'],'g-v',l=>{const r=l==='o'?[11,49]:l==='p'?[11,99]:[101,499],a=ri(...r),b=ri(...r),c=ri(...r);return l==='o'?lawMC(`${a} + ${b} = ${b} + ${a}`,'v'):lawMC(`${a} + ${b} + ${c} = ${a} + ${c} + ${b}`,'v');});
+gen('law',['o','p','l'],'g-b',l=>{const r=l==='o'?[11,49]:l==='p'?[11,99]:[101,499],a=ri(...r),b=ri(...r),c=ri(...r);return pick([lawMC(`(${a} + ${b}) + ${c} = ${a} + (${b} + ${c})`,'b'),lawMC(`${a} + ${b} + ${c} = ${a} + (${b} + ${c})`,'b')]);});
+gen('law',['o','p'],'g-k',l=>{const [b,c]=pair10(11,39,1),A=ri(b+c+5,b+c+60);return lawMC(`${A} ${M} (${b} + ${c}) = ${A} ${M} ${b+c}`,'k');});
+gen('law',['p','l'],'g-k2',l=>{const p=l==='p'?pair10(11,59,2):pair100(),c=ri(11,89);return lawMC(`(${p[0]} + ${p[1]}) + ${c} = ${p[0]+p[1]} + ${c}`,'k');});
+gen('law','l','g-x',()=>{const a=ri(40,99),b=ri(11,a-10);return lawMC(`${a} ${M} ${b} = ${b} ${M} ${a}`,'x',true,[t(`${a} ${M} ${b} = ${a-b}. Aber ${b} ${M} ${a} kannst du mit natürlichen Zahlen nicht rechnen.`,`${a} ${M} ${b} = ${a-b}. Ama ${b} ${M} ${a} doğal sayılarla hesaplanamaz.`),t('Bei Minus darfst du nicht tauschen.','Çıkarmada yer değiştiremezsin.')]);});
+gen('law','l','g-x2',()=>{const a=10*ri(5,9),b=ri(12,29),c=ri(3,9);return lawMC(`(${a} ${M} ${b}) ${M} ${c} = ${a} ${M} (${b} ${M} ${c})`,'x',true,[t(`Links: ${a-b} ${M} ${c} = ${a-b-c}. Rechts: ${a} ${M} ${b-c} = ${a-b+c}.`,`Sol: ${a-b} ${M} ${c} = ${a-b-c}. Sağ: ${a} ${M} ${b-c} = ${a-b+c}.`),t('Bei Minus darfst du die Klammer nicht verschieben.','Çıkarmada parantezi kaydıramazsın.')]);});
+/* Lösungsweg zuordnen wie im Buch */
+function linesTask(l){let f;do{f=fset(l);}while(f.n[0]===f.pairs[0][0]&&f.n[1]===f.pairs[0][1]);const n=f.n,[p1,p2]=f.pairs;let rows;
+ if(f.pairs.length===1){const rest=n.filter(x=>!p1.includes(x))[0],s1=p1[0]+p1[1];rows=[[`${p1[0]} + ${p1[1]} + ${rest}`,'v'],[`(${p1[0]} + ${p1[1]}) + ${rest}`,'b'],[`${s1} + ${rest}`,'k'],[`${s1+rest}`,null]];}
+ else{const rest=n.filter(x=>!p1.includes(x)&&!p2.includes(x)),s1=p1[0]+p1[1],s2=p2[0]+p2[1],tail=rest.length?' + '+rest[0]:'';rows=[[`${p1[0]} + ${p1[1]} + ${p2[0]} + ${p2[1]}${tail}`,'v'],[`(${p1[0]} + ${p1[1]}) + (${p2[0]} + ${p2[1]})${tail}`,'b'],[`${s1} + ${s2}${tail}`,'k'],[`${s1+s2+(rest[0]||0)}`,null]];}
+ return {type:'lines',q:t(`Ordne jedem Schritt die Regel zu.<br><span class="eq">${term(n)}</span>`,`Her adıma kuralını eşleştir.<br><span class="eq">${term(n)}</span>`),rows,tips:TIPS(t('Schau, was sich von einer Zeile zur nächsten ändert.','Bir satırdan diğerine neyin değiştiğine bak.'),t('Erst wird getauscht, dann werden Klammern gesetzt, dann wird die Klammer ausgerechnet.','Önce yer değiştirilir, sonra parantez konur, sonra parantezin içi hesaplanır.')),sol:[t('1. Zeile: Die Zahlen tauschen ihren Platz → Vertauschungsgesetz.','1. satır: Sayılar yer değiştirir → Değişme özelliği.'),t('2. Zeile: Klammern fassen zusammen → Verbindungsgesetz.','2. satır: Parantezler birleştirir → Birleşme özelliği.'),t('3. Zeile: Die Klammern werden ausgerechnet → Klammerregel.','3. satır: Parantezler hesaplanır → Parantez kuralı.')]};}
+gen('law',['p','l'],'g-lines',linesTask);
+gen('law','o','g-lines',()=>linesTask('o'));
+
+/* ===== Station 2: Partner finden ===== */
+const pairTip=b=>b===100?TIPS(t('Suche zwei Zahlen, die zusammen einen vollen Hunderter ergeben.','Toplamı tam yüzlük olan iki sayı ara.'),t('Schau zuerst auf die Einer: Sie müssen zusammen 10 ergeben. Dann auf die Zehner.','Önce birlere bak: toplamları 10 olmalı. Sonra onluklara bak.')):TIPS(t('Suche zwei Zahlen, die zusammen einen vollen Zehner ergeben.','Toplamı tam onluk olan iki sayı ara.'),t('Schau nur auf die Einer. Welche zwei Einer ergeben zusammen 10?','Sadece birler basamağına bak. Hangi iki birlik toplamı 10 eder?'));
+gen('part',['o','p','l'],'p-game',l=>{const f=fset(l);return{type:'pair',q:t(`Rechne geschickt: <span class="eq">${term(f.n)}</span><br>Tippe zwei Zahlen an, die du zuerst addierst.`,`Akıllıca hesapla: <span class="eq">${term(f.n)}</span><br>Önce toplayacağın iki sayıya dokun.`),n:f.n,pairs:f.pairs,base:f.base,tips:pairTip(f.base),sol:[f.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(', '),t(`Ergebnis: ${sum(f.n)}`,`Sonuç: ${sum(f.n)}`)]};});
+gen('part',['o','p','l'],'p-which',l=>{const f=fset(l),p=f.pairs[0];const all=[];for(let i=0;i<f.n.length;i++)for(let j=i+1;j<f.n.length;j++)all.push([f.n[i],f.n[j]]);const bad=shuffle(all.filter(x=>!round(x[0]+x[1],10))).slice(0,2);
+ return MC(t(`Welche zwei Zahlen addierst du bei <span class="eq">${term(f.n)}</span> am besten zuerst?`,`<span class="eq">${term(f.n)}</span> işleminde önce hangi iki sayıyı toplamak en iyisi?`),`${p[0]} + ${p[1]}`,bad.map(x=>[`${x[0]} + ${x[1]}`,t(`${x[0]} + ${x[1]} = ${x[0]+x[1]}. Das ist kein voller Zehner.`,`${x[0]} + ${x[1]} = ${x[0]+x[1]}. Bu tam onluk değil.`)]),{tips:pairTip(f.base),sol:[t(`${p[0]} + ${p[1]} = ${p[0]+p[1]}. Damit rechnest du leicht weiter.`,`${p[0]} + ${p[1]} = ${p[0]+p[1]}. Bununla kolayca devam edersin.`)]});});
+gen('part',['o','p','l'],'p-num',l=>{const f=fset(l),s=sum(f.n);return NUM(t(`Rechne geschickt: <span class="eq">${term(f.n)}</span>`,`Akıllıca hesapla: <span class="eq">${term(f.n)}</span>`),s,{tips:pairTip(f.base),trap:[[s-10,t('Du hast dich um 10 verrechnet. Prüfe den Übertrag.','10 hata yaptın. Eldeyi kontrol et.')],[s+10,t('Du hast dich um 10 verrechnet. Prüfe den Übertrag.','10 hata yaptın. Eldeyi kontrol et.')]],sol:[f.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(', '),`= ${s}`]});});
+gen('part',['p','l'],'p-story',l=>{const f=fset(l),nm=pick(NAMES),s=sum(f.n),u=l==='l'?'€':t('Punkte','puan');return NUM(t(`${nm} sammelt an ${f.n.length} Tagen ${f.n.join(', ').replace(/, ([^,]*)$/,' und $1')} ${u}. Wie viele ${u} sind es zusammen? Rechne geschickt.`,`${nm} ${f.n.length} günde ${f.n.join(', ').replace(/, ([^,]*)$/,' ve $1')} ${u} topluyor. Toplam kaç ${u}? Akıllıca hesapla.`),s,{unit:u,tips:pairTip(f.base),sol:[f.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(', '),`= ${s}`]});});
+
+/* ===== Station 3: Rechenbaum ===== */
+gen('tree',['o','p','l'],'b-choose',l=>{let a,b,c,o;const big=l==='l';do{if(big){const p=pair100();a=ri(110,480);[b,c]=Math.random()<.5?p:[p[1],p[0]];}else{const p=pair10(11,l==='o'?39:69,l==='o'?1:2);a=filler(p,11,l==='o'?49:89);[b,c]=p;}o=pick(['L','R']);}while(round(a+b,10));let n=o==='R'?[a,b,c]:[b,c,a];
+ const good=o,badO=o==='L'?'R':'L',bp=badO==='L'?[n[0],n[1]]:[n[1],n[2]],gp=good==='L'?[n[0],n[1]]:[n[1],n[2]];const opts=shuffle([good,badO]);
+ return {type:'mc',q:t(`Welcher Rechenbaum ist für <span class="eq">${term(n)}</span> vorteilhafter?`,`<span class="eq">${term(n)}</span> için hangi işlem ağacı daha avantajlı?`),o:opts.map(x=>tree(n,x,null,'?','?')),ot:opts.map((x,i)=>t('Rechenbaum ','Ağaç ')+'AB'[i]),c:opts.indexOf(good),why:opts.map(x=>t(`Hier rechnest du zuerst ${bp[0]} + ${bp[1]} = ${bp[0]+bp[1]}. Das ist keine runde Zahl.`,`Burada önce ${bp[0]} + ${bp[1]} = ${bp[0]+bp[1]} hesaplıyorsun. Bu yuvarlak bir sayı değil.`)),fixo:1,wide:1,tips:TIPS(t('Schau, welche zwei Zahlen im Baum zuerst verbunden werden.','Ağaçta önce hangi iki sayının birleştiğine bak.'),t(`Welches Paar ergibt einen vollen ${big?'Hunderter':'Zehner'}?`,`Hangi çift tam ${big?'yüzlük':'onluk'} eder?`)),sol:[t(`Zuerst ${gp[0]} + ${gp[1]} = ${gp[0]+gp[1]}, dann ist der Rest leicht: ${sum(n)}.`,`Önce ${gp[0]} + ${gp[1]} = ${gp[0]+gp[1]}, sonrası kolay: ${sum(n)}.`)]};});
+gen('tree',['o','p','l'],'b-fill',l=>{const f=fset(l==='p'?'o':l==='l'?'l':'o');let n,o;if(l==='l'){const p=f.pairs[0];n=[ri(110,480),...p];o='R';}else{const p=f.pairs[0],r=f.n.filter(x=>!p.includes(x))[0];o=pick(['L','R']);n=o==='L'?[p[0],p[1],r]:[r,p[0],p[1]];}
+ const m=o==='L'?n[0]+n[1]:n[1]+n[2],e=sum(n);return MULTI(t('Ergänze den Rechenbaum.','İşlem ağacını tamamla.'),[{lab:'①',ans:m},{lab:'②',ans:e}],{fig:tree(n,o,null,'①','②'),tips:TIPS(t('Rechne zuerst die zwei Zahlen, die oben verbunden sind.','Önce üstte birleşen iki sayıyı topla.'),t('Das Ergebnis von ① rechnest du dann mit der dritten Zahl.','① sonucunu sonra üçüncü sayıyla topla.')),sol:[`① = ${m}`,`② = ${e}`]});});
+gen('tree',['o','p','l'],'b-term',l=>{const n=[ri(11,l==='l'?400:99),ri(11,99),ri(11,99)],o=pick(['L','R']),R=`(${n[0]} + ${n[1]}) + ${n[2]}`,Ri=`${n[0]} + (${n[1]} + ${n[2]})`;
+ return MC(t('Welcher Term passt zum Rechenbaum?','Hangi işlem bu ağaca uyar?'),o==='L'?R:Ri,[[o==='L'?Ri:R,t('Im Baum werden andere Zahlen zuerst verbunden. Die Klammer zeigt, was zuerst gerechnet wird.','Ağaçta önce başka sayılar birleşiyor. Parantez önce neyin hesaplandığını gösterir.')],[`${n[0]} ${M} (${n[1]} + ${n[2]})`,t('Im Baum steht zweimal plus, kein minus.','Ağaçta iki kez artı var, eksi yok.')]],{fig:tree(n,o,null,'',''),tips:TIPS(t('Welche zwei Zahlen werden im Baum zuerst verbunden?','Ağaçta önce hangi iki sayı birleşiyor?'),t('Was zuerst gerechnet wird, steht in der Klammer.','Önce hesaplanan, parantezin içinde yazılır.')),sol:[t('Die zuerst verbundenen Zahlen stehen in der Klammer.','Önce birleşen sayılar parantezin içindedir.')]});});
+gen('tree',['p','l'],'b-minus',l=>{const A=l==='l'?ri(150,300):ri(60,99),b=ri(11,29),c=ri(5,19),one=pick([0,1]);const n=[A,b,c];
+ if(one){const m=b+c,e=A-m;return MULTI(t(`Berechne mit dem Rechenbaum: <span class="eq">${A} ${M} (${b} + ${c})</span>`,`İşlem ağacıyla hesapla: <span class="eq">${A} ${M} (${b} + ${c})</span>`),[{lab:'①',ans:m},{lab:'②',ans:e}],{fig:tree(n,'R',['+',M],'①','②'),tips:TIPS(t('Klammerregel: Rechne zuerst die Klammer.','Parantez kuralı: Önce parantezi hesapla.'),t(`① = ${b} + ${c}. Dann ziehst du ① von ${A} ab.`,`① = ${b} + ${c}. Sonra ① sonucunu ${A} sayısından çıkar.`)),trap2:[[1,A-b+c,t(`Du hast ${A} ${M} ${b} + ${c} gerechnet. Die Klammer sagt: ${b} und ${c} werden beide abgezogen.`,`${A} ${M} ${b} + ${c} hesapladın. Parantez diyor ki: ${b} ve ${c} ikisi de çıkarılır.`)]],sol:[`① = ${b} + ${c} = ${m}`,`② = ${A} ${M} ${m} = ${e}`]});}
+ const m=A-b,e=m+c;return MULTI(t(`Berechne mit dem Rechenbaum: <span class="eq">${A} ${M} ${b} + ${c}</span>`,`İşlem ağacıyla hesapla: <span class="eq">${A} ${M} ${b} + ${c}</span>`),[{lab:'①',ans:m},{lab:'②',ans:e}],{fig:tree(n,'L',[M,'+'],'①','②'),tips:TIPS(t('Ohne Klammer rechnest du von links nach rechts.','Parantez yoksa soldan sağa hesaplarsın.'),t(`① = ${A} ${M} ${b}. Dann rechnest du ① + ${c}.`,`① = ${A} ${M} ${b}. Sonra ① + ${c} hesaplarsın.`)),trap2:[[1,A-b-c,t(`Du hast ${c} abgezogen. Vor der ${c} steht aber ein Plus.`,`${c} sayısını çıkardın. Ama ${c} sayısının önünde artı var.`)]],sol:[`① = ${A} ${M} ${b} = ${m}`,`② = ${m} + ${c} = ${e}`]});});
+
+/* ===== Station 4: Lücken füllen ===== */
+gen('gap',['o','p','l'],'l-chain',l=>{
+ if(l==='o'){const f=fset('o'),p=f.pairs[0],r=f.n.filter(x=>!p.includes(x))[0],n=[p[0],r,p[1]],s=p[0]+p[1];
+  return MULTI(t(`Fülle die Lücken.<br><span class="eq">${term(n)} = (${p[0]} + ①) + ${r} = ② + ${r} = ③</span>`,`Boşlukları doldur.<br><span class="eq">${term(n)} = (${p[0]} + ①) + ${r} = ② + ${r} = ③</span>`),[{lab:'①',ans:p[1]},{lab:'②',ans:s},{lab:'③',ans:s+r}],{tips:TIPS(t(`Welche Zahl passt zu ${p[0]}, damit ein voller Zehner entsteht?`,`Tam onluk olması için ${p[0]} ile hangi sayı uyar?`),t(`① ist ${p[1]}. ② ist ${p[0]} + ${p[1]}.`,`① = ${p[1]}. ② = ${p[0]} + ${p[1]}.`)),sol:[`① = ${p[1]}`,`② = ${s}`,`③ = ${s} + ${r} = ${s+r}`]});}
+ if(l==='p'){const f=fset('p'),[p1,p2]=f.pairs,n=[p1[0],p2[0],p1[1],p2[1]],s1=p1[0]+p1[1],s2=p2[0]+p2[1];
+  return MULTI(t(`Fülle die Lücken.<br><span class="eq">${term(n)} = (${p1[0]} + ①) + (${p2[0]} + ②) = ③ + ④ = ⑤</span>`,`Boşlukları doldur.<br><span class="eq">${term(n)} = (${p1[0]} + ①) + (${p2[0]} + ②) = ③ + ④ = ⑤</span>`),[{lab:'①',ans:p1[1]},{lab:'②',ans:p2[1]},{lab:'③',ans:s1},{lab:'④',ans:s2},{lab:'⑤',ans:s1+s2}],{tips:TIPS(t('Suche für jede Klammer den Partner, der einen vollen Zehner macht.','Her parantez için tam onluk yapan eşi bul.'),t(`① = ${p1[1]}, ② = ${p2[1]}.`,`① = ${p1[1]}, ② = ${p2[1]}.`)),sol:[`(${p1[0]} + ${p1[1]}) + (${p2[0]} + ${p2[1]})`,`= ${s1} + ${s2} = ${s1+s2}`]});}
+ const p=pair100(),A=ri(180,480),s=p[0]+p[1];
+ return MULTI(t(`Fülle die Lücken.<br><span class="eq">${A} ${M} ${p[0]} ${M} ${p[1]} = ${A} ${M} (${p[0]} + ①) = ${A} ${M} ② = ③</span>`,`Boşlukları doldur.<br><span class="eq">${A} ${M} ${p[0]} ${M} ${p[1]} = ${A} ${M} (${p[0]} + ①) = ${A} ${M} ② = ③</span>`),[{lab:'①',ans:p[1]},{lab:'②',ans:s},{lab:'③',ans:A-s}],{tips:TIPS(t('Beide Zahlen werden abgezogen. Du kannst sie erst addieren und dann zusammen abziehen.','İki sayı da çıkarılıyor. Önce toplayıp sonra birlikte çıkarabilirsin.'),t(`② = ${p[0]} + ${p[1]}.`,`② = ${p[0]} + ${p[1]}.`)),trap2:[[2,A-p[0]+p[1],t('Hier hast du die zweite Zahl addiert. Beide werden abgezogen.','Burada ikinci sayıyı topladın. İkisi de çıkarılır.')]],sol:[`${A} ${M} (${p[0]} + ${p[1]}) = ${A} ${M} ${s} = ${A-s}`]});});
+gen('gap',['o','p','l'],'l-same',l=>{const r=l==='o'?[11,49]:l==='p'?[11,99]:[101,899],a=ri(...r),b=ri(...r),c=ri(...r),k=pick([0,1]);
+ if(k===0)return MULTI(t(`Ergänze mit dem Vertauschungsgesetz.<br><span class="eq">${a} + ${b} + ${c} = ${c} + ① + ${b}</span>`,`Değişme özelliğiyle tamamla.<br><span class="eq">${a} + ${b} + ${c} = ${c} + ① + ${b}</span>`),[{lab:'①',ans:a}],{tips:TIPS(t('Links und rechts stehen dieselben Zahlen, nur in anderer Reihenfolge.','Solda ve sağda aynı sayılar var, sadece sıraları farklı.'),t('Welche Zahl fehlt rechts noch?','Sağda hangi sayı eksik?')),sol:[t(`Es fehlt ${a}.`,`${a} eksik.`)]});
+ return MULTI(t(`Ergänze mit dem Verbindungsgesetz.<br><span class="eq">(${a} + ${b}) + ${c} = ${a} + (① + ②)</span>`,`Birleşme özelliğiyle tamamla.<br><span class="eq">(${a} + ${b}) + ${c} = ${a} + (① + ②)</span>`),[{lab:'①',ans:b},{lab:'②',ans:c}],{tips:TIPS(t('Beim Verbindungsgesetz bleiben die Zahlen an ihrem Platz.','Birleşme özelliğinde sayılar yerinde kalır.'),t('Nur die Klammer rückt nach rechts.','Sadece parantez sağa kayar.')),sol:[`(${a} + ${b}) + ${c} = ${a} + (${b} + ${c})`]});});
+
+
+gen('gap',['o','p','l'],'l-partner',l=>{const big=l==='l',a=big?ri(12,88):NZ(11,l==='o'?49:89),tgt=big?100:Math.ceil(a/10)*10,ans=tgt-a;return MULTI(t(`Finde die Partnerzahl zum vollen ${big?'Hunderter':'Zehner'}.`,`Tam ${big?'yüzlüğe':'onluğa'} tamamlayan eş sayıyı bul.`),[{lab:`${a} + ① = ${tgt}`,ans}],{tips:TIPS(t(`Wie viel fehlt von ${a} bis ${tgt}?`,`${a} sayısından ${tgt} sayısına ne kadar eksik?`),big?t(`Die Einer müssen zusammen 10 ergeben, die Zehner zusammen 9.`,`Birler toplamı 10, onluklar toplamı 9 olmalı.`):t(`Die Einer müssen zusammen 10 ergeben.`,`Birlerin toplamı 10 olmalı.`)),sol:[`${a} + ${ans} = ${tgt}`]});});
+/* ===== Station 5: Plus und Minus in einem Term ===== */
+const minusTip=TIPS(t('Mehrere Minus-Zahlen hintereinander: Du kannst sie erst addieren und dann zusammen abziehen.','Art arda gelen çıkarılan sayıları önce toplayıp sonra birlikte çıkarabilirsin.'),t('Das Rechenzeichen gehört zur Zahl dahinter. Wenn du tauschst, nimm es mit.','İşlem işareti arkasındaki sayıya aittir. Yer değiştirirken onu da götür.'));
+gen('minus',['o','p','l'],'m-twominus',l=>{const p=l==='l'?pair100():pair10(2,l==='o'?9:39,l==='o'?0:2),s=p[0]+p[1],A=l==='l'?ri(2,6)*100+ri(10,90):10*ri(Math.ceil(s/10)+1,l==='o'?9:15);
+ return NUM(t(`Rechne geschickt: <span class="eq">${A} ${M} ${p[0]} ${M} ${p[1]}</span>`,`Akıllıca hesapla: <span class="eq">${A} ${M} ${p[0]} ${M} ${p[1]}</span>`),A-s,{tips:minusTip,trap:[[A-p[0]+p[1],t(`Du hast ${p[1]} addiert. Vor ${p[1]} steht ein Minus, also wird es abgezogen.`,`${p[1]} sayısını topladın. ${p[1]} sayısının önünde eksi var, yani çıkarılır.`)],[A+s,t('Du hast addiert statt abgezogen.','Çıkarmak yerine topladın.')]],sol:[`${A} ${M} (${p[0]} + ${p[1]})`,`= ${A} ${M} ${s} = ${A-s}`]});});
+gen('minus',['o','p'],'m-same',l=>{const b=ri(2,8),c=10-b,A=10*ri(3,9);return MC(t(`Welcher Term hat denselben Wert wie <span class="eq">${A} ${M} ${b} ${M} ${c}</span>?`,`Hangi işlem <span class="eq">${A} ${M} ${b} ${M} ${c}</span> ile aynı sonucu verir?`),`${A} ${M} (${b} + ${c})`,[[`${A} ${M} (${b} ${M} ${c})`,t(`In die Klammer gehört ein Plus: ${b} und ${c} werden beide abgezogen, zusammen also ${b} + ${c}.`,`Paranteze artı gelir: ${b} ve ${c} ikisi de çıkarılır, yani toplam ${b} + ${c}.`)],[`${A} + (${b} + ${c})`,t('Die Zahlen werden abgezogen, nicht addiert.','Sayılar çıkarılır, toplanmaz.')]],{tips:minusTip,sol:[`${A} ${M} ${b} ${M} ${c} = ${A-b-c}`,`${A} ${M} (${b} + ${c}) = ${A} ${M} 10 = ${A-10}`]});});
+gen('minus',['o','p'],'m-dice',l=>{const nm=pick(NAMES.slice(0,3));let pp,f,s;do{pp=pair10(2,18,1);f={n:shuffle([...pp,filler(pp,2,18)])};s=sum(f.n);}while(s===35);return NUM(t(`Beim Würfelspiel „Schaffst du die 70?“ hat ${nm} ${f.n[0]}, ${f.n[1]} und ${f.n[2]} Punkte gewürfelt. Wie viele Punkte fehlen bis 70?`,`„70'i yapabilir misin?“ zar oyununda ${nm} ${f.n[0]}, ${f.n[1]} ve ${f.n[2]} puan attı. 70'e kaç puan eksik?`),70-s,{unit:t('Punkte','puan'),tips:TIPS(t('Addiere zuerst die gewürfelten Punkte. Ziehe die Summe dann von 70 ab.','Önce atılan puanları topla. Sonra toplamı 70\'ten çıkar.'),t(`70 ${M} (${f.n.join(' + ')})`,`70 ${M} (${f.n.join(' + ')})`)),trap:[[s,t('Das sind die erreichten Punkte. Gefragt ist, wie viele bis 70 fehlen.','Bunlar kazanılan puanlar. Soru, 70\'e kaç puan eksik olduğu.')]],sol:[`70 ${M} (${f.n.join(' + ')}) = 70 ${M} ${s} = ${70-s}`]});});
+gen('minus',['p','l'],'m-wander',l=>{const A=l==='l'?ri(1,4)*100+NZ(11,89):NZ(31,89),cc=l==='l'?A%100:A%10,b=ri(11,l==='l'?99:59),res=A+b-cc;
+ return NUM(t(`Rechne geschickt: <span class="eq">${A} + ${b} ${M} ${cc}</span>`,`Akıllıca hesapla: <span class="eq">${A} + ${b} ${M} ${cc}</span>`),res,{tips:TIPS(t(`Tausche: Die ${M} ${cc} darf mit ihrem Minuszeichen nach vorne wandern.`,`Yer değiştir: ${M} ${cc}, eksi işaretiyle birlikte öne gidebilir.`),t(`${A} ${M} ${cc} + ${b} = ${A-cc} + ${b}`,`${A} ${M} ${cc} + ${b} = ${A-cc} + ${b}`)),trap:[[A+b+cc,t(`Du hast ${cc} addiert. Das Minus gehört zur ${cc} und wandert beim Tauschen mit.`,`${cc} sayısını topladın. Eksi işareti ${cc} sayısına aittir ve yer değiştirirken onunla gider.`)],[A-b-cc,t(`Du hast ${b} abgezogen. Vor ${b} steht aber ein Plus.`,`${b} sayısını çıkardın. Ama ${b} sayısının önünde artı var.`)]],sol:[`${A} + ${b} ${M} ${cc} = ${A} ${M} ${cc} + ${b}`,`= ${A-cc} + ${b} = ${res}`]});});
+gen('minus',['p','l'],'m-trap',l=>{const A=l==='l'?ri(150,400):10*ri(5,9),b=ri(11,29),c=ri(3,9),ok=Math.random()<.4;
+ const st=ok?`${A} ${M} ${b} ${M} ${c} = ${A} ${M} (${b} + ${c})`:`${A} ${M} ${b} + ${c} = ${A} ${M} (${b} + ${c})`;
+ const R=t('Ja, das stimmt.','Evet, doğru.'),F=t('Nein, das stimmt nicht.','Hayır, doğru değil.');
+ return MC(t(`Stimmt das? <span class="eq">${st}</span>`,`Doğru mu? <span class="eq">${st}</span>`),ok?R:F,[[ok?F:R,ok?t(`Rechne nach: Beide Seiten ergeben ${A-b-c}. Beide Zahlen werden abgezogen.`,`Kontrol et: İki taraf da ${A-b-c}. İki sayı da çıkarılıyor.`):t(`Links wird ${c} addiert, rechts wird ${c} abgezogen. Links: ${A-b+c}, rechts: ${A-b-c}.`,`Solda ${c} toplanıyor, sağda ${c} çıkarılıyor. Sol: ${A-b+c}, sağ: ${A-b-c}.`)]],{tips:TIPS(t('Rechne beide Seiten aus.','İki tarafı da hesapla.'),t('Achte auf das Zeichen vor der letzten Zahl.','Son sayının önündeki işarete dikkat et.')),sol:ok?[`${A} ${M} ${b} ${M} ${c} = ${A-b-c}`,`${A} ${M} ${b+c} = ${A-b-c}`]:[`${A} ${M} ${b} + ${c} = ${A-b+c}`,`${A} ${M} (${b} + ${c}) = ${A-b-c}`]});});
+gen('minus','l','m-mix',()=>{const h=ri(1,3)*100,x=ri(11,89),A=h+x,p=pair100(),res=h+100;return NUM(t(`Rechne geschickt: <span class="eq">${A} + ${p[0]} ${M} ${x} + ${p[1]}</span>`,`Akıllıca hesapla: <span class="eq">${A} + ${p[0]} ${M} ${x} + ${p[1]}</span>`),res,{tips:TIPS(t(`Welche Zahl hat dieselbe Endung wie ${A}? Ziehe sie zuerst ab.`,`Hangi sayının son iki basamağı ${A} ile aynı? Önce onu çıkar.`),t(`(${A} ${M} ${x}) + (${p[0]} + ${p[1]})`,`(${A} ${M} ${x}) + (${p[0]} + ${p[1]})`)),trap:[[A+p[0]+x+p[1],t(`Du hast ${x} addiert. Vor ${x} steht ein Minus.`,`${x} sayısını topladın. ${x} sayısının önünde eksi var.`)]],sol:[`(${A} ${M} ${x}) + (${p[0]} + ${p[1]})`,`= ${h} + 100 = ${res}`]});});
+gen('minus','l','m-bracket',()=>{const A=ri(60,99),b=ri(11,29),c=ri(3,9),R=A-b-c;return MC(t(`Wo müssen Klammern stehen, damit das Ergebnis ${R} ist?<br><span class="eq">${A} ${M} ${b} + ${c}</span>`,`Sonucun ${R} olması için parantezler nereye konmalı?<br><span class="eq">${A} ${M} ${b} + ${c}</span>`),`${A} ${M} (${b} + ${c})`,[[`(${A} ${M} ${b}) + ${c}`,t(`Das ergibt ${A-b+c}. Diese Klammer ändert nichts.`,`Bu ${A-b+c} eder. Bu parantez hiçbir şey değiştirmez.`)],[`${A} ${M} ${b} + ${c} ${t('(ohne Klammer)','(parantezsiz)')}`,t(`Ohne Klammer rechnest du von links nach rechts: ${A-b+c}.`,`Parantezsiz soldan sağa hesaplarsın: ${A-b+c}.`)]],{tips:TIPS(t(`${R} ist kleiner als ${A} ${M} ${b}. Also muss ${c} auch abgezogen werden.`,`${R} sayısı, ${A} ${M} ${b} sonucundan küçük. Yani ${c} de çıkarılmalı.`),t('Eine Klammer hinter dem Minus macht aus „+“ ein „abziehen“.','Eksiden sonraki parantez „+“yı „çıkarmaya“ çevirir.')),sol:[`${A} ${M} (${b} + ${c}) = ${A} ${M} ${b+c} = ${R}`]});});
+
+/* ===== Station 6: Stimmt das? ===== */
+const RV=t('Richtig. Die Summanden wurden nur vertauscht.','Doğru. Toplananların sadece yeri değişti.'),RB=t('Richtig. Die Summanden wurden anders zusammengefasst.','Doğru. Toplananlar farklı gruplandı.'),FT=t('Falsch. Bei Minus darf man nicht tauschen.','Yanlış. Çıkarmada yer değiştirilemez.'),FK=t('Falsch. Bei Minus darf man die Klammer nicht verschieben.','Yanlış. Çıkarmada parantez kaydırılamaz.'),RM=t('Richtig. Beide Zahlen werden abgezogen.','Doğru. İki sayı da çıkarılıyor.'),FP=t('Falsch. Die Klammer macht aus „+“ ein „abziehen“.','Yanlış. Parantez „+“yı „çıkarmaya“ çevirir.');
+const STW={[RV]:t('Hier wurde nicht nur vertauscht.','Burada sadece yer değiştirilmedi.'),[RB]:t('Hier wurde nicht nur die Klammer verschoben.','Burada sadece parantez kaydırılmadı.'),[FT]:t('Rechne beide Seiten aus. Kommt dasselbe heraus?','İki tarafı da hesapla. Aynı sonuç çıkıyor mu?'),[FK]:t('Rechne beide Seiten aus. Kommt dasselbe heraus?','İki tarafı da hesapla. Aynı sonuç çıkıyor mu?'),[RM]:t('Schau genau auf die Rechenzeichen.','İşlem işaretlerine dikkatle bak.'),[FP]:t('Schau genau auf die Rechenzeichen.','İşlem işaretlerine dikkatle bak.')};
+function stmt(st,right,pool,sol){const w=shuffle(pool.filter(x=>x!==right)).slice(0,2);return MC(t(`Stimmt das? Begründe.<br><span class="eq">${st}</span>`,`Doğru mu? Nedenini seç.<br><span class="eq">${st}</span>`),right,w.map(x=>[x,STW[x]]),{tips:TIPS(t('Rechne beide Seiten aus.','İki tarafı da hesapla.'),t('Gibt es ein Minus? Bei Minus gelten Vertauschungs- und Verbindungsgesetz nicht.','Eksi var mı? Çıkarmada değişme ve birleşme özellikleri geçerli değildir.')),sol});}
+gen('true',['o','p','l'],'s-v',l=>{const r=l==='l'?[101,499]:[11,99],a=ri(...r),b=ri(...r),c=ri(...r);return stmt(`${a} + ${b} + ${c} = ${a} + ${c} + ${b}`,RV,[RV,RB,FT,FK],[t(`Beide Seiten: ${a+b+c}.`,`İki taraf da: ${a+b+c}.`)]);});
+gen('true',['o','p','l'],'s-b',l=>{const r=l==='l'?[101,499]:[11,99],a=ri(...r),b=ri(...r),c=ri(...r);return stmt(`(${a} + ${b}) + ${c} = ${a} + (${b} + ${c})`,RB,[RV,RB,FT,FK],[t(`Beide Seiten: ${a+b+c}.`,`İki taraf da: ${a+b+c}.`)]);});
+gen('true',['o','p','l'],'s-ft',l=>{const a=ri(30,99),b=ri(11,a-5);return stmt(`${a} ${M} ${b} = ${b} ${M} ${a}`,FT,[RV,RB,FT],[t(`${a} ${M} ${b} = ${a-b}. ${b} ${M} ${a} geht mit natürlichen Zahlen nicht.`,`${a} ${M} ${b} = ${a-b}. ${b} ${M} ${a} doğal sayılarla yapılamaz.`)]);});
+gen('true',['p','l'],'s-fk',l=>{const a=10*ri(5,9),b=ri(15,29),c=ri(3,9);return stmt(`(${a} ${M} ${b}) ${M} ${c} = ${a} ${M} (${b} ${M} ${c})`,FK,[RB,FT,FK],[t(`Links: ${a-b-c}. Rechts: ${a-(b-c)}.`,`Sol: ${a-b-c}. Sağ: ${a-(b-c)}.`)]);});
+gen('true',['p','l'],'s-rm',l=>{const a=ri(60,99),b=ri(11,29),c=ri(3,19);return stmt(`${a} ${M} ${b} ${M} ${c} = ${a} ${M} ${c} ${M} ${b}`,RM,[RM,FT,FK],[t(`Beide Seiten: ${a-b-c}. Das Minus wandert mit der Zahl.`,`İki taraf da: ${a-b-c}. Eksi işareti sayıyla birlikte gider.`)]);});
+gen('true','l','s-fp',()=>{const a=ri(60,99),b=ri(11,29),c=ri(3,9);return stmt(`${a} ${M} ${b} + ${c} = ${a} ${M} (${b} + ${c})`,FP,[RM,FP,RB],[t(`Links: ${a-b+c}. Rechts: ${a-b-c}.`,`Sol: ${a-b+c}. Sağ: ${a-b-c}.`)]);});
+
+const TOPICS=[
+ {id:'law',name:t('Gesetze erkennen','Özellikleri tanı'),sub:t('Vertauschen, verbinden oder Klammer ausrechnen?','Yer değiştirme, birleştirme mi, parantez hesaplama mı?')},
+ {id:'part',name:t('Partner finden','Eşini bul'),sub:t('Zahlen, die zusammen einen vollen Zehner ergeben','Toplamı tam onluk olan sayılar')},
+ {id:'tree',name:t('Rechenbäume','İşlem ağaçları'),sub:t('Welcher Weg ist vorteilhaft?','Hangi yol avantajlı?')},
+ {id:'gap',name:t('Lücken füllen','Boşlukları doldur'),sub:t('Schritt für Schritt geschickt rechnen','Adım adım akıllıca hesapla')},
+ {id:'minus',name:t('Plus und Minus im Term','Aynı işlemde artı ve eksi'),sub:t('Das Rechenzeichen gehört zur Zahl dahinter','İşlem işareti arkasındaki sayıya aittir')},
+ {id:'true',name:t('Stimmt das?','Doğru mu?'),sub:t('Prüfen und begründen','Kontrol et ve nedenini söyle')}
+];
+
+/* ---------- Forscheraufträge (Erarbeitung) ---------- */
+const INFO=(title,html,x)=>Object.assign({type:'info',title,q:html},x||{});
+const RULE=(id,name,parts,formula)=>({type:'rule',id,name,parts,formula,q:t('Vervollständige deinen Merksatz. Tippe die passenden Wörter an.','Kuralını tamamla. Uygun kelimelere dokun.'),tips:TIPS(t('Schau dir deine Ergebnisse von eben noch einmal an.','Az önceki sonuçlarına tekrar bak.'),t('Bei Plus ist die Reihenfolge egal. Bei Minus nicht.','Toplamada sıra önemli değil. Çıkarmada önemli.'))});
+/* parts: Strings und Lücken [richtig, falsch] */
+function FORSCH(){return [
+ {id:'f1',name:t('Zahlen tauschen','Sayıların yerini değiştirmek'),sub:t('Darf ich die Reihenfolge ändern?','Sırayı değiştirebilir miyim?'),steps:()=>{const a=ri(13,48),b=ri(21,67),c=ri(11,39),d=ri(14,58),e=ri(3,9),x=ri(12,19),y=ri(3,8);return[
+  MULTI(t('Rechne beide Aufgaben aus.','İki işlemi de hesapla.'),[{lab:`${a} + ${b} =`,ans:a+b},{lab:`${b} + ${a} =`,ans:a+b}],{tips:TIPS(t('Rechne erst die Zehner, dann die Einer.','Önce onlukları, sonra birlikleri topla.'),t(`${a} + ${b - b%10} = ${a+b-b%10}, dann + ${b%10}.`,`${a} + ${b - b%10} = ${a+b-b%10}, sonra + ${b%10}.`))}),
+  MULTI(t('Jetzt mit drei Zahlen. Rechne beide aus.','Şimdi üç sayıyla. İkisini de hesapla.'),[{lab:`${c} + ${d} + ${e} =`,ans:c+d+e},{lab:`${e} + ${c} + ${d} =`,ans:c+d+e}],{tips:TIPS(t('Rechne von links nach rechts.','Soldan sağa hesapla.'),t(`${c} + ${d} = ${c+d}`,`${c} + ${d} = ${c+d}`))}),
+  MC(t('Was fällt dir auf?','Ne fark ettin?'),t('Die Ergebnisse sind gleich, obwohl die Summanden vertauscht sind.','Toplananların yeri değişse de sonuçlar aynı.'),[[t('Das zweite Ergebnis ist immer größer.','İkinci sonuç her zaman daha büyük.'),t('Vergleiche deine Ergebnisse noch einmal. Sie sind gleich.','Sonuçlarını tekrar karşılaştır. Aynılar.')],[t('Die Ergebnisse sind nur zufällig gleich.','Sonuçlar sadece tesadüfen aynı.'),t('Das ist kein Zufall. Es klappt bei jeder Plusaufgabe.','Bu tesadüf değil. Her toplama işleminde işe yarar.')]],{tips:TIPS(t('Vergleiche die Ergebnisse von eben.','Az önceki sonuçları karşılaştır.'),t('Welche Zahlen kamen vor? Welche Ergebnisse?','Hangi sayılar vardı? Hangi sonuçlar?'))}),
+  NUM(t(`Und bei Minus? Rechne: <span class="eq">${x} ${M} ${y}</span>`,`Peki çıkarmada? Hesapla: <span class="eq">${x} ${M} ${y}</span>`),x-y,{tips:TIPS(t('Ziehe die kleine Zahl von der großen ab.','Küçük sayıyı büyük sayıdan çıkar.'),t(`${x} ${M} ${y}: Zähle von ${y} bis ${x}.`,`${x} ${M} ${y}: ${y} sayısından ${x} sayısına kadar say.`))}),
+  MC(t(`Ist <span class="eq">${y} ${M} ${x}</span> dasselbe wie <span class="eq">${x} ${M} ${y}</span>?`,`<span class="eq">${y} ${M} ${x}</span>, <span class="eq">${x} ${M} ${y}</span> ile aynı mı?`),t(`Nein. ${y} ${M} ${x} kann ich gar nicht rechnen.`,`Hayır. ${y} ${M} ${x} işlemini hiç yapamam.`),[[t('Ja, man darf bei Minus auch tauschen.','Evet, çıkarmada da yer değiştirilebilir.'),t(`Versuche es: Von ${y} kannst du ${x} nicht abziehen. Es fehlt etwas.`,`Dene: ${y} sayısından ${x} sayısını çıkaramazsın. Yetmez.`)]],{tips:TIPS(t(`Hast du ${y} Bonbons, kannst du ${x} verschenken?`,`${y} şekerin varsa ${x} tane verebilir misin?`),t('Bei Minus kommt es auf die Reihenfolge an.','Çıkarmada sıra önemlidir.'))}),
+  RULE('v',LAWF.v,[t('In einer ','Bir '),[t('Summe','toplamda'),t('Differenz','farkta')],t(' darf ich die ',' '),[t('Summanden','toplananların'),t('Ergebnisse','sonuçların')],t(' ',' yerini '),[t('vertauschen','değiştirebilirim'),t('weglassen','silebilirim')],t('. Bei Minus gilt das ','. Çıkarmada bu '),[t('nicht','geçerli değildir'),t('auch','de geçerlidir')],'.'],'a + b = b + a')];}},
+ {id:'f2',name:t('Klammern verschieben','Parantezleri kaydırmak'),sub:t('Darf ich anders zusammenfassen?','Farklı gruplayabilir miyim?'),steps:()=>{const p=pair10(11,39,1),a=filler(p,11,49),A=10*ri(3,6),b=ri(5,9),c=ri(2,4);const n=[a,p[0],p[1]];return[
+  INFO(t('Klammerregel','Parantez kuralı'),t(`Was in der Klammer steht, rechnest du <b>zuerst</b>. Der Rechenbaum zeigt es: Was oben verbunden wird, kommt zuerst.`,`Parantezin içindekini <b>önce</b> hesaplarsın. İşlem ağacı bunu gösterir: Üstte birleşen önce gelir.`),{fig:`<div class="pair2">${tree([7,3,5],'L',null,'10','15')}${tree([7,3,5],'R',null,'8','15')}</div><p class="small muted">${t('Links: (7 + 3) + 5. Rechts: 7 + (3 + 5).','Sol: (7 + 3) + 5. Sağ: 7 + (3 + 5).')}</p>`}),
+  MULTI(t('Rechne beide Rechenbäume aus.','İki işlem ağacını da hesapla.'),[{lab:`(${a} + ${p[0]}) + ${p[1]} =`,ans:sum(n)},{lab:`${a} + (${p[0]} + ${p[1]}) =`,ans:sum(n)}],{fig:`<div class="pair2">${tree(n,'L',null,'?','?')}${tree(n,'R',null,'?','?')}</div>`,tips:TIPS(t('Rechne zuerst die Klammer.','Önce parantezi hesapla.'),t(`${a} + ${p[0]} = ${a+p[0]} und ${p[0]} + ${p[1]} = ${p[0]+p[1]}`,`${a} + ${p[0]} = ${a+p[0]} ve ${p[0]} + ${p[1]} = ${p[0]+p[1]}`))}),
+  MC(t('Beide Ergebnisse sind gleich. Welcher Weg war leichter?','İki sonuç da aynı. Hangi yol daha kolaydı?'),`${a} + (${p[0]} + ${p[1]})`,[[`(${a} + ${p[0]}) + ${p[1]}`,t(`Hier rechnest du zuerst ${a} + ${p[0]} = ${a+p[0]}. Das ist keine runde Zahl.`,`Burada önce ${a} + ${p[0]} = ${a+p[0]} hesaplarsın. Bu yuvarlak bir sayı değil.`)]],{tips:TIPS(t('Welche Klammer ergibt eine runde Zahl?','Hangi parantez yuvarlak bir sayı verir?'),t(`${p[0]} + ${p[1]} = ${p[0]+p[1]}`,`${p[0]} + ${p[1]} = ${p[0]+p[1]}`)),sol:[t(`${p[0]} + ${p[1]} = ${p[0]+p[1]} ist ein voller Zehner. Damit rechnest du leicht weiter.`,`${p[0]} + ${p[1]} = ${p[0]+p[1]} tam onluktur. Bununla kolayca devam edersin.`)]}),
+  MULTI(t('Und bei Minus? Rechne beide aus.','Peki çıkarmada? İkisini de hesapla.'),[{lab:`(${A} ${M} ${b}) ${M} ${c} =`,ans:A-b-c},{lab:`${A} ${M} (${b} ${M} ${c}) =`,ans:A-b+c}],{tips:TIPS(t('Rechne immer zuerst die Klammer.','Her zaman önce parantezi hesapla.'),t(`Links: ${A} ${M} ${b} = ${A-b}. Rechts: ${b} ${M} ${c} = ${b-c}.`,`Sol: ${A} ${M} ${b} = ${A-b}. Sağ: ${b} ${M} ${c} = ${b-c}.`))}),
+  MC(t('Was fällt dir bei Minus auf?','Çıkarmada ne fark ettin?'),t('Die Ergebnisse sind verschieden. Bei Minus darf ich die Klammer nicht verschieben.','Sonuçlar farklı. Çıkarmada parantezi kaydıramam.'),[[t('Die Ergebnisse sind gleich, wie bei Plus.','Sonuçlar toplamadaki gibi aynı.'),t(`Schau noch einmal: ${A-b-c} und ${A-b+c} sind verschieden.`,`Tekrar bak: ${A-b-c} ve ${A-b+c} farklı.`)]],{tips:TIPS(t('Vergleiche deine beiden Ergebnisse.','İki sonucunu karşılaştır.'),t('Sind sie gleich oder verschieden?','Aynı mı, farklı mı?'))}),
+  RULE('b',LAWF.b,[t('In einer ','Bir '),[t('Summe','toplamda'),t('Differenz','farkta')],t(' darf ich die Summanden beliebig mit ',' toplananları istediğim gibi '),[t('Klammern','parantezlerle'),t('Strichen','çizgilerle')],t(' zusammenfassen. Bei der ',' gruplayabilirim. '),[t('Subtraktion','Çıkarmada'),t('Addition','Toplamada')],t(' gilt das nicht.',' bu geçerli değildir.')],'a + b + c = a + (b + c)')];}},
+ {id:'f3',name:t('Geschickt rechnen','Akıllıca hesaplamak'),sub:t('Beide Gesetze zusammen nutzen','İki özelliği birlikte kullanmak'),steps:()=>{const f1=fset('o'),f2=fset('p');return[
+  INFO(t('Rechenvorteile','Hesaplama kolaylıkları'),t('Mit beiden Gesetzen darfst du in einer Summe <b>tauschen</b> und <b>Klammern setzen</b>. So findest du Partnerzahlen, die zusammen einen vollen Zehner ergeben.','İki özellikle bir toplamda <b>yer değiştirebilir</b> ve <b>parantez koyabilirsin</b>. Böylece toplamı tam onluk olan eş sayıları bulursun.'),{fig:`<div class="steps"><div><span class="eq">38 + 27 + 52</span></div><div><span class="eq">= 38 + 52 + 27</span> <span class="lw c-o">${LAW.v}</span></div><div><span class="eq">= (38 + 52) + 27</span> <span class="lw c-p">${LAW.b}</span></div><div><span class="eq">= 90 + 27</span> <span class="lw c-l">${LAW.k}</span></div><div><span class="eq">= 117</span></div></div>`}),
+  {type:'pair',q:t(`Probiere es selbst: <span class="eq">${term(f1.n)}</span><br>Tippe zwei Zahlen an, die du zuerst addierst.`,`Kendin dene: <span class="eq">${term(f1.n)}</span><br>Önce toplayacağın iki sayıya dokun.`),n:f1.n,pairs:f1.pairs,base:10,tips:pairTip(10),sol:[`${f1.pairs[0][0]} + ${f1.pairs[0][1]} = ${f1.pairs[0][0]+f1.pairs[0][1]}`,`= ${sum(f1.n)}`]},
+  {type:'pair',q:t(`Jetzt mit vier Zahlen: <span class="eq">${term(f2.n)}</span>`,`Şimdi dört sayıyla: <span class="eq">${term(f2.n)}</span>`),n:f2.n,pairs:f2.pairs,base:10,tips:pairTip(10),sol:[f2.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(', '),`= ${sum(f2.n)}`]},
+  RULE('g',t('Geschickt rechnen','Akıllıca hesaplamak'),[t('Es ist vorteilhaft, zuerst Zahlen zu addieren, die zusammen einen ','Önce toplamı '),[t('vollen Zehner','tam onluk'),t('ungeraden Wert','tek sayı')],t(' ergeben. Dafür darf ich ',' olan sayıları toplamak avantajlıdır. Bunun için '),[t('tauschen und Klammern setzen','yer değiştirip parantez koyabilirim'),t('nur von links nach rechts rechnen','sadece soldan sağa hesaplayabilirim')],'.'],'38 + 27 + 52 = (38 + 52) + 27')];}},
+ {id:'f4',name:t('Plus und Minus in einem Term','Aynı işlemde artı ve eksi'),sub:t('Was ist bei Minus erlaubt?','Çıkarmada ne yapılabilir?'),steps:()=>{const A=10*ri(5,8),b=ri(11,19),c=ri(3,9),B=ri(31,79),d=ri(12,29),e=B%10;return[
+  MULTI(t('Würfelspiel aus dem Buch (S. 38): Louis hat 5, 8 und 15 Punkte gewürfelt. Wie viele Punkte fehlen bis 70? Rechne auf zwei Wegen.','Kitaptaki zar oyunu (s. 38): Louis 5, 8 ve 15 puan attı. 70\'e kaç puan eksik? İki yoldan hesapla.'),[{lab:`70 ${M} 5 ${M} 8 ${M} 15 =`,ans:42},{lab:`70 ${M} (5 + 8 + 15) =`,ans:42}],{tips:TIPS(t('Oben: Ziehe nacheinander ab. Unten: Rechne zuerst die Klammer.','Üstte: Sırayla çıkar. Altta: Önce parantezi hesapla.'),t(`5 + 8 + 15 = 28. 70 ${M} 28 = ?`,`5 + 8 + 15 = 28. 70 ${M} 28 = ?`))}),
+  MC(t('Was fällt dir auf?','Ne fark ettin?'),t('Mehrere Minus-Zahlen kann ich erst addieren und dann zusammen abziehen.','Birden fazla çıkarılan sayıyı önce toplayıp sonra birlikte çıkarabilirim.'),[[t('Bei Minus kommt immer etwas anderes heraus.','Çıkarmada her zaman farklı bir sonuç çıkar.'),t('Hier kommt beide Male 42 heraus.','Burada iki seferde de 42 çıkıyor.')],[t('Ich darf das Minus weglassen.','Eksiyi silebilirim.'),t('Nein. Die Zahlen werden weiter abgezogen, nur zusammen.','Hayır. Sayılar yine çıkarılır, sadece birlikte.')]],{tips:TIPS(t('Vergleiche deine zwei Ergebnisse.','İki sonucunu karşılaştır.'),t('Was steht in der Klammer: plus oder minus?','Parantezin içinde ne var: artı mı eksi mi?'))}),
+  MULTI(t('Achtung, jetzt steht ein Plus im Term. Rechne beide aus.','Dikkat, şimdi işlemde bir artı var. İkisini de hesapla.'),[{lab:`${A} ${M} ${b} + ${c} =`,ans:A-b+c},{lab:`${A} ${M} (${b} + ${c}) =`,ans:A-b-c}],{tips:TIPS(t('Oben: von links nach rechts. Unten: zuerst die Klammer.','Üstte: soldan sağa. Altta: önce parantez.'),t(`Oben: ${A} ${M} ${b} = ${A-b}, dann + ${c}.`,`Üstte: ${A} ${M} ${b} = ${A-b}, sonra + ${c}.`))}),
+  MC(t('Warum sind die Ergebnisse verschieden?','Sonuçlar neden farklı?'),t(`Oben wird ${c} addiert. In der Klammer wird ${c} mit abgezogen.`,`Üstte ${c} toplanıyor. Parantezde ise ${c} de çıkarılıyor.`),[[t('Ich habe mich verrechnet.','Hesap hatası yaptım.'),t('Nein, die Ergebnisse sind wirklich verschieden.','Hayır, sonuçlar gerçekten farklı.')],[t('Bei Plus gelten keine Gesetze.','Toplamada hiçbir özellik geçerli değildir.'),t('Doch, bei Plus gelten die Gesetze. Das Problem ist das Minus vor der Klammer.','Hayır, toplamada geçerlidir. Sorun parantezin önündeki eksidir.')]],{tips:TIPS(t(`Was passiert mit ${c} oben, was in der Klammer?`,`${c} üstte ne oluyor, parantezde ne oluyor?`),t('Ein Minus vor der Klammer gilt für alles in der Klammer.','Parantezin önündeki eksi, parantezin içindeki her şey için geçerlidir.'))}),
+  MULTI(t('Das Rechenzeichen wandert mit. Rechne beide aus.','İşlem işareti sayıyla gider. İkisini de hesapla.'),[{lab:`${B} + ${d} ${M} ${e} =`,ans:B+d-e},{lab:`${B} ${M} ${e} + ${d} =`,ans:B+d-e}],{tips:TIPS(t(`Unten: ${B} ${M} ${e} ist leicht.`,`Altta: ${B} ${M} ${e} kolay.`),t(`${B} ${M} ${e} = ${B-e}`,`${B} ${M} ${e} = ${B-e}`))}),
+  RULE('m',t('Plus und Minus in einem Term','Aynı işlemde artı ve eksi'),[t('Mehrere Minus-Zahlen darf ich erst ','Birden fazla çıkarılan sayıyı önce '),[t('addieren','toplayıp'),t('subtrahieren','çıkarıp')],t(' und dann zusammen abziehen. Wenn ich Zahlen tausche, nehme ich das ',' sonra birlikte çıkarabilirim. Sayıların yerini değiştirirken '),[t('Rechenzeichen davor','önündeki işlem işaretini'),t('Rechenzeichen dahinter','arkasındaki işlem işaretini')],t(' mit.',' de götürürüm.')],`70 ${M} 5 ${M} 8 = 70 ${M} (5 + 8)`)];}}
+];}
+const FO=FORSCH();
+
+/* ---------- Fortschritt ---------- */
+const KEY=(typeof APPKEY!=='undefined'?APPKEY:'wissensjagd-rechengesetze-v1')+'-'+LANG;
+let P={cells:{},name:'',kl_:'',stars:0,best:0,err:{},found:{},rules:{},input:false};
+try{P=Object.assign(P,JSON.parse(localStorage.getItem(KEY))||{});}catch(e){}
+const store=()=>{try{localStorage.setItem(KEY,JSON.stringify(P));}catch(e){}};
+const PASS=5,SIZE=6;
+const pips=l=>{const n=LVS.indexOf(l)+1;return `<span class="pips">${[1,2,3].map(i=>`<i class="${i<=n?'f':''}"></i>`).join('')}</span>`;};
+const lvTag=l=>`<span class="lv c-${l}">${pips(l)} ${LV[l]}</span>`;
+const topic=id=>TOPICS.find(x=>x.id===id);
+const passed=(x,l)=>(P.cells[x+l]||{}).best>=PASS;
+function toast(s){const e=$('toast');e.textContent=s;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2400);}
+const VIEWS=['vIn','vLearn','vHome','vMemo','vTask','vRes'];
+function show(v,tab){VIEWS.forEach(x=>$(x).hidden=x!==v);document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===tab));window.scrollTo(0,0);}
+function confetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const w=document.createElement('div');w.className='conf';const col=['var(--o)','var(--p)','var(--l)','var(--accent)','var(--ok)'];for(let i=0;i<36;i++){const s=document.createElement('i');s.style.left=ri(2,98)+'%';s.style.background=pick(col);s.style.animationDelay=ri(0,500)+'ms';s.style.height=ri(14,48)+'px';w.appendChild(s);}document.body.appendChild(w);setTimeout(()=>w.remove(),2400);}
+
+/* ---------- Eine Aufgabe zeigen ---------- */
+let S=null,A=null;
+function render(q,head,cls){A={sel:null,lines:{},pick:{},chips:null,merges:[],pend:[],tip:0};
+ let body='';
+ if(q.type==='mc'){q.ord=q.fixo?q.o.map((_,i)=>i):shuffle(q.o.map((_,i)=>i));body=`<div class="opts ${q.wide?'wide':''}">${q.ord.map((oi,k)=>`<button type="button" class="opt" data-i="${oi}" aria-pressed="false"><span class="optk">${'ABCD'[k]}</span><span class="optb">${fmt(q.o[oi])}</span></button>`).join('')}</div>`;}
+ if(q.type==='num')body=`<div class="numrow"><input class="numin" id="num" inputmode="numeric" autocomplete="off" placeholder="${t('Antwort','Cevap')}" aria-label="${t('Deine Antwort','Cevabın')}"> ${q.unit?`<span>${esc(q.unit)}</span>`:''}</div>`;
+ if(q.type==='multi')body=`<div class="fields2">${q.fields.map((f,i)=>`<label class="fl"><span class="eq">${esc(f.lab)}</span><input class="numin sm" id="m${i}" inputmode="numeric" autocomplete="off" aria-label="${esc(f.lab)}"></label>`).join('')}</div>`;
+ if(q.type==='lines')body=`<div class="lines">${q.rows.map((r,i)=>`<div class="ln"><span class="eq">= ${esc(r[0])}</span>${r[1]?`<div class="seg" data-r="${i}">${['v','b','k'].map(k=>`<button type="button" class="opt sm" data-k="${k}" aria-pressed="false">${LAW[k]}</button>`).join('')}</div>`:''}</div>`).join('')}</div>`;
+ if(q.type==='pair')body=`<div id="pairBox"></div>`;
+ if(q.type==='rule')body=`<p class="rulep">${q.parts.map((p,i)=>typeof p==='string'?esc(p):`<span class="gapw" data-g="${i}">${shuffle(p.map((w,k)=>[w,k])).map(([w,k])=>`<button type="button" class="opt sm" data-k="${k}" aria-pressed="false">${esc(w)}</button>`).join('')}</span>`).join('')}</p><div class="small muted">${t('Das ist das','Bu kural:')} <b>${esc(q.name)}</b>: <span class="eq">${esc(q.formula)}</span></div>`;
+ const box=$('vTask');box.className=cls;
+ box.innerHTML=`<div class="card stack">${head}${q.title?`<h2>${esc(q.title)}</h2>`:''}<div class="qt">${fmt(q.q)}</div>${q.fig?`<div class="fig">${q.fig}</div>`:''}${body}<div id="tipBox" class="stack"></div><div id="fbBox"></div><div class="row" id="acts"></div></div>`;
+ box.querySelectorAll('.opts .opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.sel=+b.dataset.i;box.querySelectorAll('.opts .opt').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+ box.querySelectorAll('.seg').forEach(s=>s.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.lines[s.dataset.r]=b.dataset.k;s.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+ box.querySelectorAll('.gapw').forEach(s=>s.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(A.done)return;A.pick[s.dataset.g]=+b.dataset.k;s.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b));}));
+ if(q.type==='pair'){A.chips=q.n.map((v,i)=>({v,id:i}));pairDraw(q);}
+ box.querySelectorAll('input').forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const b=$('go');if(b)b.click();}}));}
+/* Partnerspiel */
+function pairDraw(q){const el=$('pairBox');if(!el)return;
+ const done=A.chips.length===1;
+ el.innerHTML=`<div class="chips">${A.chips.map(c=>`<button type="button" class="chip ${A.pend.includes(c.id)?'on':''}" data-id="${c.id}" ${done||A.done?'disabled':''}>${c.v}</button>`).join(`<span class="plus">+</span>`)}</div>
+ ${A.pend.length===2?(()=>{const [x,y]=A.pend.map(id=>A.chips.find(c=>c.id===id).v);return `<div class="numrow"><span class="eq">${x} + ${y} =</span><input class="numin sm" id="pin" inputmode="numeric" autocomplete="off" aria-label="${x} + ${y}"><button type="button" class="btn sec sm" id="pok">OK</button></div><div id="pmsg" class="small"></div>`;})():''}
+ ${A.merges.length?`<div class="steps">${A.merges.map(m=>`<div><span class="eq">${m[0]} + ${m[1]} = ${m[0]+m[1]}</span> ${round(m[0]+m[1],q.base)?`<span class="lw c-ok">${t('voller '+(q.base===100?'Hunderter':'Zehner'),'tam '+(q.base===100?'yüzlük':'onluk'))}</span>`:''}</div>`).join('')}</div>`:''}
+ ${done?`<div class="small"><b>${t('Fertig. Ergebnis:','Bitti. Sonuç:')} ${A.chips[0].v}</b> ${t('Tippe auf „Prüfen“.','„Kontrol et“e dokun.')}</div>`:`<div class="small muted">${A.pend.length<2?t('Tippe zwei Zahlen an.','İki sayıya dokun.'):t('Rechne die beiden Zahlen zusammen.','İki sayıyı topla.')}</div>`}`;
+ el.querySelectorAll('.chip').forEach(b=>b.onclick=()=>{const id=+b.dataset.id;if(A.pend.includes(id))A.pend=A.pend.filter(x=>x!==id);else if(A.pend.length<2)A.pend.push(id);pairDraw(q);if(A.pend.length===2)setTimeout(()=>{const i=$('pin');if(i)i.focus();},30);});
+ const ok=$('pok');if(ok){const go=()=>{const [x,y]=A.pend.map(id=>A.chips.find(c=>c.id===id));const v=parseNum($('pin').value);if(v!==x.v+y.v){$('pmsg').innerHTML=`<span class="badtx">${t(`Noch nicht. Rechne ${x.v} + ${y.v} nochmal: erst die Zehner, dann die Einer.`,`Henüz değil. ${x.v} + ${y.v} işlemini tekrar hesapla: önce onluklar, sonra birlikler.`)}</span>`;return;}
+  A.merges.push([x.v,y.v]);const pos=A.chips.indexOf(x);A.chips=A.chips.filter(c=>c!==x&&c!==y);A.chips.splice(Math.min(pos,A.chips.length),0,{v:x.v+y.v,id:100+A.merges.length});A.pend=[];pairDraw(q);};
+  ok.onclick=go;$('pin').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});}}
+function answered(q){if(q.type==='mc')return A.sel!=null;if(q.type==='num')return $('num').value.trim()!=='';if(q.type==='multi')return q.fields.every((_,i)=>$('m'+i).value.trim()!=='');if(q.type==='lines')return q.rows.every((r,i)=>!r[1]||A.lines[i]);if(q.type==='pair')return A.chips.length===1;if(q.type==='rule')return q.parts.every((p,i)=>typeof p==='string'||A.pick[i]!=null);return true;}
+function grade(q){
+ if(q.type==='mc'){const ok=A.sel===q.c,tx=i=>q.ot?q.ot[i]:plain(q.o[i]);return{ok,txt:A.sel==null?'–':tx(A.sel),right:tx(q.c),msgs:!ok&&A.sel!=null&&q.why&&q.why[A.sel]?[q.why[A.sel]]:[]};}
+ if(q.type==='num'){const raw=$('num').value,v=parseNum(raw),ok=v===q.ans,tr=(q.trap||[]).find(x=>x[0]===v);return{ok,txt:raw.trim(),right:q.ans+(q.unit?' '+q.unit:''),msgs:!ok&&tr?[tr[1]]:[]};}
+ if(q.type==='multi'){const v=q.fields.map((_,i)=>parseNum($('m'+i).value)),bad=[],msgs=[];v.forEach((x,i)=>{if(x!==q.fields[i].ans){bad.push(i);const tr=(q.trap2||[]).find(z=>z[0]===i&&z[1]===x);if(tr)msgs.push(tr[2]);}});
+  if(q.fields.length===2&&q.fields[0].ans===q.fields[1].ans&&bad.length===1&&!msgs.length)msgs.push(t('Schau genau: Beide Aufgaben haben dasselbe Ergebnis. Prüfe die andere noch einmal.','Dikkat: İki işlemin sonucu aynı. Diğerini tekrar kontrol et.'));
+  if(bad.length&&!msgs.length)msgs.push(t(`Prüfe ${bad.map(i=>q.fields[i].lab.replace(/=\s*$/,'').trim()).join(' und ')}.`,`Kontrol et: ${bad.map(i=>q.fields[i].lab.replace(/=\s*$/,'').trim()).join(' ve ')}.`));
+  return{ok:!bad.length,bad,txt:v.map(x=>isNaN(x)?'–':x).join(' · '),right:q.fields.map(f=>f.lab.replace(/=\s*$/,'').trim()+' = '+f.ans).join(', '),msgs};}
+ if(q.type==='lines'){const msgs=[];let ok=true;q.rows.forEach((r,i)=>{if(r[1]&&A.lines[i]!==r[1]){ok=false;msgs.push(t(`Zeile „= ${r[0]}“: Das ist das ${LAW[r[1]]}, nicht das ${LAW[A.lines[i]]}.`,`„= ${r[0]}“ satırı: Bu ${LAW[r[1]]}, ${LAW[A.lines[i]]} değil.`));}});return{ok,txt:q.rows.filter(r=>r[1]).map((r,i)=>LAW[A.lines[i]]||'–').join(' · '),right:q.rows.filter(r=>r[1]).map(r=>LAW[r[1]]).join(' · '),msgs};}
+ if(q.type==='pair'){const k=q.pairs.length,first=A.merges.slice(0,k),good=first.every(m=>round(m[0]+m[1],q.base));const msgs=[];
+  if(!good){const m=first.find(m=>!round(m[0]+m[1],q.base));msgs.push(t(`Du hast ${m[0]} + ${m[1]} = ${m[0]+m[1]} gerechnet. Das ist kein voller ${q.base===100?'Hunderter':'Zehner'}. Das Ergebnis stimmt, aber es geht leichter.`,`${m[0]} + ${m[1]} = ${m[0]+m[1]} hesapladın. Bu tam ${q.base===100?'yüzlük':'onluk'} değil. Sonuç doğru ama daha kolay bir yol var.`));msgs.push(t(`Geschickter: ${q.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(' und ')}.`,`Daha akıllıca: ${q.pairs.map(p=>`${p[0]} + ${p[1]} = ${p[0]+p[1]}`).join(' ve ')}.`));}
+  return{ok:good,txt:A.merges.map(m=>m[0]+' + '+m[1]).join(', '),right:q.pairs.map(p=>p[0]+' + '+p[1]).join(', '),msgs};}
+ if(q.type==='rule'){let ok=true;q.parts.forEach((p,i)=>{if(typeof p!=='string'&&A.pick[i]!==0)ok=false;});return{ok,txt:'',right:ruleText(q),msgs:ok?[]:[t('Ein Wort passt noch nicht. Schau dir deine Ergebnisse von eben an.','Bir kelime henüz uymuyor. Az önceki sonuçlarına bak.')]};}
+ return{ok:true,msgs:[]};}
+const ruleText=q=>q.parts.map(p=>typeof p==='string'?p:p[0]).join('');
+function lock(q,g){A.done=true;const box=$('vTask');box.querySelectorAll('input').forEach(i=>i.disabled=true);
+ if(q.type==='mc')box.querySelectorAll('.opts .opt').forEach(b=>{const i=+b.dataset.i;if(i===q.c)b.classList.add('good');else if(i===A.sel)b.classList.add('wrong');b.disabled=true;});
+ if(q.type==='num')$('num').classList.add(g.ok?'good':'wrong');
+ if(q.type==='multi')q.fields.forEach((f,i)=>{const e=$('m'+i),o=parseNum(e.value)===f.ans;e.classList.add(o?'good':'wrong');if(!o)e.insertAdjacentHTML('afterend',`<span class="fix">${f.ans}</span>`);});
+ if(q.type==='lines')box.querySelectorAll('.seg').forEach(s=>{const r=q.rows[+s.dataset.r][1];s.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.k===r)b.classList.add('good');else if(b.getAttribute('aria-pressed')==='true')b.classList.add('wrong');});});
+ if(q.type==='rule')box.querySelectorAll('.gapw').forEach(s=>s.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.dataset.k==='0')b.classList.add('good');else if(b.getAttribute('aria-pressed')==='true')b.classList.add('wrong');}));
+ if(q.type==='pair')box.querySelectorAll('.chip').forEach(b=>b.disabled=true);}
+const RIGHT=[t('Richtig!','Doğru!'),t('Genau!','Aynen!'),t('Stark!','Harika!'),t('Super gemacht!','Çok iyi!'),t('Das sitzt!','Tam isabet!')];
+function fbHtml(q,g){const sol=(q.sol||[]).filter(Boolean);
+ if(q.type==='info')return'';
+ if(q.type==='rule')return `<div class="fb ${g.ok?'y':'n'}"><b class="h">${g.ok?t('Dein Merksatz ist fertig!','Kuralın hazır!'):t('Fast. So heißt der Merksatz:','Neredeyse. Kural şöyle:')}</b>${(g.msgs||[]).map(m=>`<div>${m}</div>`).join('')}<div class="merk">${esc(ruleText(q))}</div><div class="small">${t('Er steht jetzt in deinem Merkheft.','Artık not defterinde.')}</div></div>`;
+ return `<div class="fb ${g.ok?'y':'n'}"><b class="h">${g.ok?pick(RIGHT):g.idk?t('So geht es:','Şöyle yapılır:'):t('Noch nicht ganz.','Henüz tam değil.')}</b>${(g.msgs||[]).length?`<ul class="st3">${g.msgs.map(m=>`<li>${fmt(m)}</li>`).join('')}</ul>`:''}${!g.ok&&g.right&&q.type!=='multi'?`<div>${t('Richtig ist:','Doğrusu:')} <b>${esc(g.right)}</b></div>`:''}${sol.length&&!g.ok?`<div><b>${t('So geht es richtig:','Doğru yol:')}</b></div><ol class="st3">${sol.map(s=>`<li>${fmt(s)}</li>`).join('')}</ol>`:''}${g.ok&&sol.length?`<div class="small">${fmt(sol[sol.length-1])}</div>`:''}</div>`;}
+function tipButtons(q){const tips=q.tips||[];if(!tips.length)return '';return `<button type="button" class="btn sec" id="tip">${t('Tippkarte 1','İpucu kartı 1')}</button>`;}
+function bindTips(q){const b=$('tip');if(!b)return;b.onclick=()=>{const tips=q.tips||[];if(A.tip>=tips.length)return;const n=A.tip+1;$('tipBox').insertAdjacentHTML('beforeend',`<div class="tip tc${n}"><b>${t('Tippkarte','İpucu kartı')} ${n}:</b> ${fmt(tips[A.tip])}</div>`);A.tip++;if(S)S.tips=(S.tips||0)+1;if(A.tip<tips.length)b.textContent=t('Tippkarte ','İpucu kartı ')+(A.tip+1);else b.hidden=true;};}
+
+/* ---------- Input ---------- */
+const INSTEPS=()=>[
+ {h:t('Schaffst du die 70?','70\'i yapabilir misin?'),b:t(`<p>Erinnerst du dich an das Würfelspiel aus dem Buch (S. 38)? Louis hat <b>5</b>, <b>8</b> und <b>15</b> Punkte gewürfelt.</p><p>Wie viele Punkte fehlen ihm noch bis 70?</p>`,`<p>Kitaptaki zar oyununu hatırlıyor musun (s. 38)? Louis <b>5</b>, <b>8</b> ve <b>15</b> puan attı.</p><p>70'e kaç puanı eksik?</p>`),reveal:`<div class="steps"><div><span class="eq">70 ${M} 5 ${M} 8 ${M} 15 = 42</span></div><div><span class="eq">70 ${M} (5 + 8 + 15) = 70 ${M} 28 = 42</span></div></div><p>${t('Zwei Wege, ein Ergebnis. Heute findest du heraus, warum.','İki yol, tek sonuç. Bugün nedenini keşfedeceksin.')}</p>`},
+ {h:t('Die Fachwörter','Terimler'),b:`<div class="vocab"><div><span class="eq"><b class="c1">23</b> + <b class="c2">14</b> = <b class="c3">37</b></span><div class="small"><span class="c1">${t('Summand','toplanan')}</span> + <span class="c2">${t('Summand','toplanan')}</span> = <span class="c3">${t('Wert der Summe','toplam')}</span></div></div><div><span class="eq"><b class="c1">50</b> ${M} <b class="c2">12</b> = <b class="c3">38</b></span><div class="small"><span class="c1">${t('Minuend','eksilen (Minuend)')}</span> ${M} <span class="c2">${t('Subtrahend','çıkan (Subtrahend)')}</span> = <span class="c3">${t('Wert der Differenz','fark (Differenz)')}</span></div></div></div><p>${t('Einen Rechenausdruck wie <span class="eq">70 − 5 − 8</span> nennt man <b>Term</b>.','<span class="eq">70 − 5 − 8</span> gibi bir işleme <b>Term</b> (işlem ifadesi) denir.')}</p>`},
+ {h:t('Die Klammerregel','Parantez kuralı'),b:t(`<p>Was in der <b>Klammer</b> steht, rechnest du <b>zuerst</b>.</p><p>Ohne Klammer rechnest du von <b>links nach rechts</b>.</p>`,`<p><b>Parantezin</b> içindekini <b>önce</b> hesaplarsın.</p><p>Parantez yoksa <b>soldan sağa</b> hesaplarsın.</p>`),fig:`<div class="pair2">${tree([70,5,8],'R',['+',M],'13','57')}</div><p class="small muted">${t('Rechenbaum zu','İşlem ağacı:')} <span class="eq">70 ${M} (5 + 8)</span></p>`},
+ {h:t('Dein Auftrag','Görevin'),b:t(`<p>Gibt es Rechentricks, mit denen du schneller rechnest? Darfst du Zahlen <b>tauschen</b>? Darfst du <b>Klammern</b> anders setzen?</p><p>Das findest du jetzt in <b>4 Forscheraufträgen</b> selbst heraus. Am Ende hast du vier Merksätze in deinem Merkheft.</p><p>Wenn du nicht weiterkommst, nimm eine <b>Tippkarte</b>.</p>`,`<p>Daha hızlı hesaplamanı sağlayan hileler var mı? Sayıların <b>yerini değiştirebilir</b> misin? <b>Parantezleri</b> farklı koyabilir misin?</p><p>Bunu şimdi <b>4 araştırma görevinde</b> kendin keşfedeceksin. Sonunda not defterinde dört kural olacak.</p><p>Takılırsan bir <b>ipucu kartı</b> al.</p>`)}];
+let IN=0;
+function inputView(){const st=INSTEPS(),s=st[IN],last=IN===st.length-1;
+ $('vIn').innerHTML=`<div class="card stack"><div class="qhead"><b>Input · ${IN+1} / ${st.length}</b><button type="button" class="btn ghost sm" id="skip">${t('Input überspringen','Girişi atla')} →</button></div><div class="pr"><div style="width:${(IN+1)/st.length*100}%"></div></div><h1>${s.h}</h1><div class="stack big-t">${s.b}</div>${s.fig?`<div class="fig">${s.fig}</div>`:''}${s.reveal?`<div id="rv"></div><div><button type="button" class="btn sec" id="rvb">${t('Lösung zeigen','Çözümü göster')}</button></div>`:''}
+ <div class="row">${IN?`<button type="button" class="btn ghost" id="back">${t('Zurück','Geri')}</button>`:''}<button type="button" class="btn pri" id="nxt">${last?t('Los geht’s: Forscherauftrag 1','Başla: Araştırma görevi 1'):t('Weiter','Devam')}</button></div></div>`;
+ if(s.reveal)$('rvb').onclick=()=>{$('rv').innerHTML=s.reveal;$('rvb').hidden=true;};
+ $('skip').onclick=()=>{P.input=true;store();learnHome();};
+ if($('back'))$('back').onclick=()=>{IN--;inputView();};
+ $('nxt').onclick=()=>{if(last){P.input=true;store();startF(0);}else{IN++;inputView();}};
+ show('vIn','in');}
+
+/* ---------- Entdecken ---------- */
+function learnHome(){const n=FO.filter(f=>P.found[f.id]).length,nx=FO.findIndex(f=>!P.found[f.id]);
+ $('vLearn').innerHTML=`<div class="card stack"><h1>${t('Entdecken','Keşfet')}</h1><p class="muted">${t('Hier erarbeitest du dir die Rechengesetze selbst. Rechne, vergleiche und schreibe am Ende jedes Auftrags deinen Merksatz.','Burada hesaplama özelliklerini kendin keşfedersin. Hesapla, karşılaştır ve her görevin sonunda kuralını yaz.')}</p>
+ <div class="total" role="img" aria-label="${n}/4"><div style="width:${n/4*100}%"></div></div>
+ <div class="nextbar"><span class="small muted">${t(`${n} von 4 Forscheraufträgen geschafft`,`4 araştırma görevinden ${n} tanesi tamam`)}</span>${nx>=0?`<button type="button" class="btn pri" id="lgo">${t('Weiter','Devam')}: ${esc(FO[nx].name)}</button>`:`<button type="button" class="btn pri" id="lgo2">${t('Jetzt üben','Şimdi alıştırma yap')}</button>`}</div></div>
+ <div class="fgrid">${FO.map((f,i)=>`<button type="button" class="fcard ${P.found[f.id]?'done':''} ${i===nx?'next':''}" data-i="${i}"><span class="fnum">${i+1}</span><span><b>${esc(f.name)}</b><br><span class="small muted">${esc(f.sub)}</span></span><span class="fst">${P.found[f.id]?'★':'☆'}</span></button>`).join('')}</div>
+ ${P.input?`<div class="small muted"><button type="button" class="linkb" id="rein">${t('Input noch einmal ansehen','Girişe tekrar bak')}</button></div>`:''}`;
+ $('vLearn').querySelectorAll('.fcard').forEach(b=>b.onclick=()=>startF(+b.dataset.i));
+ if($('lgo'))$('lgo').onclick=()=>startF(nx);if($('lgo2'))$('lgo2').onclick=home;if($('rein'))$('rein').onclick=()=>{IN=0;inputView();};
+ show('vLearn','learn');}
+function startF(i){const f=FO[i];S={mode:'f',fi:i,list:f.steps(),i:0,ok:0,tips:0};fStep();}
+function fStep(){const q=S.list[S.i],f=FO[S.fi],N=S.list.length;
+ render(q,`<div class="qhead"><b>${t('Forscherauftrag','Araştırma görevi')} ${S.fi+1}: ${esc(f.name)}</b><span class="lv c-l">${S.i+1} / ${N}</span></div><div class="pr"><div style="width:${S.i/N*100}%"></div></div>`,'c-l');
+ if(q.type==='info'){$('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${t('Verstanden, weiter','Anladım, devam')}</button>`;$('nx').onclick=()=>{S.i++;fNext();};show('vTask','learn');return;}
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">${t('Prüfen','Kontrol et')}</button>${tipButtons(q)}`;bindTips(q);
+ $('go').onclick=()=>{if(!answered(q)){toast(q.type==='pair'?t('Fasse zuerst alle Zahlen zusammen.','Önce tüm sayıları birleştir.'):t('Fülle zuerst alles aus.','Önce her şeyi doldur.'));return;}const g=grade(q);lock(q,g);if(g.ok){S.ok++;P.stars++;}if(q.type==='rule')P.rules[q.id]=ruleText(q);store();$('tipBox').innerHTML='';$('fbBox').innerHTML=fbHtml(q,g);
+  $('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${S.i===N-1?t('Auftrag abschließen','Görevi bitir'):t('Weiter','Devam')}</button>`;$('nx').onclick=()=>{S.i++;fNext();};$('nx').focus({preventScroll:true});};
+ show('vTask','learn');}
+function fNext(){if(S.i<S.list.length)return fStep();const f=FO[S.fi],first=!P.found[f.id];P.found[f.id]=true;store();const nx=FO.findIndex(x=>!P.found[x.id]);
+ $('vRes').className='c-l';$('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${t('Forscherauftrag','Araştırma görevi')} ${S.fi+1}</b><span class="lv c-l">★</span></div><h1>${esc(f.name)}: ${t('geschafft!','tamam!')}</h1>${P.rules[FO[S.fi].steps().slice(-1)[0].id]?`<div class="merk">${esc(P.rules[FO[S.fi].steps().slice(-1)[0].id])}</div>`:''}<p class="muted">${t(`Du hast ${S.tips} Tippkarten benutzt.`,`${S.tips} ipucu kartı kullandın.`)} ${S.tips===0?t('Ganz allein. Stark!','Tamamen kendi başına. Harika!'):t('Tippkarten helfen beim Lernen. Gut gemacht!','İpucu kartları öğrenmeye yardım eder. Aferin!')}</p>
+ <div class="row">${nx>=0?`<button type="button" class="btn pri" id="fn">${t('Nächster Auftrag','Sonraki görev')}: ${esc(FO[nx].name)}</button>`:`<button type="button" class="btn pri" id="fh">${t('Alle Aufträge geschafft. Jetzt üben!','Tüm görevler tamam. Şimdi alıştırma yap!')}</button>`}<button type="button" class="btn sec" id="fm">${t('Mein Merkheft','Not defterim')}</button><button type="button" class="btn ghost" id="fo">${t('Übersicht','Genel bakış')}</button></div></div>`;
+ if($('fn'))$('fn').onclick=()=>startF(nx);if($('fh'))$('fh').onclick=home;$('fm').onclick=memo;$('fo').onclick=learnHome;if(first)confetti();show('vRes','learn');}
+
+/* ---------- Üben (Stationen) ---------- */
+function nextCell(){for(const x of TOPICS)for(const l of LVS)if(!passed(x.id,l))return[x.id,l];return null;}
+function cells(nx){return TOPICS.map(x=>`<div class="st"><div><h3>${esc(x.name)}</h3><div class="small muted">${esc(x.sub)}</div></div>${LVS.map(l=>{const c=P.cells[x.id+l],d=passed(x.id,l),n=nx&&nx[0]===x.id&&nx[1]===l;return `<button type="button" class="cell c-${l} ${d?'done':''} ${n?'next':''}" data-t="${x.id}" data-l="${l}" aria-label="${esc(x.name)}, ${LV[l]}"><span><span class="nm">${LV[l]}<br></span><b>${c?c.best+'/'+SIZE:t('Los','Başla')}</b></span></button>`;}).join('')}</div>`).join('');}
+function home(){const done=TOPICS.reduce((n,x)=>n+LVS.filter(l=>passed(x.id,l)).length,0),nx=nextCell();
+ $('vHome').innerHTML=`<div class="card stack"><h1>${t('Üben','Alıştırma')}</h1><p class="muted">${t(`Wähle deine Farbe wie im Buch: Orange (S. 39), Pink (S. 40), Lila (S. 41). Jede Station hat ${SIZE} Aufgaben mit neuen Zahlen. Ab ${PASS} richtigen ist sie geschafft.`,`Kitaptaki gibi rengini seç: Turuncu (s. 39), Pembe (s. 40), Mor (s. 41). Her istasyonda yeni sayılarla ${SIZE} soru var. ${PASS} doğru cevapla istasyon tamamdır.`)}</p>
+ ${FO.some(f=>!P.found[f.id])?`<div class="tip">${t('Tipp: Mach zuerst die Forscheraufträge unter „Entdecken“.','İpucu: Önce „Keşfet“ bölümündeki araştırma görevlerini yap.')}</div>`:''}
+ <div class="total" role="img" aria-label="${done}/18"><div style="width:${done/18*100}%"></div></div>
+ <div class="nextbar"><span class="small muted">${t(`${done} von 18 Stationen geschafft`,`18 istasyondan ${done} tanesi tamam`)}</span>${nx?`<button type="button" class="btn pri" id="go1">${t('Weiter','Devam')}: ${esc(topic(nx[0]).name)} · ${LV[nx[1]]}</button>`:''}</div></div>
+ <div class="card hud"><div><div class="big2">${P.stars}</div><div class="small muted">${t('Sterne','Yıldız')}</div></div><div><div class="big2">${FO.filter(f=>P.found[f.id]).length}/4</div><div class="small muted">${t('Merksätze','Kurallar')}</div></div><div><div class="big2">${P.best}</div><div class="small muted">${t('Beste Serie','En iyi seri')}</div></div></div>
+ <div class="card"><div class="gridhead"><span></span>${LVS.map(lvTag).join('')}</div>${cells(nx)}</div>`;
+ $('vHome').querySelectorAll('.cell').forEach(b=>b.onclick=()=>startSet(b.dataset.t,b.dataset.l));if(nx)$('go1').onclick=()=>startSet(nx[0],nx[1]);show('vHome','home');}
+function buildSet(x,l,n){const pool=GEN.filter(g=>g.t===x&&g.l===l);let out=[];while(out.length<n)out=out.concat(shuffle(pool));out=out.slice(0,n);for(let i=1;i<n;i++)if(out[i].id===out[i-1].id){const j=out.findIndex((y,k)=>k>i&&y.id!==out[i].id);if(j>0)[out[i],out[j]]=[out[j],out[i]];}return out.map(g=>Object.assign(g.make(),{g}));}
+function startSet(x,l){S={mode:'set',t:x,l,list:buildSet(x,l,SIZE),i:0,ok:0,wrong:[],run:0,tips:0};setStep();}
+function setStep(){const q=S.list[S.i],tp=topic(S.t),N=S.list.length,fx=S.mode==='fix';
+ render(q,`<div class="qhead"><b>${fx?t('Fehler-Training: ','Hata çalışması: '):''}${esc(tp.name)}</b>${lvTag(S.l)}</div><div class="row small muted"><span>${t('Aufgabe','Soru')} ${S.i+1} / ${N}</span><span>· ${S.ok} ${t('richtig','doğru')}</span>${S.run>=2?`<span class="streak">${S.run} ${t('in Folge','üst üste')}</span>`:''}</div><div class="pr"><div style="width:${S.i/N*100}%"></div></div>`,'c-'+S.l);
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">${t('Prüfen','Kontrol et')}</button>${tipButtons(q)}<button type="button" class="btn ghost" id="idk">${t('Zeig mir den Weg','Yolu göster')}</button>`;bindTips(q);
+ $('go').onclick=()=>{if(!answered(q)){toast(q.type==='pair'?t('Fasse zuerst alle Zahlen zusammen.','Önce tüm sayıları birleştir.'):t('Trage zuerst deine Antwort ein.','Önce cevabını yaz.'));return;}finishQ(q,grade(q));};
+ $('idk').onclick=()=>finishQ(q,{ok:false,idk:true,right:q.type==='mc'?(q.ot?q.ot[q.c]:plain(q.o[q.c])):q.type==='num'?String(q.ans):q.type==='pair'?q.pairs.map(p=>p[0]+' + '+p[1]).join(', '):q.type==='lines'?q.rows.filter(r=>r[1]).map(r=>LAW[r[1]]).join(' · '):null,msgs:[]});
+ show('vTask','home');}
+function finishQ(q,g){lock(q,g);if(q.type==='multi'&&g.idk)q.fields.forEach((f,i)=>{const e=$('m'+i);if(!e.nextElementSibling)e.insertAdjacentHTML('afterend',`<span class="fix">${f.ans}</span>`);});
+ if(g.ok){S.ok++;S.run++;P.stars++;if(S.run>P.best)P.best=S.run;}else{S.run=0;S.wrong.push(q.g);P.err[S.t]=(P.err[S.t]||0)+1;}store();
+ $('tipBox').innerHTML='';$('fbBox').innerHTML=fbHtml(q,g);if(g.ok&&(S.run===3||S.run===5))toast(t(`${S.run} richtige in Folge!`,`Üst üste ${S.run} doğru!`));
+ const last=S.i===S.list.length-1;$('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${last?t('Zum Ergebnis','Sonuca git'):t('Nächste Aufgabe','Sonraki soru')}</button>`;$('nx').onclick=()=>{S.i++;if(last)setEnd();else setStep();};$('nx').focus({preventScroll:true});}
+function setEnd(){const fx=S.mode==='fix',tp=topic(S.t),k=S.t+S.l,a=S.t,b=S.l;$('vRes').className='c-'+S.l;
+ if(fx){const n=S.list.length;$('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${t('Fehler-Training','Hata çalışması')}: ${esc(tp.name)}</b>${lvTag(S.l)}</div><div class="big">${S.ok} / ${n}</div><p>${S.ok===n?t('Alle Fehler aufgeholt. Das ist echtes Lernen!','Tüm hataları düzelttin. İşte gerçek öğrenme!'):t('Gut, dass du drangeblieben bist.','Pes etmemen çok güzel.')}</p><div class="row"><button type="button" class="btn pri" id="r1">${t('Neue Runde','Yeni tur')}</button><button type="button" class="btn ghost" id="r3">${t('Übersicht','Genel bakış')}</button></div></div>`;if(S.ok===n)confetti();$('r1').onclick=()=>startSet(a,b);$('r3').onclick=home;show('vRes','home');return;}
+ const was=passed(S.t,S.l),c=P.cells[k]||{best:0,runs:0};c.best=Math.max(c.best,S.ok);c.runs++;P.cells[k]=c;store();const pass=S.ok>=PASS,nx=nextCell(),w=S.wrong.slice(),pg={o:39,p:40,l:41}[S.l];
+ $('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${esc(tp.name)}</b>${lvTag(S.l)}</div><div class="big">${S.ok} / ${SIZE}</div><p>${pass?(S.ok===SIZE?t('Alles richtig. Diese Station sitzt.','Hepsi doğru. Bu istasyon tamam.'):t('Station geschafft. Stark gemacht!','İstasyon tamam. Harika!')):t(`Noch nicht geschafft. Du brauchst ${PASS} richtige.`,`Henüz tamam değil. ${PASS} doğru gerekiyor.`)}</p>
+ ${w.length?`<div class="tip">${t('<b>Fehler-Training:</b> Übe genau die Aufgaben, die noch nicht geklappt haben, mit neuen Zahlen.','<b>Hata çalışması:</b> Henüz olmayan soruları yeni sayılarla çalış.')}</div>`:''}<p class="small muted">${t(`Im Buch: Merkkasten auf Seite 38, Übungen in deiner Farbe auf Seite ${pg}.`,`Kitapta: kural kutusu 38. sayfada, senin rengindeki alıştırmalar ${pg}. sayfada.`)}</p>
+ <div class="row">${w.length?`<button type="button" class="btn pri" id="r5">${t('Fehler-Training starten','Hata çalışmasını başlat')}</button>`:''}<button type="button" class="btn ${w.length?'sec':pass&&nx?'sec':'pri'}" id="r1">${t('Nochmal mit neuen Zahlen','Yeni sayılarla tekrar')}</button>${pass&&nx?`<button type="button" class="btn ${w.length?'sec':'pri'}" id="r2">${t('Nächste Station','Sonraki istasyon')}</button>`:''}<button type="button" class="btn ghost" id="r3">${t('Übersicht','Genel bakış')}</button></div></div>`;
+ $('r1').onclick=()=>startSet(a,b);$('r3').onclick=home;if($('r2'))$('r2').onclick=()=>startSet(nx[0],nx[1]);
+ if($('r5'))$('r5').onclick=()=>{S={mode:'fix',t:a,l:b,list:w.map(g=>Object.assign(g.make(),{g})),i:0,ok:0,wrong:[],run:0,tips:0};setStep();};
+ if(pass&&!was)confetti();show('vRes','home');}
+
+/* ---------- Merkheft und Sichern ---------- */
+function memo(){const rid=['v','b','g','m'];
+ $('vMemo').innerHTML=`<div class="card stack"><h1>${t('Mein Merkheft','Not defterim')}</h1><p class="muted">${t('Hier sammelst du deine Merksätze aus den Forscheraufträgen. Vergleiche sie mit dem Merkkasten im Buch auf Seite 38.','Burada araştırma görevlerinden kurallarını toplarsın. Onları kitaptaki sayfa 38\'deki kural kutusuyla karşılaştır.')}</p></div>
+ <div class="two">${FO.map((f,i)=>{const r=P.rules[rid[i]];return `<div class="card stack m-p"><div class="qhead"><h2>${esc(f.name)}</h2><span class="fst">${r?'★':'☆'}</span></div>${r?`<div class="merk">${esc(r)}</div>`:`<p class="muted">${t('Noch offen. Mach Forscherauftrag','Henüz açık. Araştırma görevini yap:')} ${i+1}.</p><div><button type="button" class="btn sec sm" data-f="${i}">${t('Auftrag starten','Görevi başlat')}</button></div>`}</div>`;}).join('')}</div>
+ <div class="card stack"><h2>${t('Das Wichtigste','En önemlisi')}</h2><div class="laws"><div><b>${LAWF.v}</b><span class="eq">a + b = b + a</span><span class="small">23 + 14 = 14 + 23</span></div><div><b>${LAWF.b}</b><span class="eq">a + b + c = a + (b + c)</span><span class="small">(7 + 3) + 5 = 7 + (3 + 5)</span></div><div><b>${LAWF.k}</b><span class="eq">70 ${M} (5 + 8) = 70 ${M} 13</span><span class="small">${t('Klammer zuerst','Önce parantez')}</span></div></div>
+ <div class="tip warn"><b>${t('Achtung:','Dikkat:')}</b> ${t('Vertauschungsgesetz und Verbindungsgesetz gelten nicht für die Subtraktion.','Değişme ve birleşme özellikleri çıkarma için geçerli değildir.')} <span class="eq">9 ${M} 4 ≠ 4 ${M} 9</span></div>
+ <p>${t('<b>Plus und Minus in einem Term:</b> Das Rechenzeichen gehört zur Zahl dahinter. Beim Tauschen wandert es mit:','<b>Aynı işlemde artı ve eksi:</b> İşlem işareti arkasındaki sayıya aittir. Yer değiştirirken onunla gider:')} <span class="eq">46 + 19 ${M} 6 = 46 ${M} 6 + 19 = 59</span></p>
+ <p class="small muted">${t('Satzhilfe für das Gespräch: „Es ist vorteilhaft, zuerst … und … zu addieren, weil sie zusammen einen vollen Zehner ergeben.“','Konuşma için cümle yardımı: „Önce … ve … sayılarını toplamak avantajlıdır, çünkü toplamları tam onluk eder.“')}</p></div>
+ <div class="card stack"><h2>${t('Stand für IServ sichern','IServ için kaydet')}</h2><div id="saveM"></div></div>`;
+ $('vMemo').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>startF(+b.dataset.f));saveBox($('saveM'));show('vMemo','memo');}
+function report(){const d=new Date(),pad=n=>String(n).padStart(2,'0'),ds=pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear();
+ let s=t('RECHENGESETZE – Stand','HESAPLAMA ÖZELLİKLERİ – Durum')+'\n==========================\n'+t('Name','Ad')+':   '+P.name+'\n'+t('Klasse','Sınıf')+': '+P.kl_+'\n'+t('Datum','Tarih')+':  '+ds+'\n'+t('Sterne','Yıldız')+': '+P.stars+'\n\n'+t('Meine Merksätze','Kurallarım')+':\n';
+ ['v','b','g','m'].forEach((k,i)=>s+='  '+(i+1)+'. '+(P.rules[k]||t('noch offen','henüz açık'))+'\n');
+ s+='\n'+t('Stationen (beste Runde von ','İstasyonlar (en iyi tur, ')+SIZE+'):\n';TOPICS.forEach(x=>{s+='  '+x.name+': '+LVS.map(l=>LV[l]+' '+((P.cells[x.id+l]||{}).best!=null?P.cells[x.id+l].best:'–')).join(', ')+'\n';});
+ s+='\n'+t('Fehler je Station','İstasyon başına hata')+':\n';TOPICS.forEach(x=>{if(P.err[x.id])s+='  '+x.name+': '+P.err[x.id]+'\n';});
+ return s+'\n#DATEN '+JSON.stringify({app:'mathe5-rechengesetze',lang:LANG,v:1,name:P.name,kl:P.kl_,datum:ds,stationen:P.cells,fehler:P.err,merksaetze:P.rules})+'\n';}
+function saveBox(el){const top=window.self===window.top;
+ el.innerHTML=`<div class="stack"><div class="fields"><label class="f">${t('Dein Vorname','Adın')}<input id="sN" maxlength="30" value="${esc(P.name)}" autocomplete="given-name"></label><label class="f">${t('Deine Klasse','Sınıfın')}<input id="sK" maxlength="8" value="${esc(P.kl_)}" placeholder="5c"></label></div><div class="row">${top?`<button type="button" class="btn sec" id="sD">${t('Datei speichern','Dosyayı kaydet')}</button>`:''}<button type="button" class="btn sec" id="sC">${t('Ergebnis kopieren','Sonucu kopyala')}</button></div><p class="small muted">${t('Lade die Datei in IServ hoch oder füge den kopierten Text dort ein.','Dosyayı IServ\'e yükle veya kopyalanan metni oraya yapıştır.')}</p></div>`;
+ const up=()=>{P.name=$('sN').value.trim();P.kl_=$('sK').value.trim();store();return P.name&&P.kl_;};$('sN').oninput=up;$('sK').oninput=up;
+ const need=t('Trage zuerst Vorname und Klasse ein.','Önce adını ve sınıfını yaz.'),done_=t('Kopiert. Füge es jetzt in IServ ein.','Kopyalandı. Şimdi IServ\'e yapıştır.');
+ $('sC').onclick=()=>{if(!up()){toast(need);return;}const s=report(),fb=()=>{const a=document.createElement('textarea');a.value=s;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}a.remove();toast(ok?done_:t('Kopieren hat nicht geklappt.','Kopyalama olmadı.'));};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(()=>toast(done_),fb);else fb();};
+ if(top)$('sD').onclick=()=>{if(!up()){toast(need);return;}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([report()],{type:'text/plain;charset=utf-8'}));a.download=(t('Rechengesetze_','Hesaplama_')+P.kl_+'_'+P.name).replace(/[^\wäöüÄÖÜßçğıöşüÇĞİÖŞÜ-]+/g,'_')+'.txt';a.click();};}
+
+/* ---------- Stunden-App: ein fester Weg ---------- */
+const LSTEPS=[{k:'in',n:t('Input','Giriş')},{k:'f',i:0,n:'1'},{k:'f',i:1,n:'2'},{k:'f',i:2,n:'3'},{k:'f',i:3,n:'4'},{k:'check',n:t('Check','Kontrol')},{k:'end',n:'★'}];
+if(P.lstep==null)P.lstep=0;
+function drawPath(){const el=$('path');if(!el)return;el.innerHTML=LSTEPS.map((s,i)=>`<span class="pst ${i<P.lstep?'done':''} ${i===P.lstep?'now':''}" title="${esc(s.k==='f'?FO[s.i].name:s.n)}">${i<P.lstep&&s.k!=='end'?'✓':esc(s.n)}</span>`).join('<span class="pln"></span>');}
+function show(v){VIEWS.forEach(x=>$(x).hidden=x!==v);drawPath();window.scrollTo(0,0);}
+function go(i){P.lstep=Math.max(P.lstep,i);store();const s=LSTEPS[i];if(s.k==='in'){IN=0;lessonInput();}else if(s.k==='f')startF(s.i);else if(s.k==='check')startCheck();else endView();}
+function lessonInput(){const st=INSTEPS(),s=st[IN],last=IN===st.length-1;
+ $('vIn').innerHTML=`<div class="card stack"><div class="qhead"><b>Input · ${IN+1} / ${st.length}</b><button type="button" class="btn ghost sm" id="skip">${t('Input überspringen','Girişi atla')} →</button></div><div class="pr"><div style="width:${(IN+1)/st.length*100}%"></div></div><h1>${s.h}</h1><div class="stack big-t">${s.b}</div>${s.fig?`<div class="fig">${s.fig}</div>`:''}${s.reveal?`<div id="rv"></div><div><button type="button" class="btn sec" id="rvb">${t('Lösung zeigen','Çözümü göster')}</button></div>`:''}
+ <div class="row">${IN?`<button type="button" class="btn ghost" id="back">${t('Zurück','Geri')}</button>`:''}<button type="button" class="btn pri" id="nxt">${last?t('Los geht’s: Forscherauftrag 1','Başla: Araştırma görevi 1'):t('Weiter','Devam')}</button></div></div>`;
+ if(s.reveal)$('rvb').onclick=()=>{$('rv').innerHTML=s.reveal;$('rvb').hidden=true;};
+ $('skip').onclick=()=>go(1);if($('back'))$('back').onclick=()=>{IN--;lessonInput();};
+ $('nxt').onclick=()=>{if(last)go(1);else{IN++;lessonInput();}};show('vIn');}
+function fNext(){if(S.i<S.list.length)return fStep();const f=FO[S.fi];P.found[f.id]=true;store();const rid=S.list[S.list.length-1].id,nxt=P.lstep+1,nl=LSTEPS[nxt];
+ $('vRes').className='c-l';$('vRes').innerHTML=`<div class="card stack"><div class="qhead"><b>${t('Forscherauftrag','Araştırma görevi')} ${S.fi+1} / 4</b><span class="lv c-l">★</span></div><h1>${esc(f.name)}: ${t('geschafft!','tamam!')}</h1>${P.rules[rid]?`<div class="small muted">${t('Dein Merksatz:','Kuralın:')}</div><div class="merk">${esc(P.rules[rid])}</div>`:''}<p class="muted">${S.tips===0?t('Ohne Tippkarte. Stark!','İpucu kartı olmadan. Harika!'):t(`Du hast ${S.tips} Tippkarten benutzt. Gut, dass du sie genutzt hast!`,`${S.tips} ipucu kartı kullandın. Kullanman çok iyi!`)}</p>
+ <div class="row"><button type="button" class="btn pri" id="fn">${nl.k==='f'?t('Weiter: Forscherauftrag ','Devam: Araştırma görevi ')+(nl.i+1):t('Weiter zum Kurz-Check','Kısa kontrole devam')}</button></div></div>`;
+ $('fn').onclick=()=>go(nxt);confetti();show('vRes');}
+function startCheck(){const g=(id,l)=>{const x=GEN.find(z=>z.id===id&&z.l===l);return Object.assign(x.make(),{g:x});};
+ S={mode:'check',list:[g(pick(['g-v','g-b']),'o'),g('p-game','p'),g('m-twominus','p'),g('m-trap','p')],i:0,ok:0,tips:0};checkStep();}
+function checkStep(){const q=S.list[S.i],N=S.list.length;
+ render(q,`<div class="qhead"><b>${t('Kurz-Check','Kısa kontrol')}</b><span class="lv c-l">${S.i+1} / ${N}</span></div><p class="small muted">${t('Zeig, was du heute gelernt hast.','Bugün öğrendiklerini göster.')}</p><div class="pr"><div style="width:${S.i/N*100}%"></div></div>`,'c-l');
+ $('acts').innerHTML=`<button type="button" class="btn pri" id="go">${t('Prüfen','Kontrol et')}</button>${tipButtons(q)}`;bindTips(q);
+ $('go').onclick=()=>{if(!answered(q)){toast(q.type==='pair'?t('Fasse zuerst alle Zahlen zusammen.','Önce tüm sayıları birleştir.'):t('Trage zuerst deine Antwort ein.','Önce cevabını yaz.'));return;}const gr=grade(q);lock(q,gr);if(gr.ok){S.ok++;P.stars++;}else P.err.check=(P.err.check||0)+1;store();$('tipBox').innerHTML='';$('fbBox').innerHTML=fbHtml(q,gr);
+  const last=S.i===N-1;$('acts').innerHTML=`<button type="button" class="btn pri" id="nx">${last?t('Fertig','Bitti'):t('Nächste Aufgabe','Sonraki soru')}</button>`;$('nx').onclick=()=>{S.i++;if(last){P.check=S.ok;store();go(LSTEPS.length-1);}else checkStep();};$('nx').focus({preventScroll:true});};
+ show('vTask');}
+function endView(){const rid=['v','b','g','m'];
+ $('vRes').className='c-l';$('vRes').innerHTML=`<div class="card stack"><h1>${t('Geschafft!','Başardın!')}</h1><p>${t(`Kurz-Check: <b>${P.check!=null?P.check:'–'} von 4</b> richtig.`,`Kısa kontrol: 4 sorudan <b>${P.check!=null?P.check:'–'}</b> doğru.`)}</p></div>
+ <div class="card stack"><h2>${t('Deine Merksätze','Kuralların')}</h2>${FO.map((f,i)=>`<div><div class="small muted">${i+1}. ${esc(f.name)}</div><div class="merk">${esc(P.rules[rid[i]]||t('noch offen','henüz açık'))}</div></div>`).join('')}</div>
+ <div class="card stack"><h2>${t('Jetzt besprechen','Şimdi konuşalım')}</h2><ol class="st3"><li>${t('Vergleiche deine Merksätze mit deinem Partner.','Kurallarını partnerinle karşılaştır.')}</li><li>${t('Vergleiche mit dem Merkkasten im Buch auf Seite 38.','Kitapta 38. sayfadaki kural kutusuyla karşılaştır.')}</li><li>${t('Satzhilfe: „Es ist vorteilhaft, zuerst … und … zu addieren, weil …“','Cümle yardımı: „Önce … ve … sayılarını toplamak avantajlıdır, çünkü …“')}</li></ol>
+ <div class="tip">${t('<b>Schon fertig und deine Klasse noch nicht?</b> Öffne die Übungs-App „Rechengesetze“ und übe in deiner Farbe.','<b>Bitirdin ama sınıfın henüz bitirmedi mi?</b> „Hesaplama özellikleri“ alıştırma uygulamasını aç ve kendi renginde çalış.')}</div></div>
+ <div class="card stack"><h2>${t('Ergebnis für IServ sichern','Sonucu IServ için kaydet')}</h2><div id="saveE"></div></div>
+ <div class="small muted"><button type="button" class="linkb" id="again">${t('Noch einmal von vorne','Baştan başla')}</button></div>`;
+ saveBox($('saveE'));$('again').onclick=()=>{P.lstep=0;store();go(0);};if(P.check===4)confetti();show('vRes');}
+const _rep=report;report=function(){return _rep().replace(/#DATEN /,'Kurz-Check: '+(P.check!=null?P.check:'–')+'/4\n\n#DATEN ');};
+go(P.lstep||0);
+</script>
+</body></html>

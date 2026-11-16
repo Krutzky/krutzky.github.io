@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Regenbogen-Labor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.gopt span{font-size:15px}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Regenbogen-Labor</b><span>Wie entsteht ein Regenbogen?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Prisma, Regentropfen oder Landschaft"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'Prisma',scene:'prism'},
+  {key:'s2',name:'Regentropfen',scene:'drop'},
+  {key:'s3',name:'Himmel',scene:'sky'},
+  {key:'s4',name:'Merksatz',scene:'sky'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'drop'}
+];
+/* Farben: Name, Anzeige-Farbe, Brechzahl Glas (Unterschiede überzeichnet), Brechzahl Wasser (echt) */
+var COLS=[
+  {n:'Rot',c:'#E8322B',ng:1.500,nw:1.3310},
+  {n:'Orange',c:'#F28C28',ng:1.510,nw:1.3325},
+  {n:'Gelb',c:'#F5D42A',ng:1.520,nw:1.3335},
+  {n:'Grün',c:'#3DB54A',ng:1.532,nw:1.3350},
+  {n:'Blau',c:'#2F6FD3',ng:1.546,nw:1.3380},
+  {n:'Violett',c:'#8A3FC7',ng:1.560,nw:1.3435}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  pAng:48,filter:'white', b:50,dfilter:'red',many:false,refl2:false, sun:20,obs:30,friend:false,
+  s1:{real:{},realOk:false,kreuz:{},kreuzOk:false,why:null,whyOk:false,own:'',ok:false},
+  s2:{path:null,pathOk:false,max:false,peak:null,peakOk:false,outer:null,outerOk:false,tip:0},
+  s3:{sunq:null,sunqOk:false,high:null,highOk:false,walk:null,walkOk:false,friendq:null,friendqOk:false},
+  s4:{gaps:{},ok:false,refl:'',hose:null,hoseOk:false},
+  s5:{a:null,b:null},res:{},tries:{},help:{},t0:null};
+
+/* ---------- Speicher ---------- */
+var KEY='regenbogen-labor-v1',RKEY='regenbogen-labor-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+
+/* ---------- Vektor-Optik ---------- */
+function norm(v){var l=Math.hypot(v[0],v[1]);return [v[0]/l,v[1]/l];}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1];}
+/* Brechung: d Richtung, nrm Normale gegen d, eta=n1/n2; null bei Totalreflexion */
+function refract(d,nrm,eta){var ci=-dot(nrm,d),k=1-eta*eta*(1-ci*ci);if(k<0)return null;var f=eta*ci-Math.sqrt(k);return norm([eta*d[0]+f*nrm[0],eta*d[1]+f*nrm[1]]);}
+function reflect(d,m){var k=2*dot(d,m);return [d[0]-k*m[0],d[1]-k*m[1]];}
+/* Regentropfen (Einheitskreis, y nach oben): b = Auftreffhöhe 0..1, k Spiegelungen. Liefert Punkte und Winkel zur Gegenrichtung der Sonne */
+function dropTrace(b,n,k){
+  var p=[-Math.sqrt(1-b*b),b],d=[1,0],pts=[[p[0]-2.2,b],p];
+  d=refract(d,p,1/n);
+  for(var j=0;j<=k;j++){var t=-2*dot(p,d);p=[p[0]+t*d[0],p[1]+t*d[1]];pts.push(p);if(j<k)d=reflect(d,p);}
+  var out=refract(d,[-p[0],-p[1]],n);if(!out)return null;
+  var ang=Math.acos(Math.max(-1,Math.min(1,-out[0])))*180/Math.PI;
+  return {pts:pts,out:out,ang:ang,exit:p};
+}
+var MAXANG={};COLS.forEach(function(c){var m=0;for(var i=1;i<1000;i++){var r=dropTrace(i/1000,c.nw,1);if(r&&r.ang>m)m=r.ang;}MAXANG[c.n]=m;});
+var MAXANG2={};COLS.forEach(function(c){var m=999;for(var i=1;i<1000;i++){var r=dropTrace(i/1000,c.nw,2);if(r&&r.ang<m)m=r.ang;}MAXANG2[c.n]=m;});
+
+/* ---------- Zeichnen ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function font(px,b){return (b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function tag(t,x,y,c,align){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);c._dpr=dpr;}
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;var dark=sc==='prism'||sc==='drop';ctx.fillStyle=dark?'#141826':col('surface');ctx.fillRect(0,0,W,H);
+  if(sc==='prism')drawPrism();else if(sc==='drop')drawDrop();else drawSky();}
+
+/* --- Prisma --- */
+function prismResults(){
+  var cx=W*0.44,cy=H*0.58,sd=Math.min(W*0.30,H*0.66),hgt=sd*Math.sqrt(3)/2;
+  var A=[cx,cy-hgt*0.62],B=[cx-sd/2,cy+hgt*0.38],C=[cx+sd/2,cy+hgt*0.38];
+  var nOutL=norm([-(B[1]-A[1]),-(A[0]-B[0])]);if(nOutL[0]>0)nOutL=[-nOutL[0],-nOutL[1]];
+  var nOutR=norm([C[1]-A[1],-(C[0]-A[0])]);if(nOutR[0]<0)nOutR=[-nOutR[0],-nOutR[1]];
+  var E=[A[0]+(B[0]-A[0])*0.58,A[1]+(B[1]-A[1])*0.58];
+  var base=Math.atan2(-nOutL[1],-nOutL[0]),ang=base-st.pAng*Math.PI/180,d=[Math.cos(ang),Math.sin(ang)];
+  var screenX=W*0.94,res=[];
+  COLS.forEach(function(c){var d1=refract(d,nOutL,1/c.ng);
+    var ux=C[0]-A[0],uy=C[1]-A[1],den=d1[0]*uy-d1[1]*ux,t=((A[0]-E[0])*uy-(A[1]-E[1])*ux)/den,X=[E[0]+d1[0]*t,E[1]+d1[1]*t];
+    var d2=refract(d1,[-nOutR[0],-nOutR[1]],c.ng);if(!d2){res.push({c:c,X:X,tir:true,dev:0});return;}
+    var t2=(screenX-X[0])/d2[0],Y=[screenX,X[1]+d2[1]*t2];
+    var dev=Math.acos(Math.max(-1,Math.min(1,dot(d,d2))))*180/Math.PI;
+    res.push({c:c,X:X,Y:Y,d2:d2,dev:dev});});
+  return {A:A,B:B,C:C,E:E,d:d,res:res,screenX:screenX};
+}
+function drawPrism(){
+  var P=prismResults(),cols=st.filter==='red'?[0]:[0,1,2,3,4,5];
+  /* Lampe + weißer Strahl */
+  var L0=[P.E[0]-P.d[0]*Math.min(W*0.32,(P.E[0]-40)/Math.max(.2,P.d[0])),P.E[1]-P.d[1]*Math.min(W*0.32,(P.E[0]-40)/Math.max(.2,P.d[0]))];
+  line(L0[0],L0[1],P.E[0],P.E[1],st.filter==='red'?'#E8322B':'#FFFFFF',6,null,.95);
+  ctx.save();ctx.translate(L0[0],L0[1]);ctx.rotate(Math.atan2(P.d[1],P.d[0]));ctx.fillStyle='#3A3F55';ctx.fillRect(-34,-14,34,28);ctx.fillStyle='#FFE58A';ctx.fillRect(-4,-8,6,16);ctx.restore();
+  if(st.filter==='red'){var fm=[L0[0]+(P.E[0]-L0[0])*0.45,L0[1]+(P.E[1]-L0[1])*0.45];ctx.save();ctx.translate(fm[0],fm[1]);ctx.rotate(Math.atan2(P.d[1],P.d[0]));ctx.fillStyle='rgba(232,50,43,.85)';ctx.fillRect(-5,-22,10,44);ctx.restore();tag('Rotfilter',fm[0],fm[1]-34,'#E8322B');
+    line(L0[0],L0[1],fm[0],fm[1],'#FFFFFF',6,null,.95);}
+  /* Prisma */
+  ctx.beginPath();ctx.moveTo(P.A[0],P.A[1]);ctx.lineTo(P.B[0],P.B[1]);ctx.lineTo(P.C[0],P.C[1]);ctx.closePath();ctx.fillStyle='rgba(170,210,255,.22)';ctx.fill();ctx.strokeStyle='#9CC3F0';ctx.lineWidth=2;ctx.stroke();
+  ctx.font=font(13,true);ctx.fillStyle='#C9D3F2';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Prisma (Glas)',(P.B[0]+P.C[0])/2,P.B[1]+8);
+  /* Schirm */
+  ctx.fillStyle='#F3F4F6';ctx.fillRect(P.screenX,H*0.08,8,H*0.84);
+  cols.forEach(function(i){var r=P.res[i];if(r.tir)return;line(P.E[0],P.E[1],r.X[0],r.X[1],r.c.c,2,null,.9);line(r.X[0],r.X[1],r.Y[0],r.Y[1],r.c.c,st.filter==='red'?4:3,null,.95);
+    ctx.fillStyle=r.c.c;ctx.fillRect(P.screenX-2,r.Y[1]-4,12,8);});
+  ctx.font=font(12,true);ctx.fillStyle='#C9D3F2';ctx.textAlign='right';ctx.textBaseline='top';ctx.fillText('Schirm',P.screenX-6,H*0.08);
+  if(st.filter!=='red'){var r0=P.res[0],r5=P.res[5];if(!r0.tir&&!r5.tir){tag('Rot',P.screenX-26,r0.Y[1],'#E8322B');tag('Violett',P.screenX-34,r5.Y[1],'#8A3FC7');}}
+  ctx.font=font(11);ctx.fillStyle='#8E97B8';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('Farbunterschiede überzeichnet',8,H-6);
+  renderPrismViews(P);
+}
+function renderPrismViews(P){
+  $('capA').innerHTML='<b>Auf dem Schirm</b>';$('capB').innerHTML='<b>Wie stark abgelenkt?</b>';
+  var c=$('cvA'),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,0,1,0,0);x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
+  var cols=st.filter==='red'?[0]:[0,1,2,3,4,5],bw=w*0.6,top=w*0.16,hh=w*0.68/6;
+  cols.forEach(function(i,k){x.fillStyle=COLS[i].c;x.fillRect((w-bw)/2,top+i*hh,bw,hh+1);});
+  if(st.filter==='red'){x.fillStyle='#6B7280';x.font=Math.round(w/14)+'px '+getComputedStyle(document.body).fontFamily;x.textAlign='center';x.fillText('nur Rot',w/2,w*0.9);}
+  var c2=$('cvB'),y=c2.getContext('2d'),w2=c2.width;y.setTransform(1,0,0,1,0,0);y.fillStyle='#FFFFFF';y.fillRect(0,0,w2,w2);
+  var devs=P.res.map(function(r){return r.dev||0;}),mn=Math.min.apply(null,devs)-2,mx=Math.max.apply(null,devs)+0.5;
+  var fs=Math.round(w2/16);y.font=fs+'px '+getComputedStyle(document.body).fontFamily;
+  P.res.forEach(function(r,i){if(st.filter==='red'&&i>0)return;var yy=w2*0.1+i*w2*0.14,len=(r.dev-mn)/(mx-mn)*(w2*0.55);y.fillStyle=r.c.c;y.fillRect(w2*0.34,yy,Math.max(4,len),w2*0.1);y.fillStyle='#1A1F36';y.textAlign='right';y.textBaseline='middle';y.fillText(r.c.n,w2*0.31,yy+w2*0.05);});
+}
+
+/* --- Regentropfen --- */
+function dropGeom(){var R=Math.min(H*0.30,W*0.19);return {cx:W*0.46,cy:H*0.40,R:R};}
+function drawDrop(){
+  var G=dropGeom(),k=st.refl2?2:1;
+  function P(p){return [G.cx+p[0]*G.R,G.cy-p[1]*G.R];}
+  /* Sonne */
+  ctx.fillStyle='#FFD666';ctx.beginPath();ctx.arc(26,30,16,0,Math.PI*2);ctx.fill();ctx.font=font(12,true);ctx.fillStyle='#FFE7A0';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Sonnenlicht →',48,30);
+  for(var yy=-0.9;yy<=0.91;yy+=0.3){var a=P([-2.3,yy]),b0=P([-Math.sqrt(1-yy*yy),yy]);line(a[0],a[1],b0[0],b0[1],'#FFFFFF',1,[3,5],.25);}
+  /* Tropfen */
+  ctx.beginPath();ctx.arc(G.cx,G.cy,G.R,0,Math.PI*2);ctx.fillStyle='rgba(120,180,255,.18)';ctx.fill();ctx.strokeStyle='#9CC3F0';ctx.lineWidth=2;ctx.stroke();
+  ctx.font=font(12,true);ctx.fillStyle='#C9D3F2';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Regentropfen (stark vergrößert)',G.cx+G.R*0.75,G.cy-G.R*0.95);
+  var cols=st.dfilter==='red'?[COLS[0]]:COLS,b=st.b/100*0.995;
+  if(st.many){ /* viele rote Strahlen */
+    for(var i=1;i<=28;i++){var bb=i/29;var r=dropTrace(bb,COLS[0].nw,k);if(!r)continue;var e=P(r.exit),L=W;line(e[0],e[1],e[0]+r.out[0]*L,e[1]-r.out[1]*L,'#E8322B',1.2,null,.45);}
+  }
+  var main=null;
+  cols.forEach(function(c){var r=dropTrace(b,c.nw,k);if(!r)return;if(c===COLS[0])main=r;
+    for(var j=0;j<r.pts.length-1;j++){var a=P(r.pts[j]),q=P(r.pts[j+1]);line(a[0],a[1],q[0],q[1],j===0?'#FFFFFF':c.c,j===0?3:2,null,.95);}
+    var e=P(r.exit);line(e[0],e[1],e[0]+r.out[0]*W,e[1]-r.out[1]*W,c.c,2.5,null,.95);});
+  if(!main)main=dropTrace(b,COLS[0].nw,k);
+  /* Winkel anzeigen: Gegenrichtung der Sonne und austretender Strahl (rot) */
+  if(main){var e=P(main.exit),ref=[e[0]-W*0.25,e[1]];line(e[0],e[1],ref[0],ref[1],'#C9D3F2',1.5,[6,5],.8);
+    var a1=Math.PI,a2=Math.atan2(-main.out[1],main.out[0]);ctx.save();ctx.strokeStyle='#FFE7A0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e[0],e[1],46,Math.min(a1,a2<0?a2+2*Math.PI:a2),Math.max(a1,a2<0?a2+2*Math.PI:a2));ctx.stroke();ctx.restore();
+    tag(fmt(main.ang,1)+'°',e[0]-62,e[1]+(main.out[1]>0?-26:26),'#B05A12');}
+  ctx.font=font(11);ctx.fillStyle='#8E97B8';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('gestrichelt: Richtung zurück zur Sonne',W-8,H-6);
+  renderDropViews(k,b);
+  var d=$('dispA');if(d&&main)d.textContent=fmt(main.ang,1)+'°';
+}
+function renderDropViews(k,b){
+  $('capA').innerHTML='<b>Austrittswinkel der Farben</b>';$('capB').innerHTML='<b>Wie viel Licht bei welchem Winkel?</b> (Rot)';
+  var c=$('cvA'),x=c.getContext('2d'),w=c.width,ff=getComputedStyle(document.body).fontFamily;x.setTransform(1,0,0,1,0,0);x.fillStyle='#FFFFFF';x.fillRect(0,0,w,w);
+  var lo=k===1?30:44,hi=k===1?45:60;function X(a){return w*0.1+(a-lo)/(hi-lo)*w*0.8;}
+  x.strokeStyle='#9CA3AF';x.lineWidth=w/200;x.beginPath();x.moveTo(X(lo),w*0.8);x.lineTo(X(hi),w*0.8);x.stroke();x.font=Math.round(w/16)+'px '+ff;x.fillStyle='#4E5677';x.textAlign='center';x.textBaseline='top';
+  for(var a=lo;a<=hi;a+=5){x.fillRect(X(a)-1,w*0.78,2,w*0.04);x.fillText(a+'°',X(a),w*0.84);}
+  COLS.forEach(function(cc,i){var r=dropTrace(b,cc.nw,k);if(!r)return;var y=w*0.12+i*w*0.105;x.fillStyle=cc.c;x.beginPath();x.arc(X(Math.max(lo,Math.min(hi,r.ang))),y+w*0.04,w*0.035,0,Math.PI*2);x.fill();x.fillStyle='#1A1F36';x.textAlign='left';x.textBaseline='middle';x.font=Math.round(w/18)+'px '+ff;x.fillText(cc.n,w*0.02,y+w*0.04);});
+  /* Histogramm */
+  var c2=$('cvB'),y2=c2.getContext('2d'),w2=c2.width;y2.setTransform(1,0,0,1,0,0);y2.fillStyle='#FFFFFF';y2.fillRect(0,0,w2,w2);
+  var bins=new Array(16).fill(0),blo=k===1?0:44,bhi=k===1?48:64;for(var i=1;i<2000;i++){var r2=dropTrace(i/2000,COLS[0].nw,k);if(!r2)continue;var bi=Math.floor((r2.ang-blo)/(bhi-blo)*16);if(bi>=0&&bi<16)bins[bi]++;}
+  var mx=Math.max.apply(null,bins);bins.forEach(function(v,i){var bw=w2*0.8/16,hh=v/mx*w2*0.62;y2.fillStyle=i===bins.indexOf(mx)?'#E8322B':'#F2A39F';y2.fillRect(w2*0.1+i*bw+1,w2*0.78-hh,bw-2,hh);});
+  y2.fillStyle='#4E5677';y2.font=Math.round(w2/16)+'px '+ff;y2.textAlign='center';y2.textBaseline='top';[blo,(blo+bhi)/2,bhi].forEach(function(a){y2.fillText(Math.round(a)+'°',w2*0.1+(a-blo)/(bhi-blo)*w2*0.8,w2*0.82);});
+  y2.textAlign='left';y2.fillText('Lichtmenge',w2*0.04,w2*0.05);
+}
+
+/* --- Himmel (Seitenansicht) --- */
+function skyGeom(){return {gy:H*0.84,eyeH:34};}
+function drops(){var a=[];for(var i=0;i<16;i++)for(var j=0;j<11;j++){a.push([0.56+i*0.027+(j%2)*0.0135,0.08+j*0.065]);}return a;}
+var DROPS=drops();
+function litColor(elev){var h=st.sun;for(var i=0;i<COLS.length;i++){var ang=MAXANG[COLS[i].n]-h;if(Math.abs(elev-ang)<0.55)return COLS[i].c;}return null;}
+function drawSky(){
+  var G=skyGeom(),h=st.sun,hr=h*Math.PI/180;
+  /* Himmel/Boden */
+  var g=ctx.createLinearGradient(0,0,0,G.gy);g.addColorStop(0,'#BFD9F2');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,G.gy);ctx.fillStyle='#8DBF6A';ctx.fillRect(0,G.gy,W,H-G.gy);
+  /* Regenwand */
+  ctx.fillStyle='rgba(90,105,135,.18)';ctx.fillRect(W*0.54,0,W*0.46,G.gy);ctx.font=font(12,true);ctx.fillStyle='#4E5677';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Regenschauer',W*0.77,4);
+  /* Sonne + Strahlen */
+  var sx=W*0.06,sy=G.gy-Math.tan(hr)*W*0.06-30-Math.min(H*0.6,h*H/70);sy=Math.max(22,G.gy-30-(h/60)*G.gy*0.9);
+  ctx.fillStyle='#F5B82E';ctx.beginPath();ctx.arc(sx,sy,15,0,Math.PI*2);ctx.fill();ctx.fillStyle='#B05A12';ctx.font=font(12,true);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Sonne '+h+'°',sx+20,sy-16);
+  var dir=[Math.cos(hr),Math.sin(hr)];
+  for(var k=-2;k<=2;k++){var x0=sx+k*30*-dir[1],y0=sy+k*30*dir[0];line(x0,y0,x0+dir[0]*W*1.2,y0+dir[1]*W*1.2,'#F5B82E',1.5,[8,6],.55);}
+  /* Personen */
+  var people=[{x:W*st.obs/100,c:'#1A1F36',n:'Du'}];if(st.friend)people.push({x:W*st.obs/100-W*0.09,c:'#B05A12',n:'Freundin'});
+  people.forEach(function(p,pi){var ex=p.x,ey=G.gy-G.eyeH;
+    ctx.strokeStyle=p.c;ctx.lineWidth=3;ctx.beginPath();ctx.arc(ex,ey,7,0,Math.PI*2);ctx.stroke();line(ex,ey+7,ex,G.gy-14,p.c,3);line(ex,G.gy-14,ex-7,G.gy,p.c,3);line(ex,G.gy-14,ex+7,G.gy,p.c,3);line(ex,ey+14,ex+10,ey+22,p.c,3);
+    ctx.font=font(12,true);ctx.fillStyle=p.c;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(p.n,ex,G.gy+4);
+    /* Schattenlinie (Gegenpunkt der Sonne) */
+    if(pi===0){var t=(G.gy-ey)/dir[1];if(h>0)line(ex,ey,ex+dir[0]*Math.min(t,W),ey+dir[1]*Math.min(t,W),'#4E5677',1.5,[4,4],.8);
+      var e1=(MAXANG.Rot-h)*Math.PI/180,len=W*0.62;
+      if(MAXANG.Rot-h>0){line(ex,ey,ex+Math.cos(e1)*len,ey-Math.sin(e1)*len,'#E8322B',2,null,.9);var e2=(MAXANG.Violett-h)*Math.PI/180;line(ex,ey,ex+Math.cos(e2)*len,ey-Math.sin(e2)*len,'#8A3FC7',2,null,.9);
+        ctx.save();ctx.strokeStyle='#1A1F36';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(ex,ey,56,-e1,hr);ctx.stroke();ctx.restore();tag('42°',ex+64*Math.cos((hr-e1)/2),ey+64*Math.sin((hr-e1)/2),'#1A1F36');}
+    }
+    /* leuchtende Tropfen für diese Person */
+    DROPS.forEach(function(dp){var dx=dp[0]*W,dy=dp[1]*G.gy;var elev=Math.atan2(ey-dy,dx-ex)*180/Math.PI;var c=litColor(elev);
+      if(pi===0&&!c){ctx.fillStyle='rgba(70,90,130,.35)';ctx.beginPath();ctx.arc(dx,dy,1.8,0,Math.PI*2);ctx.fill();}
+      if(c){ctx.fillStyle=c;ctx.strokeStyle=pi===0?'#fff':'#B05A12';ctx.lineWidth=pi===0?1:2;ctx.beginPath();ctx.arc(dx,dy,pi===0?5:6,0,Math.PI*2);if(pi===0)ctx.fill();ctx.stroke();}});
+  });
+  if(MAXANG.Rot-h<=0)tag('Sonne zu hoch: Der Regenbogen liegt unter dem Horizont',W/2,H*0.45,'#C8423D');
+  ctx.font=font(11);ctx.fillStyle='#4E5677';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Seitenansicht, nicht maßstäblich',W-8,H-4);
+  renderSkyViews();
+}
+function rainbowView(c,full){
+  var x=c.getContext('2d'),w=c.width,h=st.sun,ff=getComputedStyle(document.body).fontFamily;x.setTransform(1,0,0,1,0,0);
+  var hz=w*0.72,deg=w/110,cx=w/2,cy=hz+h*deg;
+  var g=x.createLinearGradient(0,0,0,hz);g.addColorStop(0,'#9DC4EC');g.addColorStop(1,'#DCEAF8');x.fillStyle=g;x.fillRect(0,0,w,hz);x.fillStyle='#8DBF6A';x.fillRect(0,hz,w,w-hz);
+  x.save();if(!full){x.beginPath();x.rect(0,0,w,hz);x.clip();}
+  COLS.forEach(function(cc,i){var r=MAXANG[cc.n]*deg;x.strokeStyle=cc.c;x.globalAlpha=.85;x.lineWidth=deg*0.55;x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.stroke();});
+  x.restore();
+  if(full){x.save();x.setLineDash([w/60,w/60]);x.strokeStyle='rgba(30,30,30,.5)';x.lineWidth=w/150;x.beginPath();x.moveTo(0,hz);x.lineTo(w,hz);x.stroke();x.restore();}
+  /* Kopfschatten = Gegenpunkt */
+  if(cy<w){x.fillStyle='#1A1F36';x.beginPath();x.arc(cx,cy,w/50,0,Math.PI*2);x.fill();}
+  x.fillStyle='#1A1F36';x.font=Math.round(w/17)+'px '+ff;x.textAlign='left';x.textBaseline='top';x.fillText(full?'ganzer Kreis':'Horizont',w*0.03,full?w*0.03:hz+w*0.02);
+}
+function renderSkyViews(){$('capA').innerHTML='<b>So siehst du den Regenbogen</b>';$('capB').innerHTML='<b>Eigentlich ein Kreis</b> (Punkt: Schatten deines Kopfes)';rainbowView($('cvA'),false);rainbowView($('cvB'),true);}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){
+  var sc=STATIONS[st.station].scene,h='';
+  if(sc==='prism'){h=slider('P','EINFALLSWINKEL',st.pAng+'°',35,70,1,st.pAng,'35°','70°','g')+'<div class="ctlrow"><span>LICHT</span>'+segHTML('sF',[['white','weißes Licht'],['red','nur rotes Licht (Filter)']],st.filter)+'</div>';}
+  else if(sc==='drop'){h=slider('B','AUFTREFFHÖHE',st.b+' %',0,99,1,st.b,'Mitte','Rand','g')+
+    '<div class="disp"><small>WINKEL ZUR SONNENRICHTUNG (ROT)</small><span id="dispA">–</span></div>'+
+    '<div class="ctlrow"><span>LICHT</span>'+segHTML('sD',[['red','nur Rot'],['white','weißes Licht']],st.dfilter)+'</div>'+
+    '<label class="chk"><input type="checkbox" id="tMany"'+(st.many?' checked':'')+'> viele rote Strahlen zeigen</label>'+
+    (STATIONS[st.station].key==='s5'?'<label class="chk"><input type="checkbox" id="tR2"'+(st.refl2?' checked':'')+'> zwei Spiegelungen im Tropfen</label>':'');}
+  else{h=slider('H','SONNENHÖHE',st.sun+'°',0,60,1,st.sun,'0° (Horizont)','60° (hoch)')+slider('O','DEIN STANDORT',st.obs+' %',12,48,1,st.obs,'weiter weg','näher am Regen','g')+
+    '<label class="chk"><input type="checkbox" id="tFr"'+(st.friend?' checked':'')+'> Freundin daneben stellen</label>';}
+  $('ctl').innerHTML=h;
+  if(sc==='prism'){bindSlider('P',function(){return st.pAng;},function(v){st.pAng=v;$('dispP').textContent=v+'°';},1,35,70);bindSeg('sF',function(v){st.filter=v;draw();});}
+  else if(sc==='drop'){bindSlider('B',function(){return st.b;},function(v){st.b=v;$('dispB').textContent=v+' %';},1,0,99);bindSeg('sD',function(v){st.dfilter=v;draw();});
+    $('tMany').addEventListener('change',function(){st.many=this.checked;draw();});if($('tR2'))$('tR2').addEventListener('change',function(){st.refl2=this.checked;draw();});}
+  else{bindSlider('H',function(){return st.sun;},function(v){st.sun=v;$('dispH').textContent=v+'°';},1,0,60);bindSlider('O',function(){return st.obs;},function(v){st.obs=v;$('dispO').textContent=v+' %';},1,12,48);
+    $('tFr').addEventListener('change',function(){st.friend=this.checked;draw();});}
+}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+/* ---------- Vermutung ---------- */
+var GUESS=[{k:'A',t:'<b>vor</b> dir, hinter dem Regenbogen'},{k:'B',t:'in deinem <b>Rücken</b>'},{k:'C',t:'genau <b>über</b> dir'},{k:'D',t:'Das ist <b>egal</b>.'}];
+function guessName(k){return {A:'A (vor dir)',B:'B (im Rücken)',C:'C (über dir)',D:'D (egal)'}[k]||'';}
+
+/* ---------- Station 1: Prisma ---------- */
+var REAL=[
+  {id:'a',q:'1. Lasst das Licht der Lampe durch das Prisma auf das weiße Blatt fallen. Ihr seht …',o:['einen weißen Fleck','ein Farbband'],a:1,w:'Dreht das Prisma langsam, bis auf dem Blatt Farben erscheinen.'},
+  {id:'b',q:'2. Die Farben liegen …',o:['immer in derselben Reihenfolge','jedes Mal durcheinander'],a:0,w:'Schaut genau hin: Welche Farbe liegt immer neben welcher?'},
+  {id:'c',q:'3. Neben Rot liegt …',o:['Orange','Blau'],a:0,w:'Schaut noch einmal auf das Farbband: Was kommt direkt nach Rot?'}
+];
+var KREUZ=[
+  {id:'a',q:'Welche Farbe wird am stärksten abgelenkt (gebrochen)?',o:['Rot','Violett'],a:1,w:'Schau auf die Balken „Wie stark abgelenkt?“ unter dem Modell.'},
+  {id:'b',q:'Schalte auf „nur rotes Licht“. Hinter dem Prisma ist das Licht …',o:['wieder bunt','nur rot'],a:1,w:'Stelle im Steuerpult „nur rotes Licht (Filter)“ ein und schau auf den Schirm.'}
+];
+var WHY={q:'Warum entstehen am Prisma die Farben?',o:['Weißes Licht besteht aus vielen Farben. Jede Farbe wird verschieden stark gebrochen.','Das Prisma färbt das Licht ein.','Das Licht wird im Prisma gespiegelt.'],a:0,
+  ok:'Genau! Das Prisma färbt nichts. Es trennt nur die Farben, die schon im weißen Licht stecken. Das zeigt der Rotfilter: Rot bleibt rot.',bad:['','Wenn das Prisma färben würde, wäre auch rotes Licht danach bunt. Teste den Rotfilter!','Schau ins Modell: Das Licht geht durch das Prisma hindurch und wird an beiden Flächen gebrochen.']};
+function r1(){
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Du siehst einen Regenbogen am Himmel. Wo steht dann die <b>Sonne</b>?</p><div class="choice" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 3 prüfst du sie.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var real='<div class="stack"><p class="eyebrow">Teil A · Mit dem echten Prisma</p><p>Nehmt Prisma, Lampe und weißes Blatt. <span class="muted">(Kein Prisma da? Dann beobachtet im Modell links.)</span></p>'+segQHTML(REAL,st.s1.real,st.s1.realOk)+
+    (st.s1.realOk?'':'<div class="row"><button class="btn pri" type="button" id="c1r">Prüfen</button></div>')+'<p class="fb" id="fb1r"></p></div>';
+  var lab=st.s1.realOk?'<div class="stack"><p class="eyebrow">Teil B · Im Modell</p><p>Verändere den Einfallswinkel und probiere den <b>Rotfilter</b> aus.</p>'+segQHTML(KREUZ,st.s1.kreuz,st.s1.kreuzOk)+
+    (st.s1.kreuzOk?'':'<div class="row"><button class="btn pri" type="button" id="c1k">Prüfen</button></div>')+'<p class="fb" id="fb1k"></p></div>':'';
+  var why=st.s1.kreuzOk?mcHTML('why',WHY.q,WHY.o,st.s1.why,WHY.a):'';
+  var own=st.s1.whyOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Wie entstehen am Prisma die Farben? Schreibe ein bis zwei Sätze.</p><textarea class="free" id="own" rows="3" placeholder="Weißes Licht …">'+esc(st.s1.own)+'</textarea>'+(st.s1.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1o">Fertig</button></div>')+'<p class="fb" id="fb1o"></p></div>':'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Prisma</p><h2>Woher kommen die Farben?</h2></div>'+real+lab+why+own+(st.done[0]?'<p class="win"><b>Super!</b> Weißes Licht ist eine Mischung aus allen Farben.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  bindSegQ(st.s1.real,function(){return st.s1.realOk;});
+  if(!st.s1.realOk)$('c1r').addEventListener('click',function(){if(checkSegQ(REAL,st.s1.real,'s1real','fb1r',r1)){st.s1.realOk=true;save();r1();}});
+  else helpMsg('fb1r','Gut beobachtet! Das Farbband heißt Spektrum: Rot, Orange, Gelb, Grün, Blau, Violett.');
+  if(st.s1.realOk){bindSegQ(st.s1.kreuz,function(){return st.s1.kreuzOk;});
+    if(!st.s1.kreuzOk)$('c1k').addEventListener('click',function(){if(checkSegQ(KREUZ,st.s1.kreuz,'s1kreuz','fb1k',r1)){st.s1.kreuzOk=true;save();r1();}});
+    else helpMsg('fb1k','Richtig! Violett wird am stärksten gebrochen, Rot am schwächsten.');}
+  if(st.s1.kreuzOk){bindMC('why',WHY.a,'s1why',WHY.ok,WHY.bad,function(){st.s1.whyOk=true;save();r1();showFb('why',true,WHY.ok);},function(j){st.s1.why=j;});if(st.s1.whyOk)showFb('why',true,WHY.ok);}
+  if(st.s1.whyOk){$('own').addEventListener('input',function(){st.s1.own=this.value;save();});
+    if(!st.s1.ok)$('c1o').addEventListener('click',function(){var fb=$('fb1o');if(st.s1.own.trim().length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}st.s1.ok=true;finish(0);save();r1();});
+    else helpMsg('fb1o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 2: Regentropfen ---------- */
+var QPATH={q:'Was passiert mit dem Licht im Regentropfen? Schau dir den Weg im Modell an.',o:['gebrochen → gespiegelt → gebrochen','nur gespiegelt','nur gebrochen'],a:0,
+  ok:'Genau! Beim Eintritt gebrochen, an der Rückseite gespiegelt, beim Austritt wieder gebrochen. Das Licht kommt also zurück, Richtung Sonne.',bad:['','Schau genau hin: Ändert das Licht beim Eintritt in den Tropfen seine Richtung?','Schau auf die Rückseite des Tropfens: Was passiert dort mit dem Licht?']};
+var QPEAK={q:'Schalte „viele rote Strahlen“ ein und schau auf das Diagramm rechts unten. Bei welchem Winkel kommt besonders viel Licht zurück?',o:['bei etwa 42°','bei etwa 10°','bei etwa 90°'],a:0,
+  ok:'Richtig! Bei etwa 42° drängen sich die Strahlen. Darum leuchtet der Regenbogen genau in diesem Winkel.',bad:['','Schau auf den höchsten Balken im Diagramm.','Schau auf den höchsten Balken im Diagramm.']};
+var QOUT={q:'Rotes Licht kommt bei etwa 42° heraus, violettes bei etwa 40°. Welche Farbe liegt im Regenbogen außen (oben)?',o:['Rot','Violett'],a:0,
+  ok:'Genau! Rot hat den größten Winkel und liegt deshalb außen. Violett liegt innen.',bad:['','Der größere Winkel liegt weiter außen. Welche Farbe hat den größeren Winkel?']};
+var TIPS2=['Schiebe die Auftreffhöhe langsam von der Mitte zum Rand. Der Winkel wird erst größer und dann wieder kleiner.','Der größte Winkel liegt bei einer Auftreffhöhe um 86 %.'];
+function r2(){
+  var s=st.s2;
+  var path=mcHTML('path',QPATH.q,QPATH.o,s.path,QPATH.a);
+  var max=s.pathOk?'<div class="q"><p><b>Finde den größten Winkel:</b> Stelle „nur Rot“ ein. Verändere die Auftreffhöhe so, dass der Winkel zur Sonnenrichtung <b>so groß wie möglich</b> wird.</p>'+
+    (s.max?'<p class="fb ok">Größter Winkel gefunden: etwa 42° ✓</p>':'<div class="row"><button class="btn pri" type="button" id="c2m">Ist das der größte Winkel?</button><button class="btn tip" type="button" id="t2"'+(s.tip>=TIPS2.length?' hidden':'')+'>Tipp anzeigen</button></div><p class="fb" id="fb2m"></p><div class="stack">'+TIPS2.slice(0,s.tip).map(function(t,i){return '<p class="hint"><b>Tipp '+(i+1)+':</b> '+t+'</p>';}).join('')+'</div>')+'</div>':'';
+  var peak=s.max?mcHTML('peak',QPEAK.q,QPEAK.o,s.peak,QPEAK.a):'';
+  var out=s.peakOk?mcHTML('out',QOUT.q,QOUT.o,s.outer,QOUT.a,true):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Regentropfen</p><h2>Was passiert im Regentropfen?</h2></div><p>Ein Sonnenstrahl trifft auf einen Regentropfen. Verschiebe die Auftreffhöhe und beobachte den Weg des Lichts.</p>'+path+max+peak+out+
+    (st.done[1]?'<p class="win"><b>Klasse!</b> Jeder Regentropfen wirkt wie ein kleines Prisma mit Spiegel.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindMC('path',QPATH.a,'s2path',QPATH.ok,QPATH.bad,function(){s.pathOk=true;st.dfilter='red';save();renderCtl();draw();r2();showFb('path',true,QPATH.ok);},function(j){s.path=j;});if(s.pathOk)showFb('path',true,QPATH.ok);
+  if(s.pathOk&&!s.max){$('t2').addEventListener('click',function(){s.tip++;save();r2();});
+    $('c2m').addEventListener('click',function(){var r=dropTrace(st.b/100*0.995,COLS[0].nw,1),fb=$('fb2m'),ok=r&&r.ang>=MAXANG.Rot-0.35;tryInc('s2max',ok,ok?null:(st.b<86?'zu klein':'zu groß'));
+      if(ok){s.max=true;save();r2();return;}
+      fb.className='fb bad';fb.textContent='Noch nicht der größte Winkel ('+fmt(r?r.ang:0,1)+'°). Probiere eine '+(st.b<86?'größere':'kleinere')+' Auftreffhöhe.';
+      showHelp(fb,'s2max',function(){st.b=86;save();renderCtl();draw();helpMsg('fb2m','Die Auftreffhöhe steht jetzt auf 86 %. Schau auf den Winkel und tippe auf „Ist das der größte Winkel?“.');});});}
+  if(s.max){bindMC('peak',QPEAK.a,'s2peak',QPEAK.ok,QPEAK.bad,function(){s.peakOk=true;save();r2();showFb('peak',true,QPEAK.ok);},function(j){s.peak=j;});if(s.peakOk)showFb('peak',true,QPEAK.ok);}
+  if(s.peakOk){bindMC('out',QOUT.a,'s2outer',QOUT.ok,QOUT.bad,function(){s.outerOk=true;finish(1);save();r2();showFb('out',true,QOUT.ok);},function(j){s.outer=j;});if(s.outerOk)showFb('out',true,QOUT.ok);}
+  bindNext();
+}
+
+/* ---------- Station 3: Himmel ---------- */
+var QSUN={q:'Schau dir das Modell an. Wo steht die Sonne, wenn du einen Regenbogen siehst?',o:['in deinem Rücken','vor dir, hinter dem Regen'],a:0,ok:'Richtig! Die Sonne scheint von hinten in den Regen. Die Tropfen schicken das Licht zu dir zurück.',bad:['','Schau, von wo die gelben Sonnenstrahlen kommen.']};
+var QHIGH={q:'Stelle die Sonne langsam höher. Ab welcher Sonnenhöhe verschwindet der Regenbogen hinter dem Horizont?',o:['ab etwa 42°','ab etwa 10°','ab etwa 80°'],a:0,ok:'Genau! Steht die Sonne höher als 42°, liegt der Regenbogen unter dem Horizont. Deshalb sieht man ihn morgens und abends, nicht mittags im Sommer.',bad:['','Bei 10° ist er noch gut zu sehen. Schieb die Sonne weiter nach oben.','Schieb die Sonne langsam hoch und achte, wann er verschwindet.']};
+var QWALK={q:'Verändere deinen Standort. Was passiert, wenn du auf den Regenbogen zuläufst?',o:['Er wandert mit und bleibt gleich weit weg.','Ich komme an und finde den Goldtopf.','Er wird immer größer.'],a:0,ok:'Richtig! Es leuchten immer die Tropfen, die im 42°-Winkel zu dir liegen. Gehst du weiter, sind es andere Tropfen: Der Regenbogen wandert mit. Den Goldtopf erreicht niemand.',bad:['','Schau auf die leuchtenden Tropfen: Bleiben sie gleich, wenn du dich bewegst?','Schau auf die Ansicht „So siehst du den Regenbogen“: Ändert sie sich?']};
+var QFR={q:'Stelle deine Freundin daneben. Seht ihr denselben Regenbogen?',o:['Nein. Für jeden leuchten andere Tropfen: Jeder sieht seinen eigenen Regenbogen.','Ja, genau denselben aus denselben Tropfen.'],a:0,ok:'Genau! Die Tropfen mit braunem Rand leuchten für deine Freundin. Es sind andere als deine.',bad:['','Vergleiche die Tropfen mit weißem Rand (deine) und mit braunem Rand (ihre).']};
+function r3(){
+  var s=st.s3;
+  var h=mcHTML('sunq',QSUN.q,QSUN.o,s.sunq,QSUN.a,true)+(s.sunqOk?mcHTML('high',QHIGH.q,QHIGH.o,s.high,QHIGH.a):'')+(s.highOk?mcHTML('walk',QWALK.q,QWALK.o,s.walk,QWALK.a):'')+(s.walkOk?mcHTML('fr',QFR.q,QFR.o,s.friendq,QFR.a):'');
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Himmel</p><h2>Wo und wie sehen wir den Regenbogen?</h2></div><p>Links siehst du dich, die Sonne und einen Regenschauer von der Seite. Die bunten Punkte sind die Tropfen, deren Licht genau in dein Auge fällt.</p>'+
+    '<p class="note">Der Regenbogen erscheint immer im Winkel von etwa <b>42°</b> zur Linie von der Sonne durch deinen Kopf (gestrichelt, sie endet im Schatten deines Kopfes).</p>'+h+
+    (st.done[2]?'<p class="win"><b>Stark!</b> Du weißt jetzt, wo man Regenbogen findet und warum man sie nie erreicht.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindMC('sunq',QSUN.a,'s3sun',QSUN.ok,QSUN.bad,function(){s.sunqOk=true;save();r3();showFb('sunq',true,QSUN.ok);},function(j){s.sunq=j;});if(s.sunqOk)showFb('sunq',true,QSUN.ok);
+  if(s.sunqOk){bindMC('high',QHIGH.a,'s3high',QHIGH.ok,QHIGH.bad,function(){s.highOk=true;save();r3();showFb('high',true,QHIGH.ok);},function(j){s.high=j;});if(s.highOk)showFb('high',true,QHIGH.ok);}
+  if(s.highOk){bindMC('walk',QWALK.a,'s3walk',QWALK.ok,QWALK.bad,function(){s.walkOk=true;save();r3();showFb('walk',true,QWALK.ok);},function(j){s.walk=j;});if(s.walkOk)showFb('walk',true,QWALK.ok);}
+  if(s.walkOk){bindMC('fr',QFR.a,'s3friend',QFR.ok,QFR.bad,function(){s.friendqOk=true;finish(2);save();r3();showFb('fr',true,QFR.ok);},function(j){s.friendq=j;});if(s.friendqOk)showFb('fr',true,QFR.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Weißes Licht besteht aus vielen ',post:'.',o:['Farben','Linsen','Schatten'],a:0},
+  {pre:'Am Prisma wird jede Farbe verschieden stark ',post:'.',o:['gebrochen','gespiegelt','gefärbt'],a:0},
+  {pre:'Violettes Licht wird ',post:' gebrochen als rotes Licht.',o:['stärker','schwächer'],a:0},
+  {pre:'Im Regentropfen wird das Licht gebrochen, an der Rückseite ',post:' und wieder gebrochen.',o:['gespiegelt','verschluckt'],a:0},
+  {pre:'Einen Regenbogen sieht man nur, wenn die Sonne ',post:' uns steht.',o:['hinter','vor'],a:0},
+  {pre:'Wir sehen den Regenbogen in einem Winkel von etwa ',post:' zum Schatten unseres Kopfes.',o:['42°','90°','10°'],a:0},
+  {pre:'Gehen wir auf den Regenbogen zu, ',post:'.',o:['wandert er mit','kommen wir an'],a:0}
+];
+var WORTE='hinter · 42° · Farben · wandert er mit · gebrochen · gespiegelt · stärker';
+var MERK='<div class="merk"><h3>Merksatz: Der Regenbogen</h3><p>'+GAPS.map(function(g){return g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post;}).join(' ')+'</p></div>';
+var HOSE={q:'Es ist 18 Uhr. Die Sonne steht tief im Westen. Du willst mit dem Gartenschlauch einen Regenbogen machen. Wohin spritzt und schaust du?',o:['nach Osten, mit der Sonne im Rücken','nach Westen, in die Sonne','senkrecht nach oben'],a:0,
+  ok:'Richtig! Die Sonne muss im Rücken stehen. Dann siehst du den Regenbogen im Wassernebel im Winkel von etwa 42°.',bad:['','Schau in dein Ergebnis aus Station 3: Wo steht die Sonne?','Die Sonne muss im Rücken stehen. Wo ist dann der Wassernebel?']};
+function r4(){
+  var refl=st.s4.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='B'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist B: Die Sonne steht im Rücken.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>B</b>.</p>')+
+    '<p>Begründe kurz, warum die Sonne im Rücken stehen muss:</p><textarea class="free" id="refl" rows="2" placeholder="Die Sonne muss im Rücken stehen, weil die Tropfen …">'+esc(st.s4.refl)+'</textarea></div>':'';
+  var hose=st.s4.ok?mcHTML('hose',HOSE.q,HOSE.o,st.s4.hose,HOSE.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+hose+(st.s4.hoseOk?saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=st.s4.gaps[i];if(st.s4.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){st.s4.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(st.s4.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){st.s4.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){$('refl').addEventListener('input',function(){st.s4.refl=this.value;save();});
+    bindMC('hose',HOSE.a,'s4hose',HOSE.ok,HOSE.bad,function(){st.s4.hoseOk=true;finish(3);save();r4();showFb('hose',true,HOSE.ok);},function(j){st.s4.hose=j;});if(st.s4.hoseOk)showFb('hose',true,HOSE.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Der Nebenregenbogen',task:'Manchmal sieht man über dem Regenbogen einen zweiten, blasseren. Schalte im Steuerpult „zwei Spiegelungen im Tropfen“ und „weißes Licht“ ein und stelle die Auftreffhöhe auf etwa <b>95 %</b>.',q:'Was fällt dir auf?',
+   o:['Das Licht kommt bei etwa 51° heraus und die Farben sind umgekehrt: Rot liegt innen.','Das Licht kommt wieder bei 42° heraus, die Farben sind gleich.','Es kommt nur rotes Licht heraus.'],a:0,ok:'Richtig! Durch die zweite Spiegelung entsteht der Nebenregenbogen bei etwa 51°. Er ist blasser und die Farben sind vertauscht.',bad:'Schau auf die Ansicht „Austrittswinkel der Farben“ mit zwei Spiegelungen.'},
+  {id:'b',title:'Regenbogen aus dem Flugzeug',task:'Aus dem Flugzeug sieht man manchmal einen ganzen Kreis statt eines Bogens.',q:'Warum?',
+   o:['Der Boden verdeckt den unteren Teil des Kreises nicht mehr.','Im Flugzeug ist das Licht heller.','Die Flugzeugfenster wirken wie Prismen.'],a:0,ok:'Genau! Der Regenbogen ist eigentlich ein Kreis um den Schatten deines Kopfes. Vom Boden aus sieht man nur den Teil über dem Horizont.',bad:'Schau in Station 3 auf die Ansicht „Eigentlich ein Kreis“.'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Knobel-Aufgaben zum Regenbogen</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der beiden Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse speichern ---------- */
+var TL=[['s1real','Station 1 · Beobachtungen am echten Prisma'],['s1kreuz','Station 1 · Prisma im Modell'],['s1why','Station 1 · Warum entstehen Farben?'],
+  ['s2path','Station 2 · Weg des Lichts im Tropfen'],['s2max','Station 2 · Größter Winkel'],['s2peak','Station 2 · Winkel mit viel Licht'],['s2outer','Station 2 · Welche Farbe außen?'],
+  ['s3sun','Station 3 · Wo steht die Sonne?'],['s3high','Station 3 · Sonne zu hoch'],['s3walk','Station 3 · Auf den Regenbogen zulaufen'],['s3friend','Station 3 · Eigener Regenbogen'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4hose','Station 4 · Gartenschlauch'],['s5a','Profi · Nebenregenbogen'],['s5b','Profi · Flugzeug']];
+function resText(){
+  var r=st.res||{},d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  L.push('REGENBOGEN-LABOR · Wie entsteht ein Regenbogen?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='B'?'  → stimmt':'  → richtig ist B'));
+  L.push('');
+  L.push('STATION 1 · Prisma');
+  REAL.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s1.real[q.id]));});
+  KREUZ.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s1.kreuz[q.id]));});
+  L.push('  '+WHY.q+' → '+a(WHY,st.s1.why));
+  L.push('  Meine Erklärung (Farben am Prisma): '+((st.s1.own||'').trim()||'(leer)'));
+  L.push('');
+  L.push('STATION 2 · Regentropfen');
+  L.push('  Weg des Lichts: '+a(QPATH,st.s2.path));
+  L.push('  Größter Winkel gefunden: '+(st.s2.max?'ja, etwa 42° ✓':'nein'));
+  L.push('  Viel Licht bei: '+a(QPEAK,st.s2.peak)+'   Außen liegt: '+a(QOUT,st.s2.outer));
+  L.push('');
+  L.push('STATION 3 · Himmel');
+  L.push('  Sonne: '+a(QSUN,st.s3.sunq));L.push('  Sonne zu hoch ab: '+a(QHIGH,st.s3.high));L.push('  Zulaufen: '+a(QWALK,st.s3.walk));L.push('  Freundin: '+a(QFR,st.s3.friendq));
+  L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){var tmp=document.createElement('div');tmp.innerHTML=MERK;L.push('  '+tmp.textContent.replace('Merksatz: Der Regenbogen','Der Regenbogen: '));}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Begründung zur Vermutung: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Gartenschlauch: '+a(HOSE,st.s4.hose));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];if(!t){if(x[0].charAt(1)!=='5')L.push('  '+x[1]+': nicht bearbeitet');return;}if(x[0].charAt(1)!=='5'){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,tries:st.tries,tips:{s2:st.s2.tip||0},own:st.s1.own||'',refl:st.s4.refl||'',hose:st.s4.hose,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('RL-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Regenbogen-Labor_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||'7d')+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Regenbogen-Labor“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie entsteht ein Regenbogen?</p><h2 id="stH">Willkommen im Regenbogen-Labor!</h2>'+
+    '<p>Heute findest du heraus, wie ein Regenbogen entsteht und warum er so bunt ist.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Gesamt ---------- */
+var lastScene=null;
+function render(){var sc=STATIONS[st.station].scene;
+  if(sc!==lastScene){if(sc==='prism'){st.pAng=48;st.filter='white';}if(sc==='drop'){st.b=50;st.dfilter=STATIONS[st.station].key==='s5'?'white':'white';st.many=false;st.refl2=false;}if(sc==='sky'){st.sun=20;st.obs=30;st.friend=false;}lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();remind();startDialog();
+})();
+</script>
+</body>
+</html>

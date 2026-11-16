@@ -1,0 +1,829 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 6</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+.choice.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.choice.grid3 .opt{padding:8px 8px;font-size:14px;display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25);flex:none}
+.tick{color:var(--ok);font-weight:700}
+.chip{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:1px 8px;font-size:13px;margin:2px 0;color:var(--ink-soft)}
+.chip.on{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+table.mt{border-collapse:collapse;width:100%;font-size:15px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt input.num{width:100%;max-width:5.5em;text-align:center}
+table.mt select{max-width:100%}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+ol.ladder{margin:0;padding-left:1.4em}
+ol.ladder li{padding:3px 0}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg.long{display:flex;flex-direction:column;border-radius:12px}
+.seg.long button{text-align:left;border-top:1px solid var(--line);font-weight:600}
+.seg.long button:first-child{border-top:none}
+@media (max-width:440px){.choice.grid3{grid-template-columns:1fr 1fr}}
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 6</b><span>Wie entsteht ein Blitz?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Gewitterwolke, Blitzeinschlag oder Entfernung eines Gewitters"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 6';
+var STATIONS=[
+  {key:'s1',name:'Wolken-Labor',scene:'cloud'},
+  {key:'s2',name:'Blitzeinschlag',scene:'land'},
+  {key:'s3',name:'Entfernung & Sicherheit',scene:'storm'},
+  {key:'s4',name:'Merksatz',scene:'cloud'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'land'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{m1:false,strikes:{},mr:{},obs:{}},
+  s2:{seen:{},pred:{},obs:{},own:''},
+  s3:{meas:{},km:{},rules:{}},
+  s4:{gaps:{},ok:false,refl:'',fd:{}},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[]};
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-6-v1',RKEY='ladungslabor-6-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Wolke: Aufwind lässt Eiskristalle (werden +) und Graupelkörner (werden –) aneinander reiben. Die leichten Eiskristalle steigen nach oben,
+   der schwere Graupel sinkt nach unten: Ladungstrennung. Unten in der Wolke sammelt sich negative Ladung, der Boden darunter wird positiv (wie in Stunde 4).
+   Im Modell: pro Reibschritt 10 Mio. V. Der Blitz springt über, wenn die Spannung den Grenzwert erreicht. Grenzwert ~ Abstand (niedrig 4, mittel 8, hoch 12 Schritte).
+   Einschlag: Der Blitz sucht den kürzesten Weg, also meist den höchsten Punkt. Entfernung: Schall braucht etwa 3 Sekunden für 1 km. */
+var M={},T=0,UPER=10;
+var DIST=[null,{n:'niedrig',lim:4,yb:224},{n:'mittel',lim:8,yb:172},{n:'hoch',lim:12,yb:120}];
+var SCN=[
+  {k:'feld',n:'Mensch auf freiem Feld',safe:0,txt:'Der Mensch ist der höchste Punkt. Der Blitz schlägt in ihn ein. Lebensgefahr!'},
+  {k:'baum',n:'Mensch unter einem Baum',safe:0,txt:'Der Blitz schlägt in den Baum ein und springt auf den Menschen über. Lebensgefahr!'},
+  {k:'hocke',n:'Hocke in einer Mulde',safe:1,txt:'Der Baum in der Ferne ist höher. Der Mensch hockt tief mit geschlossenen Füßen (wegen der Schrittspannung, siehe Station 3). Viel sicherer, aber nur eine Notlösung.'},
+  {k:'auto',n:'Im Auto',safe:1,txt:'Die Ladung fließt außen über die Metallkarosserie in den Boden. Innen ist man geschützt.'},
+  {k:'haus',n:'Haus mit Blitzableiter',safe:1,txt:'Der Blitz trifft den Blitzableiter. Ein Metalldraht leitet die Ladung sicher in die Erde.'}];
+function scn(k){return SCN.filter(function(s){return s.k===k;})[0]||SCN[0];}
+var ROUNDS=[3,6,12];
+function freshModel(){
+  M={cl:{d:2,n:0,parts:[],bolt:0,boltPath:null,flash:0,thunder:0,strikes:0},
+     land:{k:'feld',bolt:0,path:null,flash:0,flow:0},
+     st:{r:0,run:false,t:0,flashT:0,thunderT:0,res:null}};
+  var r=rng(5);for(var i=0;i<26;i++)M.cl.parts.push({x:r(),y:r(),ph:r()*6.28,big:i%2});
+}
+function rng(s){return function(){s=(s*9301+49297)%233280;return s/233280;};}
+freshModel();
+function fmtN(v){return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+
+/* ---------- Zeichnen ---------- */
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return false;}
+function bg(){return col('surface');}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='cloud')drawCloud(c,lupe);else if(sc==='land')drawLand(c,lupe);else drawStorm(c,lupe);}
+function rrect(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
+function sgn(c,x,y,r,plus){c.fillStyle=plus?'#E8322B':'#2F6FD3';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold '+Math.round(r*1.5)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText(plus?'+':'–',x,y+0.5);}
+function sky(c,dark){var g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,dark?'#5D6A86':'#BFD3EC');g.addColorStop(1,dark?'#9FAABF':'#E3EDF8');c.fillStyle=g;c.fillRect(0,0,640,300);}
+function ground(c,y){c.fillStyle='#7FAE5A';c.fillRect(0,y,640,372-y);c.fillStyle='#6A9A47';c.fillRect(0,y,640,6);}
+function cloudShape(c,cx,yb,w,h,fill){c.fillStyle=fill;
+  var bumps=[[-0.38,0.62,0.36],[-0.18,0.38,0.42],[0.06,0.28,0.48],[0.28,0.4,0.42],[0.42,0.62,0.34]];
+  bumps.forEach(function(b){c.beginPath();c.arc(cx+b[0]*w,yb-h+b[1]*h,b[2]*h,0,Math.PI*2);c.fill();});
+  rrect(c,cx-0.47*w,yb-h*0.42,0.94*w,h*0.42,h*0.2);c.fill();}
+function bolt(c,x0,y0,x1,y1,seed,wid){var r=rng(seed),pts=[[x0,y0]],n=9;for(var i=1;i<n;i++){var t=i/n;pts.push([x0+(x1-x0)*t+(r()-.5)*40,y0+(y1-y0)*t]);}pts.push([x1,y1]);
+  c.strokeStyle='rgba(255,247,170,.55)';c.lineWidth=(wid||4)*3;c.lineJoin='round';c.beginPath();pts.forEach(function(p,i){if(i)c.lineTo(p[0],p[1]);else c.moveTo(p[0],p[1]);});c.stroke();
+  c.strokeStyle='#FFFDE8';c.lineWidth=wid||4;c.stroke();}
+function drawCloud(c,lupe){var C=M.cl,D=DIST[C.d],yb=D.yb,n=C.n;sky(c,n>0);ground(c,300);
+  cloudShape(c,320,yb,340,110,n?'#7B8396':'#EEF1F6');
+  /* Teilchen */
+  var top=yb-100,bot=yb-12;
+  for(var i=0;i<n;i++){var x=180+((i*67)%280);sgn(c,x+Math.sin(T*2+i)*3,top+18+(i%3)*10,7,true);sgn(c,x+Math.cos(T*2+i)*3,bot-8-(i%3)*10,7,false);}
+  /* Boden + (Influenz) */
+  for(var j=0;j<n;j++){sgn(c,320-(n-1)*13+j*26,312,7,true);}
+  if(C.bolt>0)bolt(c,320,yb-6,300,300,7+C.strikes,5);
+  if(C.flash>0){c.fillStyle='rgba(255,255,255,'+(C.flash*0.7)+')';c.fillRect(0,0,640,372);}
+  if(!lupe){c.font='bold 14px '+ff();c.textAlign='left';c.textBaseline='middle';c.fillStyle=n?'#C8423D':col('ink-soft');c.fillText(n?'oben: positiv':'Wolke ungeladen',8,top+18);
+    c.fillStyle=n?'#1C66C0':col('ink-soft');if(n)c.fillText('unten: negativ',8,bot-8);
+    if(n){c.fillStyle='#8E2420';c.fillText('Boden: positiv',8,340);}
+    c.font='bold 13px '+ff();c.fillStyle=col('ink');c.textAlign='right';c.fillText('Abstand: '+D.n,632,yb+16);
+    if(C.thunder>0){c.globalAlpha=Math.min(1,C.thunder);c.font='bold 30px '+ff();c.fillStyle='#1A1F36';c.textAlign='center';c.fillText('GRRROLLL!',480,260);c.globalAlpha=1;}}
+}
+function landObj(c,k,hit){var person=function(x,y,s,crouch){c.strokeStyle='#1A1F36';c.lineWidth=3*s;c.lineCap='round';c.fillStyle='#F6D3B0';
+    if(crouch){c.beginPath();c.arc(x,y-24*s,7*s,0,7);c.fill();c.stroke();c.beginPath();c.moveTo(x,y-17*s);c.lineTo(x+2*s,y-6*s);c.lineTo(x-6*s,y);c.moveTo(x+2*s,y-6*s);c.lineTo(x+4*s,y);c.stroke();return;}
+    c.beginPath();c.arc(x,y-44*s,7*s,0,7);c.fill();c.stroke();c.beginPath();c.moveTo(x,y-37*s);c.lineTo(x,y-16*s);c.moveTo(x,y-16*s);c.lineTo(x-6*s,y);c.moveTo(x,y-16*s);c.lineTo(x+6*s,y);c.moveTo(x,y-30*s);c.lineTo(x-9*s,y-22*s);c.moveTo(x,y-30*s);c.lineTo(x+9*s,y-22*s);c.stroke();};
+  var tree=function(x,y,h){c.fillStyle='#7A5233';c.fillRect(x-6,y-h*0.45,12,h*0.45);c.fillStyle='#3F7D3A';c.beginPath();c.arc(x,y-h*0.62,h*0.3,0,7);c.arc(x-h*0.18,y-h*0.5,h*0.2,0,7);c.arc(x+h*0.18,y-h*0.5,h*0.2,0,7);c.fill();};
+  if(k==='feld'){person(320,300,1.2);return [320,246];}
+  if(k==='baum'){tree(300,300,170);person(336,300,1.1);if(hit){c.strokeStyle='#FFF3A0';c.lineWidth=4;c.beginPath();c.moveTo(304,200);c.lineTo(326,226);c.lineTo(334,248);c.stroke();}return [300,140];}
+  if(k==='hocke'){c.fillStyle='#6A9A47';c.beginPath();c.ellipse(260,304,70,14,0,0,Math.PI);c.fill();person(260,306,1.2,true);tree(520,300,170);return [520,140];}
+  if(k==='auto'){var x=320,y=300;c.fillStyle=hit?'#FFE58A':'#C8423D';rrect(c,x-90,y-42,180,30,10);c.fill();rrect(c,x-55,y-70,110,32,12);c.fill();c.fillStyle='#BFD3EC';rrect(c,x-46,y-64,40,22,4);c.fill();rrect(c,x+6,y-64,40,22,4);c.fill();
+    c.fillStyle='#2B2F3A';c.beginPath();c.arc(x-55,y-10,13,0,7);c.arc(x+55,y-10,13,0,7);c.fill();person(x-26,y-40,0.45);person(x+26,y-40,0.45);return [x,y-70];}
+  /* haus */
+  var hx=320,hy=300;c.fillStyle='#E8DCC8';c.fillRect(hx-80,hy-90,160,90);c.fillStyle='#A0412D';c.beginPath();c.moveTo(hx-95,hy-90);c.lineTo(hx,hy-150);c.lineTo(hx+95,hy-90);c.closePath();c.fill();
+  c.fillStyle='#6B4A2F';c.fillRect(hx-18,hy-50,36,50);c.fillStyle='#BFD3EC';c.fillRect(hx-60,hy-75,30,24);c.fillRect(hx+30,hy-75,30,24);
+  c.strokeStyle='#8A8F98';c.lineWidth=4;c.beginPath();c.moveTo(hx,hy-150);c.lineTo(hx,hy-190);c.moveTo(hx,hy-150);c.lineTo(hx+95,hy-92);c.lineTo(hx+110,hy-92);c.lineTo(hx+110,hy+4);c.stroke();
+  return [hx,hy-190];}
+function drawLand(c,lupe){var L=M.land,s=scn(L.k);sky(c,true);ground(c,300);
+  cloudShape(c,320,92,420,82,'#6B7385');
+  var tgt=landObj(c,L.k,L.bolt>0);
+  if(L.bolt>0)bolt(c,330,86,tgt[0],tgt[1],11+SCN.indexOf(s),5);
+  if(L.flow>0&&(L.k==='haus'||L.k==='auto')){var t=(1-L.flow);for(var i=0;i<6;i++){var u=(t*2+i/6)%1,p;
+      if(L.k==='haus'){p=u<0.3?[320+95*(u/0.3),110+58*(u/0.3)]:(u<0.36?[415+15*((u-0.3)/0.06),208]:[430,208+(u-0.36)/0.64*96]);}
+      else{p=u<0.5?[320-90*(u/0.5),230+(u/0.5)*58]:[230,288+(u-0.5)*20];}
+      sgn(c,p[0],p[1],5,false);}}
+  if(L.flash>0){c.fillStyle='rgba(255,255,255,'+(L.flash*0.7)+')';c.fillRect(0,0,640,372);}
+  if(!lupe){c.font='bold 16px '+ff();c.fillStyle='#fff';c.textAlign='left';c.textBaseline='top';c.fillText(s.n,12,12);
+    if(L.shown){c.fillStyle=s.safe?'#DDF2E7':'#F9E1DF';rrect(c,12,320,616,40,10);c.fill();c.fillStyle=s.safe?'#1B6B47':'#8E2420';c.font='bold 12px '+ff();c.textBaseline='middle';var tx=(s.safe?'Geschützt: ':'Gefährlich: ')+s.txt,ws=tx.split(' '),l1='',l2='';ws.forEach(function(w){if(!l2&&c.measureText(l1+' '+w).width<590)l1=l1?l1+' '+w:w;else l2=l2?l2+' '+w:w;});
+    if(l2){c.fillText(l1,22,332);c.fillText(l2,22,348);}else c.fillText(l1,22,340);}}
+}
+function drawStorm(c,lupe){var S=M.st;sky(c,true);ground(c,300);
+  var dist=ROUNDS[Math.min(S.r,ROUNDS.length-1)]/3,sc=1.6-dist*0.25;
+  cloudShape(c,470,150,260*sc,90*sc,'#6B7385');
+  if(S.flashT>0)bolt(c,470,148,455,300,3+S.r,3);
+  if(S.flashT>0){c.fillStyle='rgba(255,255,255,'+(S.flashT*0.6)+')';c.fillRect(0,0,640,372);}
+  /* Beobachter */
+  c.strokeStyle='#1A1F36';c.lineWidth=3;c.fillStyle='#F6D3B0';c.beginPath();c.arc(90,250,9,0,7);c.fill();c.stroke();c.beginPath();c.moveTo(90,259);c.lineTo(90,282);c.lineTo(82,300);c.moveTo(90,282);c.lineTo(98,300);c.moveTo(90,266);c.lineTo(104,258);c.stroke();
+  if(S.thunderT>0){c.globalAlpha=Math.min(1,S.thunderT);c.font='bold 30px '+ff();c.fillStyle='#fff';c.textAlign='center';c.textBaseline='middle';c.fillText('GRRROLLL!',260,200);c.globalAlpha=1;}
+  if(!lupe){c.fillStyle='#2B2F3A';rrect(c,20,20,200,64,12);c.fill();c.fillStyle='#C9F2D0';rrect(c,30,30,180,44,8);c.fill();c.fillStyle='#14361C';c.font='bold 28px monospace';c.textAlign='center';c.textBaseline='middle';c.fillText((S.t).toFixed(1).replace('.',',')+' s',120,53);
+    c.fillStyle='#fff';c.font='bold 14px '+ff();c.textAlign='left';c.fillText('Runde '+Math.min((S.thunderT>0||(!S.run&&S.res!=null))?S.r:S.r+1,ROUNDS.length)+' von '+ROUNDS.length,236,40);
+    c.font='13px '+ff();c.fillText(S.run?(S.thunderT>0?'Donner! Die Uhr bleibt stehen.':'Blitz gesehen … warte auf den Donner'):(S.res!=null?'Gemessen: '+S.res+' s':'Tippe auf „Blitz beobachten“.'),236,62);}
+}
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='cloud'){var x=A.getContext('2d'),w=A.width;paper(x,w,'#E9EDF3');
+    for(var i=0;i<6;i++){var px=w*(0.2+(i%3)*0.3),phase=(T*0.25+i*0.17)%1;var yi=w*(0.85-phase*0.65),yg=w*(0.15+phase*0.65);
+      x.fillStyle='#BFE3F5';x.beginPath();x.arc(px,yi,w*0.03,0,7);x.fill();x.fillStyle='#E8322B';x.font='bold '+Math.round(w*0.05)+'px '+ff();x.textAlign='center';x.textBaseline='middle';x.fillText('+',px,yi);
+      x.fillStyle='#8FA3BD';x.beginPath();x.arc(px+w*0.08,yg,w*0.055,0,7);x.fill();x.fillStyle='#1C66C0';x.fillText('–',px+w*0.08,yg);}
+    x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.058)+'px '+ff();x.textAlign='left';x.textBaseline='top';x.fillText('Eiskristalle (+) steigen',w*0.05,w*0.03);x.textBaseline='bottom';x.fillText('Graupel (–) sinkt',w*0.05,w*0.98);
+    var C=M.cl,D=DIST[C.d],y=B.getContext('2d'),w2=B.width;paper(y,w2,'#FFFFFF');
+    y.fillStyle='#1A1F36';y.font='bold '+Math.round(w2*0.075)+'px '+ff();y.textAlign='left';y.textBaseline='top';y.fillText('Spannung Wolke–Boden',w2*0.06,w2*0.07);
+    y.font='bold '+Math.round(w2*0.13)+'px '+ff();y.fillStyle='#6B3FB0';y.fillText(fmtN(C.n*UPER)+' Mio. V',w2*0.06,w2*0.22);
+    y.fillStyle='#E3E8F0';y.fillRect(w2*0.06,w2*0.48,w2*0.88,w2*0.12);y.fillStyle='#6B3FB0';y.fillRect(w2*0.06,w2*0.48,w2*0.88*Math.min(1,C.n/DIST[3].lim),w2*0.12);
+    var gx=w2*0.06+w2*0.88*D.lim/DIST[3].lim;y.strokeStyle='#E8892B';y.lineWidth=w2*0.012;y.beginPath();y.moveTo(gx,w2*0.44);y.lineTo(gx,w2*0.64);y.stroke();
+    y.font=Math.round(w2*0.055)+'px '+ff();y.fillStyle='#B4671F';y.textAlign='center';y.fillText('Blitz-Grenze',Math.min(w2*0.8,Math.max(w2*0.2,gx)),w2*0.66);
+    y.textAlign='left';y.fillStyle='#4E5677';y.fillText('Reibschritte: '+C.n+' · Blitze: '+(C.strikes||0),w2*0.06,w2*0.8);
+    $('capA').innerHTML='<b>Lupe:</b> im Inneren der Wolke';$('capB').innerHTML='<b>Spannungsanzeige</b>';}
+  else if(sc==='land'){var s=scn(M.land.k),x3=A.getContext('2d'),w3=A.width;paper(x3,w3,'#FFFFFF');
+    vtext(x3,w3,[{t:'Regel',s:0.08,b:true},{t:'Der Blitz nimmt meist den kürzesten Weg: Er schlägt in den höchsten Punkt ein.',s:0.062,c:'#4E5677'}]);
+    var x4=B.getContext('2d'),w4=B.width;paper(x4,w4);var shown=M.land.shown;
+    vtext(x4,w4,[{t:'Ergebnis',s:0.08,b:true},{t:shown?(s.safe?'geschützt':'gefährlich'):'Löse einen Blitz aus.',s:0.075,b:true,c:shown?(s.safe?'#22865A':'#C8423D'):'#4E5677'},{t:shown?s.txt:'',s:0.056,c:'#4E5677'}]);
+    $('capA').innerHTML='<b>Merke</b>';$('capB').innerHTML='<b>Ergebnis</b>';}
+  else{var S=M.st,x5=A.getContext('2d'),w5=A.width;paper(x5,w5,'#FFFFFF');
+    vtext(x5,w5,[{t:'Faustregel',s:0.08,b:true},{t:'Schall legt in 3 Sekunden etwa 1 km zurück.',s:0.066,c:'#4E5677'},{t:'Sekunden : 3 = km',s:0.085,b:true,c:'#6B3FB0',a:'center'}]);
+    var x6=B.getContext('2d'),w6=B.width;paper(x6,w6);
+    vtext(x6,w6,[{t:'Warum zuerst der Blitz?',s:0.072,b:true},{t:'Licht ist fast eine Million Mal schneller als Schall. Den Blitz sieht man sofort, der Donner kommt später.',s:0.056,c:'#4E5677'}]);
+    $('capA').innerHTML='<b>Faustregel</b>';$('capB').innerHTML='<b>Licht und Schall</b>';}
+}
+function statusInfo(){var sc=scene();
+  if(sc==='cloud'){var C=M.cl,D=DIST[C.d];if(C.bolt>0)return ['bad','Blitz! Die getrennten Ladungen gleichen sich aus.'];if(!C.n)return ['info','Die Wolke ist ungeladen. Lass den Aufwind wirken.'];return ['info',C.n+' Reibschritte · '+fmtN(C.n*UPER)+' Mio. V · Blitz-Grenze bei '+fmtN(D.lim*UPER)+' Mio. V'];}
+  if(sc==='land'){var s=scn(M.land.k);return M.land.shown?[s.safe?'ok':'bad',s.txt]:['info','Wähle eine Situation und löse einen Blitz aus.'];}
+  var S=M.st;if(S.r>=ROUNDS.length)return ['ok','Alle Runden gemessen.'];return ['info',S.run?'Zähle mit …':'Runde '+(S.r+1)+': Tippe auf „Blitz beobachten“.'];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();if(e.textContent!==s[1]){e.className='status '+s[0];e.textContent=s[1];}}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0,reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;T+=dt;var sc=scene(),moving=(sc==='cloud');
+  var C=M.cl;if(C.bolt>0){C.bolt=Math.max(0,C.bolt-dt*2.5);moving=true;}if(C.flash>0){C.flash=Math.max(0,C.flash-dt*3);moving=true;}if(C.thunder>0){C.thunder=Math.max(0,C.thunder-dt*0.6);moving=true;}
+  var L=M.land;if(L.bolt>0){L.bolt=Math.max(0,L.bolt-dt*1.2);moving=true;}if(L.flash>0){L.flash=Math.max(0,L.flash-dt*3);moving=true;}if(L.flow>0){L.flow=Math.max(0,L.flow-dt*0.5);moving=true;}
+  var S=M.st;if(S.run){var goal=ROUNDS[S.r];if(S.thunderT<=0){S.t=Math.min(goal,S.t+dt);if(S.t>=goal){S.thunderT=1.6;S.res=goal;stormDone();}}moving=true;}
+  if(S.flashT>0){S.flashT=Math.max(0,S.flashT-dt*3);moving=true;}if(S.thunderT>0){S.thunderT=Math.max(0,S.thunderT-dt*0.8);if(S.thunderT===0){S.run=false;renderCtl();}moving=true;}
+  draw();if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max,unit){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+(unit==null?'×':unit);draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='';var eb=$('ctlCard').querySelector('.eyebrow');
+  if(needGuess()){eb.textContent='Bevor du startest';eb.classList.add('pro');$('ctl').innerHTML=guessBox();bindGuess();return;}
+  eb.textContent='Steuerpult';eb.classList.remove('pro');
+  if(sc==='cloud'){var C=M.cl,D=DIST[C.d];h='<div class="ctlrow"><span>ABSTAND WOLKE – BODEN</span>'+segHTML('sD',[[1,'niedrig'],[2,'mittel'],[3,'hoch']],C.d)+'</div>'+
+      '<div class="lift"><div class="disp"><small>REIBSCHRITTE</small><span>'+C.n+'</span></div></div>'+
+      '<div class="row"><button class="btn pri" type="button" id="cUp">Aufwind: Eis und Graupel reiben</button></div>'+
+      '<div class="row"><button class="btn sec" type="button" id="cRe"'+(C.n?'':' disabled')+'>Wolke zurücksetzen</button></div>';}
+  else if(sc==='land'){var L=M.land;h='<div class="ctlrow"><span>SITUATION</span><div class="choice" id="scs">'+SCN.map(function(s){return '<button type="button" class="opt'+(L.k===s.k?' sel':'')+'" data-k="'+s.k+'">'+s.n+((st.s2.seen||{})[s.k]?' <small class="tick">✓</small>':'')+'</button>';}).join('')+'</div></div>'+
+      '<div class="row"><button class="btn pri" type="button" id="lB">Blitz auslösen</button></div>';}
+  else{var S=M.st,done=S.r>=ROUNDS.length;h=(done?'<p class="locked">Alle drei Runden sind gemessen.</p>':'<div class="row"><button class="btn pri" type="button" id="sB"'+(S.run?' disabled':'')+'>Blitz beobachten (Runde '+(S.r+1)+')</button></div>')+
+      '<div class="row"><button class="btn tip" type="button" id="sR">Messung neu starten</button></div>';}
+  h+='<p class="status info" id="stat"></p>';
+  $('ctl').innerHTML=h;
+  if(sc==='cloud'){bindSeg('sD',function(v){var C=M.cl;C.d=+v;C.n=0;renderCtl();kick();});
+    $('cUp').addEventListener('click',function(){var C=M.cl,D=DIST[C.d];if(C.bolt>0)return;C.n++;if(C.n>=D.lim)strike();renderCtl();kick();});
+    $('cRe').addEventListener('click',function(){M.cl.n=0;renderCtl();kick();});}
+  else if(sc==='land'){Array.prototype.forEach.call(document.querySelectorAll('#scs .opt'),function(b){b.addEventListener('click',function(){M.land.k=b.dataset.k;M.land.shown=false;M.land.bolt=0;M.land.flow=0;renderCtl();kick();});});
+    $('lB').addEventListener('click',function(){var L=M.land;L.bolt=1;L.flash=1;L.flow=(L.k==='haus'||L.k==='auto')?1:0;L.shown=true;st.s2.seen=st.s2.seen||{};st.s2.seen[L.k]=true;save();renderCtl();kick();if(st.station===1)keepScroll(r2);});}
+  else{var sb=$('sB');if(sb)sb.addEventListener('click',function(){var S=M.st;if(S.run)return;S.run=true;S.t=0;S.flashT=1;S.thunderT=0;S.res=null;renderCtl();kick();});
+    $('sR').addEventListener('click',function(){var S=M.st;S.r=0;S.run=false;S.t=0;S.res=null;st.s3.meas={};save();renderCtl();kick();if(st.station===2)keepScroll(r3);});}
+  updStatus();
+}
+function strike(){var C=M.cl;st.s1.strikes=st.s1.strikes||{};st.s1.strikes[C.d]=C.n;C.n=0;C.bolt=1;C.flash=1;C.thunder=1.6;C.strikes=(C.strikes||0)+1;save();if(st.station===0&&!needGuess())keepScroll(r1);}
+function stormDone(){var S=M.st;st.s3.meas=st.s3.meas||{};st.s3.meas[S.r]=ROUNDS[S.r];S.r++;save();if(st.station===2)keepScroll(r3);}
+function keepScroll(fn){var y=window.scrollY;fn();window.scrollTo(0,y);}
+
+/* ---------- Vermutung ---------- */
+function pic(k){var inner={
+  A:'<path d="M16 34 a10 10 0 0 1 14 -12 a12 12 0 0 1 22 2 a9 9 0 0 1 12 10 z" fill="#7B8396"/><text x="30" y="31" font-size="9" font-weight="700" fill="#FFD1CE">+</text><text x="48" y="31" font-size="11" font-weight="700" fill="#BFD7FF">–</text><path d="M40 36 l-6 12 h6 l-5 14" stroke="#F5B82E" stroke-width="3" fill="none"/>',
+  B:'<path d="M8 66 l22 -30 l14 16 l8 -10 l20 24 z" fill="#8A6D4A"/><path d="M44 34 q-6 -8 0 -16 q6 8 0 16" fill="#E8892B"/>',
+  C:'<circle cx="40" cy="38" r="13" fill="#F5B82E"/><g stroke="#F5B82E" stroke-width="3"><path d="M40 14v-6M40 68v-6M16 38h-6M70 38h-6M23 21l-4-4M61 59l-4-4M23 55l-4 4M61 17l-4 4"/></g>',
+  D:'<rect x="8" y="58" width="64" height="12" fill="#7FAE5A"/><path d="M40 58 l5 -12 h-5 l4 -14" stroke="#F5B82E" stroke-width="3" fill="none"/><g fill="#2F6FD3"><circle cx="20" cy="22" r="3"/><circle cx="32" cy="14" r="3"/><circle cx="58" cy="20" r="3"/></g>'}[k];
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="3" y="3" width="74" height="74" rx="14" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="3"/>'+inner+'</svg>';}
+var GUESS=[{k:'A',n:'In der Wolke werden Ladungen getrennt. Wird die Spannung zu groß, gleichen sie sich im Blitz aus.'},{k:'B',n:'Die Wolke reibt an einem Berg und fängt Feuer.'},{k:'C',n:'Die Sonne lädt die Wolke mit Licht auf.'},{k:'D',n:'Der Blitz kommt aus der Erde, wenn es regnet.'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+function guessBox(){var tmp=st.guessTmp||null;
+  return '<div class="guess stack"><p>Ein Gewitter zieht auf. Es blitzt und donnert. <b>Wie entsteht ein Blitz?</b></p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(tmp===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.k)+'<span style="font-size:13px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Erst wenn du deine Vermutung festgelegt hast, geht es los.</p>'+
+    '<div class="row"><button class="btn pri" type="button" id="gsOk"'+(tmp?'':' disabled')+'>Vermutung festlegen</button></div></div>';}
+function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guessTmp=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(x){x.classList.toggle('sel',x===b);});$('gsOk').disabled=false;});});
+  $('gsOk').addEventListener('click',function(){if(!st.guessTmp)return;st.guess=st.guessTmp;save();render();});}
+function needGuess(){return st.station===0&&!st.guess;}
+
+
+function numVal(t){t=String(t==null?'':t).replace(',','.').replace(/[^0-9.]/g,'');return t===''?null:+t;}
+function mcBlock(id,Q,s,key,next){return {html:mcHTML(id,Q.q,Q.o,s[id],Q.a),bind:function(){bindMC(id,Q.a,key,Q.ok,Q.bad,function(){s[id+'Ok']=true;save();next();showFb(id,true,Q.ok);},function(j){s[id]=j;});if(s[id+'Ok'])showFb(id,true,Q.ok);}};}
+
+/* ---------- Station 1: Wolken-Labor ---------- */
+var OBS1=[
+  {id:'a',q:'1. <b>Unten</b> in der Wolke sammelt sich …',o:['negative Ladung','positive Ladung'],a:0,w:'Schau auf die Wolke: Welche Ladung ist unten?'},
+  {id:'b',q:'2. Der <b>Boden</b> unter der Wolke wird …',o:['positiv','negativ','gar nicht geladen'],a:0,w:'Denk an Stunde 4: Ein negativ geladener Stab schiebt die Elektronen weg. Die nahe Seite wird …'},
+  {id:'c',q:'3. Beim Blitz …',o:['gleichen sich die getrennten Ladungen aus','entstehen neue Ladungen'],a:0,w:'Ladung entsteht nie neu. Was passiert mit den getrennten Ladungen?'},
+  {id:'d',q:'4. Nach dem Blitz ist die Spannung …',o:['wieder fast 0','doppelt so groß'],a:0,w:'Schau nach einem Blitz auf die Spannungsanzeige.'}
+];
+var QEN={q:'Woher kommt die Energie des Blitzes?',o:['Aus der Ladungstrennung in der Wolke: Aufwind und Reibung trennen die Ladungen.','Aus dem Boden.','Aus dem Donner.'],a:0,
+  ok:'Genau! Wie in Stunde 5: Wer Ladungen trennt, wendet Energie auf. Beim Blitz wird sie als Licht, Wärme und Schall frei.',bad:['','Der Boden wird nur durch die Wolke geladen. Was trennt die Ladungen?','Der Donner entsteht erst durch den Blitz. Woher kommt die Energie davor?']};
+var FACH1='<div class="merk"><h3>So entsteht ein Blitz</h3><ul style="margin:0;padding-left:1.2em"><li>Starker <span class="k">Aufwind</span> wirbelt Eiskristalle und Graupelkörner durcheinander. Sie reiben aneinander.</li><li>Die Eiskristalle werden positiv und steigen nach oben. Der Graupel wird negativ und sinkt nach unten: <span class="k">Ladungstrennung</span>.</li><li>Ist die <span class="k">Spannung</span> zwischen Wolke und Boden zu groß, gleichen sich die Ladungen in einem <span class="k">Blitz</span> aus.</li></ul></div>';
+var DR=[[1,'niedrig',4],[2,'mittel',8],[3,'hoch',12]];
+function r1(){var s=st.s1;s.mr=s.mr||{};var sk=s.strikes||{};
+  if(needGuess()){$('task').innerHTML='<div><p class="eyebrow">Station 1 · Wolken-Labor</p><h2>Wie entsteht ein Blitz?</h2></div><p class="note">Lege zuerst oben im Kasten <b>„Bevor du startest“</b> deine Vermutung fest. Danach erscheint das Steuerpult und es geht los.</p>';return;}
+  var g='<div class="guess"><p class="eyebrow pro">Deine Vermutung</p><p><b>'+guessName(st.guess)+'</b>. In Station 4 prüfst du sie.</p></div>';
+  var info='<div class="stack"><p>In einer Gewitterwolke gibt es starken <b>Aufwind</b>. Er wirbelt Eiskristalle und Graupelkörner durcheinander. Mit jedem Tippen auf „Aufwind“ reiben sie im Modell einmal aneinander. Beobachte die Wolke, den Boden und die Spannungsanzeige.</p></div>';
+  var m1='<div class="q"><p class="eyebrow">Teil A · Mission'+(s.m1?' · geschafft ★':'')+'</p><p>Bring die Wolke bei <b>mittlerem</b> Abstand zum Blitzen.</p>'+(s.m1?'':'<div class="row"><button class="btn pri" type="button" id="c1a">Prüfen</button></div>')+'<p class="fb'+(s.m1?' ok':'')+'" id="fb1a">'+(s.m1?'Es hat geblitzt!':'')+'</p></div>';
+  var mr=s.m1?'<div class="stack"><p class="eyebrow">Teil B · Messreihe</p><p>Wie viele Reibschritte braucht es bis zum Blitz? Probiere alle drei Abstände aus und trage es ein.</p>'+
+    '<table class="mt"><tr><th>Abstand</th><th>Reibschritte bis zum Blitz</th></tr>'+DR.map(function(r,i){var v=s.mr[i];return '<tr><td>'+r[1]+(sk[r[0]]!=null?' <small class="tick">✓</small>':'')+'</td><td><input class="num'+(s.mrOk?' ok':'')+'" id="mr'+i+'" inputmode="numeric" autocomplete="off" value="'+esc(v==null?'':v)+'"'+(s.mrOk?' readonly':'')+'></td></tr>';}).join('')+'</table>'+
+    (s.mrOk?'':'<div class="row"><button class="btn pri" type="button" id="c1m">Prüfen</button></div>')+'<p class="fb" id="fb1m"></p></div>':'';
+  var jd=s.mrOk?'<div class="q"><p><b>Schreibe einen Je-desto-Satz:</b> Wie hängt der Blitz vom Abstand zwischen Wolke und Boden ab?</p><textarea class="free" id="jd" rows="2" placeholder="Je kleiner der Abstand …, desto …">'+esc(s.jd||'')+'</textarea>'+(s.jdOk?'':'<div class="row"><button class="btn pri" type="button" id="c1j">Fertig</button></div>')+'<p class="fb" id="fb1j"></p></div>':'';
+  var obs=s.jdOk?'<div class="stack"><p class="eyebrow">Teil C · Was hast du beobachtet?</p>'+segQHTML(OBS1,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p></div>':'';
+  var en=s.obsOk?mcBlock('en',QEN,s,'s1en',function(){finish(0);r1();}):null;
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Wolken-Labor</p><h2>Wie entsteht ein Blitz?</h2></div>'+info+m1+mr+jd+obs+(s.obsOk?FACH1+en.html:'')+
+    (st.done[0]?'<p class="win"><b>Klasse!</b> In der Wolke werden Ladungen getrennt. Wird die Spannung zu groß, gleichen sie sich im Blitz aus.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  if(!s.m1)$('c1a').addEventListener('click',function(){var ok=sk[2]!=null;tryInc('s1m1',ok,'');var fb=$('fb1a');if(ok){s.m1=true;save();r1();}else{fb.className='fb bad';fb.textContent=M.cl.d!==2?'Stelle zuerst den Abstand „mittel“ ein.':'Tippe weiter auf „Aufwind“, bis es blitzt.';
+    showHelp(fb,'s1m1',function(){M.cl.d=2;M.cl.n=7;renderCtl();kick();helpMsg('fb1a','Fast geschafft: Tippe noch einmal auf „Aufwind“.');});}});
+  if(s.m1){DR.forEach(function(r,i){$('mr'+i).addEventListener('input',function(){s.mr[i]=this.value;this.className='num';save();});});
+    if(!s.mrOk)$('c1m').addEventListener('click',function(){var fb=$('fb1m'),empty=0,wrong=0;DR.forEach(function(r,i){var v=numVal($('mr'+i).value);if(v==null){empty++;return;}var ok=v===r[2];$('mr'+i).className='num '+(ok?'ok':'bad');if(!ok)wrong++;});
+      if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Werte.';return;}
+      tryInc('s1mr',!wrong,DR.map(function(r,i){return $('mr'+i).value;}).join('/'));
+      if(wrong){fb.className='fb bad';fb.textContent='Zähle noch einmal: Stelle den Abstand ein, setze die Wolke zurück und zähle die Reibschritte bis zum Blitz.';
+        showHelp(fb,'s1mr',function(){DR.forEach(function(r,i){s.mr[i]=String(r[2]);});save();r1();helpMsg('fb1m','Die Werte sind eingetragen. Tippe auf „Prüfen“.');});return;}
+      s.mrOk=true;save();r1();});
+    else helpMsg('fb1m','Gut gezählt! Bei kleinem Abstand blitzt es schon bei kleinerer Spannung.');}
+  if(s.mrOk){$('jd').addEventListener('input',function(){s.jd=this.value;save();});
+    if(!s.jdOk)$('c1j').addEventListener('click',function(){var fb=$('fb1j'),t=(s.jd||'').trim();if(!/\bje\b/i.test(t)||!/desto/i.test(t)){fb.className='fb bad';fb.textContent='Benutze „Je …, desto …“.';return;}if(!/abstand/i.test(t)){fb.className='fb bad';fb.textContent='Benutze das Wort „Abstand“.';return;}s.jdOk=true;save();r1();});
+    else helpMsg('fb1j','Gut! Vergleiche: Je kleiner der Abstand, desto schneller (bei kleinerer Spannung) springt der Blitz über.');}
+  if(s.jdOk){bindSegQ(s.obs,function(){return s.obsOk;},OBS1);
+    if(!s.obsOk)$('c1').addEventListener('click',function(){if(checkSegQ(OBS1,s.obs,'s1obs','fb1',r1)){s.obsOk=true;save();r1();}});else helpMsg('fb1','Richtig beobachtet!');}
+  if(s.obsOk)en.bind();
+  bindNext();
+}
+
+/* ---------- Station 2: Wo schlägt der Blitz ein? ---------- */
+var PRED2=SCN.map(function(x){return {id:'p'+x.k,q:'<b>'+x.n+'</b>',o:['geschützt','gefährlich'],a:x.safe?0:1};});
+var RES2=SCN.map(function(x){return {id:x.k,q:'<b>'+x.n+'</b>',o:['geschützt','gefährlich'],a:x.safe?0:1,w:'Wähle „'+x.n+'“ und löse einen Blitz aus.'};});
+var QHIGH={q:'Warum schlägt der Blitz meistens in hohe Gegenstände ein?',o:['Dort ist der Weg zwischen Wolke und Boden am kürzesten.','Hohe Gegenstände sind immer aus Metall.','Hohe Gegenstände sind schon vorher geladen.'],a:0,
+  ok:'Richtig! Das hast du auch in Station 1 gesehen: Bei kleinem Abstand springt der Blitz am leichtesten über.',bad:['','Auch Bäume werden getroffen. Denk an deine Messreihe in Station 1.','Denk an deine Messreihe in Station 1: Wovon hängt es ab, wann der Blitz überspringt?']};
+var QROD={q:'Wie schützt ein Blitzableiter das Haus?',o:['Der Blitz trifft die Metallstange. Ein Draht leitet die Ladung sicher in die Erde.','Er hält den Blitz vom Haus fern, indem er Ladung abstößt.','Er speichert den Blitz in einer Batterie.'],a:0,
+  ok:'Genau! Metall ist ein guter Leiter (Stunde 4). So fließt die Ladung am Haus vorbei in die Erde.',bad:['','Der Blitz schlägt sogar gezielt in den Blitzableiter ein. Was passiert dann mit der Ladung?','Die Ladung wird nicht gespeichert. Wohin fließt sie?']};
+function predScore2(){var p=st.s2.pred||{};return PRED2.filter(function(q){return p[q.id]===q.a;}).length;}
+function r2(){var s=st.s2,seen=s.seen||{},n=SCN.filter(function(x){return seen[x.k];}).length;s.pred=s.pred||{};s.obs=s.obs||{};
+  var pred='<div class="stack"><p class="eyebrow">Teil A · Sage vorher</p><p>Ein Gewitter ist direkt über dir. Wo bist du geschützt, wo ist es gefährlich? Entscheide <b>vor dem Ausprobieren</b>.</p>'+segQHTML(PRED2,s.pred,s.predOk)+
+    (s.predOk?'':'<div class="row"><button class="btn pri" type="button" id="c2p">Vorhersage festlegen</button></div>')+'<p class="fb" id="fb2p"></p></div>';
+  var test=s.predOk?'<div class="stack"><p class="eyebrow">Teil B · Probiere aus</p><p>Wähle im Steuerpult jede Situation und löse einen Blitz aus.</p><p class="hint"><b>Ausprobiert:</b> '+n+' von 5 '+SCN.map(function(x){return '<span class="chip'+(seen[x.k]?' on':'')+'">'+x.n+'</span>';}).join(' ')+'</p>'+
+    segQHTML(RES2,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p>'+
+    (s.obsOk?'<p class="win"><b>Deine Vorhersage: '+predScore2()+' von 5 Punkten.</b></p>':'')+'</div>':'';
+  var hi=s.obsOk?mcBlock('high',QHIGH,s,'s2high',function(){r2();}):null,rod=s.highOk?mcBlock('rod',QROD,s,'s2rod',function(){r2();}):null;
+  var own=s.rodOk?'<div class="q"><p><b>Erkläre einem Mitschüler:</b> Warum ist man bei Gewitter im Auto geschützt? Benutze das Wort <b>Metall</b>.</p><textarea class="free" id="own" rows="3" placeholder="Im Auto ist man geschützt, weil …">'+esc(s.own||'')+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c2o">Fertig</button></div>')+'<p class="fb" id="fb2o"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Blitzeinschlag</p><h2>Wo schlägt der Blitz ein?</h2></div>'+pred+test+(hi?hi.html:'')+(rod?rod.html:'')+own+
+    (st.done[1]?'<p class="win"><b>Stark!</b> Blitze schlagen meist in den höchsten Punkt ein. Auto und Haus mit Blitzableiter schützen dich.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  if(s.predOk)PRED2.forEach(function(q){var gq=document.querySelector('[data-sq="'+q.id+'"]');if(gq)Array.prototype.forEach.call(gq.children,function(b){if(b.className==='ok')b.className='sel';});});
+  bindSegQ(s.pred,function(){return s.predOk;},PRED2);
+  if(!s.predOk)$('c2p').addEventListener('click',function(){var miss=PRED2.filter(function(q){return s.pred[q.id]==null;}).length,fb=$('fb2p');if(miss){fb.className='fb bad';fb.textContent='Entscheide dich noch bei '+miss+' Situation'+(miss>1?'en':'')+'.';return;}s.predOk=true;save();r2();});
+  else helpMsg('fb2p','Vorhersage gespeichert. Jetzt wird ausprobiert!');
+  if(s.predOk){bindSegQ(s.obs,function(){return s.obsOk;},RES2);
+    if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(RES2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});else helpMsg('fb2','Richtig ausgewertet!');}
+  if(hi)hi.bind();if(rod)rod.bind();
+  if(s.rodOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c2o').addEventListener('click',function(){var fb=$('fb2o'),t=(s.own||'').trim();if(t.length<20){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}if(!/metall/i.test(t)){fb.className='fb bad';fb.textContent='Benutze das Wort „Metall“.';return;}s.ok=true;finish(1);save();r2();});
+    else helpMsg('fb2o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 3: Entfernung und Sicherheit ---------- */
+var QLIGHT={q:'Warum sieht man den Blitz, bevor man den Donner hört?',o:['Licht ist viel schneller als Schall.','Der Donner entsteht erst Sekunden nach dem Blitz.','Die Ohren sind langsamer als die Augen.'],a:0,
+  ok:'Richtig! Blitz und Donner entstehen gleichzeitig. Das Licht ist sofort da, der Schall braucht etwa 3 Sekunden für 1 km.',bad:['','Blitz und Donner entstehen gleichzeitig: Der Blitz erhitzt die Luft, sie dehnt sich schlagartig aus. Warum hörst du ihn trotzdem später?','Ohren und Augen sind beide sehr schnell. Was ist unterschiedlich schnell?']};
+var RULES=[
+  {id:'a',q:'Ich gehe in ein Haus oder steige in ein Auto.',o:['richtig','falsch'],a:0,w:'Denk an Station 2: Wo warst du geschützt?'},
+  {id:'b',q:'Ich stelle mich unter einen einzelnen hohen Baum.',o:['richtig','falsch'],a:1,w:'Denk an Station 2: Was passierte unter dem Baum?'},
+  {id:'c',q:'Ich verlasse sofort das Schwimmbecken oder den See.',o:['richtig','falsch'],a:0,w:'Im und auf dem Wasser ist es bei Gewitter besonders gefährlich.'},
+  {id:'d',q:'Auf freiem Feld gehe ich in eine Mulde, hocke mich hin und stelle die Füße eng zusammen.',o:['richtig','falsch'],a:0,w:'In der Hocke bist du nicht der höchste Punkt. Mit geschlossenen Füßen entsteht zwischen den Füßen keine gefährliche Spannung.'},
+  {id:'h',q:'Unter einem Strommast oder einer Stromleitung stelle ich die Füße eng zusammen.',o:['richtig','falsch'],a:0,w:'Schlägt der Blitz in den Mast ein, fließt die Ladung im Boden nach allen Seiten. Was passiert dann zwischen weit auseinander stehenden Füßen?'},
+  {id:'e',q:'Ich halte mit dem Regenschirm über dem Kopf die Stellung auf dem Fußballplatz.',o:['richtig','falsch'],a:1,w:'Wer auf freiem Feld steht, ist oft der höchste Punkt.'},
+  {id:'f',q:'Ich halte zu Bäumen mindestens 10 Meter Abstand.',o:['richtig','falsch'],a:0,w:'Der Blitz kann vom Baum auf Menschen in der Nähe überspringen.'},
+  {id:'g',q:'Nach dem letzten Donner warte ich etwa eine halbe Stunde, bevor ich wieder rausgehe.',o:['richtig','falsch'],a:0,w:'Auch ein abziehendes Gewitter kann noch Blitze schicken.'}
+];
+var FACH3='<div class="merk"><h3>Warum die Füße zusammen?</h3>'+
+  '<svg viewBox="0 0 320 132" style="width:100%;max-width:420px;display:block;margin:4px auto 8px" aria-hidden="true"><rect x="0" y="86" width="320" height="26" fill="#7FAE5A"/>'+
+  '<g fill="none" stroke="#F5B82E" stroke-width="2" stroke-dasharray="4 4"><ellipse cx="160" cy="92" rx="40" ry="8"/><ellipse cx="160" cy="92" rx="85" ry="16"/><ellipse cx="160" cy="92" rx="135" ry="24"/></g>'+
+  '<rect x="155" y="10" width="10" height="80" fill="#8A8F98"/><path d="M160 0 l-8 14 h8 l-6 12" stroke="#F5B82E" stroke-width="3" fill="none"/>'+
+  '<g stroke="#1A1F36" stroke-width="3" stroke-linecap="round" fill="none"><circle cx="60" cy="34" r="7" fill="#F6D3B0"/><path d="M60 41v22M60 63l-16 26M60 63l16 26M60 48l-10 8M60 48l10 8"/>'+
+  '<circle cx="262" cy="34" r="7" fill="#F6D3B0"/><path d="M262 41v22M262 63l-3 26M262 63l3 26M262 48l-10 8M262 48l10 8"/></g>'+
+  '<path d="M44 89 Q60 62 76 89" stroke="#C8423D" stroke-width="3" fill="none"/><text x="60" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#8E2420">✗ große Spannung</text>'+
+  '<text x="262" y="128" text-anchor="middle" font-size="12" font-weight="700" fill="#1B6B47">✓ kaum Spannung</text></svg>'+
+  '<p style="margin:0">Schlägt ein Blitz in der Nähe ein, zum Beispiel in einen Mast oder einen Baum, fließt die Ladung im Boden nach allen Seiten weg. Zwischen zwei Punkten am Boden entsteht dabei eine Spannung. Je weiter die Punkte auseinander liegen, desto größer ist sie. Stehen deine Füße weit auseinander, liegt diese <span class="k">Schrittspannung</span> zwischen deinen Füßen, und Ladung kann durch die Beine und den Körper fließen. Mit eng geschlossenen Füßen ist die Spannung zwischen den Füßen fast null.</p></div>';
+var QSTEP={q:'Ein Blitz schlägt in einen Mast in deiner Nähe ein. Warum sollst du die Füße eng zusammenstellen?',o:['Die Ladung fließt im Boden nach allen Seiten. Zwischen weit auseinander stehenden Füßen entsteht eine Spannung, und Ladung kann durch die Beine fließen.','Damit man nicht umfällt.','Damit der Blitz einen nicht sieht.'],a:0,
+  ok:'Richtig! Das nennt man Schrittspannung. Mit geschlossenen Füßen ist die Spannung zwischen den Füßen fast null.',bad:['','Lies den Kasten „Warum die Füße zusammen?“ noch einmal: Was passiert mit der Ladung im Boden?','Der Blitz „sieht“ nichts. Lies den Kasten „Warum die Füße zusammen?“.']};
+var QTEN={q:'Zwischen Blitz und Donner liegen nur 5 Sekunden. Was bedeutet das?',o:['Das Gewitter ist weniger als 2 km entfernt. Es besteht Lebensgefahr, ich suche sofort Schutz.','Das Gewitter ist weit weg. Ich kann weiterspielen.','Ich warte erst einmal ab, ob es regnet.'],a:0,
+  ok:'Genau! Liegen 10 Sekunden oder weniger zwischen Blitz und Donner, besteht Lebensgefahr. Wer Donner hört, sollte schon Schutz suchen.',bad:['','5 Sekunden : 3 ≈ 1,7 km. Ist das weit weg?','Regen spielt keine Rolle. Rechne die Entfernung aus.']};
+function r3(){var s=st.s3;s.km=s.km||{};var meas=s.meas||{};
+  var info='<div class="stack"><p>Blitz und Donner entstehen gleichzeitig. Der Blitz erhitzt die Luft so stark, dass sie sich schlagartig ausdehnt. Das hörst du als <b>Donner</b>. Miss, wie viele Sekunden zwischen Blitz und Donner liegen, und berechne die Entfernung.</p></div>';
+  var tab='<div class="stack"><p class="eyebrow">Teil A · Wie weit ist das Gewitter?</p><table class="mt"><tr><th>Runde</th><th>Sekunden</th><th>Entfernung in km</th></tr>'+ROUNDS.map(function(r,i){var v=s.km[i];return '<tr><td>'+(i+1)+'</td><td>'+(meas[i]!=null?meas[i]+' s':'–')+'</td><td><input class="num'+(s.kmOk?' ok':'')+'" id="km'+i+'" inputmode="decimal" autocomplete="off" value="'+esc(v==null?'':v)+'"'+(s.kmOk?' readonly':'')+'></td></tr>';}).join('')+'</table>'+
+    (s.kmOk?'':'<div class="row"><button class="btn pri" type="button" id="c3k">Prüfen</button></div>')+'<p class="fb" id="fb3k"></p></div>';
+  var li=s.kmOk?mcBlock('light',QLIGHT,s,'s3light',function(){r3();}):null;
+  var rules=s.lightOk?'<div class="stack"><p class="eyebrow">Teil B · Richtig verhalten</p><p>Ein Gewitter ist nah. Ist das Verhalten richtig oder falsch?</p>'+segQHTML(RULES,s.rules=s.rules||{},s.rulesOk)+(s.rulesOk?'':'<div class="row"><button class="btn pri" type="button" id="c3r">Prüfen</button></div>')+'<p class="fb" id="fb3r"></p></div>':'';
+  var step=s.rulesOk?mcBlock('step',QSTEP,s,'s3step',function(){r3();}):null;
+  var ten=s.stepOk?mcBlock('ten',QTEN,s,'s3ten',function(){finish(2);r3();}):null;
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Entfernung und Sicherheit</p><h2>Wie nah ist das Gewitter?</h2></div>'+info+tab+(li?li.html:'')+rules+(s.rulesOk?FACH3:'')+(step?step.html:'')+(ten?ten.html:'')+
+    (st.done[2]?'<p class="win"><b>Super!</b> Sekunden durch 3 ergibt die Entfernung in km. Bei 10 Sekunden oder weniger: sofort Schutz suchen! Füße zusammen wegen der Schrittspannung.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  ROUNDS.forEach(function(r,i){$('km'+i).addEventListener('input',function(){s.km[i]=this.value;this.className='num';save();});});
+  if(!s.kmOk)$('c3k').addEventListener('click',function(){var fb=$('fb3k'),miss=ROUNDS.filter(function(r,i){return meas[i]==null;}).length;if(miss){fb.className='fb bad';fb.textContent='Miss zuerst alle drei Runden im Modell.';return;}
+    var empty=0,wrong=0;ROUNDS.forEach(function(r,i){var v=numVal($('km'+i).value);if(v==null){empty++;return;}var ok=Math.abs(v-r/3)<0.05;$('km'+i).className='num '+(ok?'ok':'bad');if(!ok)wrong++;});
+    if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Entfernungen.';return;}
+    tryInc('s3km',!wrong,ROUNDS.map(function(r,i){return $('km'+i).value;}).join('/'));
+    if(wrong){fb.className='fb bad';fb.textContent='Rechne: Sekunden geteilt durch 3. Schau in die Faustregel unter dem Modell.';
+      showHelp(fb,'s3km',function(){ROUNDS.forEach(function(r,i){s.km[i]=String(r/3);});save();r3();helpMsg('fb3k','Die Lösung ist eingetragen. Tippe auf „Prüfen“.');});return;}
+    s.kmOk=true;save();r3();});
+  else helpMsg('fb3k','Richtig gerechnet!');
+  if(li)li.bind();
+  if(s.lightOk){bindSegQ(s.rules,function(){return s.rulesOk;},RULES);
+    if(!s.rulesOk)$('c3r').addEventListener('click',function(){if(checkSegQ(RULES,s.rules,'s3rules','fb3r',r3)){s.rulesOk=true;save();r3();}});else helpMsg('fb3r','Du kennst die Regeln!');}
+  if(step)step.bind();if(ten)ten.bind();
+  kick();bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'In einer Gewitterwolke werden durch Aufwind und Reibung positive und negative ',post:' getrennt.',o:['Ladungen','Wolken','Atome'],a:0},
+  {pre:'Unten in der Wolke sammelt sich meist ',post:' Ladung. Der Boden darunter wird positiv.',o:['negative','positive'],a:0},
+  {pre:'Wird die Spannung zu groß, gleichen sich die Ladungen in einem ',post:' aus.',o:['Blitz','Regen','Donner'],a:0},
+  {pre:'Der Blitz erhitzt die Luft so stark, dass sie sich schlagartig ausdehnt. Das hören wir als ',post:'.',o:['Donner','Regen','Wind'],a:0},
+  {pre:'Blitze schlagen bevorzugt in ',post:' Gegenstände ein. Ein Blitzableiter leitet die Ladung sicher in die Erde.',o:['hohe','niedrige','nasse'],a:0},
+  {pre:'Bei Gewitter sind Gebäude und ',post:' sichere Orte. Freie Flächen, einzelne Bäume und Wasser sind gefährlich.',o:['Autos','Zelte','Bäume'],a:0}
+];
+var WORTE='Ladungen · negative · Blitz · Donner · hohe · Autos';
+var MERK='<div class="merk"><h3>Merksatz: Gewitter</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var FD=[
+  {id:'a',q:'„Ein Blitz schlägt nie zweimal an derselben Stelle ein.“',o:['richtig','falsch'],a:1,w:'Hohe Türme werden oft viele Male im Jahr getroffen.'},
+  {id:'b',q:'„Eichen sollst du weichen, Buchen sollst du suchen.“',o:['richtig','falsch'],a:1,w:'Der Blitz schlägt in alle Baumarten ein. Bäume sind immer gefährlich.'},
+  {id:'c',q:'„Im Auto mit Metallkarosserie ist man bei Gewitter geschützt.“',o:['richtig','falsch'],a:0,w:'Denk an Station 2.'},
+  {id:'d',q:'„Bei einem Blitz entsteht neue Ladung.“',o:['richtig','falsch'],a:1,w:'Ladung entsteht nie neu. Sie wird getrennt und gleicht sich aus.'},
+  {id:'e',q:'„Wer Donner hört, ist schon in Reichweite von Blitzen.“',o:['richtig','falsch'],a:0,w:'Donner hört man bis etwa 10 km weit. So weit können Blitze reichen.'}
+];
+var WANDER={q:'Du bist mit deiner Familie wandern. Zwischen Blitz und Donner zählst du 6 Sekunden. In der Nähe stehen ein einzelner Baum und ein Auto. Was tust du?',o:['Das Gewitter ist nur etwa 2 km entfernt. Wir steigen sofort ins Auto.','Wir stellen uns unter den Baum, damit wir nicht nass werden.','Wir laufen über das freie Feld weiter nach Hause.'],a:0,
+  ok:'Richtig! Das Auto ist geschützt. Unter dem Baum und auf dem freien Feld besteht Lebensgefahr.',bad:['','Der Blitz schlägt bevorzugt in den Baum ein und kann auf euch überspringen.','Auf dem freien Feld bist du der höchste Punkt.']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b></p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: In der Wolke werden Ladungen getrennt. Wird die Spannung zu groß, gleichen sie sich im Blitz aus.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Beantworte jetzt die Leitfrage in zwei Sätzen: <b>Wie entsteht ein Blitz, und wie schütze ich mich bei Gewitter?</b></p><textarea class="free" id="refl" rows="3" placeholder="Ein Blitz entsteht, wenn … Ich schütze mich, indem …">'+esc(s.refl)+'</textarea></div>':'';
+  s.fd=s.fd||{};var fd=s.ok?'<div class="stack"><p class="eyebrow">Fehler-Detektiv</p><p>Richtig oder falsch? Prüfe die Aussagen.</p>'+segQHTML(FD,s.fd,s.fdOk)+(s.fdOk?'':'<div class="row"><button class="btn pri" type="button" id="c4f">Prüfen</button></div>')+'<p class="fb" id="fb4f"></p></div>':'';
+  var wd=s.fdOk?mcHTML('wander',WANDER.q,WANDER.o,s.wander,WANDER.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+fd+wd+(s.wanderOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindSegQ(s.fd,function(){return s.fdOk;},FD);
+    if(!s.fdOk)$('c4f').addEventListener('click',function(){if(checkSegQ(FD,s.fd,'s4fd','fb4f',r4)){s.fdOk=true;save();r4();}});else helpMsg('fb4f','Alle Fehler gefunden!');}
+  if(s.fdOk){bindMC('wander',WANDER.a,'s4wander',WANDER.ok,WANDER.bad,function(){s.wanderOk=true;finish(3);save();r4();showFb('wander',true,WANDER.ok);},function(j){s.wander=j;});if(s.wanderOk)showFb('wander',true,WANDER.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Der kleine Blitz',task:'Du läufst über einen Teppich und bekommst an der Türklinke einen kleinen Schlag. Manchmal sieht man im Dunkeln einen Funken.',q:'Was hat das mit einem Gewitter zu tun?',
+   o:['Es ist ein Mini-Blitz: Getrennte Ladungen gleichen sich in einem Funken aus.','Nichts, das ist etwas ganz anderes.','Die Türklinke erzeugt neue Ladung.'],a:0,ok:'Genau! Blitz und Funke funktionieren gleich, nur der Blitz ist viel größer.',bad:'Denk an Stunde 1 und an Station 1: Was passiert in beiden Fällen mit den getrennten Ladungen?'},
+  {id:'b',title:'Das Cabrio',task:'Ein Cabrio hat ein Dach aus Stoff.',q:'Ist man darin bei Gewitter genauso gut geschützt wie in einem Auto mit Blechdach?',
+   o:['Nein. Es fehlt die geschlossene Hülle aus Metall, über die die Ladung außen abfließt.','Ja, alle Autos schützen gleich gut.','Ja, Stoff ist ein guter Leiter.'],a:0,ok:'Richtig! Der Schutz kommt von der Metallhülle. Fehlt sie, ist man nicht sicher geschützt.',bad:'Warum schützt ein normales Auto? Hat das Cabrio diese Eigenschaft?'},
+  {id:'c',title:'Die Kühe auf der Weide',task:'Bei Blitzeinschlägen in der Nähe sterben auf Weiden manchmal Kühe, obwohl der Blitz sie nicht direkt getroffen hat.',q:'Warum sind Kühe durch die Schrittspannung besonders gefährdet?',
+   o:['Ihre Vorder- und Hinterbeine stehen weit auseinander. Dazwischen liegt eine große Spannung, und Ladung fließt durch den Körper.','Kühe sind aus Metall.','Kühe sind der höchste Punkt auf der Weide.'],a:0,ok:'Genau! Je weiter die Beine auseinander, desto größer die Schrittspannung. Bei der Kuh fließt die Ladung sogar durch Herz und Brust.',bad:'Denk an den Kasten „Warum die Füße zusammen?“ in Station 3: Worauf kommt es bei der Schrittspannung an?'},
+  {id:'d',title:'Der Fernseher',task:'Bei einem nahen Blitzeinschlag können Geräte kaputtgehen, die an der Steckdose hängen.',q:'Warum?',
+   o:['Der Blitz kann über Stromleitungen eine sehr hohe Spannung bis in die Geräte schicken.','Die Geräte werden nass.','Der Donner ist zu laut.'],a:0,ok:'Richtig! Deshalb zieht man bei Gewitter manchmal Stecker oder nutzt einen Überspannungsschutz.',bad:'Stromleitungen sind aus Metall. Was kann über sie fließen?'},
+  {id:'e',title:'Die Energie',task:'Ein Blitz dauert nur einen Bruchteil einer Sekunde. Trotzdem kann er Bäume spalten.',q:'Was sagt das über die getrennten Ladungen in der Wolke?',
+   o:['In ihnen war sehr viel Energie gespeichert. Die Spannung ist riesig.','Sie hatten keine Energie.','Der Baum war schon vorher kaputt.'],a:0,ok:'Genau! Blitze haben Spannungen von vielen Millionen Volt. Erinnere dich: Die Spannung zeigt, wie viel Energie die Ladungstrennung bereitstellt.',bad:'Denk an Stunde 5: Was zeigt die Spannung an?'}
+];
+var P5TXT='Erkläre mit dem Wissen aus der ganzen Reihe, wie ein Blitz entsteht. Benutze die Wörter Reibung, Ladungstrennung, Spannung und ausgleichen.';
+function p5done(){return P5.every(function(x){return st.s5[x.id]===x.a;})&&st.s5.txtOk;}
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Profi-Fälle zum Gewitter</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    '<div class="q"><h3>Die ganze Reihe</h3><p><b>'+P5TXT+'</b></p><textarea class="free" id="p5t" rows="4" placeholder="Durch Reibung …">'+esc(st.s5.txt||'')+'</textarea>'+(st.s5.txtOk?'':'<div class="row"><button class="btn pri" type="button" id="c5t">Fertig</button></div>')+'<p class="fb'+(st.s5.txtOk?' ok':'')+'" id="fb5t">'+(st.s5.txtOk?'Gespeichert.':'')+'</p></div>'+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Du bist jetzt Expertin oder Experte für ruhende Ladungen.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(p5done())finish(4);r5();});});});
+  $('p5t').addEventListener('input',function(){st.s5.txt=this.value;save();});
+  var c5=$('c5t');if(c5)c5.addEventListener('click',function(){var t=(st.s5.txt||'').trim(),fb=$('fb5t'),need=['reib','trenn','spannung','gleich'].filter(function(w){return t.toLowerCase().indexOf(w)<0;});if(t.length<40){fb.className='fb bad';fb.textContent='Schreibe mindestens zwei ganze Sätze.';return;}if(need.length){fb.className='fb bad';fb.textContent='Benutze alle vier Wörter: Reibung, Ladungstrennung, Spannung, ausgleichen.';return;}st.s5.txtOk=true;save();if(p5done())finish(4);r5();});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1m1','Station 1 · Mission (Blitz bei mittlerem Abstand)'],['s1mr','Station 1 · Messreihe'],['s1obs','Station 1 · Beobachtungen Wolke'],['s1en','Station 1 · Energie des Blitzes'],
+  ['s2obs','Station 2 · Wo ist man geschützt?'],['s2high','Station 2 · Warum hohe Gegenstände?'],['s2rod','Station 2 · Blitzableiter'],
+  ['s3km','Station 3 · Entfernung berechnen'],['s3light','Station 3 · Licht und Schall'],['s3rules','Station 3 · Verhaltensregeln'],['s3step','Station 3 · Füße zusammen (Schrittspannung)'],['s3ten','Station 3 · 5 Sekunden'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4fd','Station 4 · Fehler-Detektiv'],['s4wander','Station 4 · Wanderung'],
+  ['s5a','Profi · Kleiner Blitz'],['s5b','Profi · Cabrio'],['s5c','Profi · Kühe auf der Weide'],['s5d','Profi · Fernseher'],['s5e','Profi · Energie']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  L.push('LADUNGSLABOR 6 · Wie verhalten sich ruhende Ladungen? · Elektrische Phänomene und Gewitter');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Wolken-Labor');L.push('  Mission: '+(st.s1.m1?'geschafft':'nicht geschafft'));
+  L.push('  Messreihe: '+DR.map(function(x,i){var v=numVal((st.s1.mr||{})[i]);return x[1]+' → '+(v==null?'–':v)+' Schritte';}).join(' | ')+(st.s1.mrOk?'  ✓':''));
+  L.push('  Je-desto-Satz: '+((st.s1.jd||'').trim()||'(leer)'));segs(OBS1,st.s1.obs||{});L.push('  Energie des Blitzes: '+a(QEN,st.s1.en));L.push('');
+  L.push('STATION 2 · Wo schlägt der Blitz ein?');L.push('  Vorhersage richtig: '+predScore2()+' von 5');segs(RES2,st.s2.obs||{});L.push('  Hohe Gegenstände: '+a(QHIGH,st.s2.high));L.push('  Blitzableiter: '+a(QROD,st.s2.rod));L.push('  Meine Erklärung (Auto): '+((st.s2.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 3 · Entfernung und Sicherheit');L.push('  Entfernungen: '+ROUNDS.map(function(x,i){var v=(st.s3.km||{})[i];return x+' s → '+(v==null||v===''?'–':v)+' km';}).join(' | ')+(st.s3.kmOk?'  ✓':''));
+  L.push('  Licht und Schall: '+a(QLIGHT,st.s3.light));L.push('  Verhaltensregeln:');segs(RULES,st.s3.rules||{});L.push('  Füße zusammen: '+a(QSTEP,st.s3.step));L.push('  5 Sekunden: '+a(QTEN,st.s3.ten));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(gp,i){L.push('  '+(i+1)+'. '+gp.pre+gp.o[gp.a]+gp.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));L.push('  Fehler-Detektiv:');segs(FD,st.s4.fd||{});L.push('  Wanderung: '+a(WANDER,st.s4.wander));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  L.push('  Die ganze Reihe: '+((st.s5.txt||'').trim()||'(leer)'));
+  var data={v:1,app:'LL6',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,own:st.s2.own||'',refl:st.s4.refl||'',jd:st.s1.jd||'',pred:predScore2(),seen:SCN.filter(function(x){return (st.s2.seen||{})[x.k];}).length,p5txt:st.s5.txt||'',
+    tries:st.tries,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL6-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-6_'+n+'.txt';}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg'+(q.o.join('').length>34?' long':'')+'" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,list){Array.prototype.forEach.call(list?document.querySelectorAll(list.map(function(q){return '[data-sq="'+q.id+'"]';}).join(',')):document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 6</p><h2 id="stH">Willkommen im Ladungslabor 6!</h2>'+
+    '<p>Heute geht es um Gewitter: Wie entsteht ein Blitz, wo schlägt er ein und wie schützt du dich? Lass eine Wolke blitzen, teste Einschläge und miss, wie weit ein Gewitter entfernt ist.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();kick();
+
+})();
+</script>
+</body>
+</html>

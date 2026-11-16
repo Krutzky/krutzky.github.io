@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sicherheits-Check Physik</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.illu{width:100%;height:auto;display:block;border-radius:12px}
+.illu text{font-family:var(--f-display)}
+.cap{font-size:14px;color:var(--ink-soft);text-align:center}
+.order{display:flex;flex-direction:column;gap:8px}
+.order .it{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1.5px solid var(--line);border-radius:12px;background:var(--surface)}
+.order select,.match select{font:inherit;font-size:15px;padding:6px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);min-height:40px}
+select.ok{border-color:var(--ok);background:var(--ok-soft)} select.bad{border-color:var(--bad);background:var(--bad-soft)}
+.match{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.match .nr{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.room{display:flex;flex-direction:column;gap:10px}
+.room .it{border:1.5px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;background:var(--surface)}
+.room .it.okk{border-color:var(--ok);background:var(--ok-soft)}
+.room input[type=text],.sig input{font:inherit;font-size:15px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);width:100%;box-sizing:border-box}
+.rules{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rules label{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:8px 10px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;background:var(--surface);font-size:15px;line-height:1.35}
+.rules input{width:22px;height:22px;margin:0;accent-color:var(--ok)}
+.rules label.on{border-color:var(--ok);background:var(--ok-soft)}
+.rules h4{margin:10px 0 2px;font-family:var(--f-display);font-size:15px;color:var(--ink-soft)}
+.sig{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.sig label{font-weight:700;font-size:14px}
+.prog{height:10px;border-radius:6px;background:var(--line);overflow:hidden}.prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.big{font-family:var(--f-display);font-size:20px}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Sicherheits-Check</b><span>Sicher experimentieren im Physikraum</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Bild zur Station"><div id="pic"></div><p class="cap" id="cap"></p></section>
+  <aside class="side"><section class="card stack" id="task"></section></aside>
+</main>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var KEY='sicherheits-check-v1';
+var STATIONS=[{name:'STOPP'},{name:'Verhalten'},{name:'Geräte'},{name:'Notfall'},{name:'Raum-Check'},{name:'Quiz'},{name:'Bestätigung'}];
+var st={station:0,done:[],s:[{},{},{},{},{},{},{}],tries:{},help:[],t0:0,res:{}};
+function load(){try{var o=JSON.parse(localStorage.getItem(KEY)||'null');if(o&&o.s)st=Object.assign(st,o);}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(String(val));}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function fb(id,ok,t){var f=$(id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=t;}}
+function helpBtn(fbId,k,fn){if(!stuck(k))return;var id='hb_'+k;if($(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){if(st.help.indexOf(k)<0)st.help.push(k);var t=st.tries[k];if(t)t.helped=true;save();fn();});var f=$(fbId);f.parentNode.insertBefore(b,f.nextSibling);}
+function unlocked(i){return i===0||!!st.done[i-1];}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function renderRoute(){$('route').innerHTML=STATIONS.map(function(s,i){return '<button type="button" class="stop'+(i===st.station?' on':'')+(st.done[i]?' done':'')+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(i+1))+'</span>'+s.name+'</button>';}).join('');
+  Array.prototype.forEach.call($('route').children,function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';return '<div class="row"><button class="btn pri" type="button" id="nextSt">Weiter zu Station '+(i+2)+': '+STATIONS[i+1].name+' →</button></div>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function head(i,title,intro){return '<div><p class="eyebrow">Station '+(i+1)+' von '+STATIONS.length+'</p><h2>'+title+'</h2></div>'+(intro?'<p>'+intro+'</p>':'');}
+function win(i,t){return st.done[i]?'<p class="win"><b>Geschafft!</b> '+t+'</p>':'';}
+
+/* ---- Multiple Choice mit Hilfe ---- */
+function mcHTML(id,q){var v=q.v;return '<div class="q"><p><b>'+q.q+'</b></p><div class="choice" data-mc="'+id+'">'+q.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===q.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,q,store,onOk,rerender){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  if(store[q.id+'Ok']){fb('fb_'+id,true,q.ok);return;}
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){if(store[q.id+'Ok'])return;var j=+b.dataset.j;tryInc(id,j===q.a,j);store[q.id]=j;
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===q.a?' ok':' bad'):'');});
+    if(j===q.a){store[q.id+'Ok']=true;save();onOk();rerender();}else{save();fb('fb_'+id,false,(q.bad&&q.bad[j])||q.hint||'Noch nicht richtig. Lies die Antworten noch einmal genau.');
+      helpBtn('fb_'+id,id,function(){store[q.id]=q.a;store[q.id+'Ok']=true;save();onOk();rerender();});}});});}
+function chainHTML(list,store,key){var h='';for(var i=0;i<list.length;i++){var q=list[i];q.v=store[q.id];h+=mcHTML(key+q.id,q);if(!store[q.id+'Ok'])break;}return h;}
+function bindChain(list,store,key,rerender,onDone){list.forEach(function(q,i){if(i>0&&!store[list[i-1].id+'Ok'])return;bindMC(key+q.id,q,store,function(){if(i===list.length-1&&onDone)onDone();},rerender);});}
+
+/* ---- Auswahllisten (Zuordnen / Reihenfolge) ---- */
+function selHTML(id,opts,val,cls){return '<select id="'+id+'" class="'+(cls||'')+'"><option value="">…</option>'+opts.map(function(o,j){return '<option value="'+j+'"'+(String(val)===String(j)?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';}
+/* list: [{t, a}] a = Index der richtigen Option; check(vals) optional */
+function selGroup(prefix,list,store,locked){list.forEach(function(q,i){var el=$(prefix+i);if(!el)return;if(locked){el.disabled=true;el.className='ok';return;}el.addEventListener('change',function(){store[i]=el.value;el.className='';save();});});}
+function checkGroup(prefix,list,store,key,fbId,okFn,rerender,isOk,wrongMsg){var miss=0,wrong=[];
+  list.forEach(function(q,i){var v=store[i];if(v==null||v===''){miss++;return;}});
+  if(miss){fb(fbId,false,'Es fehlen noch '+miss+' Angaben.');return;}
+  list.forEach(function(q,i){var ok=isOk?isOk(i,+store[i]):(+store[i]===q.a);$(prefix+i).className=ok?'ok':'bad';if(!ok)wrong.push(i);});
+  tryInc(key,!wrong.length,wrong.map(function(i){return i+':'+store[i];}).join(','));
+  if(wrong.length){fb(fbId,false,(wrongMsg||'Noch nicht alles richtig. Die rot markierten Felder stimmen noch nicht.'));
+    helpBtn(fbId,key,function(){list.forEach(function(q,i){store[i]=String(q.a);});save();rerender();fb(fbId,true,'Die Lösung ist eingetragen. Lies sie dir genau durch und tippe dann auf „Prüfen“.');});return;}
+  okFn();}
+/* ---------- Bilder (SVG) ---------- */
+var NAVY='#0B1A5C',RED='#D7263D',GRN='#1E9E4A',YEL='#F5C518';
+function svg(w,h,inner){return '<svg class="illu" viewBox="0 0 '+w+' '+h+'" role="img" xmlns="http://www.w3.org/2000/svg">'+inner+'</svg>';}
+function tile(x,y,s,inner,label){return '<g transform="translate('+x+','+y+')"><rect width="'+s+'" height="'+(s+(label?34:0))+'" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/><g transform="translate('+(s*0.1)+','+(s*0.1)+') scale('+(s*0.8/100)+')">'+inner+'</g>'+(label?'<text x="'+(s/2)+'" y="'+(s+22)+'" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ink)">'+label+'</text>':'')+'</g>';}
+function forbid(inner){return inner+'<circle cx="50" cy="50" r="44" fill="none" stroke="'+RED+'" stroke-width="9"/><line x1="19" y1="19" x2="81" y2="81" stroke="'+RED+'" stroke-width="9"/>';}
+var RUN='<g stroke="#111" stroke-width="6" stroke-linecap="round" fill="none"><circle cx="58" cy="24" r="7" fill="#111" stroke="none"/><path d="M54 34 L46 56 L58 66 L54 84 M46 56 L34 76 M52 40 L64 50 L74 46 M52 40 L38 44 L30 54"/></g>';
+var FOOD='<g><path d="M30 44 h22 l-3 34 h-16 z" fill="#E8432E"/><rect x="28" y="38" width="26" height="7" rx="2" fill="#333"/><line x1="44" y1="38" x2="50" y2="22" stroke="#333" stroke-width="3"/><path d="M50 62 a14 8 0 0 1 28 0 z" fill="#C98A3A"/><rect x="50" y="63" width="28" height="5" fill="#3A8A2E"/><rect x="50" y="68" width="28" height="7" rx="3" fill="#C98A3A"/></g>';
+var WARN='<path d="M50 10 L92 86 H8 Z" fill="'+YEL+'" stroke="#111" stroke-width="6" stroke-linejoin="round"/><rect x="46" y="34" width="8" height="30" rx="3" fill="#111"/><circle cx="50" cy="74" r="5" fill="#111"/>';
+var CLIP='<rect x="22" y="14" width="56" height="76" rx="6" fill="#fff" stroke="#111" stroke-width="5"/><rect x="38" y="8" width="24" height="12" rx="3" fill="#111"/><g stroke="#111" stroke-width="4"><line x1="32" y1="36" x2="68" y2="36"/><line x1="32" y1="50" x2="68" y2="50"/><line x1="32" y1="64" x2="56" y2="64"/></g><circle cx="70" cy="76" r="14" fill="'+GRN+'"/><path d="M63 76 l5 5 l9 -10" stroke="#fff" stroke-width="4" fill="none"/>';
+var EXT='<rect width="100" height="100" rx="8" fill="'+RED+'"/><rect x="36" y="30" width="24" height="56" rx="10" fill="#fff"/><path d="M40 30 v-10 h14 l14 -6" stroke="#fff" stroke-width="5" fill="none"/><rect x="44" y="14" width="8" height="8" fill="#fff"/><path d="M68 70 q8 -12 4 -22 q10 8 6 22 z" fill="#fff"/>';
+var AID='<rect width="100" height="100" rx="8" fill="'+GRN+'"/><rect x="40" y="18" width="20" height="64" fill="#fff"/><rect x="18" y="40" width="64" height="20" fill="#fff"/>';
+var NOTAUS='<rect width="100" height="100" rx="8" fill="'+YEL+'"/><rect x="10" y="10" width="80" height="80" rx="6" fill="none" stroke="#111" stroke-width="3"/><circle cx="50" cy="48" r="20" fill="#8C1C13"/><ellipse cx="50" cy="40" rx="26" ry="16" fill="'+RED+'"/><ellipse cx="42" cy="35" rx="9" ry="5" fill="#fff" opacity=".5"/><text x="50" y="83" text-anchor="middle" font-size="13" font-weight="700" fill="#111">NOT-AUS</text>';
+var EXIT='<rect width="100" height="100" rx="8" fill="'+GRN+'"/><rect x="8" y="22" width="34" height="56" fill="none" stroke="#fff" stroke-width="4"/><g stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"><circle cx="30" cy="34" r="4" fill="#fff"/><path d="M28 42 L24 56 L32 62 L30 74 M24 56 L16 68 M27 46 L36 52 M27 46 L18 50"/></g><path d="M50 50 H82 M70 36 L86 50 L70 64" stroke="#fff" stroke-width="9" fill="none" stroke-linejoin="round"/>';
+var SAMMEL='<rect width="100" height="100" rx="8" fill="'+GRN+'"/><g fill="#fff"><circle cx="50" cy="40" r="7"/><path d="M40 66 q10 -24 20 0 z"/><circle cx="35" cy="48" r="6"/><path d="M26 70 q9 -20 18 0 z"/><circle cx="65" cy="48" r="6"/><path d="M56 70 q9 -20 18 0 z"/></g><g stroke="#fff" stroke-width="5" fill="none"><path d="M10 10 L24 24 M24 14 V24 H14"/><path d="M90 10 L76 24 M76 14 V24 H86"/><path d="M10 90 L24 76 M24 86 V76 H14"/><path d="M90 90 L76 76 M76 86 V76 H86"/></g>';
+var EYE='<rect width="100" height="100" rx="8" fill="'+GRN+'"/><path d="M18 64 q32 -30 64 0 q-32 26 -64 0 z" fill="#fff"/><circle cx="50" cy="64" r="10" fill="'+GRN+'"/><circle cx="50" cy="64" r="4" fill="#fff"/><path d="M30 14 h40 l-6 10 h-28 z" fill="#fff"/><g stroke="#fff" stroke-width="4" stroke-linecap="round"><line x1="38" y1="30" x2="35" y2="40"/><line x1="50" y1="30" x2="50" y2="42"/><line x1="62" y1="30" x2="65" y2="40"/></g>';
+var PHONE='<rect width="100" height="100" rx="8" fill="'+GRN+'"/><path d="M28 22 q-6 4 -4 14 q8 30 38 42 q10 2 14 -4 l-12 -12 q-6 4 -10 2 q-12 -6 -16 -18 q-2 -4 2 -10 z" fill="#fff"/><text x="70" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#fff">112</text>';
+var BELL='<rect width="100" height="100" rx="8" fill="'+RED+'"/><path d="M30 66 q4 -6 4 -20 q0 -18 16 -20 q16 2 16 20 q0 14 4 20 z" fill="#fff"/><circle cx="50" cy="72" r="6" fill="#fff"/><g stroke="#fff" stroke-width="4" stroke-linecap="round" fill="none"><path d="M20 30 q-6 12 0 24"/><path d="M80 30 q6 12 0 24"/></g>';
+var PLUG='<rect x="18" y="30" width="50" height="40" rx="6" fill="#4B5563"/><circle cx="34" cy="50" r="6" fill="#111"/><circle cx="52" cy="50" r="6" fill="'+RED+'"/><path d="M68 50 q14 0 14 18 q0 16 10 16" stroke="#111" stroke-width="5" fill="none"/><path d="M76 58 l8 -6 l-2 10 l8 -6" stroke="'+YEL+'" stroke-width="4" fill="none"/>';
+var GLASS='<circle cx="42" cy="42" r="22" fill="#E6F0FF" stroke="#111" stroke-width="7"/><line x1="58" y1="58" x2="84" y2="84" stroke="#111" stroke-width="10" stroke-linecap="round"/>';
+var BOX='<path d="M16 38 L50 24 L84 38 L84 76 L50 90 L16 76 Z" fill="#C98A3A" stroke="#111" stroke-width="4" stroke-linejoin="round"/><path d="M16 38 L50 52 L84 38 M50 52 V90" stroke="#111" stroke-width="4" fill="none"/>';
+var BULB='<circle cx="50" cy="40" r="22" fill="'+YEL+'" stroke="#111" stroke-width="5"/><rect x="40" y="62" width="20" height="16" rx="3" fill="#9CA3AF" stroke="#111" stroke-width="4"/><g stroke="'+YEL+'" stroke-width="5" stroke-linecap="round"><line x1="50" y1="6" x2="50" y2="12"/><line x1="16" y1="40" x2="22" y2="40"/><line x1="78" y1="40" x2="84" y2="40"/></g>';
+var BROOM='<line x1="70" y1="10" x2="44" y2="60" stroke="#8B5A2B" stroke-width="7" stroke-linecap="round"/><path d="M30 56 L56 66 L46 90 L14 78 Z" fill="'+YEL+'" stroke="#111" stroke-width="4" stroke-linejoin="round"/>';
+var SHIELD='<path d="M50 6 L88 20 V48 q0 30 -38 46 q-38 -16 -38 -46 V20 Z" fill="'+NAVY+'"/><path d="M32 50 l12 12 l24 -26" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+var SIGNS=[{k:'ext',n:'Feuerlöscher',s:EXT},{k:'aid',n:'Erste-Hilfe-Kasten',s:AID},{k:'notaus',n:'Not-Aus-Schalter',s:NOTAUS},{k:'exit',n:'Fluchtweg',s:EXIT},{k:'sammel',n:'Sammelpunkt',s:SAMMEL},{k:'eye',n:'Augendusche',s:EYE}];
+var SIGN_ORDER=[2,4,0,5,1,3]; /* Reihenfolge der Bilder 1–6 (gemischt) */
+function picFor(i){var W=600;
+  if(i===0){var L='STOPP'.split(''),lab=['Sicherheit zuerst','Technik checken','Ordnung & Übersicht','Personen schützen','Pause: denken, dann handeln'];var h='';
+    L.forEach(function(c,j){var x=8+j*118;h+='<rect x="'+x+'" y="20" width="108" height="120" rx="12" fill="'+NAVY+'"/><text x="'+(x+54)+'" y="110" text-anchor="middle" font-size="84" font-weight="700" fill="'+(j===4?'#F5A524':'#5FA8F5')+'">'+c+'</text>'+
+      '<rect x="'+x+'" y="150" width="108" height="76" rx="10" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/><foreignObject x="'+(x+4)+'" y="154" width="100" height="68"><div xmlns="http://www.w3.org/1999/xhtml" style="height:68px;display:grid;place-items:center;text-align:center;font:700 13px/1.2 var(--f-body);color:var(--ink)">'+(st.done[0]?lab[j]:'?')+'</div></foreignObject>';});
+    h+='<rect x="8" y="244" width="578" height="40" rx="20" fill="#F5A524"/><text x="297" y="270" text-anchor="middle" font-size="17" font-weight="700" fill="#111">STOPP gilt immer, bevor du ein Experiment startest.</text>';
+    return [svg(W,296,h),'Die Grundregel für jedes Experiment'];}
+  if(i===1){return [svg(W,330,tile(20,10,130,forbid(RUN),'Rennen?')+tile(165,10,130,forbid(FOOD),'Essen, Trinken?')+tile(310,10,130,CLIP,'Anweisung')+tile(455,10,130,WARN,'Melden!')+
+     '<text x="300" y="232" text-anchor="middle" font-size="18" font-weight="700" fill="var(--ink)">Im Physikraum gilt:</text><text x="300" y="262" text-anchor="middle" font-size="16" fill="var(--ink-soft)">gehen · Taschen zur Seite · Haare zusammen · trockene Hände</text><text x="300" y="290" text-anchor="middle" font-size="16" fill="var(--ink-soft)">Schutzbrille, wenn angeordnet · nie allein im Raum</text>'),'Verhalten im Physikraum'];}
+  if(i===2){return [svg(W,250,tile(20,10,130,GLASS,'prüfen')+tile(165,10,130,BROOM,'aufräumen')+tile(310,10,130,BOX,'ausgeben')+tile(455,10,130,BULB,'experimentieren')+
+     '<text x="300" y="218" text-anchor="middle" font-size="16" fill="var(--ink-soft)">In welcher Reihenfolge? Bringe die Schritte in Ordnung.</text>'),'Geräte und Aufbau'];}
+  if(i===3){var c=['Ruhe bewahren','Lehrkraft informieren','Notruf 112','Erste Hilfe'],h2='';
+    h2+=tile(30,10,150,PHONE,'Notruf')+tile(225,10,150,BELL,'Alarm')+tile(420,10,150,EXIT,'Fluchtweg');
+    h2+='<text x="300" y="232" text-anchor="middle" font-size="16" fill="var(--ink-soft)">Merke: Erst Ruhe bewahren und sichern, dann Hilfe holen.</text>';
+    return [svg(W,250,h2),'Notfälle, Alarm und Brand'];}
+  if(i===4){var h3='';SIGN_ORDER.forEach(function(k,j){var x=20+(j%3)*195,y=10+Math.floor(j/3)*190;h3+='<g transform="translate('+x+','+y+')"><rect width="170" height="170" rx="14" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/><g transform="translate(25,25) scale(1.2)">'+SIGNS[k].s+'</g><circle cx="22" cy="22" r="17" fill="var(--ink)"/><text x="22" y="29" text-anchor="middle" font-size="20" font-weight="700" fill="var(--surface)">'+(j+1)+'</text></g>';});
+    return [svg(W,390,h3),'Sicherheitszeichen im Physikraum'];}
+  if(i===5){return [svg(W,260,'<g transform="translate(220,10) scale(1.6)">'+SHIELD+'</g><text x="300" y="200" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ink)">Sicherheits-Check</text><text x="300" y="232" text-anchor="middle" font-size="16" fill="var(--ink-soft)">Zeig, was du weißt.</text>'),'Wiederholung'];}
+  return [svg(W,260,'<g transform="translate(225,10) scale(1.5)">'+CLIP+'</g><text x="300" y="200" text-anchor="middle" font-size="22" font-weight="700" fill="var(--ink)">Bestätigung</text><text x="300" y="232" text-anchor="middle" font-size="16" fill="var(--ink-soft)">Lies jede Regel und hake sie ab.</text>'),'Bestätigung der Sicherheitsunterweisung'];}
+/* ---------- Station 1: STOPP ---------- */
+var STOPP_O=['Personen schützen','Sicherheit zuerst','Pause: erst denken, dann handeln','Technik checken','Ordnung & Übersicht'];
+var STOPP=[{t:'S',a:1},{t:'T',a:3},{t:'O',a:4},{t:'P',a:0},{t:'P',a:2}];
+function stoppOk(i,v){if(i<3)return v===STOPP[i].a;var o=+st.s[0].sel[i===3?4:3];return (v===0||v===2)&&v!==o;}
+var Q0=[{id:'when',q:'Wann gilt die Grundregel STOPP?',o:['Immer, bevor ich ein Experiment starte.','Nur bei gefährlichen Versuchen mit Feuer.','Nur, wenn die Lehrkraft daneben steht.'],a:0,ok:'Richtig! Vor jedem Experiment gehst du STOPP einmal im Kopf durch.',hint:'Schau auf den orangen Balken im Bild.'}];
+function r0(){var s=st.s[0];s.sel=s.sel||{};
+  var h=head(0,'Die Grundregel STOPP','Bevor du ein Experiment startest, denkst du an STOPP. Ordne jedem Buchstaben die passende Bedeutung zu.')+
+   '<div class="order">'+STOPP.map(function(q,i){return '<div class="it"><span class="big">'+q.t+'</span>'+selHTML('stp'+i,STOPP_O,s.sel[i])+'</div>';}).join('')+'</div>'+
+   (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c0">Prüfen</button></div>')+'<p class="fb" id="fb0"></p>'+
+   (s.ok?chainHTML(Q0,s,'s1'):'')+win(0,'Du kennst die Grundregel STOPP.')+nextBtn(0);
+  $('task').innerHTML=h;selGroup('stp',STOPP,s.sel,s.ok);
+  if(!s.ok)$('c0').addEventListener('click',function(){checkGroup('stp',STOPP,s.sel,'s1stopp','fb0',function(){s.ok=true;save();r0();pic();},r0,stoppOk,'Noch nicht ganz. Tipp: S steht für das Wichtigste überhaupt, T für die Geräte.');});
+  else{fb('fb0',true,'Richtig! S – T – O – P – P.');bindChain(Q0,s,'s1',r0,function(){finish(0);});}
+  bindNext();}
+
+/* ---------- Station 2: Verhalten ---------- */
+var VERH=[
+ {t:'Ich renne schnell zu meinem Platz, damit ich pünktlich bin.',a:1,w:'Im Physikraum wird gegangen, nicht gerannt.'},
+ {t:'Ich stelle meine Tasche unter den Tisch oder an die Seite.',a:0},
+ {t:'Ich trinke kurz aus meiner Flasche am Experimentiertisch.',a:1,w:'Essen und Trinken ist im Physikraum verboten, auch aus der eigenen Flasche.'},
+ {t:'Ich schalte das Netzgerät erst ein, wenn die Lehrkraft es sagt.',a:0},
+ {t:'Ich binde meine langen Haare zusammen.',a:0},
+ {t:'Ich warte in der Pause schon allein im Physikraum.',a:1,w:'Den Physikraum betrittst du nur, wenn eine Lehrkraft da ist.'},
+ {t:'Ich fasse den Stromkreis mit nassen Händen an.',a:1,w:'Arbeite nur mit trockenen Händen.'},
+ {t:'Ich trage die Schutzbrille, wenn sie angeordnet ist.',a:0},
+ {t:'Das Kabel ist nur ein bisschen kaputt. Ich benutze es trotzdem vorsichtig.',a:1,w:'Beschädigte Kabel und Geräte nie benutzen, sondern sofort melden.'},
+ {t:'Ich probiere, ob die farblose Flüssigkeit Wasser ist.',a:1,w:'Unbekannte Stoffe niemals probieren oder benutzen.'}];
+function segHTML(id,v,locked,a){return '<span class="seg" id="'+id+'">'+['in Ordnung','nicht in Ordnung'].map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(String(v)===String(j)?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span>';}
+function r1(){var s=st.s[1];s.sel=s.sel||{};
+  var h=head(1,'Verhalten im Physikraum','Ist das in Ordnung oder nicht? Entscheide bei jeder Situation.')+
+   VERH.map(function(q,i){return '<div class="q"><p>'+q.t+'</p>'+segHTML('vh'+i,s.sel[i],s.ok)+'</div>';}).join('')+
+   (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p>'+win(1,'Du weißt, wie man sich im Physikraum verhält.')+nextBtn(1);
+  $('task').innerHTML=h;
+  VERH.forEach(function(q,i){Array.prototype.forEach.call($('vh'+i).children,function(b){b.addEventListener('click',function(){if(s.ok)return;s.sel[i]=+b.dataset.j;save();Array.prototype.forEach.call($('vh'+i).children,function(x){x.className=x===b?'sel':'';});});});});
+  if(s.ok){fb('fb1',true,'Alles richtig!');}
+  else $('c1').addEventListener('click',function(){var miss=VERH.filter(function(q,i){return s.sel[i]==null;}).length;if(miss){fb('fb1',false,'Es fehlen noch '+miss+' Antworten.');return;}
+    var wrong=[];VERH.forEach(function(q,i){var ok=s.sel[i]===q.a;$('vh'+i).children[s.sel[i]].className=ok?'ok':'bad';if(!ok)wrong.push(i);});
+    tryInc('s2verh',!wrong.length,wrong.join(','));
+    if(wrong.length){var q=VERH[wrong[0]];fb('fb1',false,wrong.length+' Antwort'+(wrong.length>1?'en stimmen':' stimmt')+' noch nicht. '+(q.w||'Lies die rot markierte Situation noch einmal.'));
+      helpBtn('fb1','s2verh',function(){VERH.forEach(function(q,i){s.sel[i]=q.a;});save();r1();fb('fb1',true,'Die Lösung ist markiert. Lies sie dir genau durch und tippe dann auf „Prüfen“.');});return;}
+    s.ok=true;finish(1);save();r1();});
+  bindNext();}
+
+/* ---------- Station 3: Geräte & Aufbau ---------- */
+var POS=['1.','2.','3.','4.'];
+var GER=[{t:'Aufbau prüfen: Steht alles fest, korrekt und sicher?',a:1},{t:'Aufräumen: Geräte aus, Kabel bündeln, Tisch sauber',a:3},{t:'Geräte bei der Lehrkraft abholen (nur freigegebene)',a:0},{t:'Experimentieren nach Arbeitsauftrag',a:2}];
+var Q2=[
+ {id:'kabel',q:'Beim Aufbauen siehst du: Die Isolierung eines Kabels ist eingerissen. Was tust du?',o:['Ich benutze das Kabel nicht und zeige es sofort der Lehrkraft.','Ich klebe es mit Tesafilm ab und benutze es.','Ich lege es zurück in die Kiste.'],a:0,ok:'Richtig! Beschädigte Geräte nie benutzen und immer sofort melden. Sonst bekommt der Nächste das kaputte Kabel.',hint:'Was passiert, wenn das kaputte Kabel einfach zurück in die Kiste kommt?'},
+ {id:'schrank',q:'Im Schrank steht ein spannendes Gerät, das heute nicht ausgegeben wurde. Darfst du es benutzen?',o:['Nein. Ich benutze nur Geräte, die die Lehrkraft ausgibt.','Ja, wenn ich vorsichtig bin.','Ja, wenn mein Partner es erlaubt.'],a:0,ok:'Genau! Nur freigegebene Geräte verwenden.',hint:'Schau dir die Reihenfolge noch einmal an: Wer gibt die Geräte aus?'},
+ {id:'ende',q:'Das Experiment ist fertig. Was machst du zuerst?',o:['Geräte ausschalten, dann abbauen und aufräumen.','Sofort alle Kabel herausziehen, solange der Strom noch an ist.','Alles liegen lassen, die nächste Klasse räumt auf.'],a:0,ok:'Richtig! Erst ausschalten, dann abbauen, Kabel bündeln und den Tisch sauber hinterlassen.',hint:'Was ist sicherer: erst ausschalten oder erst abbauen?'}];
+function r2(){var s=st.s[2];s.sel=s.sel||{};
+  var h=head(2,'Geräte und Aufbau','Bringe die Arbeitsschritte in die richtige Reihenfolge.')+
+   '<div class="order">'+GER.map(function(q,i){return '<div class="it"><span>'+q.t+'</span>'+selHTML('ger'+i,POS,s.sel[i])+'</div>';}).join('')+'</div>'+
+   (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p>'+
+   (s.ok?chainHTML(Q2,s,'s3'):'')+win(2,'Du gehst sicher mit Geräten um.')+nextBtn(2);
+  $('task').innerHTML=h;selGroup('ger',GER,s.sel,s.ok);
+  if(!s.ok)$('c2').addEventListener('click',function(){checkGroup('ger',GER,s.sel,'s3order','fb2',function(){s.ok=true;save();r2();},r2,null,'Noch nicht richtig. Was muss passieren, bevor du prüfen kannst?');});
+  else{fb('fb2',true,'Richtig! Ausgeben – prüfen – experimentieren – aufräumen.');bindChain(Q2,s,'s3',r2,function(){finish(2);});}
+  bindNext();}
+
+/* ---------- Station 4: Notfall & Alarm ---------- */
+var UNF=[{t:'Notruf 112 wählen und auf Hilfe warten',a:2},{t:'Erste Hilfe nach Anweisung leisten',a:3},{t:'Ruhe bewahren und die Situation sichern (Strom aus)',a:0},{t:'Lehrkraft informieren, Ersthelfer rufen',a:1}];
+var ALA=[{t:'Über den Fluchtweg zum Sammelpunkt gehen',a:2},{t:'Fenster schließen, nichts mitnehmen',a:0},{t:'In Zweierreihe ruhig den Raum verlassen',a:1}];
+var Q3=[
+ {id:'nr',q:'Welche Nummer wählst du für Feuerwehr und Rettungsdienst?',o:['112','110','911'],a:0,ok:'Richtig! 112 ist der Notruf für Feuerwehr und Rettungsdienst, in ganz Europa.',bad:['','110 ist die Polizei.','911 gilt in den USA, nicht bei uns.']},
+ {id:'mit',q:'Der Feueralarm geht los. Dein Handy liegt noch auf dem Tisch. Was tust du?',o:['Ich lasse es liegen und verlasse sofort den Raum.','Ich packe schnell meine Tasche.','Ich warte, ob es ein Probealarm ist.'],a:0,ok:'Genau! Bei Alarm wird die Arbeit sofort beendet. Nichts mitnehmen, jede Sekunde zählt.',hint:'Bei Alarm: Arbeit SOFORT beenden.'}];
+function r3(){var s=st.s[3];s.u=s.u||{};s.al=s.al||{};
+  var h=head(3,'Notfälle und Alarm','Was tust du bei einem Unfall? Bringe die Unfallkette in die richtige Reihenfolge.')+
+   '<div class="order">'+UNF.map(function(q,i){return '<div class="it"><span>'+q.t+'</span>'+selHTML('unf'+i,POS,s.u[i])+'</div>';}).join('')+'</div>'+
+   (s.uOk?'':'<div class="row"><button class="btn pri" type="button" id="c3u">Prüfen</button></div>')+'<p class="fb" id="fb3u"></p>';
+  if(s.uOk)h+='<p><b>Und bei Feueralarm?</b> Bringe auch diese Schritte in die richtige Reihenfolge.</p><div class="order">'+ALA.map(function(q,i){return '<div class="it"><span>'+q.t+'</span>'+selHTML('ala'+i,POS.slice(0,3),s.al[i])+'</div>';}).join('')+'</div>'+
+   (s.aOk?'':'<div class="row"><button class="btn pri" type="button" id="c3a">Prüfen</button></div>')+'<p class="fb" id="fb3a"></p>';
+  if(s.aOk)h+=chainHTML(Q3,s,'s4');
+  h+=win(3,'Du weißt, was im Notfall zu tun ist.')+nextBtn(3);
+  $('task').innerHTML=h;selGroup('unf',UNF,s.u,s.uOk);
+  if(!s.uOk)$('c3u').addEventListener('click',function(){checkGroup('unf',UNF,s.u,'s4unfall','fb3u',function(){s.uOk=true;save();r3();},r3,null,'Noch nicht richtig. Merke: Erst Ruhe bewahren und sichern, dann Hilfe holen.');});
+  else fb('fb3u',true,'Richtig! Ruhe bewahren – Lehrkraft – Notruf – Erste Hilfe.');
+  if(s.uOk){selGroup('ala',ALA,s.al,s.aOk);
+    if(!s.aOk)$('c3a').addEventListener('click',function(){checkGroup('ala',ALA,s.al,'s4alarm','fb3a',function(){s.aOk=true;save();r3();},r3,null,'Noch nicht richtig. Bevor du gehst, schließt du die Fenster.');});
+    else fb('fb3a',true,'Richtig! Fenster zu, in Zweierreihe raus, über den Fluchtweg zum Sammelpunkt.');}
+  if(s.aOk)bindChain(Q3,s,'s4',r3,function(){finish(3);});
+  bindNext();}
+
+/* ---------- Station 5: Raum-Check ---------- */
+var SIGQ=SIGN_ORDER.map(function(k){return {a:k};});
+function r4(){var s=st.s[4];s.sel=s.sel||{};s.room=s.room||{};
+  var h=head(4,'Sicherheit im Physikraum','Welches Zeichen ist welches? Ordne jedem Bild (1–6) den richtigen Namen zu.')+
+   '<div class="match">'+SIGQ.map(function(q,i){return '<span class="nr">'+(i+1)+'</span>'+selHTML('sig'+i,SIGNS.map(function(x){return x.n;}),s.sel[i]);}).join('')+'</div>'+
+   (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button></div>')+'<p class="fb" id="fb4"></p>';
+  if(s.ok){h+='<div class="merk stack"><h3>Schau dich im Raum um!</h3><p>Suche jede Einrichtung in <b>deinem</b> Physikraum. Schreibe auf, wo sie ist (z. B. „neben der Tür“). Gibt es sie hier nicht, tippe auf „gibt es hier nicht“.</p></div><div class="room">'+
+     SIGNS.map(function(x){var r=s.room[x.k]||{};return '<div class="it'+(r.f===true&&(r.w||'').trim().length>=3||r.f===false?' okk':'')+'" id="rm_'+x.k+'"><b>'+x.n+'</b><span class="seg"><button type="button" data-f="1" class="'+(r.f===true?'sel':'')+'">gefunden</button><button type="button" data-f="0" class="'+(r.f===false?'sel':'')+'">gibt es hier nicht</button></span>'+
+       (r.f===true?'<input type="text" placeholder="Wo genau?" value="'+esc(r.w)+'" maxlength="80" aria-label="Ort: '+x.n+'">':'')+'</div>';}).join('')+'</div>'+
+     (st.done[4]?'':'<div class="row"><button class="btn pri" type="button" id="c4r">Raum-Check abschließen</button></div>')+'<p class="fb" id="fb4r"></p>';}
+  h+=win(4,'Du weißt, wo die Sicherheitseinrichtungen sind.')+nextBtn(4);
+  $('task').innerHTML=h;selGroup('sig',SIGQ,s.sel,s.ok);
+  if(!s.ok)$('c4').addEventListener('click',function(){checkGroup('sig',SIGQ,s.sel,'s5zeichen','fb4',function(){s.ok=true;save();r4();},r4,null,'Noch nicht richtig. Tipp: Rote Zeichen haben mit Brand zu tun, grüne mit Rettung.');});
+  else{fb('fb4',true,'Alles richtig zugeordnet!');
+    SIGNS.forEach(function(x){var box=$('rm_'+x.k),r=s.room[x.k]||(s.room[x.k]={});
+      Array.prototype.forEach.call(box.querySelectorAll('[data-f]'),function(b){b.addEventListener('click',function(){r.f=b.dataset.f==='1';save();r4();var inp=$('rm_'+x.k).querySelector('input');if(inp)inp.focus();});});
+      var inp=box.querySelector('input');if(inp)inp.addEventListener('input',function(){r.w=inp.value;save();box.className='it'+(r.w.trim().length>=3?' okk':'');});});
+    if($('c4r'))$('c4r').addEventListener('click',function(){var miss=SIGNS.filter(function(x){var r=s.room[x.k]||{};return !(r.f===false||(r.f===true&&(r.w||'').trim().length>=3));});
+      if(miss.length){fb('fb4r',false,'Noch offen: '+miss.map(function(x){return x.n;}).join(', ')+'. Schreibe bei „gefunden“ dazu, wo es ist.');return;}
+      finish(4);save();r4();});}
+  bindNext();}
+
+/* ---------- Station 6: Quiz ---------- */
+var Q5=[
+ {id:'q1',q:'Darfst du ohne Auftrag ein Experiment beginnen?',o:['Nein, nur nach Arbeitsauftrag und mit Erlaubnis.','Ja, wenn alle Geräte auf dem Tisch stehen.','Ja, wenn es ungefährlich aussieht.'],a:0,ok:'Richtig! Erst Auftrag und Erlaubnis, dann experimentieren.'},
+ {id:'q2',q:'Wohin gehören Taschen im Physikraum?',o:['So an die Seite oder unter den Tisch, dass niemand darüber stolpert.','Auf den Experimentiertisch.','In den Gang, da ist Platz.'],a:0,ok:'Genau! Wege und Arbeitsplätze bleiben frei.'},
+ {id:'q3',q:'Darf man im Physikraum essen oder trinken?',o:['Nein, auch nicht aus der eigenen Flasche.','Ja, wenn man vorsichtig ist.','Nur Wasser.'],a:0,ok:'Richtig! Im Physikraum wird nicht gegessen und nicht getrunken.'},
+ {id:'q4',q:'Was machst du, wenn etwas kaputtgeht?',o:['Ich melde es sofort der Lehrkraft, auch kleine Schäden.','Ich räume es schnell weg, damit es keiner merkt.','Ich repariere es selbst.'],a:0,ok:'Genau! Schäden, Glasbruch und Unfälle immer sofort melden.'},
+ {id:'q5',q:'Warum soll man im Physikraum gehen und nicht rennen?',o:['Man kann stolpern, Aufbauten umstoßen und sich oder andere verletzen.','Weil es zu laut ist.','Weil der Boden sonst schmutzig wird.'],a:0,ok:'Richtig! Im Physikraum stehen Geräte, Kabel und manchmal heiße Platten.'},
+ {id:'q6',q:'Darf man ohne Lehrkraft in den Physikraum?',o:['Nein, nur wenn eine Lehrkraft anwesend ist.','Ja, in den Pausen.','Ja, wenn die Tür offen ist.'],a:0,ok:'Richtig! Den Physikraum betrittst du nur mit einer Lehrkraft.'},
+ {id:'q7',q:'Wann schaltest du ein Netzgerät, eine Heizplatte oder einen Brenner ein?',o:['Nur auf Anweisung der Lehrkraft.','Sobald alles aufgebaut ist.','Wenn mein Partner bereit ist.'],a:0,ok:'Genau! Einschalten nur auf Anweisung.'},
+ {id:'q8',q:'Eine Mitschülerin hat sich verletzt. Was tust du zuerst?',o:['Ruhe bewahren, sichern und sofort die Lehrkraft informieren.','Ein Foto machen.','Weiterarbeiten, die Lehrkraft merkt es schon.'],a:0,ok:'Richtig! Erst Ruhe bewahren und sichern, dann Hilfe holen.'}];
+/* Antworten mischen, damit nicht immer A richtig ist */
+(function(){var sh=[[1,0,2],[2,1,0],[0,2,1],[1,2,0],[2,0,1],[0,1,2],[1,0,2],[2,1,0]];Q5.forEach(function(q,i){var p=sh[i],o=q.o.slice();q.o=p.map(function(k){return o[k];});q.a=p.indexOf(0);});})();
+function r5(){var s=st.s[5];
+  var nOk=Q5.filter(function(q){return s[q.id+'Ok'];}).length;
+  var h=head(5,'Sicherheits-Check','Beantworte alle Fragen. Bei einem Fehler darfst du es noch einmal versuchen.')+
+   '<div class="prog" aria-hidden="true"><i style="width:'+(nOk/Q5.length*100)+'%"></i></div><p class="muted">'+nOk+' von '+Q5.length+' Fragen geschafft</p>'+
+   chainHTML(Q5,s,'s6')+win(5,'Alle Fragen richtig beantwortet.')+nextBtn(5);
+  $('task').innerHTML=h;bindChain(Q5,s,'s6',r5,function(){finish(5);});bindNext();}
+
+/* ---------- Station 7: Bestätigung ---------- */
+var RULES=[['Verhalten',[
+ 'Ich betrete den Physikraum nur in Anwesenheit einer Lehrkraft.',
+ 'Ich befolge die Anweisungen der Lehrkraft.',
+ 'Ich experimentiere nur nach Arbeitsauftrag und mit Erlaubnis.',
+ 'Ich arbeite niemals allein oder unbeaufsichtigt.',
+ 'Ich gehe im Physikraum, renne nicht und halte Wege sowie Arbeitsplätze frei.',
+ 'Taschen stelle ich so ab, dass keine Stolperfallen entstehen.',
+ 'Ich esse und trinke nicht im Physikraum.',
+ 'Ich trage die angeordnete Schutzkleidung, insbesondere eine Schutzbrille.',
+ 'Lange Haare binde ich zusammen, weite Kleidung sichere ich.']],
+ ['Experimentieren',[
+ 'Ich arbeite nur mit trockenen Händen und überprüfe Kabel sowie Geräte vor der Benutzung auf sichtbare Schäden.',
+ 'Ich schalte elektrische Geräte, Netzgeräte, Heizplatten oder Brenner nur auf Anweisung ein.',
+ 'Vor Beginn prüfe ich, ob mein Versuchsaufbau stabil, korrekt und sicher ist.',
+ 'Ich gehe vorsichtig mit Strom, Wärmequellen, Flammen, Chemikalien und Glasgeräten um.',
+ 'Ich verwende keine unbekannten oder unbeschrifteten Stoffe und probiere Chemikalien niemals.',
+ 'Ich melde Schäden, Glasbruch, Unfälle und gefährliche Situationen sofort der Lehrkraft.',
+ 'Nach dem Experiment schalte ich Geräte aus, räume auf und hinterlasse meinen Arbeitsplatz sauber.',
+ 'Im Notfall oder bei Alarm beende ich die Arbeit sofort und folge den Anweisungen der Lehrkraft.']],
+ ['Zum Schluss',['Mir ist bewusst, dass die Sicherheitsregeln dem Schutz aller dienen. Bei Missachtung der Regeln kann die Lehrkraft das Experimentieren für einzelne Schülerinnen und Schüler oder für die ganze Klasse beenden.']]];
+var NRULES=RULES.reduce(function(n,g){return n+g[1].length;},0);
+function halbjahr(d){var m=d.getMonth()+1,y=d.getFullYear();var sj=m>=8?y+'/'+String(y+1).slice(2):(y-1)+'/'+String(y).slice(2);return {hj:(m>=8||m===1)?'1. Halbjahr':'2. Halbjahr',sj:sj};}
+function nChecked(){var r=st.s[6].r||{};return Object.keys(r).filter(function(k){return r[k];}).length;}
+function complete(){return STATIONS.slice(0,6).every(function(x,i){return st.done[i];})&&nChecked()===NRULES&&!!st.s[6].sig&&!!(st.res.name||'').trim()&&!!(st.res.klasse||'').trim();}
+function r6(){var s=st.s[6];s.r=s.r||{};var n=0,h=head(6,'Bestätigung','Lies jede Regel genau und hake sie ab. Mit deinem Namen bestätigst du, dass du die Regeln kennst und einhältst.')+
+   '<div class="prog" aria-hidden="true"><i id="pbar" style="width:'+(nChecked()/NRULES*100)+'%"></i></div><p class="muted" id="pcount">'+nChecked()+' von '+NRULES+' Regeln abgehakt</p><ul class="rules">';
+  RULES.forEach(function(g){h+='<li><h4>'+g[0]+'</h4></li>';g[1].forEach(function(t){var id='r'+n;h+='<li><label class="'+(s.r[id]?'on':'')+'"><input type="checkbox" data-r="'+id+'"'+(s.r[id]?' checked':'')+'><span>'+t+'</span></label></li>';n++;});});
+  h+='</ul><div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Unterschrift</h3><div class="sig">'+
+   '<label for="resName">Vor- und Nachname</label><input id="resName" autocomplete="off" value="'+esc(st.res.name)+'">'+
+   '<label for="resKlasse">Klasse / Kurs</label><input id="resKlasse" autocomplete="off" placeholder="z. B. 7d" value="'+esc(st.res.klasse)+'">'+
+   '<label for="resLk">Lehrkraft</label><input id="resLk" autocomplete="off" value="'+esc(st.res.lk)+'"></div>'+
+   '<ul class="rules"><li><label class="'+(s.sig?'on':'')+'"><input type="checkbox" id="sig"'+(s.sig?' checked':'')+'><span><b>Ich bestätige mit meinem Namen</b>, dass ich über die Sicherheitsregeln informiert wurde und sie einhalte.</span></label></li></ul></div>'+
+   '<p class="fb" id="fb6"></p>'+resultsHTML();
+  $('task').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-r]'),function(c){c.addEventListener('change',function(){s.r[c.dataset.r]=c.checked;c.parentNode.className=c.checked?'on':'';save();upd6();});});
+  $('sig').addEventListener('change',function(){if(this.checked&&(nChecked()<NRULES||!(st.res.name||'').trim())){this.checked=false;fb('fb6',false,nChecked()<NRULES?'Hake zuerst alle Regeln ab.':'Trage zuerst deinen Vor- und Nachnamen ein.');return;}
+    s.sig=this.checked;if(s.sig)s.sigAt=new Date().toISOString();this.parentNode.className=this.checked?'on':'';save();upd6();});
+  ['resName','resKlasse','resLk'].forEach(function(id){$(id).addEventListener('input',function(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();st.res.lk=$('resLk').value.trim();save();upd6();});});
+  bindResults();upd6();}
+function upd6(){$('pbar').style.width=(nChecked()/NRULES*100)+'%';$('pcount').textContent=nChecked()+' von '+NRULES+' Regeln abgehakt';
+  if(complete()){finish(6);fb('fb6',true,'Alles erledigt! Speichere jetzt deine Ergebnisse und lade sie bei IServ hoch.');}
+  else if(st.s[6].sig&&!complete())fb('fb6',false,'Es fehlt noch etwas: '+missing().join(', ')+'.');else{var f=$('fb6');f.className='fb';f.textContent='';}
+  if(!$('resTxt').hidden)$('resTxt').value=resText();}
+function missing(){var m=[];STATIONS.slice(0,6).forEach(function(x,i){if(!st.done[i])m.push('Station '+(i+1));});if(nChecked()<NRULES)m.push((NRULES-nChecked())+' Regeln');if(!(st.res.name||'').trim())m.push('Name');if(!(st.res.klasse||'').trim())m.push('Klasse');if(!st.s[6].sig)m.push('Bestätigung');return m;}
+/* ---------- Ergebnisse ---------- */
+var TASKS=[['s1stopp','STOPP zuordnen'],['s1when','Wann gilt STOPP?'],['s2verh','Verhalten: 10 Situationen'],['s3order','Reihenfolge Geräte'],['s3kabel','Kabel beschädigt'],['s3schrank','Gerät aus dem Schrank'],['s3ende','Nach dem Experiment'],
+ ['s4unfall','Unfallkette'],['s4alarm','Ablauf bei Alarm'],['s4nr','Notrufnummer'],['s4mit','Alarm: nichts mitnehmen'],['s5zeichen','Sicherheitszeichen zuordnen']].concat(Q5.map(function(q,i){return ['s6'+q.id,'Quiz '+(i+1)+': '+q.q];}));
+function resFile(){var n=(st.res.name||'Name').replace(/[^A-Za-zÄÖÜäöüß0-9]+/g,'_').replace(/^_|_$/g,'');var k=(st.res.klasse||'').replace(/[^A-Za-z0-9]+/g,'');return 'Sicherheitsunterweisung_'+n+(k?'_'+k:'')+'.txt';}
+function resText(){var now=new Date(),h=halbjahr(now),dur=Math.round((Date.now()-(st.t0||Date.now()))/1000),L=[];
+  L.push('SICHERHEITSUNTERWEISUNG PHYSIK · Sicherheits-Check');L.push('Name: '+(st.res.name||'')+'   Klasse: '+(st.res.klasse||'')+'   Lehrkraft: '+(st.res.lk||''));
+  L.push('Datum: '+now.toLocaleDateString('de-DE')+' '+now.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+'   Schuljahr '+h.sj+', '+h.hj+'   Bearbeitungszeit: '+Math.round(dur/60)+' min');
+  L.push('Status: '+(complete()?'VOLLSTÄNDIG':'UNVOLLSTÄNDIG (fehlt: '+missing().join(', ')+')'));L.push('');
+  STATIONS.forEach(function(x,i){L.push('Station '+(i+1)+' '+x.name+': '+(st.done[i]?'erledigt':'offen'));});L.push('');
+  L.push('Aufgaben (Versuche):');TASKS.forEach(function(t){var r=st.tries[t[0]];L.push('  '+t[1]+': '+(r?(r.ok?(r.n===1?'beim 1. Versuch richtig':'richtig nach '+r.n+' Versuchen'):'offen nach '+r.n+' Versuchen')+(r.helped?' (Lösung angezeigt)':''):'nicht bearbeitet'));});
+  L.push('');L.push('Raum-Check:');var room=st.s[4].room||{};SIGNS.forEach(function(x){var r=room[x.k]||{};L.push('  '+x.n+': '+(r.f===true?'gefunden – '+(r.w||'').trim():(r.f===false?'gibt es hier nicht':'offen')));});
+  L.push('');L.push('Regeln abgehakt: '+nChecked()+' von '+NRULES);L.push('Bestätigt mit Namen: '+(st.s[6].sig?'ja':'nein'));
+  var data={v:1,name:st.res.name||'',klasse:st.res.klasse||'',lk:st.res.lk||'',date:now.toISOString(),dur:dur,sj:h.sj,hj:h.hj,done:STATIONS.map(function(x,i){return !!st.done[i];}),
+    tries:st.tries,help:st.help,rules:nChecked(),nrules:NRULES,sig:!!st.s[6].sig,sigAt:st.s[6].sigAt||'',room:room,complete:complete()};
+  var js=JSON.stringify(data);L.push('');L.push('#DATEN '+js);L.push('#PRUEF '+fnv('SU-v1|'+js));return L.join('\n');}
+function resultsHTML(){return '<div class="merk stack" id="resBox" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3>'+
+   '<p class="muted">Tippe auf <b>„Als Textdatei speichern“</b> (iPad: „Laden“ bestätigen). Lade die Datei danach bei <b>IServ</b> in der Aufgabe „Sicherheitsunterweisung“ hoch. Jede und jeder gibt eine eigene Datei ab.</p>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="12" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Sicherheitsunterweisung“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<p class="muted"><b>Gerät weitergeben?</b> Erst speichern und hochladen, dann oben auf „Neu starten“ tippen.</p></div>';}
+function bindResults(){
+  function msg(ok,t){fb('resFb',ok,t);}
+  function need(){if(!(st.res.name||'').trim()){msg(false,'Trage zuerst deinen Vor- und Nachnamen ein.');$('resName').focus();return false;}
+    if(!complete())msg(false,'Achtung: Noch nicht vollständig (fehlt: '+missing().join(', ')+'). Die Datei wird trotzdem gespeichert.');return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Du kannst den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile(),warn=!complete();
+    function done(t){if(!warn)msg(true,t);}
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      done('Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutze „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){done('Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Du kannst es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutze „Text kopieren“.');});},blobSave);}
+    else blobSave();});}
+
+/* ---------- Gesamt ---------- */
+function pic(){var p=picFor(st.station);$('pic').innerHTML=p[0];$('cap').textContent=p[1];}
+function render(){renderRoute();pic();[r0,r1,r2,r3,r4,r5,r6][st.station]();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();});
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();
+})();
+</script>
+</body>
+</html>

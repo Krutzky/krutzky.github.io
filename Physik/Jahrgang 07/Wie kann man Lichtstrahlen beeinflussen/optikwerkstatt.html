@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Optik-Werkstatt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Optik-Werkstatt</b><span>Wie helfen uns Linsen beim Sehen?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Lupe oder Auge (Seitenansicht)"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="ctlCard">
+      <p class="eyebrow">Steuerpult</p>
+      <div id="ctl" class="ctl"></div>
+    </section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var F=10, AL=4, GH=2;  /* Lupe: Brennweite, Linsenradius, Höhe des Gegenstands (cm) */
+var STATIONS=[
+  {key:'s1',name:'Lupe',scene:'lupe'},
+  {key:'s2',name:'Auge',scene:'eye'},
+  {key:'s3',name:'Brillen',scene:'glass'},
+  {key:'s4',name:'Merksatz',scene:'glass'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'lupe'}
+];
+/* Augen: Länge Linse–Netzhaut L, Brennweiten-Bereich der Augenlinse (cm, Modell nicht maßstäblich) */
+var EYES={
+  normal:{name:'normales Auge',L:2.3,fmin:2.06,fmax:2.36},
+  lena:{name:'Lena',L:2.45,fmin:2.08,fmax:2.30,col:'#1C66C0',ini:'L',txt:'Lena (13): „Die Tafel ist total verschwommen. Mein Handy sehe ich scharf.“'},
+  becker:{name:'Herr Becker',L:2.2,fmin:2.12,fmax:2.30,col:'#B05A12',ini:'B',txt:'Herr Becker (68): „Die Zeitung verschwimmt. Straßenschilder sehe ich scharf.“'}
+};
+var OBJ={far:{g:600,t:'Tafel',d:'6 m'},near:{g:25,t:'Buch',d:'25 cm'}};
+var GL={none:{D:0,t:'keine Brille'},plus:{D:3,t:'Sammellinse'},minus:{D:-3,t:'Zerstreuungslinse'}};
+
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  g:5,rays:false,screen:false, w:0,obj:'far', pat:'lena',glass:'none',
+  s1:{real:{},realOk:false,kreuz:{},kreuzOk:false,virt:null,virtOk:false,own:'',ok:false},
+  s2:{map:{},mapOk:false,schirm:null,schirmOk:false,fern:false,nah:false,tip:0,akk:null,akkOk:false,bild:null,bildOk:false},
+  s3:{lena:null,lenaB:null,beck:null,beckB:null,names:{},namesOk:false,tip:0},
+  s4:{gaps:{},ok:false,refl:'',tom:null,tomOk:false},
+  s5:{a:null,b:null},res:{},tries:{},help:{},t0:null};
+
+/* ---------- Speicher ---------- */
+var KEY='optik-werkstatt-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;}catch(e){}}
+var RKEY='optik-werkstatt-resets';
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+/* Hilfe: nach 3 Fehlversuchen kann die Lösung angezeigt werden */
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+
+/* ---------- Physik ---------- */
+function lupeB(g){var v=1/F-1/g;return Math.abs(v)<1e-9?Infinity:1/v;}           /* b<0: virtuelles Bild */
+function eyeF(){var E=EYES.normal;return E.fmax-(E.fmax-E.fmin)*st.w/100;}
+function eyeState(){ /* liefert {E,g,D,f,b,rel} */
+  var sc=STATIONS[st.station].scene,E,D=0,f;
+  var g=OBJ[st.obj].g;
+  if(sc==='eye'){E=EYES.normal;f=eyeF();}
+  else{E=EYES[st.pat];D=GL[st.glass].D;var need=1/(1/E.L+1/g-D/100);f=Math.max(E.fmin,Math.min(E.fmax,need));}
+  var b=1/(1/f+D/100-1/g);
+  return {E:E,g:g,D:D,f:f,b:b,rel:1-E.L/b};
+}
+function eyeSharp(es){return Math.abs(es.rel)<0.006;}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+
+/* ---------- Zeichnen: Grundlagen ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function font(px,b){return (b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function dotPx(x,y,c,r){ctx.beginPath();ctx.arc(x,y,r||5,0,Math.PI*2);ctx.fillStyle=c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function tag(t,x,y,c,align){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function badge(n,x,y){ctx.beginPath();ctx.arc(x,y,12,0,Math.PI*2);ctx.fillStyle=col('ink');ctx.fill();ctx.fillStyle=col('surface');ctx.font=font(14,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(n),x,y+1);}
+function arrow(x1,y1,x2,y2,c,w,dash){line(x1,y1,x2,y2,c,w,dash);var a=Math.atan2(y2-y1,x2-x1),s=10;ctx.save();ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-s*Math.cos(a-0.45),y2-s*Math.sin(a-0.45));ctx.lineTo(x2-s*Math.cos(a+0.45),y2-s*Math.sin(a+0.45));ctx.closePath();ctx.fill();ctx.restore();}
+function resize(){
+  var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.56,420))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;
+  sizeView($('cvA'));sizeView($('cvB'));draw();
+}
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);if(sc==='lupe')drawLupe();else drawEye(sc);}
+
+/* ---------- Szene Lupe ---------- */
+var LX0=-40,LX1=42,LVS=1,LAY=0;
+function LX(x){return 14+(x-LX0)/(LX1-LX0)*(W-28);}
+function LY(y){return LAY-y*LVS;}
+function drawLupe(){
+  LVS=(H-70)/18;LAY=36+9*LVS;var g=st.g,b=lupeB(g),yi=isFinite(b)?GH*(-b/g):Infinity;
+  line(LX(LX0+1),LAY,LX(LX1-1),LAY,col('axis'),1.2,[6,6],.7);
+  [-F,F].forEach(function(fx){dotPx(LX(fx),LAY,col('axis'),3.5);ctx.fillStyle=col('axis');ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('F',LX(fx),LAY+6);});
+  /* Linse */
+  var hw=Math.max(6,W*0.012),top=LY(AL),bot=LY(-AL),cx=LX(0);
+  ctx.beginPath();ctx.moveTo(cx,top);ctx.quadraticCurveTo(cx+hw*2,LAY,cx,bot);ctx.quadraticCurveTo(cx-hw*2,LAY,cx,top);ctx.closePath();
+  ctx.fillStyle=col('lens');ctx.globalAlpha=.75;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=col('lens-edge');ctx.lineWidth=2;ctx.stroke();
+  ctx.font=font(12,true);ctx.fillStyle=col('ink');ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Lupe (Sammellinse)',cx,bot+6);
+  /* Auge */
+  var ex=LX(LX1-4);ctx.save();ctx.beginPath();ctx.ellipse(ex,LAY,16,11,0,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=col('ink');ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(ex-5,LAY,6,0,Math.PI*2);ctx.fillStyle='#3A6AA8';ctx.fill();ctx.beginPath();ctx.arc(ex-6,LAY,2.5,0,Math.PI*2);ctx.fillStyle='#111';ctx.fill();ctx.restore();
+  ctx.font=font(12,true);ctx.fillStyle=col('ink-soft');ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Auge',ex,LAY+16);
+  /* Schirm */
+  if(st.screen){var sx=LX(20);ctx.fillStyle=col('surface-2');ctx.strokeStyle=col('axis');ctx.lineWidth=1.5;ctx.fillRect(sx,LY(6),7,12*LVS);ctx.strokeRect(sx,LY(6),7,12*LVS);
+    var sharp=isFinite(b)&&b>0&&Math.abs(b-20)<1.2;ctx.save();ctx.globalAlpha=sharp?1:.35;ctx.fillStyle='#FFC94D';var hh=sharp?Math.abs(yi):5;ctx.fillRect(sx-4,LY(Math.min(6,hh)),5,Math.min(12,2*hh)*LVS);ctx.restore();
+    tag(sharp?'Bild auf dem Schirm':'nur heller Fleck, kein Bild',sx+12,LY(6)-12,sharp?col('ok'):col('bad'),'left');}
+  /* Gegenstand */
+  arrow(LX(-g),LAY,LX(-g),LY(GH),col('red'),4);
+  ctx.font=font(12,true);ctx.fillStyle=col('red');ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Gegenstand',LX(-g),LAY+20);
+  /* Abstände */
+  var dy=LY(-6.5);if(LX(0)-LX(-g)>40){line(LX(-g),dy,LX(0),dy,col('blue'),1.4);line(LX(-g),dy-5,LX(-g),dy+5,col('blue'),1.4);line(LX(0),dy-5,LX(0),dy+5,col('blue'),1.4);tag('g = '+fmt(g,1)+' cm',(LX(-g)+LX(0))/2,dy,col('blue'));}
+  /* Strahlen */
+  if(st.rays){
+    var c=col('ray1'),tip=[-g,GH];
+    function clipTo(x0,y0,dx,dy2,xmax){var t=(xmax-x0)/dx;var y=y0+dy2*t;if(Math.abs(y)>8.8){t=(Math.sign(y)*8.8-y0)/dy2;}return [x0+dx*t,y0+dy2*t];}
+    /* Parallelstrahl */
+    line(LX(tip[0]),LY(GH),LX(0),LY(GH),c,2);var e1=clipTo(0,GH,F,-GH,LX1-6);line(LX(0),LY(GH),LX(e1[0]),LY(e1[1]),c,2);
+    /* Mittelpunktstrahl */
+    var e2=clipTo(-g,GH,g,-GH,LX1-6);line(LX(-g),LY(GH),LX(e2[0]),LY(e2[1]),c,2);
+    if(isFinite(b)&&b<0){ /* virtuell: Rückverlängerung */
+      var bx=Math.max(b,LX0+1),k1=(bx-0)/F,k2=(bx+g)/g;
+      line(LX(0),LY(GH),LX(bx),LY(GH-GH*k1),col('pro'),2,[6,5]);
+      line(LX(-g),LY(GH),LX(bx),LY(GH-GH*k2),col('pro'),2,[6,5]);
+      if(b>LX0+1){var yy=Math.min(yi,8.8);arrow(LX(b),LAY,LX(b),LY(yy),col('pro'),4,[7,5]);tag('virtuelles Bild',LX(b),LY(Math.min(yy,8))-12,col('pro'));}
+      else tag('virtuelles Bild weit links →',LX(LX0+2)+6,LY(8),col('pro'),'left');
+    } else if(isFinite(b)&&b>0){
+      if(b<LX1-6){var y2=Math.max(yi,-8.8);arrow(LX(b),LAY,LX(b),LY(y2),col('red'),4);tag('reelles Bild',LX(b),LY(y2)+14,col('red'));}
+      else tag('reelles Bild weit rechts',LX(LX1-8),LY(-8),col('red'),'right');
+    } else tag('Strahlen laufen parallel: kein Bild',LX(10),LY(7.5),col('bad'));
+  }
+  renderLupeViews(g,b);
+}
+
+/* ---------- Szene Auge ---------- */
+var S=1,EX=0,EAY=0;
+function E2X(x){return EX+x*S;}function E2Y(y){return EAY-y*S;}
+function drawEye(sc){
+  var es=eyeState(),E=es.E,L=E.L;
+  S=Math.min((W*0.40)/3.2,(H-60)/3.2);EX=W*0.56;EAY=H/2-4;
+  /* Augapfel */
+  var cxE=(L-0.5)/2,rx=(L+0.5)/2,ry=1.3;
+  ctx.save();ctx.beginPath();ctx.ellipse(E2X(cxE),EAY,rx*S,ry*S,0,0,Math.PI*2);ctx.fillStyle=col('surface-2');ctx.fill();ctx.strokeStyle=col('axis');ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  /* Netzhaut */
+  ctx.save();ctx.beginPath();ctx.ellipse(E2X(cxE),EAY,rx*S,ry*S,0,-0.95,0.95);ctx.strokeStyle='#D9534F';ctx.lineWidth=6;ctx.stroke();ctx.restore();
+  /* Sehnerv */
+  ctx.fillStyle='#E9B949';ctx.fillRect(E2X(L)-2,EAY+0.15*S,0.9*S,0.32*S);
+  /* Hornhaut */
+  ctx.save();ctx.beginPath();ctx.ellipse(E2X(-0.38),EAY,0.28*S,0.85*S,0,Math.PI/2,Math.PI*1.5);ctx.strokeStyle='#7FB3E6';ctx.lineWidth=3;ctx.stroke();ctx.restore();
+  /* Iris */
+  ctx.fillStyle='#3A6AA8';ctx.fillRect(E2X(-0.12),E2Y(1.0),0.1*S,0.55*S);ctx.fillRect(E2X(-0.12),E2Y(-0.45),0.1*S,0.55*S);
+  /* Augenlinse: Dicke nach Brennweite */
+  var tt=0.10+0.20*Math.max(0,Math.min(1,(2.36-es.f)/0.30));
+  ctx.beginPath();ctx.ellipse(E2X(0.12),EAY,tt*S,0.48*S,0,0,Math.PI*2);ctx.fillStyle=col('lens');ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=col('lens-edge');ctx.lineWidth=2;ctx.stroke();
+  line(W*0.02,EAY,E2X(L+0.9),EAY,col('axis'),1,[5,6],.5);
+  /* Gegenstand (nicht maßstäblich) */
+  var far=st.obj==='far',ox=far?W*0.05:W*0.24,oh=far?0.55*S:0.45*S;
+  arrow(ox,EAY,ox,EAY-oh,col('red'),4);
+  ctx.font=font(12,true);ctx.fillStyle=col('ink');ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(OBJ[st.obj].t+' ('+OBJ[st.obj].d+')',ox,EAY+8);
+  if(far){ctx.fillStyle=col('ink-soft');ctx.font=font(16,true);ctx.fillText('≈',(ox+E2X(-1.6))/2,EAY-8);}
+  /* Brille */
+  var gx=-1.05;
+  if(sc==='glass'&&st.glass!=='none'){var gpx=E2X(gx),gh=0.75*S,bw=st.glass==='plus'?0.16*S:0.05*S;ctx.save();ctx.beginPath();
+    if(st.glass==='plus'){ctx.moveTo(gpx,EAY-gh);ctx.quadraticCurveTo(gpx+bw*2.2,EAY,gpx,EAY+gh);ctx.quadraticCurveTo(gpx-bw*2.2,EAY,gpx,EAY-gh);}
+    else{ctx.moveTo(gpx-0.12*S,EAY-gh);ctx.lineTo(gpx+0.12*S,EAY-gh);ctx.quadraticCurveTo(gpx+0.02*S,EAY,gpx+0.12*S,EAY+gh);ctx.lineTo(gpx-0.12*S,EAY+gh);ctx.quadraticCurveTo(gpx-0.02*S,EAY,gpx-0.12*S,EAY-gh);}
+    ctx.closePath();ctx.fillStyle='#CFE3F7';ctx.fill();ctx.strokeStyle='#5E7FA8';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+    ctx.font=font(12,true);ctx.fillStyle=col('ink-soft');ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('Brille',gpx,EAY-gh-4);}
+  /* Strahlen (ab Linse physikalisch, Abweichung zur Netzhaut 3-fach überzeichnet) */
+  var bd=L+(es.b-L)*3,yi=far?-0.22:-0.32,c=col('ray1'),tipX=ox,tipY=EAY-oh;
+  [-0.32,0,0.32].forEach(function(h){
+    var lx=E2X(0.12),ly=E2Y(h*0.9+(far?0.08:0.1));
+    if(sc==='glass'&&st.glass!=='none'){var gpx2=E2X(gx),gy=E2Y(h*1.25+(far?0.1:0.14));line(tipX,tipY,gpx2,gy,c,1.8);line(gpx2,gy,lx,ly,c,1.8);}
+    else line(tipX,tipY,lx,ly,c,1.8);
+    var ix=E2X(bd),iy=E2Y(yi),rx2=E2X(L);
+    if(bd<=L){line(lx,ly,ix,iy,c,1.8);var t=(rx2-lx)/(ix-lx);line(ix,iy,lx+(ix-lx)*t,ly+(iy-ly)*t,c,1.8);}
+    else{var t2=(rx2-lx)/(ix-lx);var px=lx+(ix-lx)*t2,py=ly+(iy-ly)*t2;line(lx,ly,px,py,c,1.8);line(px,py,ix,iy,c,1.6,[4,4],.8);}
+  });
+  var sharp=eyeSharp(es);
+  dotPx(E2X(bd),E2Y(yi),sharp?col('ok'):col('ray1'),5);
+  var msg=sharp?'Bild scharf auf der Netzhaut ✓':(es.b<L?'Bild entsteht VOR der Netzhaut':'Bild entsteht HINTER der Netzhaut');
+  tag(msg,W/2,22,sharp?col('ok'):col('bad'));
+  ctx.font=font(11);ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  /* Teile nummerieren (Station 2) */
+  if(STATIONS[st.station].key==='s2'&&!st.s2.mapOk){
+    badge(1,E2X(L)+16,E2Y(0.95));badge(2,E2X(0.12),E2Y(-0.75));badge(3,E2X(L+0.75),E2Y(-0.75));badge(4,E2X(-0.55),E2Y(1.05));badge(5,E2X(-0.07),E2Y(1.25));
+  } else if(STATIONS[st.station].key==='s2'){
+    tag('Netzhaut',E2X(L)+10,E2Y(1.05),col('ink'),'left');tag('Augenlinse',E2X(0.12),E2Y(-0.8),col('ink'));
+  }
+  renderEyeViews(es,sc);
+}
+
+/* ---------- Ansichten ---------- */
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);c._dpr=dpr;}
+function lShape(c2){c2.fillStyle='#E8432E';c2.fillRect(-0.62,-1,0.42,2);c2.fillRect(-0.62,-1,1.24,0.42);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function drawL(c,scale,rot,blur,bg,bright){
+  var x=c.getContext('2d'),w=c.width,ppc=w/6;paper(x,w,bg);
+  x.save();if(blur>0.3&&'filter' in x)x.filter='blur('+(blur*(c._dpr||1)).toFixed(1)+'px)';
+  x.globalAlpha=bright==null?1:bright;x.setTransform(ppc*scale*(rot?-1:1),0,0,-ppc*scale*(rot?-1:1),w/2,w/2);lShape(x);x.restore();x.filter='none';
+}
+function renderLupeViews(g,b){
+  $('capA').innerHTML='<b>Gegenstand</b> ohne Lupe';$('capB').innerHTML='<b>Blick durch die Lupe</b>';
+  drawL($('cvA'),1,false,0);
+  var c=$('cvB');
+  if(Math.abs(g-F)<0.6){drawL(c,8,false,14);return;}
+  if(g<F){var m=Math.min(9,F/(F-g));drawL(c,m,false,0);}
+  else{var m2=Math.min(9,F/(g-F));drawL(c,m2,true,Math.abs(g-F)<2?6:0);}
+  var x=c.getContext('2d');x.setTransform(1,0,0,1,0,0);x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=6*(c._dpr||1);x.beginPath();x.arc(c.width/2,c.width/2,c.width*0.47,0,Math.PI*2);x.stroke();
+}
+function renderEyeViews(es,sc){
+  var who=sc==='glass'?EYES[st.pat].name:'die Person';
+  $('capA').innerHTML='<b>Bild auf der Netzhaut</b>';$('capB').innerHTML='<b>So sieht es '+(sc==='glass'?esc(who):'die Person')+'</b>';
+  var bl=Math.min(18,Math.abs(es.rel)*260);
+  drawL($('cvA'),0.75,true,bl*0.6,'#3a1f22',1);
+  drawL($('cvB'),1.6,false,bl,'#FFF3D6',1);
+}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(o[0]===cur?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function renderCtl(){
+  var sc=STATIONS[st.station].scene,h='';
+  if(sc==='lupe'){
+    h='<div class="lift"><div class="disp g"><small>GEGENSTAND VOR DER LUPE</small><span id="dispG">'+fmt(st.g,1)+' cm</span></div><div class="keys"><button class="key" id="gl" type="button" aria-label="0,5 cm näher">◀</button><button class="key" id="gr" type="button" aria-label="0,5 cm weiter weg">▶</button></div></div>'+
+      '<input type="range" class="gr" id="gS" min="2" max="25" step="0.5" value="'+st.g+'" aria-label="Abstand Gegenstand–Lupe"><div class="scale"><span>2 cm</span><span>25 cm</span></div>'+
+      '<p class="muted">Brennweite der Lupe: <b>f = 10 cm</b></p>'+
+      '<label class="chk"><input type="checkbox" id="tRays"'+(st.rays?' checked':'')+'> Röntgenblick: Lichtstrahlen zeigen</label>'+
+      '<label class="chk"><input type="checkbox" id="tScr"'+(st.screen?' checked':'')+'> Schirm hinter die Lupe stellen</label>';
+  } else if(sc==='eye'){
+    var es=eyeState();
+    h='<div class="ctlrow"><span>WAS SCHAUT DAS AUGE AN?</span>'+segHTML('sObj',[['far','Tafel (6 m)'],['near','Buch (25 cm)']],st.obj)+'</div>'+
+      '<div class="lift"><div class="disp"><small>AUGENLINSE GEWÖLBT</small><span id="dispW">'+st.w+' %</span></div><div class="keys"><button class="key" id="wl" type="button" aria-label="flacher">◀</button><button class="key" id="wr" type="button" aria-label="dicker">▶</button></div></div>'+
+      '<input type="range" id="wS" min="0" max="100" step="1" value="'+st.w+'" aria-label="Wölbung der Augenlinse"><div class="scale"><span>flach (dünn)</span><span>stark gewölbt (dick)</span></div>'+
+      '<p class="status '+(eyeSharp(es)?'ok':'info')+'" id="eyeStat">'+(eyeSharp(es)?'scharf ✓':'noch unscharf')+'</p>';
+  } else {
+    h='<div class="ctlrow"><span>PATIENT</span>'+segHTML('sPat',[['lena','Lena (13)'],['becker','Herr Becker (68)']],st.pat)+'</div>'+
+      '<div class="ctlrow"><span>WAS SCHAUT SIE / ER AN?</span>'+segHTML('sObj',[['far','Tafel (6 m)'],['near','Zeitung (25 cm)']],st.obj)+'</div>'+
+      '<div class="ctlrow"><span>BRILLE AUFSETZEN</span>'+segHTML('sGl',[['none','keine'],['plus','Sammellinse'],['minus','Zerstreuungslinse']],st.glass)+'</div>'+
+      '<p class="muted">Das Auge stellt von selbst so gut scharf, wie es kann.</p>';
+  }
+  $('ctl').innerHTML=h;
+  if(sc==='lupe'){
+    function setG(v){st.g=Math.max(2,Math.min(25,Math.round(v*2)/2));$('gS').value=st.g;$('dispG').textContent=fmt(st.g,1)+' cm';draw();}
+    $('gS').addEventListener('input',function(){setG(parseFloat(this.value));});$('gl').addEventListener('click',function(){setG(st.g-.5);});$('gr').addEventListener('click',function(){setG(st.g+.5);});
+    $('tRays').addEventListener('change',function(){st.rays=this.checked;draw();});$('tScr').addEventListener('change',function(){st.screen=this.checked;draw();});
+  } else if(sc==='eye'){
+    function setW(v){st.w=Math.max(0,Math.min(100,Math.round(v)));$('wS').value=st.w;$('dispW').textContent=st.w+' %';var es=eyeState(),s=eyeSharp(es),e=$('eyeStat');e.className='status '+(s?'ok':'info');e.textContent=s?'scharf ✓':'noch unscharf';draw();}
+    $('wS').addEventListener('input',function(){setW(parseFloat(this.value));});$('wl').addEventListener('click',function(){setW(st.w-1);});$('wr').addEventListener('click',function(){setW(st.w+1);});
+    bindSeg('sObj',function(v){st.obj=v;setW(st.w);});
+  } else {
+    bindSeg('sPat',function(v){st.pat=v;draw();});bindSeg('sObj',function(v){st.obj=v;draw();});bindSeg('sGl',function(v){st.glass=v;draw();});
+  }
+}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function tipBox(list,n){var h='';for(var i=0;i<n&&i<list.length;i++)h+='<p class="hint"><b>Tipp '+(i+1)+':</b> '+list[i]+'</p>';return h;}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+/* Multiple Choice: Frage mit Antwortknöpfen; cb(j) bei Klick */
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){
+  var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');}});});
+}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+/* Segment-Fragen (mehrere Teilfragen, gemeinsam prüfen) */
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+/* ---------- Vermutung ---------- */
+function pic(kind){
+  var L='<rect x="22" y="14" width="12" height="52" fill="#E8432E"/><rect x="22" y="54" width="36" height="12" fill="#E8432E"/>';
+  var inner=kind==='big'?'<g transform="translate(40 40) scale(1.05) translate(-40 -40)">'+L+'</g>':kind==='bigrot'?'<g transform="rotate(180 40 40)">'+L+'</g>':kind==='smallrot'?'<g transform="translate(40 40) scale(.45) rotate(180) translate(-40 -40)">'+L+'</g>':'<text x="40" y="44" text-anchor="middle" font-size="12" fill="#6B7280" font-style="italic">nichts</text>';
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="4" y="4" width="72" height="72" rx="36" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="4"/>'+inner+'</svg>';
+}
+var GUESS=[{k:'A',t:'big',n:'groß und aufrecht'},{k:'B',t:'bigrot',n:'groß und auf dem Kopf'},{k:'C',t:'smallrot',n:'klein und auf dem Kopf'},{k:'D',t:'none',n:'gar nichts'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+
+/* ---------- Station 1: Lupe ---------- */
+var REAL=[
+  {id:'a',q:'1. Haltet die Lupe <b>nah</b> über diesen Text (wenige cm). Die Schrift ist …',o:['größer und aufrecht','größer und auf dem Kopf','kleiner'],a:0,w:'Schaut noch einmal genau hin: Steht die Schrift richtig herum?'},
+  {id:'b',q:'2. Lupe bleibt nah am Text. Haltet das weiße Blatt hinter die Lupe. Auf dem Blatt seht ihr …',o:['das vergrößerte Bild','nur einen hellen Fleck, kein Bild'],a:1,w:'Probiert es aus: Könnt ihr die Buchstaben auf dem Blatt lesen?'},
+  {id:'c',q:'3. Streckt den Arm aus und schaut durch die Lupe auf etwas weit Entferntes (Tafel, Fenster). Ihr seht es …',o:['groß und aufrecht','klein und auf dem Kopf'],a:1,w:'Haltet die Lupe wirklich weit weg vom Auge und schaut auf etwas am anderen Ende des Raums.'}
+];
+var KREUZ=[
+  {id:'a',q:'Das Lupenbild ist …',o:['größer als der Gegenstand','kleiner als der Gegenstand'],a:0,w:'Vergleiche die beiden Ansichten unter dem Modell.'},
+  {id:'b',q:'Das Lupenbild steht …',o:['aufrecht','auf dem Kopf'],a:0,w:'Schau auf den Blick durch die Lupe: Wohin zeigt der Fuß des L?'},
+  {id:'c',q:'Mit dem Schirm hinter der Lupe kann man das Bild …',o:['auffangen','nicht auffangen'],a:1,w:'Setze das Häkchen „Schirm“ und schau, was auf dem Schirm ankommt.'}
+];
+var VIRT={q:'Warum kann man das Lupenbild nicht auf einem Schirm auffangen?',o:['Hinter der Lupe laufen die Strahlen auseinander und treffen sich nicht. Unser Auge verlängert sie nach hinten (gestrichelt).','Das Bild ist zu dunkel.','Die Lupe spiegelt das Licht zurück.'],a:0,
+  ok:'Genau! Das Bild liegt nur „scheinbar“ hinter der Lupe. So ein Bild heißt virtuelles Bild.',bad:['','Auch mit heller Lampe wird es kein Bild. Schau dir mit dem Röntgenblick die Strahlen hinter der Lupe an.','Eine Lupe lässt das Licht durch. Schau dir mit dem Röntgenblick die Strahlen an.']};
+function r1(){
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Du hältst eine Lupe <b>ganz nah</b> über das „L“ (näher als die Brennweite) und schaust hindurch. Was siehst du?</p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.t)+'</button>';}).join('')+'</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. Gleich prüft ihr es mit der echten Lupe.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var real='<div class="stack"><p class="eyebrow">Teil A · Mit der echten Lupe</p><p>Nehmt eure <b>Lupe</b> und das <b>weiße Blatt</b>. Probiert aus und kreuzt an.</p>'+segQHTML(REAL,st.s1.real,st.s1.realOk)+
+    (st.s1.realOk?'':'<div class="row"><button class="btn pri" type="button" id="c1r">Prüfen</button></div>')+'<p class="fb" id="fb1r"></p></div>';
+  var lab=st.s1.realOk?'<div class="stack"><p class="eyebrow">Teil B · Im Lupen-Labor</p><p>Stelle den Gegenstand auf <b>g = 5 cm</b>. Er liegt jetzt <b>innerhalb der Brennweite</b>. Schalte den <b>Röntgenblick</b> ein und stelle den <b>Schirm</b> auf.</p>'+segQHTML(KREUZ,st.s1.kreuz,st.s1.kreuzOk)+
+    (st.s1.kreuzOk?'':'<div class="row"><button class="btn pri" type="button" id="c1k">Prüfen</button></div>')+'<p class="fb" id="fb1k"></p></div>':'';
+  var virt=st.s1.kreuzOk?mcHTML('virt',VIRT.q,VIRT.o,st.s1.virt,VIRT.a):'';
+  var own=st.s1.virtOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Was ist ein virtuelles Bild? Schreibe ein bis zwei Sätze.</p><textarea class="free" id="own" rows="3" placeholder="Ein virtuelles Bild …">'+esc(st.s1.own)+'</textarea>'+(st.s1.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1o">Fertig</button></div>')+'<p class="fb" id="fb1o"></p></div>':'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Lupe</p><h2>Wie vergrößert eine Lupe?</h2></div>'+real+lab+virt+own+(st.done[0]?'<p class="win"><b>Super!</b> Die Lupe ist eine Sammellinse. Der Gegenstand liegt innerhalb der Brennweite.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  bindSegQ(st.s1.real,function(){return st.s1.realOk;});
+  if(!st.s1.realOk)$('c1r').addEventListener('click',function(){if(checkSegQ(REAL,st.s1.real,'s1real','fb1r',r1)){st.s1.realOk=true;save();r1();}});
+  else{$('fb1r').className='fb ok';$('fb1r').textContent='Gut beobachtet! Nah dran: groß und aufrecht, aber nicht auffangbar.';}
+  if(st.s1.realOk){bindSegQ(st.s1.kreuz,function(){return st.s1.kreuzOk;});
+    if(!st.s1.kreuzOk)$('c1k').addEventListener('click',function(){if(checkSegQ(KREUZ,st.s1.kreuz,'s1kreuz','fb1k',r1)){st.s1.kreuzOk=true;save();r1();}});
+    else{$('fb1k').className='fb ok';$('fb1k').textContent='Richtig! Das Modell zeigt dasselbe wie die echte Lupe.';}}
+  if(st.s1.kreuzOk){bindMC('virt',VIRT.a,'s1virt',VIRT.ok,VIRT.bad,function(){st.s1.virtOk=true;save();r1();showFb('virt',true,VIRT.ok);},function(j){st.s1.virt=j;});if(st.s1.virtOk)showFb('virt',true,VIRT.ok);}
+  if(st.s1.virtOk){$('own').addEventListener('input',function(){st.s1.own=this.value;save();});
+    if(!st.s1.ok)$('c1o').addEventListener('click',function(){var fb=$('fb1o');if(st.s1.own.trim().length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}st.s1.ok=true;finish(0);save();r1();});
+    else{$('fb1o').className='fb ok';$('fb1o').textContent='Gespeichert.';}}
+  bindNext();
+}
+
+/* ---------- Station 2: Auge ---------- */
+var PARTS=['Hornhaut','Iris (Regenbogenhaut)','Augenlinse','Netzhaut','Sehnerv'];
+var PMARK=[{n:1,a:3},{n:2,a:2},{n:3,a:4},{n:4,a:0},{n:5,a:1}];
+var QSCH={q:'Welcher Teil des Auges entspricht dem Schirm an der optischen Bank?',o:['Hornhaut','Augenlinse','Netzhaut'],a:2};
+var QAKK={q:'Was hast du gemacht, damit das Buch scharf wird?',o:['Die Augenlinse stärker gewölbt (dicker) gemacht.','Die Augenlinse flacher (dünner) gemacht.','Das Auge länger gemacht.'],a:0};
+var QBILD={q:'Wie ist das Bild auf der Netzhaut?',o:['verkleinert, auf dem Kopf, reell','vergrößert, aufrecht, virtuell','gleich groß und aufrecht'],a:0};
+var TIPS2=['Achte auf den Punkt, in dem sich die Strahlen treffen. Er muss genau auf der roten Netzhaut liegen.','Für nahe Gegenstände muss die Augenlinse stärker gewölbt sein als für ferne.'];
+function r2(){
+  var map='<div class="stack"><p>Im Augenmodell siehst du fünf Nummern. Ordne die Teile zu.</p><div class="bz">'+
+    PMARK.map(function(m){var v=st.s2.map[m.n];return '<span class="badge">'+m.n+'</span><select class="sel'+(st.s2.mapOk?' ok':'')+'" id="pm'+m.n+'"'+(st.s2.mapOk?' disabled':'')+'><option value="">…</option>'+PARTS.map(function(t,j){return '<option value="'+j+'"'+(String(v)===String(j)?' selected':'')+'>'+t+'</option>';}).join('')+'</select>';}).join('')+'</div>'+
+    (st.s2.mapOk?'':'<div class="row"><button class="btn pri" type="button" id="c2m">Prüfen</button></div>')+'<p class="fb" id="fb2m"></p></div>';
+  var sch=st.s2.mapOk?mcHTML('sch',QSCH.q,QSCH.o,st.s2.schirm,QSCH.a):'';
+  var sharp=st.s2.schirmOk?'<div class="q"><p><b>Scharf sehen:</b> '+(!st.s2.fern?'Das Auge schaut die <b>Tafel (6 m)</b> an. Verändere die Wölbung der Augenlinse, bis das Bild genau auf der Netzhaut liegt.':(!st.s2.nah?'Jetzt schaut das Auge ins <b>Buch (25 cm)</b>. Stelle wieder scharf.':'Fern und nah scharf gestellt ✓'))+'</p>'+
+    (st.s2.nah?'':'<div class="row"><button class="btn pri" type="button" id="c2s">Ist das Bild scharf?</button><button class="btn tip" type="button" id="t2"'+(st.s2.tip>=TIPS2.length?' hidden':'')+'>Tipp anzeigen</button></div>')+'<p class="fb" id="fb2s"></p>'+tipBox(TIPS2,st.s2.tip)+'</div>':'';
+  var akk=st.s2.nah?mcHTML('akk',QAKK.q,QAKK.o,st.s2.akk,QAKK.a):'';
+  var bild=st.s2.akkOk?mcHTML('bild',QBILD.q,QBILD.o,st.s2.bild,QBILD.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Auge</p><h2>Wie entsteht im Auge ein Bild?</h2></div>'+map+sch+sharp+akk+bild+(st.done[1]?'<p class="win"><b>Klasse!</b> Das Auge funktioniert wie die optische Bank: Die Augenlinse erzeugt ein Bild auf der Netzhaut.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  if(!st.s2.mapOk){PMARK.forEach(function(m){$('pm'+m.n).addEventListener('change',function(){st.s2.map[m.n]=this.value;this.className='sel';save();});});
+    $('c2m').addEventListener('click',function(){var fb=$('fb2m'),empty=0,wrong=[];PMARK.forEach(function(m){var el=$('pm'+m.n);if(el.value===''){empty++;return;}var ok=+el.value===m.a;el.className='sel '+(ok?'ok':'bad');if(!ok)wrong.push(m.n+':'+el.value);});
+      if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Zuordnungen.';return;}
+      tryInc('s2teile',!wrong.length,wrong.join(','));
+      if(wrong.length){fb.className='fb bad';fb.textContent=(wrong.length===1?'Eine Zuordnung stimmt':wrong.length+' Zuordnungen stimmen')+' noch nicht. Tipp: Das Licht trifft zuerst auf die Hornhaut, zuletzt auf die Netzhaut.';showHelp(fb,'s2teile',function(){PMARK.forEach(function(m){st.s2.map[m.n]=String(m.a);});save();r2();helpMsg('fb2m','Die Lösung ist eingetragen. Vergleiche mit dem Modell und tippe auf „Prüfen“.');});return;}
+      st.s2.mapOk=true;save();render();});}
+  else{$('fb2m').className='fb ok';$('fb2m').textContent='Alles richtig zugeordnet!';}
+  if(st.s2.mapOk){bindMC('sch',QSCH.a,'s2schirm','Richtig! Auf der Netzhaut entsteht das Bild, wie auf dem Schirm.',['Die Hornhaut ist vorne. Wo kommt das Licht am Ende an?','Die Augenlinse entspricht der Sammellinse, nicht dem Schirm.',''],function(){st.s2.schirmOk=true;st.obj='far';save();r2();showFb('sch',true,'Richtig! Auf der Netzhaut entsteht das Bild, wie auf dem Schirm.');renderCtl();draw();},function(j){st.s2.schirm=j;});
+    if(st.s2.schirmOk)showFb('sch',true,'Richtig! Auf der Netzhaut entsteht das Bild, wie auf dem Schirm.');}
+  if(st.s2.schirmOk&&!st.s2.nah){
+    $('c2s').addEventListener('click',function(){var fb=$('fb2s'),need=st.s2.fern?'near':'far',key=st.s2.fern?'s2nah':'s2fern';
+      if(st.obj!==need){fb.className='fb bad';fb.textContent='Wähle oben im Steuerpult „'+(need==='far'?'Tafel (6 m)':'Buch (25 cm)')+'“.';return;}
+      var es=eyeState(),ok=eyeSharp(es);tryInc(key,ok,ok?null:(es.b<es.E.L?'vor':'hinter'));
+      if(!ok){fb.className='fb bad';fb.textContent='Noch unscharf: Das Bild entsteht '+(es.b<es.E.L?'vor der Netzhaut. Mach die Linse flacher.':'hinter der Netzhaut. Mach die Linse stärker gewölbt.');showHelp(fb,key,function(){var E=EYES.normal,need=1/(1/E.L+1/OBJ[st.obj].g);st.w=Math.round((E.fmax-need)/(E.fmax-E.fmin)*100);save();renderCtl();draw();r2();helpMsg('fb2s','Die Linse ist jetzt richtig eingestellt ('+st.w+' %). Schau dir das Modell an und tippe auf „Ist das Bild scharf?“.');});return;}
+      if(!st.s2.fern){st.s2.fern=true;st.obj='near';save();renderCtl();r2();draw();var f=$('fb2s');f.className='fb ok';f.textContent='Scharf! Die Linse ist jetzt zu '+st.w+' % gewölbt. Merke dir die Zahl.';}
+      else{st.s2.nah=true;save();r2();}});
+    $('t2').addEventListener('click',function(){st.s2.tip++;save();r2();});}
+  if(st.s2.nah)bindMC('akk',QAKK.a,'s2akk','Genau! Für nahe Gegenstände wölbt sich die Augenlinse stärker. Das nennt man Akkommodation.',['','Vergleiche die Prozentzahl im Display: fern ↔ nah.','Das Auge kann seine Länge nicht ändern. Schau, was sich im Modell verändert hat.'],function(){st.s2.akkOk=true;save();r2();showFb('akk',true,'Genau! Für nahe Gegenstände wölbt sich die Augenlinse stärker. Das nennt man Akkommodation.');},function(j){st.s2.akk=j;});
+  if(st.s2.akkOk){showFb('akk',true,'Genau! Für nahe Gegenstände wölbt sich die Augenlinse stärker. Das nennt man Akkommodation.');
+    bindMC('bild',QBILD.a,'s2bild','Richtig! Wie an der optischen Bank: verkleinert, auf dem Kopf und reell. Das Gehirn dreht das Bild für uns um.',['','Das wäre das Lupenbild. Schau auf die Ansicht „Bild auf der Netzhaut“.','Schau auf die Ansicht „Bild auf der Netzhaut“: Wohin zeigt der Fuß des L?'],function(){st.s2.bildOk=true;finish(1);save();r2();showFb('bild',true,'Richtig! Wie an der optischen Bank: verkleinert, auf dem Kopf und reell. Das Gehirn dreht das Bild für uns um.');},function(j){st.s2.bild=j;});
+    if(st.s2.bildOk)showFb('bild',true,'Richtig! Wie an der optischen Bank: verkleinert, auf dem Kopf und reell. Das Gehirn dreht das Bild für uns um.');}
+  bindNext();
+}
+
+/* ---------- Station 3: Brillen ---------- */
+var QL1={q:'Lena schaut ohne Brille zur Tafel. Wo entsteht das Bild?',o:['vor der Netzhaut','auf der Netzhaut','hinter der Netzhaut'],a:0};
+var QL2={q:'Welches Brillenglas hilft Lena, die Tafel scharf zu sehen?',o:['Sammellinse','Zerstreuungslinse'],a:1};
+var QB1={q:'Herr Becker liest ohne Brille Zeitung. Wo entsteht das Bild?',o:['vor der Netzhaut','auf der Netzhaut','hinter der Netzhaut'],a:2};
+var QB2={q:'Welches Brillenglas hilft Herrn Becker beim Lesen?',o:['Sammellinse','Zerstreuungslinse'],a:0};
+var NAMES=[{id:'l',q:'Lena sieht in der Ferne unscharf. Sie ist …',o:['kurzsichtig','weitsichtig'],a:0,w:'Kurzsichtige sehen nur in der Nähe (kurze Entfernung) scharf.'},{id:'b',q:'Herr Becker sieht in der Nähe unscharf. Er ist …',o:['kurzsichtig','weitsichtig'],a:1,w:'Weitsichtige sehen nur in der Ferne (weite Entfernung) scharf.'}];
+var TIPS3=['Wähle im Steuerpult den Patienten und was er anschaut. Probiere dann alle drei Brillen aus und beobachte, wo das Bild entsteht.','Eine Zerstreuungslinse lenkt die Strahlen auseinander: Das Bild rückt nach hinten. Eine Sammellinse sammelt zusätzlich: Das Bild rückt nach vorne.'];
+function r3(){
+  var P='<div class="stack">'+['lena','becker'].map(function(k){var E=EYES[k];return '<div class="patient"><span class="av" style="background:'+E.col+'">'+E.ini+'</span><b>'+E.name+'</b><span class="muted">'+E.txt.split(': ')[1]+'</span></div>';}).join('')+'</div>';
+  var s=st.s3;
+  var h=mcHTML('l1',QL1.q,QL1.o,s.lena,QL1.a)+(s.lena===QL1.a?mcHTML('l2',QL2.q,QL2.o,s.lenaB,QL2.a,true):'')+
+    (s.lenaB===QL2.a?mcHTML('b1',QB1.q,QB1.o,s.beck,QB1.a):'')+(s.beck===QB1.a?mcHTML('b2',QB2.q,QB2.o,s.beckB,QB2.a,true):'');
+  var nm=s.beckB===QB2.a?'<div class="stack"><p><b>Die Fachbegriffe:</b></p>'+segQHTML(NAMES,s.names,s.namesOk)+(s.namesOk?'':'<div class="row"><button class="btn pri" type="button" id="c3n">Prüfen</button></div>')+'<p class="fb" id="fb3n"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Brillen</p><h2>Die Sprechstunde</h2></div><p>Zwei Patienten warten. Untersuche im Modell, wo das Bild entsteht, und probiere die Brillen aus.</p>'+P+
+    '<div class="row"><button class="btn tip" type="button" id="t3"'+(s.tip>=TIPS3.length?' hidden':'')+'>Tipp anzeigen</button></div><div class="stack">'+tipBox(TIPS3,s.tip)+'</div>'+h+nm+
+    (st.done[2]?'<p class="win"><b>Diagnose gestellt!</b> Kurzsichtig → Zerstreuungslinse. Weitsichtig → Sammellinse.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  $('t3').addEventListener('click',function(){s.tip++;save();r3();});
+  var M={l1:['lena','s3lena',QL1,'Richtig! Das Bild entsteht vor der Netzhaut, auf der Netzhaut kommt nur ein Fleck an.',['','Schau genau hin: Wählt Lena und Tafel, ohne Brille.','Wählt Lena und Tafel, ohne Brille. Wo treffen sich die Strahlen?']],
+    l2:['lenaB','s3lenaB',QL2,'Genau! Die Zerstreuungslinse lenkt die Strahlen etwas auseinander. Das Bild rückt nach hinten auf die Netzhaut.',['Probiert die Sammellinse aus: Wird es besser oder schlechter?','']],
+    b1:['beck','s3beck',QB1,'Richtig! Das Bild der Zeitung entsteht hinter der Netzhaut.',['Wählt Herrn Becker und Zeitung, ohne Brille.','Wählt Herrn Becker und Zeitung, ohne Brille. Wo treffen sich die Strahlen?','']],
+    b2:['beckB','s3beckB',QB2,'Genau! Die Sammellinse hilft der Augenlinse beim Sammeln. Das Bild rückt nach vorne auf die Netzhaut. Das ist eine Lesebrille.',['','Probiert die Zerstreuungslinse aus: Wird es besser oder schlechter?']]};
+  Object.keys(M).forEach(function(id){var m=M[id];if(!document.querySelector('[data-mc="'+id+'"]'))return;
+    bindMC(id,m[2].a,m[1],m[3],m[4],function(){save();r3();},function(j){s[m[0]]=j;});
+    if(s[m[0]]===m[2].a)showFb(id,true,m[3]);});
+  if(s.beckB===QB2.a){bindSegQ(s.names,function(){return s.namesOk;});
+    if(!s.namesOk)$('c3n').addEventListener('click',function(){if(checkSegQ(NAMES,s.names,'s3namen','fb3n',r3)){s.namesOk=true;finish(2);save();r3();}});
+    else{$('fb3n').className='fb ok';$('fb3n').textContent='Richtig!';}}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Liegt ein Gegenstand innerhalb der Brennweite, wirkt die Sammellinse als ',post:'.',o:['Lupe','Brille','Spiegel'],a:0},
+  {pre:'Die Lupe zeigt ein ',post:' und aufrechtes Bild.',o:['vergrößertes','verkleinertes'],a:0},
+  {pre:'Ein Bild, das man nicht auffangen kann, heißt ',post:' Bild.',o:['reelles','virtuelles'],a:1},
+  {pre:'Im Auge entsteht das Bild auf der ',post:'.',o:['Hornhaut','Netzhaut','Iris'],a:1},
+  {pre:'Bei Kurzsichtigkeit entsteht das Bild ',post:' der Netzhaut.',o:['vor','hinter'],a:0},
+  {pre:'Kurzsichtige Menschen brauchen eine Brille mit ',post:'.',o:['Sammellinsen','Zerstreuungslinsen'],a:1},
+  {pre:'Weitsichtige Menschen brauchen eine Brille mit ',post:'.',o:['Sammellinsen','Zerstreuungslinsen'],a:0}
+];
+var WORTE='Netzhaut · Lupe · Zerstreuungslinsen · virtuelles · vor · Sammellinsen · vergrößertes';
+var MERK='<div class="merk"><h3>Merksatz: Lupe, Auge und Brille</h3><p>'+GAPS.map(function(g){return g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post;}).join(' ')+'</p></div>';
+var TOM={q:'Neuer Patient: Tom (14) erkennt beim Fußball das Tor am anderen Ende nicht scharf. Sein Handy sieht er scharf. Was schreibst du auf sein Rezept?',
+  o:['kurzsichtig · Brille mit Zerstreuungslinsen','kurzsichtig · Brille mit Sammellinsen','weitsichtig · Brille mit Zerstreuungslinsen','weitsichtig · Brille mit Sammellinsen'],a:0,
+  ok:'Richtig! Tom sieht in der Nähe scharf, in der Ferne nicht: kurzsichtig. Das Bild entsteht vor der Netzhaut, eine Zerstreuungslinse schiebt es nach hinten.',
+  w:['','Die Diagnose stimmt. Welche Linse schiebt das Bild nach hinten auf die Netzhaut?','Tom sieht in der Nähe scharf. Wie heißt das?','Tom sieht in der Nähe scharf. Wie heißt das? Und welche Linse passt dann?']};
+function r4(){
+  var refl=st.s4.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: groß und aufrecht.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Begründe kurz, warum das Bild aufrecht und nicht auf dem Kopf ist:</p><textarea class="free" id="refl" rows="2" placeholder="Das Bild ist aufrecht, weil sich die Strahlen …">'+esc(st.s4.refl)+'</textarea></div>':'';
+  var tom=st.s4.ok?'<div class="stack"><p class="eyebrow">Rezept ausstellen</p>'+mcHTML('tom',TOM.q,TOM.o,st.s4.tom,TOM.a)+'</div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+tom+(st.s4.tomOk?saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=st.s4.gaps[i];if(st.s4.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){st.s4.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(st.s4.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){st.s4.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){$('refl').addEventListener('input',function(){st.s4.refl=this.value;save();});
+    bindMC('tom',TOM.a,'s4tom',TOM.ok,TOM.w,function(){st.s4.tomOk=true;finish(3);save();r4();showFb('tom',true,TOM.ok);},function(j){st.s4.tom=j;});
+    if(st.s4.tomOk)showFb('tom',true,TOM.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Die stärkste Vergrößerung',task:'Schiebe den Gegenstand im Lupen-Labor langsam von <b>3 cm</b> bis kurz vor den Brennpunkt (<b>9,5 cm</b>). Beobachte den Blick durch die Lupe.',q:'Was passiert mit dem Lupenbild?',
+   o:['Es wird immer größer.','Es wird immer kleiner.','Es bleibt gleich groß.'],a:0,ok:'Richtig! Je näher der Gegenstand an den Brennpunkt rückt, desto größer wird das Lupenbild. Genau im Brennpunkt gibt es kein Bild mehr.',bad:'Schau auf die Ansicht „Blick durch die Lupe“, während du den Regler bewegst.'},
+  {id:'b',title:'Ferne Dinge auf dem Kopf',task:'Bei der echten Lupe stand die Tafel auf dem Kopf. Stelle den Gegenstand auf <b>g = 20 cm</b> und schalte den Röntgenblick ein.',q:'Warum steht das Bild jetzt auf dem Kopf?',
+   o:['Der Gegenstand liegt außerhalb der Brennweite. Die Strahlen kreuzen sich, es entsteht ein reelles Bild wie an der optischen Bank.','Die Lupe spiegelt das Licht.','Das Auge dreht das Bild um.'],a:0,ok:'Genau! Außerhalb der Brennweite ist die Lupe keine Lupe mehr, sondern wirkt wie die Linse an der optischen Bank.',bad:'Schalte den Röntgenblick ein: Kreuzen sich die Strahlen hinter der Linse?'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Knobel-Experimente mit der Lupe</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eins der beiden Experimente.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse speichern ---------- */
+function resText(){
+  var r=st.res||{},d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  L.push('OPTIK-WERKSTATT · Lupe, Auge und Brille');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Lupe');
+  REAL.forEach(function(q){L.push('  '+q.q.replace(/<[^>]+>/g,'')+' → '+a(q,st.s1.real[q.id]));});
+  L.push('  Lupenbild: '+(st.s1.kreuzOk?'größer, aufrecht, nicht auffangbar ✓':'(noch nicht gelöst)'));
+  L.push('  Warum nicht auffangbar? '+a(VIRT,st.s1.virt));
+  L.push('  Meine Erklärung (virtuelles Bild): '+((st.s1.own||'').trim()||'(leer)'));
+  L.push('');
+  L.push('STATION 2 · Auge');
+  L.push('  Teile des Auges zugeordnet: '+(st.s2.mapOk?'richtig ✓':'noch nicht gelöst'));
+  L.push('  Schirm im Auge: '+a(QSCH,st.s2.schirm));
+  L.push('  Scharf gestellt: Tafel '+(st.s2.fern?'✓':'–')+'  Buch '+(st.s2.nah?'✓':'–'));
+  L.push('  Nahsehen: '+a(QAKK,st.s2.akk));
+  L.push('  Bild auf der Netzhaut: '+a(QBILD,st.s2.bild));
+  L.push('');
+  L.push('STATION 3 · Brillen');
+  L.push('  Lena, Bild der Tafel: '+a(QL1,st.s3.lena)+'   Brille: '+a(QL2,st.s3.lenaB));
+  L.push('  Herr Becker, Bild der Zeitung: '+a(QB1,st.s3.beck)+'   Brille: '+a(QB2,st.s3.beckB));
+  L.push('  Fachbegriffe kurz-/weitsichtig: '+(st.s3.namesOk?'richtig ✓':'(noch nicht gelöst)'));
+  L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){var tmp=document.createElement('div');tmp.innerHTML=MERK;L.push('  '+tmp.textContent.replace('Merksatz: Lupe, Auge und Brille','Lupe, Auge und Brille: '));}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Begründung zur Vermutung: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Rezept für Tom: '+a(TOM,st.s4.tom));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var TL=[['s1real','Station 1 · Beobachtungen mit der echten Lupe'],['s1kreuz','Station 1 · Eigenschaften des Lupenbilds'],['s1virt','Station 1 · Warum nicht auffangbar?'],
+    ['s2teile','Station 2 · Teile des Auges'],['s2schirm','Station 2 · Schirm im Auge'],['s2fern','Station 2 · Scharf stellen: Tafel'],['s2nah','Station 2 · Scharf stellen: Buch'],['s2akk','Station 2 · Akkommodation'],['s2bild','Station 2 · Bild auf der Netzhaut'],
+    ['s3lena','Station 3 · Lena: Wo entsteht das Bild?'],['s3lenaB','Station 3 · Lena: Brille'],['s3beck','Station 3 · Herr Becker: Wo entsteht das Bild?'],['s3beckB','Station 3 · Herr Becker: Brille'],['s3namen','Station 3 · kurz-/weitsichtig'],
+    ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4tom','Station 4 · Rezept für Tom'],['s5a','Profi · Stärkste Vergrößerung'],['s5b','Profi · Ferne Dinge auf dem Kopf']];
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];if(!t){if(x[0].charAt(1)!=='5')L.push('  '+x[1]+': nicht bearbeitet');return;}if(x[0].charAt(1)!=='5'){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;
+  if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  L.push('');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,tries:st.tries,tips:{s2:st.s2.tip||0,s3:st.s3.tip||0},
+    own:st.s1.own||'',refl:st.s4.refl||'',tom:st.s4.tom,s5:st.s5,help:Object.keys(st.help||{}),mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('OW-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Optik-Werkstatt_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||'7d')+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Optik-Werkstatt“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie helfen uns Linsen beim Sehen?</p><h2 id="stH">Willkommen in der Optik-Werkstatt!</h2>'+
+    '<p>Heute findest du heraus, wie Lupe, Auge und Brille funktionieren.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Gesamt ---------- */
+var lastScene=null;
+function render(){var sc=STATIONS[st.station].scene;
+  if(sc!==lastScene){if(sc==='lupe'){st.g=5;st.rays=false;st.screen=false;}if(sc==='glass'){st.pat='lena';st.obj='far';st.glass='none';}if(sc==='eye'){st.w=0;st.obj='far';}lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;
+  if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();remind();startDialog();
+})();
+</script>
+</body>
+</html>

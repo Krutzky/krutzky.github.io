@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Strom-Spur</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.gopt span{font-size:15px}
+</style>
+<style>
+.overlay{position:fixed;inset:0;background:rgba(2,12,69,.6);overflow:auto;padding:24px max(16px,env(safe-area-inset-left,0px));z-index:20}
+.overlay .card{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+
+.view canvas{background:transparent}
+#tCv{width:100%;display:block;border-radius:10px}
+.opt:disabled{opacity:.6;cursor:not-allowed}
+table.mt td input.num{width:4.2em}
+table.mt tr{cursor:pointer}
+.reset.t{border-color:#E8892B;color:#FFD9B0}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Strom-Spur</b><span>Woher kommt unsere tägliche Energie?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell"></canvas>
+    <div class="views" id="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP={title:'Strom-Spur',file:'Strom-Spur',klasse:'10',lesson:'Woher kommt unsere tägliche Energie?',welcome:'Willkommen bei der Strom-Spur!',intro:'Heute verfolgst du den Weg der Energie vom Kraftwerk bis zur Steckdose.'};
+var KEY='strom-spur-v1',RKEY='strom-spur-resets';
+var STATIONS=[
+  {key:'s1',name:'Fit-Check',scene:'house'},
+  {key:'s2',name:'Energiequellen',scene:'sources'},
+  {key:'s3',name:'Kraftwerk',scene:'plant'},
+  {key:'s4',name:'Strommix',scene:'mix'},
+  {key:'s5',name:'Merksatz',scene:'house'},
+  {key:'s6',name:'Profi-Zusatz',pro:true,scene:'plant'}
+];
+var st={station:0,done:[false,false,false,false,false,false],guess:null,labels:true,hints:false,ptype:'kohle',mixCol:'type',
+  s1:{a:{},ok:false},
+  s2:{sort:{},sortOk:false,gas:null,gasOk:false,bio:null,bioOk:false},
+  s3:{chain:{},chainOk:false,gen:null,genOk:false,heat:null,heatOk:false,wind:null,windOk:false},
+  s4:{top:null,topOk:false,fos:null,fosOk:false,grow:null,growOk:false,nuc:null,nucOk:false},
+  s5:{gaps:{},ok:false,refl:'',reflOk:false},
+  s6:{eta:'',etaOk:false,loss:'',lossOk:false},
+  res:{},tries:{},help:{},t0:null};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,res:st.res,tries:st.tries,help:st.help,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  ['station','guess','res','tries','help','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
+  if(x.done){st.done=x.done;while(st.done.length<6)st.done.push(false);}
+  ['s1','s2','s3','s4','s5','s6'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});}catch(e){}}
+/* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function num(s){if(s==null)return NaN;s=String(s).trim().replace(/\s/g,'').replace(',','.');if(s===''||!/^-?\d*\.?\d+$/.test(s))return NaN;return parseFloat(s);}
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+function font(px,b){return (b?'bold ':'')+px+'px '+ff();}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* Steuerpult */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+
+/* Stationen-Weg */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+
+/* Aufgabenbausteine */
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Schau noch einmal ins Modell.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+/* Ein MC-Baustein komplett: Objekt Q={q,o,a,ok,bad}, Speicher obj[field], Flag obj[field+'Ok'] */
+function mcBlock(id,Q,obj,field,key,grid){return mcHTML(id,Q.q,Q.o,obj[field],Q.a,grid);}
+function mcBind(id,Q,obj,field,key,rerender){bindMC(id,Q.a,key,Q.ok,Q.bad,function(){if(!obj[field+'Ok']){obj[field+'Ok']=true;save();rerender();showFb(id,true,Q.ok);}},function(j){obj[field]=j;});if(obj[field+'Ok'])showFb(id,true,Q.ok);}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,onChange){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});if(onChange)onChange();});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=(wrong.length>1?wrong.length+' Antworten stimmen noch nicht. ':'')+wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+function segAns(q,v){return v==null?'(keine Antwort)':q.o[v].replace(/<[^>]+>/g,'')+(v===q.a?'  ✓':'  ✗');}
+function strip(t){return String(t).replace(/<[^>]+>/g,'');}
+
+/* Ergebnisse speichern (IServ) */
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return APP.file+'_'+n+'.txt';}
+function ncore(){return STATIONS.filter(function(x){return !x.pro;}).length;}
+function nDone(){return st.done.slice(0,ncore()).filter(Boolean).length;}
+function standInfo(){var N=ncore(),n=nDone(),S=STATIONS[st.station],cur=S?S.name:'';
+  if(n>=N)return '<b>Alle '+N+' Stationen geschafft.</b>'+(st.done[N]?' Profi-Zusatz auch!':(S&&S.pro?' Ihr seid gerade beim Profi-Zusatz ★.':' Wenn noch Zeit ist: Profi-Zusatz ★.'));
+  return '<b>Zwischenstand: '+n+' von '+N+' Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function standLine(){var N=ncore(),n=nDone();return 'Stand: '+(n>=N?'fertig (alle '+N+' Stationen)':'Zwischenstand ('+n+' von '+N+' Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)');}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||APP.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP.title+'“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">'+APP.lesson+'</p><h2 id="stH">'+APP.welcome+'</h2>'+
+    '<p>'+APP.intro+'</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="10a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+function initSave(){$('saveOpen').addEventListener('click',openSave);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+  $('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+  setInterval(remind,30000);}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+/* Versuchsstatistik für die Textdatei */
+function triesLines(L,TL,proPrefix){var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]],pro=x[0].indexOf(proPrefix)===0;if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  return {mins:mins0,help:hk};}
+function bindReset(){$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});}
+
+/* Canvas-Helfer */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(280,Math.min(w*0.62,460))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function vctx(id){var c=$(id),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,0,1,0,0);return {c:c,x:x,w:w};}
+
+
+/* ---------- Daten ---------- */
+var SRC=[
+  {id:'bk',n:'Braunkohle',a:0,h:'entstand vor Millionen Jahren aus Pflanzen'},{id:'sk',n:'Steinkohle',a:0,h:'Vorräte in der Erde sind begrenzt'},
+  {id:'eg',n:'Erdgas',a:0,h:'entstand über Jahrmillionen, wächst nicht nach'},{id:'eo',n:'Erdöl',a:0,h:'wird verbraucht, wenn man es verbrennt'},
+  {id:'ur',n:'Uran',a:0,h:'Metall aus Bergwerken, begrenzter Vorrat'},{id:'so',n:'Sonne',a:1,h:'scheint jeden Tag neu'},
+  {id:'wi',n:'Wind',a:1,h:'entsteht immer wieder durch die Sonne'},{id:'wa',n:'Wasser',a:1,h:'Regen füllt Flüsse und Seen wieder auf'},
+  {id:'bi',n:'Biomasse',a:1,h:'Holz, Mais, Gülle: Pflanzen wachsen nach'},{id:'ew',n:'Erdwärme',a:1,h:'Wärme aus dem Erdinneren, bleibt lange erhalten'}];
+/* Öffentliche Nettostromerzeugung 2025 in TWh (Fraunhofer ISE, gerundet) */
+var MIX=[{n:'Wind',v:132,r:1,c:'#2E8B57'},{n:'Solar',v:71,r:1,c:'#E8B923'},{n:'Braunkohle',v:67,r:0,c:'#7A5230'},{n:'Erdgas',v:52,r:0,c:'#8A94A6'},{n:'Biomasse',v:36,r:1,c:'#6FA33A'},{n:'Steinkohle',v:27,r:0,c:'#3A3F55'},{n:'Wasser',v:18,r:1,c:'#1C66C0'}];
+var SHARE={2000:6.3,2025:55.1};/* Anteil erneuerbarer Energien am Bruttostromverbrauch in % (UBA) */
+var PLANTS={
+  kohle:{n:'Kohlekraftwerk',eta:40,steps:['Kohle','Kessel','Turbine','Generator','Leitung','Haushalt'],forms:['chemische','thermische','Bewegungs-','elektrische','elektrische'],heat:[1,2]},
+  gas:{n:'Gaskraftwerk (GuD)',eta:60,steps:['Erdgas','Brennkammer','Turbinen','Generator','Leitung','Haushalt'],forms:['chemische','thermische','Bewegungs-','elektrische','elektrische'],heat:[1,2]},
+  wind:{n:'Windkraftwerk',eta:45,steps:['Wind','Rotor','Getriebe','Generator','Leitung','Haushalt'],forms:['Bewegungs-','Bewegungs-','Bewegungs-','elektrische','elektrische'],heat:[]},
+  wasser:{n:'Wasserkraftwerk',eta:90,steps:['Stausee','Fallrohr','Turbine','Generator','Leitung','Haushalt'],forms:['Lage-','Bewegungs-','Bewegungs-','elektrische','elektrische'],heat:[]}};
+var PKEYS=['kohle','gas','wind','wasser'];
+
+/* ---------- Zeichnen ---------- */
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  $('views').hidden=sc==='sources';
+  if(sc==='house')drawHouse();else if(sc==='sources')drawSources();else if(sc==='plant')drawPlant();else drawMix();}
+
+function drawHouse(){var gy=H*0.82,solved=st.done[4];
+  var g=ctx.createLinearGradient(0,0,0,gy);g.addColorStop(0,'#BFD9F2');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,gy);ctx.fillStyle='#8DBF6A';ctx.fillRect(0,gy,W,H-gy);
+  /* Kraftwerk links */
+  var kx=W*0.04,kw=W*0.20;ctx.fillStyle='#9AA3B5';ctx.fillRect(kx,gy-H*0.30,kw,H*0.30);ctx.fillStyle='#B9C2D0';ctx.beginPath();ctx.moveTo(kx+kw*0.55,gy-H*0.30);ctx.lineTo(kx+kw*0.62,gy-H*0.52);ctx.lineTo(kx+kw*0.92,gy-H*0.52);ctx.lineTo(kx+kw,gy-H*0.30);ctx.closePath();ctx.fill();
+  if(solved){ctx.fillStyle='rgba(255,255,255,.8)';[0,1,2].forEach(function(i){ctx.beginPath();ctx.arc(kx+kw*0.77+i*8,gy-H*0.58-i*12,12+i*4,0,Math.PI*2);ctx.fill();});}
+  ctx.fillStyle='#1A1F36';ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='top';if(solved)ctx.fillText('Kraftwerk',kx+kw/2,gy-H*0.24);
+  if(!solved){ctx.font=font(40,true);ctx.fillStyle='#E8892B';ctx.fillText('?',kx+kw*0.35,gy-H*0.20);}
+  /* Strommasten */
+  var hx=W*0.58,poles=[W*0.32,W*0.47];poles.forEach(function(px){line(px,gy,px-12,gy-H*0.38,'#5B6278',3);line(px,gy,px+12,gy-H*0.38,'#5B6278',3);line(px-22,gy-H*0.36,px+22,gy-H*0.36,'#5B6278',3);});
+  ctx.strokeStyle='#5B6278';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(kx+kw,gy-H*0.22);ctx.quadraticCurveTo(W*0.28,gy-H*0.28,poles[0]-22,gy-H*0.36);ctx.quadraticCurveTo(W*0.395,gy-H*0.30,poles[1]-22,gy-H*0.36);ctx.quadraticCurveTo(W*0.53,gy-H*0.30,hx,gy-H*0.30);ctx.stroke();
+  /* Haus */
+  var hw=W*0.38,hh=H*0.46;ctx.fillStyle='#F4F1EA';ctx.fillRect(hx,gy-hh,hw,hh);ctx.fillStyle='#C8423D';ctx.beginPath();ctx.moveTo(hx-10,gy-hh);ctx.lineTo(hx+hw/2,gy-hh-H*0.16);ctx.lineTo(hx+hw+10,gy-hh);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#CBD3E1';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx,gy-hh/2);ctx.lineTo(hx+hw,gy-hh/2);ctx.moveTo(hx+hw/2,gy-hh);ctx.lineTo(hx+hw/2,gy);ctx.stroke();
+  /* Geräte */
+  var D=[[0.12,0.30,'Lampe'],[0.62,0.30,'Laptop'],[0.12,0.78,'Kühlschrank'],[0.62,0.78,'Wasserkocher']];
+  D.forEach(function(d,i){var x=hx+hw*d[0],y=gy-hh+hh*d[1];ctx.fillStyle=['#F5D42A','#1C66C0','#9CC3F0','#E8892B'][i];
+    if(i===0){ctx.beginPath();ctx.arc(x+18,y-14,10,0,Math.PI*2);ctx.fill();line(x+18,y-30,x+18,y-hh*0.22,'#5B6278',2);}
+    else if(i===1){ctx.fillRect(x,y-22,36,22);ctx.fillStyle='#5B6278';ctx.fillRect(x-4,y,44,4);}
+    else if(i===2){ctx.fillRect(x,y-hh*0.36,30,hh*0.36);ctx.strokeStyle='#5B6278';ctx.lineWidth=1;ctx.strokeRect(x,y-hh*0.36,30,hh*0.36);}
+    else{ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+6,y-28);ctx.lineTo(x+28,y-28);ctx.lineTo(x+32,y);ctx.closePath();ctx.fill();}
+    if(st.labels){ctx.fillStyle='#1A1F36';ctx.font=font(11,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(d[2],x+(i===0?32:i===2?36:0),y+(i===0?-22:4));}});
+  /* Steckdose */
+  ctx.fillStyle='#FFFFFF';rrect(ctx,hx+4,gy-hh*0.30,20,20,4);ctx.fill();ctx.strokeStyle='#5B6278';ctx.stroke();ctx.fillStyle='#5B6278';ctx.beginPath();ctx.arc(hx+10,gy-hh*0.30+10,2,0,Math.PI*2);ctx.arc(hx+18,gy-hh*0.30+10,2,0,Math.PI*2);ctx.fill();
+  tag(solved?'Energie: umgewandelt, nicht erzeugt':'Woher kommt der Strom aus der Steckdose?',W*0.5,H*0.07,'#1A1F36','center','#FFFFFF');
+  renderHouseViews();}
+function renderHouseViews(){$('capA').innerHTML='<b>Typenschild</b> eines Wasserkochers';$('capB').innerHTML='<b>Energieflussdiagramm</b> Wasserkocher';
+  var A=vctx('cvA'),x=A.x,w=A.w;x.fillStyle='#E9ECF2';x.fillRect(0,0,w,w);rrect(x,w*0.08,w*0.18,w*0.84,w*0.60,w*0.03);x.fillStyle='#FFFFFF';x.fill();x.strokeStyle='#5B6278';x.lineWidth=w/200;x.stroke();
+  x.fillStyle='#1A1F36';x.textAlign='left';x.textBaseline='top';x.font='bold '+Math.round(w/14)+'px '+ff();x.fillText('Wasserkocher WK 17',w*0.14,w*0.23);
+  x.font=Math.round(w/16)+'px ui-monospace,Menlo,Consolas,monospace';['230 V ~ 50 Hz','2000 W','1,7 l'].forEach(function(t,i){x.fillText(t,w*0.14,w*0.38+i*w*0.11);});
+  var B=vctx('cvB'),y=B.x,w2=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w2,w2);
+  var x0=w2*0.06,x1=w2*0.42,x2=w2*0.94,top=w2*0.22,hTot=w2*0.50,hUse=hTot*0.9;
+  y.fillStyle='#F5D42A';y.fillRect(x0,top,x1-x0,hTot);
+  y.fillStyle='#E8892B';y.beginPath();y.moveTo(x1,top);y.lineTo(x2-w2*0.08,top);y.lineTo(x2,top+hUse/2);y.lineTo(x2-w2*0.08,top+hUse);y.lineTo(x1,top+hUse);y.closePath();y.fill();
+  y.fillStyle='#F2A39F';y.beginPath();y.moveTo(x1,top+hUse);y.quadraticCurveTo(x1+w2*0.18,top+hUse,x1+w2*0.22,top+hTot+w2*0.14);y.lineTo(x1+w2*0.22-hTot*0.1,top+hTot+w2*0.14);y.quadraticCurveTo(x1+w2*0.14,top+hTot,x1,top+hTot);y.closePath();y.fill();
+  var fs=Math.round(w2/20);y.font='bold '+fs+'px '+ff();y.fillStyle='#1A1F36';y.textBaseline='middle';y.textAlign='center';y.fillText('elektrisch',(x0+x1)/2,top+hTot/2-fs*0.6);y.fillText('100 %',(x0+x1)/2,top+hTot/2+fs*0.6);
+  y.fillText('thermisch (Wasser)',(x1+x2)/2+w2*0.04,top+hUse/2-fs*0.6);y.fillText('ca. 90 %',(x1+x2)/2+w2*0.04,top+hUse/2+fs*0.6);
+  y.font=fs+'px '+ff();y.textAlign='center';y.fillText('ca. 10 % an die Umgebung',w2/2,top+hTot+w2*0.20);}
+
+function drawSources(){var mid=W/2,ink=col('ink');
+  ctx.fillStyle='rgba(122,82,48,.10)';rrect(ctx,10,40,mid-20,H-50,14);ctx.fill();ctx.fillStyle='rgba(46,139,87,.12)';rrect(ctx,mid+10,40,mid-20,H-50,14);ctx.fill();
+  ctx.font=font(15,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#7A5230';ctx.fillText('nicht erneuerbar',mid/2,12);ctx.fillStyle='#22865A';ctx.fillText('regenerativ',mid+mid/2,12);
+  var bins=[[],[]],open=[];SRC.forEach(function(s){var v=st.s2.sort[s.id];if(v==null)open.push(s);else bins[v].push(s);});
+  function tile(s,x,y,w,h,c){rrect(ctx,x,y,w,h,10);ctx.fillStyle=col('surface');ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=ink;ctx.font=font(14,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(s.n,x+10,y+8);
+    if(st.hints){ctx.fillStyle=col('ink-soft');ctx.font=font(11);wrapText(ctx,s.h,x+10,y+28,w-16,13);}}
+  var th=st.hints?76:36;
+  [0,1].forEach(function(b){bins[b].forEach(function(s,i){var x=(b?mid+20:20)+(i%2)*((mid-40)/2),y=56+Math.floor(i/2)*(th+8);tile(s,x+2,y,(mid-40)/2-6,th,b?'#22865A':'#7A5230');});});
+  if(open.length){ctx.fillStyle=col('ink-soft');ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('noch nicht sortiert: '+open.map(function(s){return s.n;}).join(' · '),W/2,H-14);}}
+function wrapText(c,t,x,y,maxW,lh){var words=t.split(' '),l='';words.forEach(function(wd){var test=l?l+' '+wd:wd;if(c.measureText(test).width>maxW&&l){c.fillText(l,x,y);y+=lh;l=wd;}else l=test;});if(l)c.fillText(l,x,y);}
+
+function drawPlant(){var P=PLANTS[st.ptype],n=P.steps.length,ink=col('ink'),soft=col('ink-soft');
+  ctx.font=font(15,true);ctx.fillStyle=ink;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(W<600?P.n:P.n+': Vom Brennstoff zur Steckdose',12,10);
+  var bw=Math.min(96,(W-40)/n-18),gap=(W-24-bw*n)/(n-1),y=H*0.36,bh=H*0.26;
+  var COLS=['#7A5230','#C8423D','#1C66C0','#6B3FB0','#5B6278','#22865A'];if(st.ptype==='wind')COLS[0]='#9CC3F0';if(st.ptype==='wasser')COLS[0]='#1C66C0';if(st.ptype==='gas')COLS[0]='#8A94A6';
+  for(var i=0;i<n;i++){var x=12+i*(bw+gap);rrect(ctx,x,y,bw,bh,12);ctx.fillStyle=col('surface-2');ctx.fill();ctx.strokeStyle=COLS[i];ctx.lineWidth=3;ctx.stroke();
+    ctx.fillStyle=COLS[i];ctx.beginPath();ctx.arc(x+bw/2,y+bh*0.38,Math.min(bw,bh)*0.2,0,Math.PI*2);ctx.fill();
+    var fz=W<600?9:12;ctx.fillStyle=ink;ctx.font=font(fz,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(P.steps[i],x+bw/2,y+bh*0.68);
+    if(i<n-1){var ax=x+bw+3,bx=x+bw+gap-3,ay=y+bh/2;line(ax,ay,bx,ay,'#E8892B',4);ctx.fillStyle='#E8892B';ctx.beginPath();ctx.moveTo(bx,ay);ctx.lineTo(bx-9,ay-7);ctx.lineTo(bx-9,ay+7);ctx.closePath();ctx.fill();
+      ctx.save();ctx.translate((ax+bx)/2,y+bh+14);ctx.fillStyle=soft;ctx.font=font(W<600?9:11,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(P.forms[i],0,0);ctx.fillText('Energie',0,13);ctx.restore();}
+    if(P.heat.indexOf(i)>=0){for(var k=0;k<3;k++){var hx=x+bw*(0.3+k*0.2);ctx.strokeStyle='#C8423D';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hx,y-6);ctx.bezierCurveTo(hx-6,y-16,hx+6,y-24,hx,y-36);ctx.stroke();}
+      ctx.fillStyle='#C8423D';ctx.font=font(11,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('Abwärme',x+bw/2,y-38);}}
+  ctx.fillStyle=soft;ctx.font=font(12);ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(W<600?'Wirkungsgrad: ca. '+P.eta+' %':'Wirkungsgrad: ca. '+P.eta+' %. Der Rest wird als Wärme an die Umgebung abgegeben (entwertet).',12,H-10);
+  renderPlantViews();}
+function renderPlantViews(){var P=PLANTS[st.ptype];$('capA').innerHTML='<b>Energieflussdiagramm</b> '+P.n;$('capB').innerHTML='<b>Wirkungsgrade im Vergleich</b> (typische Werte)';
+  var A=vctx('cvA'),y=A.x,w=A.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var x0=w*0.06,x1=w*0.38,x2=w*0.94,top=w*0.16,hT=w*0.56,hU=hT*P.eta/100,fs=Math.round(w/20);
+  y.fillStyle='#F5D42A';y.fillRect(x0,top,x1-x0,hT);y.fillStyle='#6B3FB0';y.fillRect(x1,top,x2-x1,hU);
+  y.fillStyle='#F2A39F';y.beginPath();y.moveTo(x1,top+hU);y.lineTo(x1+(x2-x1)*0.25,top+hU);y.quadraticCurveTo(x1+(x2-x1)*0.45,top+hU,x1+(x2-x1)*0.5,top+hT+w*0.12);y.lineTo(x1+(x2-x1)*0.5-(hT-hU)*0.5,top+hT+w*0.12);y.quadraticCurveTo(x1+(x2-x1)*0.1,top+hT,x1,top+hT);y.closePath();y.fill();
+  y.fillStyle='#1A1F36';y.font='bold '+fs+'px '+ff();y.textAlign='center';y.textBaseline='middle';y.fillText('100 %',(x0+x1)/2,top+hT/2);
+  y.fillStyle=hU>fs*1.6?'#FFFFFF':'#1A1F36';y.fillText('elektrisch '+P.eta+' %',(x1+x2)/2+w*0.08,hU>fs*1.6?top+hU/2:top-fs*0.8);
+  y.fillStyle='#1A1F36';y.font=fs+'px '+ff();y.textAlign='left';y.textAlign='center';y.fillText('Abwärme / Verluste '+(100-P.eta)+' %',w/2,top+hT+w*0.19);
+  var B=vctx('cvB'),z=B.x,w2=B.w;z.fillStyle='#FFFFFF';z.fillRect(0,0,w2,w2);var L=w2*0.36,R=w2*0.84,f2=Math.round(w2/20);
+  PKEYS.forEach(function(k,i){var p=PLANTS[k],yy=w2*0.12+i*w2*0.2,bw=(R-L)*p.eta/100;z.fillStyle=k===st.ptype?'#E8892B':'#9CC3F0';z.fillRect(L,yy,bw,w2*0.12);
+    z.fillStyle='#1A1F36';z.font=(k===st.ptype?'bold ':'')+f2+'px '+ff();z.textAlign='right';z.textBaseline='middle';z.fillText(p.n.replace('kraftwerk','').replace(' (GuD)',''),L-6,yy+w2*0.06);z.textAlign='left';z.fillText(p.eta+' %',L+bw+5,yy+w2*0.06);});}
+
+function drawMix(){var ink=col('ink'),soft=col('ink-soft'),L=Math.min(130,W*0.22),R=W-60,top=46,bh=Math.min(34,(H-top-40)/MIX.length-8),mx=140;
+  ctx.font=font(15,true);ctx.fillStyle=ink;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Woher kam unser Strom 2025?',12,10);
+  ctx.font=font(12);ctx.fillStyle=soft;ctx.fillText('Stromerzeugung in Terawattstunden (TWh)',12,28);
+  MIX.forEach(function(m,i){var y=top+i*(bh+8),bw=(R-L)*m.v/mx,c=st.mixCol==='type'?m.c:(m.r?'#22865A':'#7A5230');
+    ctx.fillStyle=ink;ctx.font=font(14,true);ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(m.n,L-10,y+bh/2);
+    ctx.fillStyle=c;ctx.fillRect(L,y,bw,bh);ctx.fillStyle=ink;ctx.textAlign='left';ctx.fillText(m.v+' TWh',L+bw+6,y+bh/2);});
+  ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('Quelle: Fraunhofer ISE, öffentliche Nettostromerzeugung 2025, gerundet. Kernkraft: 0 TWh.',12,H-8);
+  if(st.mixCol!=='type'){ctx.fillStyle='#22865A';ctx.fillRect(W-210,12,12,12);ctx.fillStyle='#7A5230';ctx.fillRect(W-110,12,12,12);ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('regenerativ',W-194,11);ctx.fillText('fossil',W-94,11);}
+  renderMixViews();}
+function donut(id,year){var A=vctx(id),x=A.x,w=A.w,p=SHARE[year]/100,cx=w/2,cy=w*0.46,r=w*0.32;x.fillStyle='#FFFFFF';x.fillRect(0,0,w,w);
+  x.lineWidth=w*0.13;x.strokeStyle='#D6CBBE';x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.stroke();x.strokeStyle='#22865A';x.beginPath();x.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+p*Math.PI*2);x.stroke();
+  x.fillStyle='#1A1F36';x.textAlign='center';x.textBaseline='middle';x.font='bold '+Math.round(w/8)+'px '+ff();x.fillText(fmt(SHARE[year],1)+' %',cx,cy-w*0.02);x.font=Math.round(w/18)+'px '+ff();x.fillText('erneuerbar',cx,cy+w*0.08);
+  x.font='bold '+Math.round(w/13)+'px '+ff();x.fillText(String(year),cx,w*0.90);}
+function renderMixViews(){$('capA').innerHTML='<b>Anteil erneuerbarer Energien 2000</b>';$('capB').innerHTML='<b>Anteil erneuerbarer Energien 2025</b> (UBA)';donut('cvA',2000);donut('cvB',2025);}
+
+/* ---------- Steuerpult ---------- */
+function renderCtl(){var sc=STATIONS[st.station].scene,h='';
+  if(sc==='house')h='<label class="chk"><input type="checkbox" id="tLab"'+(st.labels?' checked':'')+'> Geräte beschriften</label><p class="muted">Rechts unten: Typenschild und Energieflussdiagramm eines Wasserkochers. Sie helfen beim Fit-Check.</p>';
+  else if(sc==='sources')h='<label class="chk"><input type="checkbox" id="tHint"'+(st.hints?' checked':'')+'> Hinweise auf den Karten zeigen</label><p class="muted">Links seht ihr, wie ihr sortiert habt.</p>';
+  else if(sc==='plant')h='<div class="ctlrow"><span>KRAFTWERK</span>'+segHTML('sP',[['kohle','Kohle'],['gas','Gas'],['wind','Wind'],['wasser','Wasser']],st.ptype)+'</div>';
+  else h='<div class="ctlrow"><span>FARBEN</span>'+segHTML('sM',[['type','nach Quelle'],['ren','regenerativ / fossil']],st.mixCol)+'</div>';
+  $('ctl').innerHTML=h;
+  if($('tLab'))$('tLab').addEventListener('change',function(){st.labels=this.checked;draw();});
+  if($('tHint'))$('tHint').addEventListener('change',function(){st.hints=this.checked;draw();});
+  bindSeg('sP',function(v){st.ptype=v;draw();});bindSeg('sM',function(v){st.mixCol=v;draw();});}
+
+/* ---------- Aufgaben ---------- */
+function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+(i+1)+' · '+STATIONS[i].name)+'</p><h2>'+t+'</h2></div>';}
+var GUESS=[{k:'A',t:'etwa ein <b>Zehntel</b> (10 %)'},{k:'B',t:'etwa ein <b>Viertel</b> (25 %)'},{k:'C',t:'etwas <b>mehr als die Hälfte</b>'},{k:'D',t:'<b>fast alles</b> (90 %)'}];
+function guessName(k){return {A:'A (ein Zehntel)',B:'B (ein Viertel)',C:'C (mehr als die Hälfte)',D:'D (fast alles)'}[k]||'';}
+
+/* Station 1: Fit-Check */
+var FIT=[
+  {id:'f1',q:'In welcher Einheit gibt man die Leistung eines Geräts an?',o:['Watt (W)','Volt (V)','Kilogramm (kg)'],a:0,ok:'Richtig! Der Wasserkocher hat eine Leistung von 2000 W.',bad:['','Volt ist die Einheit der Spannung.','Kilogramm ist die Einheit der Masse.'],topic:'Leistung'},
+  {id:'f2',q:'Ein Wasserkocher macht Wasser heiß. Welche Energieumwandlung findet statt?',o:['elektrische Energie → thermische Energie','thermische Energie → elektrische Energie','chemische Energie → elektrische Energie'],a:0,ok:'Genau! Schau ins Energieflussdiagramm rechts unten.',bad:['','Andersherum: Was kommt aus der Steckdose, was bekommt das Wasser?','Im Wasserkocher wird nichts verbrannt.'],topic:'Energieumwandlung'},
+  {id:'f3',q:'Was stimmt über Energie?',o:['Energie geht nicht verloren. Sie wird umgewandelt.','Energie wird verbraucht und ist dann weg.','Energie entsteht in der Steckdose.'],a:0,ok:'Richtig! Das ist der Energieerhaltungssatz.',bad:['','Im Alltag sagt man „verbrauchen“. Physikalisch ist die Energie aber noch da, nur in anderer Form.','Die Steckdose liefert nur weiter, was woanders umgewandelt wurde.'],topic:'Energieerhaltung'},
+  {id:'f4',q:'Ein Gerät hat einen Wirkungsgrad von 40 %. Das bedeutet:',o:['40 % der Energie werden genutzt, 60 % werden z. B. als Wärme abgegeben.','Das Gerät läuft 40 % der Zeit.','Das Gerät hat eine Leistung von 40 W.'],a:0,ok:'Genau! Die 60 % sind nicht weg, aber nicht mehr nutzbar: Die Energie wird entwertet.',bad:['','Der Wirkungsgrad hat nichts mit der Zeit zu tun.','Die Leistung misst man in W, den Wirkungsgrad in %.'],topic:'Wirkungsgrad'},
+  {id:'f5',q:'Föhn (1800 W) und Laptop (60 W) laufen beide 1 Stunde. Welches Gerät braucht mehr elektrische Energie?',o:['der Föhn','der Laptop','beide gleich viel'],a:0,ok:'Richtig! Bei gleicher Zeit braucht das Gerät mit der größeren Leistung mehr Energie.',bad:['','Vergleiche die Leistungen: 1800 W oder 60 W?','Die Zeit ist gleich, aber die Leistung nicht.'],topic:'Energie und Leistung'},
+  {id:'f6',q:'Mit welcher Formel berechnet man die elektrische Leistung?',o:['P = U · I','P = U + I','P = U : I'],a:0,ok:'Richtig! Diese Formel brauchen wir in den nächsten Stunden oft.',bad:['','Spannung und Stromstärke werden nicht addiert.','Spannung und Stromstärke werden nicht geteilt.'],topic:'Formel P = U · I'}];
+function r1(){var s=st.s1;
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Wie viel unseres Stroms kam <b>2025</b> aus erneuerbaren Energien?</p><div class="choice" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 4 prüft ihr sie.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var qs=FIT.map(function(q){return mcHTML(q.id,q.q,q.o,s.a[q.id],q.a);}).join('');
+  var done=FIT.every(function(q){return s.a[q.id+'Ok'];}),first=FIT.filter(function(q){var t=st.tries['s1'+q.id];return t&&t.first;}).length,weak=FIT.filter(function(q){var t=st.tries['s1'+q.id];return t&&!t.first;}).map(function(q){return q.topic;});
+  if(done&&!st.done[0])finish(0);
+  $('task').innerHTML=g+head(0,'Was wisst ihr noch aus Klasse 8?')+'<p>Beantwortet die Fragen. Überlegt zuerst jeder für sich, dann einigt ihr euch. <span class="muted">Hier gibt es keine Noten.</span></p>'+qs+
+    (done?'<div class="win"><b>Fit-Check geschafft!</b> Beim 1. Versuch richtig: '+first+' von 6.'+(weak.length?' Wiederholt zu Hause: '+weak.join(', ')+'.':' Stark!')+'</div>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  FIT.forEach(function(q){bindMC(q.id,q.a,'s1'+q.id,q.ok,q.bad,function(){if(!s.a[q.id+'Ok']){s.a[q.id+'Ok']=true;save();if(FIT.every(function(x){return s.a[x.id+'Ok'];}))r1();}},function(j){s.a[q.id]=j;});if(s.a[q.id+'Ok'])showFb(q.id,true,q.ok);});
+  bindNext();}
+
+/* Station 2: Energiequellen */
+var SORTQ=SRC.map(function(x){return {id:x.id,q:'<b>'+x.n+'</b>',o:['nicht erneuerbar','regenerativ'],a:x.a,w:x.a?'„'+x.n+'“ steht immer wieder neu zur Verfügung.':'„'+x.n+'“: Die Vorräte sind begrenzt.'};});
+var QGAS={q:'Warum zählt Erdgas zu den <b>nicht erneuerbaren</b> Energiequellen?',o:['Es ist über Jahrmillionen entstanden. Was wir verbrennen, wächst nicht nach.','Weil Erdgas teuer ist.','Weil man Erdgas nicht sehen kann.'],a:0,ok:'Genau! Die Vorräte in der Erde sind begrenzt.',bad:['','Der Preis entscheidet nicht darüber. Wie lange braucht Erdgas, um zu entstehen?','Das hat nichts damit zu tun. Wie lange braucht Erdgas, um zu entstehen?']};
+var QBIO={q:'Biomasse (Holz, Mais, Gülle) wird auch verbrannt. Warum gilt sie trotzdem als <b>regenerativ</b>?',o:['Pflanzen wachsen in wenigen Jahren nach.','Biomasse verbrennt nicht wirklich.','Biomasse kommt aus dem Ausland.'],a:0,ok:'Richtig! Was wir heute verbrennen, kann in kurzer Zeit nachwachsen.',bad:['','Doch, im Biomassekraftwerk wird sie verbrannt. Was ist der Unterschied zu Kohle?','Woher sie kommt, ist egal. Was ist der Unterschied zu Kohle?']};
+function r2(){var s=st.s2;
+  var sort='<div class="stack"><p>Sortiert jede Energiequelle. Links im Bild seht ihr eure Sortierung.</p><div class="choice grid2">'+segQHTML(SORTQ,s.sort,s.sortOk)+'</div>'+(s.sortOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var gas=s.sortOk?mcHTML('gas',QGAS.q,QGAS.o,s.gas,QGAS.a):'',bio=s.gasOk?mcHTML('bio',QBIO.q,QBIO.o,s.bio,QBIO.a):'';
+  if(s.bioOk)finish(1);
+  $('task').innerHTML=head(1,'Erneuerbar oder nicht?')+sort+gas+bio+(st.done[1]?'<p class="win"><b>Super!</b> Regenerative Energiequellen stehen immer wieder zur Verfügung. Nicht erneuerbare sind irgendwann aufgebraucht.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.sort,function(){return s.sortOk;},draw);
+  if(!s.sortOk)$('c2').addEventListener('click',function(){if(checkSegQ(SORTQ,s.sort,'s2sort','fb2',r2)){s.sortOk=true;save();r2();}draw();});else helpMsg('fb2','Alles richtig sortiert!');
+  if(s.sortOk)mcBind('gas',QGAS,s,'gas','s2gas',r2);if(s.gasOk)mcBind('bio',QBIO,s,'bio','s2bio',r2);
+  bindNext();}
+
+/* Station 3: Kraftwerk */
+var FORMS=['thermische Energie','Bewegungsenergie','elektrische Energie','Lageenergie'];
+var CHAIN=[{id:'c1',lab:'Im Kessel wird Kohle verbrannt. Aus chemischer Energie wird …',a:0},{id:'c2',lab:'Der heiße Dampf dreht die Turbine. Daraus wird …',a:1},{id:'c3',lab:'Der Generator macht daraus …',a:2}];
+var QGEN={q:'Was passiert im <b>Generator</b>?',o:['Bewegungsenergie wird in elektrische Energie umgewandelt.','Elektrische Energie wird in Bewegungsenergie umgewandelt.','Thermische Energie wird in chemische Energie umgewandelt.'],a:0,ok:'Genau! Wie beim Fahrraddynamo. Wie das genau funktioniert, klären wir in UV II.',bad:['','Das ist der Elektromotor, also andersherum.','Schau in die Kette links: Was kommt in den Generator hinein, was kommt heraus?']};
+var QHEAT={q:'Ein Kohlekraftwerk hat einen Wirkungsgrad von ca. 40 %. Wo bleiben die übrigen 60 %?',o:['Sie werden als Abwärme an die Umgebung abgegeben, z. B. über den Kühlturm. Die Energie ist entwertet.','Sie verschwinden einfach.','Sie bleiben in der Kohle zurück.'],a:0,ok:'Richtig! Die Energie ist nicht weg, aber nicht mehr nutzbar.',bad:['','Energie verschwindet nie. Schau auf die roten Pfeile „Abwärme“.','Die Kohle wird vollständig verbrannt. Schau auf die roten Pfeile „Abwärme“.']};
+var QWIND={q:'Stellt im Steuerpult „Wind“ ein. Was ist beim Windkraftwerk anders als beim Kohlekraftwerk?',o:['Es braucht keinen Brennstoff und keinen Dampf. Der Wind dreht direkt den Rotor.','Es hat keinen Generator.','Es hat einen viel kleineren Wirkungsgrad als das Kohlekraftwerk.'],a:0,ok:'Genau! Der Generator ist bei fast allen Kraftwerken das Herzstück.',bad:['','Doch: Auch beim Windrad macht ein Generator den Strom.','Vergleicht die Balken rechts unten: Wind hat sogar etwas mehr.']};
+function r3(){var s=st.s3;
+  var ch='<div class="q"><p><b>Die Kette im Kohlekraftwerk:</b> Wählt die passende Energieform. Stellt dafür im Steuerpult „Kohle“ ein.</p>'+CHAIN.map(function(c){var v=s.chain[c.id];
+    return '<label class="ctlrow"><span>'+c.lab.toUpperCase()+'</span><select class="sel'+(s.chainOk?' ok':'')+'" data-ch="'+c.id+'"'+(s.chainOk?' disabled':'')+'><option value="">bitte wählen …</option>'+FORMS.map(function(f,j){return '<option value="'+j+'"'+(v===j?' selected':'')+'>'+f+'</option>';}).join('')+'</select></label>';}).join('')+
+    (s.chainOk?'':'<div class="row"><button class="btn pri" type="button" id="c3c">Prüfen</button></div>')+'<p class="fb" id="fb3c"></p></div>';
+  var gen=s.chainOk?mcHTML('gen',QGEN.q,QGEN.o,s.gen,QGEN.a):'',heat=s.genOk?mcHTML('heat',QHEAT.q,QHEAT.o,s.heat,QHEAT.a):'',wind=s.heatOk?mcHTML('wind',QWIND.q,QWIND.o,s.wind,QWIND.a):'';
+  if(s.windOk)finish(2);
+  $('task').innerHTML=head(2,'Vom Kraftwerk zur Steckdose')+ch+gen+heat+wind+(st.done[2]?'<p class="win"><b>Klasse!</b> Im Kraftwerk wird Energie umgewandelt, nicht erzeugt. Ein Teil wird als Abwärme entwertet.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ch]'),function(sl){sl.addEventListener('change',function(){s.chain[sl.dataset.ch]=sl.value===''?null:+sl.value;save();});});
+  if($('c3c'))$('c3c').addEventListener('click',function(){var fb=$('fb3c'),miss=CHAIN.filter(function(c){return s.chain[c.id]==null;}).length;if(miss){fb.className='fb bad';fb.textContent='Wählt in allen drei Feldern eine Energieform.';return;}
+    var wrong=CHAIN.filter(function(c){return s.chain[c.id]!==c.a;});tryInc('s3chain',!wrong.length,wrong.map(function(c){return c.id;}).join(','));
+    CHAIN.forEach(function(c){var el=document.querySelector('[data-ch="'+c.id+'"]');el.className='sel '+(s.chain[c.id]===c.a?'ok':'bad');});
+    if(!wrong.length){s.chainOk=true;save();r3();return;}fb.className='fb bad';fb.textContent=wrong[0].id==='c1'?'Was entsteht, wenn etwas verbrennt? Es wird heiß.':wrong[0].id==='c2'?'Die Turbine dreht sich. Welche Energie hat etwas, das sich bewegt?':'Was kommt am Ende aus der Steckdose?';
+    showHelp(fb,'s3chain',function(){CHAIN.forEach(function(c){s.chain[c.id]=c.a;});s.chainOk=true;save();r3();});});
+  if(s.chainOk)helpMsg('fb3c','Richtig! chemische → thermische → Bewegungsenergie → elektrische Energie.');
+  if(s.chainOk)mcBind('gen',QGEN,s,'gen','s3gen',r3);if(s.genOk)mcBind('heat',QHEAT,s,'heat','s3heat',r3);if(s.heatOk)mcBind('wind',QWIND,s,'wind','s3wind',r3);
+  bindNext();}
+
+/* Station 4: Strommix */
+var QTOP={q:'Welche Energiequelle lieferte 2025 den meisten Strom?',o:['Wind','Braunkohle','Solar','Erdgas'],a:0,ok:'Richtig! Wind lag 2025 klar vorne, Solar auf Platz 2.',bad:['','Braunkohle ist die größte fossile Quelle, aber nicht die größte insgesamt.','Solar liegt auf Platz 2.','Vergleicht die Längen der Balken.']};
+var QFOS={q:'Welche <b>nicht erneuerbare</b> Quelle lieferte am meisten Strom?',o:['Braunkohle','Steinkohle','Erdgas'],a:0,ok:'Genau! Braunkohle wird z. B. im Rheinischen Revier bei Köln abgebaut.',bad:['','Stellt „regenerativ / fossil“ ein und vergleicht die braunen Balken.','Stellt „regenerativ / fossil“ ein und vergleicht die braunen Balken.']};
+var QGROW={q:'Wie hat sich der Anteil erneuerbarer Energien von 2000 bis 2025 verändert?',o:['Er ist von etwa 6 % auf etwa 55 % gestiegen.','Er ist gleich geblieben.','Er ist gesunken.'],a:0,ok:'Richtig! Heute kommt mehr als die Hälfte unseres Stroms aus erneuerbaren Energien.',bad:['','Vergleicht die beiden Kreise rechts unten.','Vergleicht die beiden Kreise rechts unten.']};
+var QNUC={q:'Uran habt ihr in Station 2 sortiert. Warum fehlt Kernenergie im Diagramm?',o:['Das letzte Kernkraftwerk in Deutschland wurde im April 2023 abgeschaltet.','Uran ist eine regenerative Energiequelle.','Kernkraftwerke machen keinen Strom.'],a:0,ok:'Genau! Wie ein Kernkraftwerk funktioniert, lernt ihr in UV VI.',bad:['','Uran gehört zu den nicht erneuerbaren Energiequellen.','Doch, in anderen Ländern liefern Kernkraftwerke viel Strom.']};
+function r4(){var s=st.s4;
+  var q1=mcHTML('top',QTOP.q,QTOP.o,s.top,QTOP.a,true),q2=s.topOk?mcHTML('fos',QFOS.q,QFOS.o,s.fos,QFOS.a):'',q3=s.fosOk?mcHTML('grow',QGROW.q,QGROW.o,s.grow,QGROW.a):'',q4=s.growOk?mcHTML('nuc',QNUC.q,QNUC.o,s.nuc,QNUC.a):'';
+  var chk=s.growOk?'<div class="merk"><h3>Eure Vermutung vom Anfang</h3><p>Ihr habt vermutet: <span class="k">'+(st.guess?guessName(st.guess):'keine')+'</span>. Richtig ist <span class="k">C</span>: 2025 waren es 55,1 %.</p></div>':'';
+  if(s.nucOk)finish(3);
+  $('task').innerHTML=head(3,'Woher kam unser Strom 2025?')+'<p>Lest das Diagramm links und die beiden Kreise rechts unten.</p>'+q1+q2+q3+chk+q4+(st.done[3]?'<p class="win"><b>Stark!</b> Ihr könnt Daten zum Strommix auswerten.</p>':'')+'<div class="row">'+nextBtn(3)+'</div>';
+  mcBind('top',QTOP,s,'top','s4top',r4);if(s.topOk)mcBind('fos',QFOS,s,'fos','s4fos',r4);if(s.fosOk)mcBind('grow',QGROW,s,'grow','s4grow',r4);if(s.growOk)mcBind('nuc',QNUC,s,'nuc','s4nuc',r4);
+  bindNext();}
+
+/* Station 5: Merksatz */
+var WORDS=['nicht erneuerbar','regenerativ','umgewandelt','elektrische','entwertet','mehr als die Hälfte'];
+var GAPS=[{id:'g1',pre:'Kohle, Erdgas, Erdöl und Uran sind',post:'Energiequellen. Ihre Vorräte sind begrenzt.',a:0},{id:'g2',pre:'Sonne, Wind, Wasser, Biomasse und Erdwärme sind',post:'Energiequellen. Sie stehen immer wieder zur Verfügung.',a:1},
+  {id:'g3',pre:'Im Kraftwerk wird Energie nicht erzeugt, sondern',post:'.',a:2},{id:'g4',pre:'Der Generator wandelt Bewegungsenergie in',post:'Energie um.',a:3},
+  {id:'g5',pre:'Ein Teil der Energie wird als Abwärme abgegeben. Die Energie wird',post:'.',a:4},{id:'g6',pre:'2025 kam',post:'unseres Stroms aus erneuerbaren Energien.',a:5}];
+var MERK='<div class="merk"><h3>Merksatz: Woher kommt unser Strom?</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+' <span class="k">'+WORDS[g.a]+'</span>'+(g.post==='.'?'.':' '+g.post)+'</li>';}).join('')+'</ol></div>';
+function r5(){var s=st.s5;
+  var gaps=s.ok?MERK:'<div class="q gap"><p><b>Lückentext:</b> Wählt das passende Wort.</p><ol>'+GAPS.map(function(g){var v=s.gaps[g.id];return '<li>'+g.pre+' <select class="sel" data-g="'+g.id+'"><option value="">…</option>'+WORDS.map(function(w,j){return '<option value="'+j+'"'+(v===j?' selected':'')+'>'+w+'</option>';}).join('')+'</select> '+(g.post==='.'?'.':g.post)+'</li>';}).join('')+'</ol>'+
+    '<div class="row"><button class="btn pri" type="button" id="c5">Prüfen</button></div><p class="fb" id="fb5"></p></div>';
+  var refl=s.ok?'<div class="q"><p><b>Was hat euch heute überrascht?</b> Schreibt einen Satz.</p><textarea class="free" id="refl" rows="2" placeholder="Uns hat überrascht, dass …">'+esc(s.refl)+'</textarea>'+(s.reflOk?'':'<div class="row"><button class="btn pri" type="button" id="c5r">Fertig</button></div>')+'<p class="fb" id="fb5r"></p></div>':'';
+  if(s.reflOk)finish(4);
+  $('task').innerHTML=head(4,'Das nehmen wir mit')+gaps+refl+(s.reflOk?saveCTA(true):'')+(st.done[4]?'<p class="win"><b>Fertig!</b> Schnell gewesen? Probiert den Profi-Zusatz.</p>':'')+'<div class="row">'+nextBtn(4)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-g]'),function(sl){sl.addEventListener('change',function(){s.gaps[sl.dataset.g]=sl.value===''?null:+sl.value;sl.className='sel';save();});});
+  if($('c5'))$('c5').addEventListener('click',function(){var fb=$('fb5'),miss=GAPS.filter(function(g){return s.gaps[g.id]==null;}).length;if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Wörter.';return;}
+    var wrong=GAPS.filter(function(g){return s.gaps[g.id]!==g.a;});tryInc('s5gaps',!wrong.length,wrong.map(function(g){return g.id;}).join(','));
+    GAPS.forEach(function(g){document.querySelector('[data-g="'+g.id+'"]').className='sel '+(s.gaps[g.id]===g.a?'ok':'bad');});
+    if(!wrong.length){s.ok=true;save();r5();draw();return;}fb.className='fb bad';fb.textContent=wrong.length+(wrong.length>1?' Lücken stimmen':' Lücke stimmt')+' noch nicht. Jedes Wort passt genau einmal.';
+    showHelp(fb,'s5gaps',function(){GAPS.forEach(function(g){s.gaps[g.id]=g.a;});save();r5();helpMsg('fb5','Die Lösung ist eingetragen. Lest sie durch und tippt auf „Prüfen“.');});});
+  if($('refl')){$('refl').addEventListener('input',function(){s.refl=this.value;save();});if($('c5r'))$('c5r').addEventListener('click',function(){var fb=$('fb5r');if(s.refl.trim().length<15){fb.className='fb bad';fb.textContent='Schreibt einen ganzen Satz.';return;}s.reflOk=true;save();r5();draw();});}
+  bindCTA();bindNext();}
+
+/* Profi-Zusatz */
+function r6(){var s=st.s6;
+  function box(id,q,unit,val,ok){return '<div class="q"><p>'+q+'</p><div class="row"><input class="num'+(ok?' ok':'')+'" id="'+id+'" inputmode="decimal" value="'+esc(val)+'"'+(ok?' disabled':'')+'><span>'+unit+'</span>'+(ok?'':'<button class="btn pri" type="button" id="b'+id+'">Prüfen</button>')+'</div><p class="fb" id="fb'+id+'"></p></div>';}
+  $('task').innerHTML=head(5,'Wirkungsgrad berechnen')+'<p class="muted">Formel: Wirkungsgrad η = genutzte Energie : zugeführte Energie · 100 %</p>'+
+    box('eta','<b>1.</b> Ein Kohlekraftwerk bekommt pro Sekunde <b>2500 MJ</b> chemische Energie aus der Kohle. Es gibt <b>1000 MJ</b> elektrische Energie ab. Wie groß ist der Wirkungsgrad?','%',s.eta,s.etaOk)+
+    (s.etaOk?box('loss','<b>2.</b> Ein Gaskraftwerk hat einen Wirkungsgrad von <b>60 %</b>. Wie viel Energie wird von <b>1000 MJ</b> Brennstoffenergie als Abwärme entwertet?','MJ',s.loss,s.lossOk):'')+
+    (s.lossOk?'<p class="win"><b>Profi!</b> Das Gaskraftwerk entwertet weniger Energie als das Kohlekraftwerk. Darum ist sein Wirkungsgrad besser.</p>'+saveCTA(true):'');bindCTA();
+  function chk(id,val,key,flag,okMsg,badMsg,sol){var b=$('b'+id);if($(id))$(id).addEventListener('input',function(){s[id]=this.value;save();});if(!b)return;b.addEventListener('click',function(){var v=num(s[id]),ok=Math.abs(v-val)<0.6,fb=$('fb'+id);tryInc(key,ok,s[id]);
+    if(ok){s[flag]=true;save();r6();helpMsg('fb'+id,okMsg);return;}fb.className='fb bad';fb.textContent=badMsg(v);showHelp(fb,key,function(){s[id]=sol;s[flag]=true;save();r6();});});}
+  chk('eta',40,'s6eta','etaOk','Richtig! 1000 MJ : 2500 MJ = 0,4 = 40 %.',function(v){return Math.abs(v-0.4)<0.01?'Fast! 0,4 ist richtig, gebt es aber in Prozent an.':'Teilt die genutzte Energie durch die zugeführte Energie.';},'40');
+  chk('loss',400,'s6loss','lossOk','Richtig! 40 % von 1000 MJ = 400 MJ Abwärme.',function(v){return Math.abs(v-600)<1?'Das ist die genutzte elektrische Energie. Gefragt ist die Abwärme.':'Wenn 60 % genutzt werden, wie viel Prozent werden entwertet?';},'400');
+  if(s.etaOk)helpMsg('fbeta','Richtig! 1000 MJ : 2500 MJ = 0,4 = 40 %.');if(s.lossOk)helpMsg('fbloss','Richtig! 40 % von 1000 MJ = 400 MJ Abwärme.');}
+
+/* ---------- Ergebnisse als Text ---------- */
+var TL=FIT.map(function(q,i){return ['s1'+q.id,'Fit-Check '+(i+1)+' · '+q.topic];}).concat([['s2sort','Energiequellen · Sortieren'],['s2gas','Energiequellen · Erdgas'],['s2bio','Energiequellen · Biomasse'],['s3chain','Kraftwerk · Energiekette'],['s3gen','Kraftwerk · Generator'],['s3heat','Kraftwerk · Abwärme'],['s3wind','Kraftwerk · Windkraftwerk'],['s4top','Strommix · größte Quelle'],['s4fos','Strommix · größte fossile Quelle'],['s4grow','Strommix · Entwicklung'],['s4nuc','Strommix · Kernenergie'],['s5gaps','Merksatz · Lückentext'],['s6eta','Profi · Wirkungsgrad'],['s6loss','Profi · Abwärme']]);
+function resText(){var r=st.res||{},d=new Date(),L=[];
+  L.push('STROM-SPUR · Woher kommt unsere tägliche Energie?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push(standLine());
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='C'?'  → stimmt':'  → richtig ist C (55,1 %)'));L.push('');
+  L.push('FIT-CHECK (Diagnose Jg. 8, erste Antwort zählt)');
+  var first=0;FIT.forEach(function(q,i){var t=st.tries['s1'+q.id],w=t&&t.w&&t.w.length?q.o[t.w[0]]:null;if(t&&t.first)first++;L.push('  '+(i+1)+'. '+q.topic+': '+(!t?'nicht bearbeitet':t.first?'beim 1. Versuch richtig ✓':'zuerst falsch ✗ (gewählt: „'+strip(w||'?')+'“)'));});
+  L.push('  Ergebnis: '+first+' von 6 beim ersten Versuch richtig');L.push('');
+  L.push('STATION 2 · Energiequellen');L.push('  '+SRC.map(function(x){var v=st.s2.sort[x.id];return x.n+': '+(v==null?'–':['nicht erneuerbar','regenerativ'][v]+(v===x.a?' ✓':' ✗'));}).join(' | '));
+  L.push('  Erdgas: '+segAns(QGAS,st.s2.gas));L.push('  Biomasse: '+segAns(QBIO,st.s2.bio));L.push('');
+  L.push('STATION 3 · Kraftwerk');L.push('  Kette Kohlekraftwerk: chemische → '+CHAIN.map(function(c){var v=st.s3.chain[c.id];return v==null?'–':FORMS[v]+(v===c.a?' ✓':' ✗');}).join(' → '));
+  L.push('  Generator: '+segAns(QGEN,st.s3.gen));L.push('  Abwärme: '+segAns(QHEAT,st.s3.heat));L.push('  Windkraftwerk: '+segAns(QWIND,st.s3.wind));L.push('');
+  L.push('STATION 4 · Strommix');L.push('  Größte Quelle: '+segAns(QTOP,st.s4.top));L.push('  Größte fossile Quelle: '+segAns(QFOS,st.s4.fos));L.push('  Entwicklung: '+segAns(QGROW,st.s4.grow));L.push('  Kernenergie: '+segAns(QNUC,st.s4.nuc));L.push('');
+  L.push('STATION 5 · Merksatz');L.push('  '+(st.s5.ok?'Lückentext gelöst ✓':'(Lückentext noch nicht gelöst)'));L.push('  Das hat uns überrascht: '+((st.s5.refl||'').trim()||'(leer)'));L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');var tt=triesLines(L,TL,'s6');L.push('');
+  L.push('PROFI-ZUSATZ ★');L.push('  Wirkungsgrad: '+(st.s6.eta?st.s6.eta+' %'+(st.s6.etaOk?'  ✓':'  ✗'):'(nicht bearbeitet)'));L.push('  Abwärme: '+(st.s6.loss?st.s6.loss+' MJ'+(st.s6.lossOk?'  ✓':'  ✗'):'(nicht bearbeitet)'));
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,fit:FIT.map(function(q){var t=st.tries['s1'+q.id];return t?(t.first?1:0):null;}),tries:st.tries,refl:st.s5.refl||'',help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');L.push('#DATEN '+json);L.push('#PRUEF '+fnv('SS-v1|'+json));
+  return L.join('\r\n');}
+
+/* ---------- Gesamt ---------- */
+var lastSc=null;
+function render(){var sc=STATIONS[st.station].scene;if(sc!==lastSc){if(sc==='plant')st.ptype='kohle';lastSc=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5,r6][st.station]();resize();}
+bindReset();initSave();
+window.addEventListener('resize',resize);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();remind();startDialog();
+})();
+
+</script>
+</body>
+</html>

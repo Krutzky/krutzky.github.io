@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lichtschutz-Labor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.gopt span{font-size:15px}
+.seg.wrap{flex-wrap:wrap;border-radius:14px}
+.seg.wrap button{flex:1 1 auto}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Lichtschutz-Labor</b><span>Wann wird Licht gefährlich?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: UV-Strahlung, UV-Test oder Auge mit Laser"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'UV-Strahlung',scene:'uv'},
+  {key:'s2',name:'UV-Schutz',scene:'beads'},
+  {key:'s3',name:'Laser',scene:'laser'},
+  {key:'s4',name:'Merksatz',scene:'beads'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'uv'}
+];
+var PLACES={velbert:{t:'Velbert',f:1},strand:{t:'Strand',f:1.15},berge:{t:'Berge (2000 m)',f:1.3},schnee:{t:'Schnee in den Bergen',f:1.9}};
+var CLOUDS={klar:{t:'klar',f:1},duenn:{t:'Schleierwolken',f:0.9},dick:{t:'dicke Wolken',f:0.35}};
+var PROT={
+  none:{t:'nichts',T:100,info:'Ohne Schutz kommt die ganze UV-Strahlung an.'},
+  glas:{t:'Fensterglas',T:45,info:'Glas schluckt fast alle UV-B-Strahlung. UV-A kommt zum Teil durch.'},
+  billig:{t:'dunkle Brille ohne UV-Schutz',T:80,info:'Dunkle Gläser schwächen nur das sichtbare Licht. Die UV-Strahlung kommt fast ungehindert durch.'},
+  uv400:{t:'Sonnenbrille mit CE und UV400',T:1,info:'UV400 heißt: UV-Strahlung bis 400 nm wird herausgefiltert.'},
+  lsf:{t:'Sonnencreme LSF 30',T:4,info:'Gilt nur, wenn genug Creme aufgetragen wird. Zu dünn aufgetragen schützt sie viel weniger.'},
+  shirt:{t:'dichtes T-Shirt',T:5,info:'Dichte Kleidung hält den größten Teil der UV-Strahlung ab.'},
+  schirm:{t:'Schatten (Sonnenschirm)',T:40,info:'Im Schatten kommt noch Streulicht vom Himmel und vom Sand an.'}
+};
+var SRC={lamp:{t:'Taschenlampe'},l2:{t:'Laserpointer Klasse 2'},l4:{t:'Laser Klasse 4 (verboten)'}};
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  time:13.5,place:'velbert',cloud:'klar', prot:'none', src:'lamp',
+  s1:{a:null,aOk:false,b:null,bOk:false,c:null,cOk:false,d:null,dOk:false,e:null,eOk:false},
+  s2:{sort:{},sortOk:false,good:null,goodOk:false,dark:null,darkOk:false,lsf:null,lsfOk:false},
+  s3:{why:null,whyOk:false,own:'',ownOk:false,cls:{},clsOk:false,act:null,actOk:false,plane:null,planeOk:false},
+  s4:{gaps:{},ok:false,refl:'',tim:null,timOk:false},
+  s5:{a:null,b:null},res:{},tries:{},help:{},t0:null};
+
+/* ---------- Speicher ---------- */
+var KEY='lichtschutz-labor-v1',RKEY='lichtschutz-labor-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function fmtT(t){var h=Math.floor(t),m=Math.round((t-h)*60);return h+':'+(m<10?'0':'')+m+' Uhr';}
+
+/* ---------- UV-Modell (sonniger Julitag, vereinfacht) ---------- */
+function uvBase(t){var x=(t-13.5)/7.5;if(Math.abs(x)>=1)return 0;return 7.5*Math.pow(Math.cos(x*Math.PI/2),1.6);}
+function uvi(t,pl,cl){return uvBase(t)*PLACES[pl||st.place].f*CLOUDS[cl||st.cloud].f;}
+function uvCat(v){var r=Math.round(v);if(r<=2)return {n:'niedrig',c:'#3DA35D',tip:'Kein Schutz nötig.'};if(r<=5)return {n:'mittel',c:'#E3B505',tip:'Schutz nötig: T-Shirt, Hut, Sonnenbrille, Sonnencreme.'};if(r<=7)return {n:'hoch',c:'#F07F1E',tip:'Schutz nötig, mittags Schatten suchen.'};if(r<=10)return {n:'sehr hoch',c:'#D7263D',tip:'Mittags möglichst drinnen bleiben, sonst unbedingt schützen.'};return {n:'extrem',c:'#8A3FC7',tip:'Mittags möglichst drinnen bleiben, sonst unbedingt schützen.'};}
+
+/* ---------- Zeichnen ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function font(px,b){return (b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function arrow(x1,y1,x2,y2,c,w,alpha){line(x1,y1,x2,y2,c,w,null,alpha);var a=Math.atan2(y2-y1,x2-x1),s=8+w;ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-s*Math.cos(a-0.45),y2-s*Math.sin(a-0.45));ctx.lineTo(x2-s*Math.cos(a+0.45),y2-s*Math.sin(a+0.45));ctx.closePath();ctx.fill();ctx.restore();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);c._dpr=dpr;}
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=sc==='laser'?'#141826':col('surface');ctx.fillRect(0,0,W,H);
+  if(sc==='uv')drawUV();else if(sc==='beads')drawBeads();else drawLaser();}
+function vctx(c,bg){var x=c.getContext('2d');x.setTransform(1,0,0,1,0,0);x.fillStyle=bg||'#FFFFFF';x.fillRect(0,0,c.width,c.width);return x;}
+var FF=function(){return getComputedStyle(document.body).fontFamily;};
+
+/* --- Szene UV --- */
+function drawUV(){
+  var lw=W*0.48,v=uvi(st.time),gy=H*0.86,oz=H*0.30;
+  var g=ctx.createLinearGradient(0,0,0,gy);g.addColorStop(0,'#2B4C8C');g.addColorStop(0.35,'#7FA8DC');g.addColorStop(1,'#DCEAF8');ctx.fillStyle=g;ctx.fillRect(0,0,lw,gy);
+  /* Boden je nach Ort */
+  var gc={velbert:'#8DBF6A',strand:'#EAD39C',berge:'#8C8F9A',schnee:'#F4F7FB'}[st.place];ctx.fillStyle=gc;ctx.fillRect(0,gy,lw,H-gy);
+  if(st.place==='berge'||st.place==='schnee'){ctx.fillStyle=st.place==='schnee'?'#E7EEF7':'#9AA0AD';ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(lw*0.25,gy-H*0.22);ctx.lineTo(lw*0.5,gy);ctx.lineTo(lw*0.75,gy-H*0.28);ctx.lineTo(lw,gy);ctx.closePath();ctx.fill();}
+  if(st.place==='velbert'){ctx.fillStyle='#B9563F';[0.12,0.3,0.8].forEach(function(x){ctx.fillRect(lw*x,gy-28,26,28);ctx.beginPath();ctx.moveTo(lw*x-4,gy-28);ctx.lineTo(lw*x+13,gy-42);ctx.lineTo(lw*x+30,gy-28);ctx.fill();});}
+  if(st.place==='strand'){ctx.fillStyle='#4F8FD8';ctx.fillRect(lw*0.6,gy,lw*0.4,H-gy);}
+  /* Ozonschicht */
+  ctx.fillStyle='rgba(120,200,255,.35)';ctx.fillRect(0,oz-10,lw,20);ctx.font=font(12,true);ctx.fillStyle='#FFFFFF';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Ozonschicht',6,oz);
+  /* Sonne: Höhe nach Uhrzeit */
+  var el=Math.max(0,Math.cos((st.time-13.5)/7.5*Math.PI/2));var sx=lw*0.5+(st.time-13.5)*lw*0.06,sy=oz-14-el*(oz-40);
+  ctx.fillStyle='#FFD54A';ctx.beginPath();ctx.arc(sx,Math.max(22,sy),16,0,Math.PI*2);ctx.fill();
+  /* Wolken */
+  if(st.cloud!=='klar'){ctx.save();ctx.globalAlpha=st.cloud==='dick'?0.92:0.45;ctx.fillStyle=st.cloud==='dick'?'#8E98AA':'#FFFFFF';
+    for(var i=0;i<5;i++){var cx=lw*(0.1+i*0.2),cy=oz+40;ctx.beginPath();ctx.ellipse(cx,cy,lw*0.12,st.cloud==='dick'?22:10,0,0,Math.PI*2);ctx.fill();}ctx.restore();}
+  /* Person */
+  var px=lw*0.5,pyH=gy-6;ctx.strokeStyle='#1A1F36';ctx.lineWidth=3;ctx.beginPath();ctx.arc(px,pyH-44,8,0,Math.PI*2);ctx.stroke();line(px,pyH-36,px,pyH-14,'#1A1F36',3);line(px,pyH-14,px-7,pyH,'#1A1F36',3);line(px,pyH-14,px+7,pyH,'#1A1F36',3);
+  /* Strahlen */
+  var k=Math.min(1,v/10);
+  arrow(sx-30,Math.max(40,sy+16),sx-50,oz-12,'#8A3FC7',4,.9);tag('UV-C',sx-58,Math.max(40,sy+16)+6,'#8A3FC7','right');tag('wird abgehalten',sx-58,oz-26,'#8A3FC7','right');
+  if(v>0.2){arrow(sx,Math.max(40,sy+18),px-6,pyH-56,'#D7263D',2+6*k,.35+.6*k);arrow(sx+22,Math.max(40,sy+16),px+12,pyH-56,'#F07F1E',2+6*k,.35+.6*k);
+    tag('UV-B',(sx+px)/2-30,(sy+pyH)/2,'#D7263D');tag('UV-A',(sx+px)/2+36,(sy+pyH)/2,'#B05A12');}
+  ctx.font=font(11);ctx.fillStyle='#4E5677';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('Modell: sonniger Julitag',6,H-4);
+  /* Tageskurve rechts */
+  var x0=W*0.56,x1=W-14,y0=H*0.12,y1=H*0.84;function X(t){return x0+(t-6)/14*(x1-x0);}function Y(u){return y1-u/15*(y1-y0);}
+  [[0,3,'#DDF2E7'],[3,6,'#FFF5CC'],[6,8,'#FFE3C7'],[8,11,'#F9D6DA'],[11,15,'#ECE0F7']].forEach(function(b){ctx.fillStyle=b[2];ctx.fillRect(x0,Y(b[1]),x1-x0,Y(b[0])-Y(b[1]));});
+  ctx.strokeStyle='#9CA3AF';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x0,y1);ctx.lineTo(x1,y1);ctx.stroke();
+  ctx.font=font(11);ctx.fillStyle='#4E5677';ctx.textAlign='center';ctx.textBaseline='top';for(var t=6;t<=20;t+=2)ctx.fillText(t,X(t),y1+4);ctx.fillText('Uhrzeit',(x0+x1)/2,y1+18);
+  ctx.textAlign='right';ctx.textBaseline='middle';[0,3,6,8,11,15].forEach(function(u){ctx.fillText(u,x0-4,Y(u));});
+  ctx.strokeStyle='#D7263D';ctx.lineWidth=2.5;ctx.beginPath();for(var tt=6;tt<=20;tt+=0.1){var yy=Y(Math.min(15,uvi(tt)));if(tt===6)ctx.moveTo(X(tt),yy);else ctx.lineTo(X(tt),yy);}ctx.stroke();
+  line(X(st.time),y0,X(st.time),y1,'#1A1F36',1.5,[4,4]);ctx.fillStyle='#1A1F36';ctx.beginPath();ctx.arc(X(st.time),Y(Math.min(15,v)),5,0,Math.PI*2);ctx.fill();
+  ctx.font=font(12,true);ctx.fillStyle='#1A1F36';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText('UV-Index über den Tag',x0,y0-4);
+  renderUVViews(v);
+}
+function renderUVViews(v){
+  $('capA').innerHTML='<b>UV-Index jetzt</b>';$('capB').innerHTML='<b>Spektrum</b>: Was sehen wir?';
+  var c=$('cvA'),w=c.width,x=vctx(c,'#FFFFFF'),cat=uvCat(v),r=Math.round(v);
+  x.fillStyle=cat.c;x.beginPath();x.arc(w/2,w*0.36,w*0.24,0,Math.PI*2);x.fill();x.fillStyle='#FFFFFF';x.font='bold '+Math.round(w*0.2)+'px '+FF();x.textAlign='center';x.textBaseline='middle';x.fillText(r,w/2,w*0.37);
+  x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.075)+'px '+FF();x.fillText(cat.n,w/2,w*0.68);
+  x.font=Math.round(w*0.055)+'px '+FF();wrapText(x,cat.tip,w/2,w*0.78,w*0.9,w*0.065);
+  var c2=$('cvB'),w2=c2.width,y=vctx(c2,'#FFFFFF');var bands=[['UV-C','#5B2A86',0.1],['UV-B','#7B3FB0',0.1],['UV-A','#9A60D6',0.1],['',null,0.45],['Infrarot','#7A1F1F',0.25]];var xx=0,hh=w2*0.3,top=w2*0.25;
+  bands.forEach(function(b){var bw=b[2]*w2;if(b[1]){y.fillStyle=b[1];y.fillRect(xx,top,bw,hh);}else{var g=y.createLinearGradient(xx,0,xx+bw,0);['#8A3FC7','#2F6FD3','#3DB54A','#F5D42A','#F28C28','#E8322B'].forEach(function(cc,i){g.addColorStop(i/5,cc);});y.fillStyle=g;y.fillRect(xx,top,bw,hh);}
+    if(b[0]){y.save();y.translate(xx+bw/2,top+hh/2);y.rotate(b[0]==='Infrarot'?0:-Math.PI/2);y.fillStyle='#FFFFFF';y.font='bold '+Math.round(w2*(b[0]==='Infrarot'?0.055:0.05))+'px '+FF();y.textAlign='center';y.textBaseline='middle';y.fillText(b[0],0,0);y.restore();}xx+=bw;});
+  y.fillStyle='#1A1F36';y.font='bold '+Math.round(w2*0.055)+'px '+FF();y.textAlign='center';y.textBaseline='top';y.fillText('UV',w2*0.15,top+hh+w2*0.04);y.fillText('sichtbares Licht',w2*0.525,top+hh+w2*0.04);y.fillText('Infrarot',w2*0.875,top+hh+w2*0.04);
+  y.fillStyle='#4E5677';y.font=Math.round(w2*0.05)+'px '+FF();y.textBaseline='bottom';y.fillText('unsichtbar',w2*0.15,top-w2*0.03);y.fillText('sichtbar',w2*0.525,top-w2*0.03);y.fillText('unsichtbar',w2*0.875,top-w2*0.03);
+}
+function wrapText(x,t,cx,y,maxw,lh){var words=t.split(' '),lineS='';words.forEach(function(wd){var test=lineS?lineS+' '+wd:wd;if(x.measureText(test).width>maxw&&lineS){x.fillText(lineS,cx,y);y+=lh;lineS=wd;}else lineS=test;});if(lineS)x.fillText(lineS,cx,y);}
+
+/* --- Szene UV-Perlen --- */
+function beadColor(T){var k=Math.max(0,Math.min(1,T/100));var a=[246,243,236],b=[124,58,190];return 'rgb('+Math.round(a[0]+(b[0]-a[0])*k)+','+Math.round(a[1]+(b[1]-a[1])*k)+','+Math.round(a[2]+(b[2]-a[2])*k)+')';}
+function drawBeads(){
+  var P=PROT[st.prot],T=P.T;
+  ctx.fillStyle='#F3F5FA';ctx.fillRect(0,0,W,H);
+  /* UV-Lampe / Sonne */
+  ctx.fillStyle='#FFD54A';ctx.beginPath();ctx.arc(W*0.5,40,22,0,Math.PI*2);ctx.fill();ctx.font=font(13,true);ctx.fillStyle='#B05A12';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Sonne / UV-Lampe',W*0.5+30,40);
+  var fy=H*0.42,by=H*0.78;
+  for(var i=-3;i<=3;i++){var x=W*0.5+i*W*0.07;arrow(x,70,x,fy-14,'#8A3FC7',3,.85);if(st.prot!=='none')arrow(x,fy+16,x,by-26,'#8A3FC7',1+3*T/100,Math.max(.08,T/100));else arrow(x,fy+16,x,by-26,'#8A3FC7',3,.85);}
+  /* Schutz-Gegenstand */
+  var L=W*0.24,R=W*0.76;
+  if(st.prot==='glas'){ctx.fillStyle='rgba(170,215,240,.55)';ctx.fillRect(L,fy-8,R-L,16);ctx.strokeStyle='#6C9EC4';ctx.strokeRect(L,fy-8,R-L,16);}
+  else if(st.prot==='billig'||st.prot==='uv400'){ctx.fillStyle=st.prot==='billig'?'rgba(20,20,20,.85)':'rgba(90,70,40,.7)';ctx.beginPath();ctx.ellipse(W*0.38,fy,W*0.12,22,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(W*0.62,fy,W*0.12,22,0,0,Math.PI*2);ctx.fill();line(W*0.5-W*0.0,fy-6,W*0.5,fy-6,'#333',4);
+    tag(st.prot==='uv400'?'CE · UV400 · Kat. 2':'ohne Kennzeichnung',W*0.5,fy+34,'#1A1F36');}
+  else if(st.prot==='lsf'){ctx.fillStyle='rgba(255,250,230,.95)';ctx.fillRect(L,fy-10,R-L,20);ctx.strokeStyle='#D9C79A';ctx.strokeRect(L,fy-10,R-L,20);ctx.font=font(12,true);ctx.fillStyle='#8A6D1F';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Klarsichtfolie mit Sonnencreme LSF 30',W*0.5,fy);}
+  else if(st.prot==='shirt'){ctx.fillStyle='#2F6FD3';ctx.fillRect(L,fy-12,R-L,24);ctx.font=font(12,true);ctx.fillStyle='#FFFFFF';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('T-Shirt-Stoff',W*0.5,fy);}
+  else if(st.prot==='schirm'){ctx.fillStyle='#E8432E';ctx.beginPath();ctx.moveTo(L,fy+10);ctx.quadraticCurveTo(W*0.5,fy-50,R,fy+10);ctx.closePath();ctx.fill();
+    for(var j=0;j<4;j++){arrow(W*(0.08+j*0.02),70+j*20,W*0.33,by-26,'#8A3FC7',2,.45);arrow(W*(0.92-j*0.02),70+j*20,W*0.67,by-26,'#8A3FC7',2,.45);}tag('Streulicht',W*0.15,by-60,'#8A3FC7');}
+  tag('Schutz: '+P.t,12,20,'#1A1F36','left');
+  /* UV-Perlen */
+  for(var k=0;k<7;k++){var bx=W*0.29+k*W*0.07;ctx.fillStyle=beadColor(T);ctx.beginPath();ctx.arc(bx,by,15,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#9CA3AF';ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.arc(bx-5,by-5,4,0,Math.PI*2);ctx.fill();}
+  ctx.font=font(12,true);ctx.fillStyle='#4E5677';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('UV-Perlen: werden bei UV-Strahlung lila',W*0.5,by+22);
+  ctx.font=font(11);ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, Werte gerundet',W-8,H-4);
+  $('capA').innerHTML='<b>UV-Perle</b> (vergrößert)';$('capB').innerHTML='<b>So viel UV kommt durch</b>';
+  var c=$('cvA'),w=c.width,x=vctx(c,'#FFFFFF');x.fillStyle=beadColor(T);x.beginPath();x.arc(w/2,w*0.45,w*0.3,0,Math.PI*2);x.fill();x.strokeStyle='#9CA3AF';x.lineWidth=w/80;x.stroke();x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(w*0.4,w*0.35,w*0.07,0,Math.PI*2);x.fill();
+  x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.07)+'px '+FF();x.textAlign='center';x.textBaseline='middle';x.fillText(T>60?'stark lila':T>20?'etwas lila':'fast weiß',w/2,w*0.87);
+  var c2=$('cvB'),w2=c2.width,y=vctx(c2,'#FFFFFF');y.fillStyle='#E3E8F0';y.fillRect(w2*0.15,w2*0.12,w2*0.7,w2*0.5);y.fillStyle=T>60?'#D7263D':T>20?'#F07F1E':'#3DA35D';y.fillRect(w2*0.15,w2*0.12+w2*0.5*(1-T/100),w2*0.7,w2*0.5*T/100);
+  y.fillStyle='#1A1F36';y.font='bold '+Math.round(w2*0.11)+'px '+FF();y.textAlign='center';y.textBaseline='middle';y.fillText('ca. '+T+' %',w2/2,w2*0.72);
+  y.font=Math.round(w2*0.05)+'px '+FF();wrapText(y,P.info,w2/2,w2*0.84,w2*0.92,w2*0.06);
+}
+
+/* --- Szene Laser & Auge --- */
+function drawLaser(){
+  var S=Math.min(W*0.36/3.2,(H-60)/3.2),EX=W*0.58,AY=H/2,L=2.3;function X(x){return EX+x*S;}function Y(y){return AY-y*S;}
+  /* Auge */
+  ctx.save();ctx.beginPath();ctx.ellipse(X(0.9),AY,1.4*S,1.3*S,0,0,Math.PI*2);ctx.fillStyle='#1F2747';ctx.fill();ctx.strokeStyle='#9CC3F0';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+  ctx.save();ctx.beginPath();ctx.ellipse(X(0.9),AY,1.4*S,1.3*S,0,-0.9,0.9);ctx.strokeStyle='#D9534F';ctx.lineWidth=6;ctx.stroke();ctx.restore();
+  ctx.fillStyle='#3A6AA8';ctx.fillRect(X(-0.12),Y(1.0),0.1*S,0.62*S);ctx.fillRect(X(-0.12),Y(-0.38),0.1*S,0.62*S);
+  ctx.beginPath();ctx.ellipse(X(0.12),AY,0.22*S,0.42*S,0,0,Math.PI*2);ctx.fillStyle='rgba(156,195,240,.85)';ctx.fill();ctx.strokeStyle='#9CC3F0';ctx.stroke();
+  ctx.font=font(12,true);ctx.fillStyle='#C9D3F2';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Augenlinse',X(0.12),Y(-1.1));ctx.textAlign='left';ctx.fillText('Netzhaut',X(L)-10,Y(1.25));
+  var rx=X(L)-2;
+  if(st.src==='lamp'){
+    var lx=W*0.08;ctx.fillStyle='#C9D3F2';ctx.fillRect(lx-34,AY-10,30,20);ctx.fillStyle='#FFE58A';ctx.beginPath();ctx.arc(lx,AY,9,0,Math.PI*2);ctx.fill();
+    for(var a=-0.5;a<=0.5;a+=0.07){var ex=X(-0.3),ey=AY+Math.tan(a)*(ex-lx);var inside=Math.abs(ey-AY)<0.36*S;line(lx,AY,inside?X(0.12):ex+(ex-lx)*0.2,inside?ey:ey+Math.tan(a)*(ex-lx)*0.2,'#FFE58A',1.5,null,inside?.9:.35);if(inside)line(X(0.12),ey,rx,AY+(ey-AY)*-0.9,'#FFE58A',1.5,null,.8);}
+    ctx.save();ctx.globalAlpha=.6;ctx.fillStyle='#FFE58A';ctx.beginPath();ctx.ellipse(rx,AY,4,0.32*S,0,0,Math.PI*2);ctx.fill();ctx.restore();
+    tag('Licht verteilt sich: nur ein kleiner Teil gelangt ins Auge',W*0.3,24,'#1A1F36');
+  } else {
+    var lx2=W*0.05,c=st.src==='l4'?'#22D44A':'#FF3B30',bw=st.src==='l4'?4:2.5;ctx.fillStyle='#8E97B8';ctx.fillRect(lx2-6,AY-7,38,14);
+    [-0.12,0,0.12].forEach(function(h){line(lx2+32,Y(h),X(0.12),Y(h),c,bw,null,.95);line(X(0.12),Y(h),rx,AY,c,bw,null,.95);});
+    ctx.save();var gl=ctx.createRadialGradient(rx,AY,0,rx,AY,st.src==='l4'?30:18);gl.addColorStop(0,'#FFFFFF');gl.addColorStop(0.3,c);gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(rx,AY,st.src==='l4'?30:18,0,Math.PI*2);ctx.fill();ctx.restore();
+    tag('Paralleles Licht: Die Linse bündelt alles auf einen winzigen Punkt',W*0.36,24,'#1A1F36');
+  }
+  ctx.font=font(11);ctx.fillStyle='#8E97B8';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-4);
+  $('capA').innerHTML='<b>Netzhaut</b> (vergrößert)';$('capB').innerHTML='<b>Licht auf einem Punkt der Netzhaut</b> (Vergleich)';
+  var cA=$('cvA'),w=cA.width,x=vctx(cA,'#7A2E2E');
+  x.strokeStyle='rgba(180,60,60,.9)';x.lineWidth=w/120;for(var i=0;i<7;i++){x.beginPath();x.moveTo(w*0.1,w*(0.1+i*0.13));x.bezierCurveTo(w*0.4,w*(0.2+i*0.1),w*0.6,w*(0.05+i*0.14),w*0.95,w*(0.15+i*0.12));x.stroke();}
+  if(st.src==='lamp'){var g=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w*0.3);g.addColorStop(0,'rgba(255,240,170,.55)');g.addColorStop(1,'rgba(255,240,170,0)');x.fillStyle=g;x.beginPath();x.arc(w/2,w/2,w*0.3,0,Math.PI*2);x.fill();}
+  else if(st.src==='l2'){var g2=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w*0.08);g2.addColorStop(0,'#FFFFFF');g2.addColorStop(0.4,'#FF3B30');g2.addColorStop(1,'rgba(255,59,48,0)');x.fillStyle=g2;x.beginPath();x.arc(w/2,w/2,w*0.08,0,Math.PI*2);x.fill();}
+  else{x.fillStyle='#1B0A08';x.beginPath();x.arc(w/2,w/2,w*0.09,0,Math.PI*2);x.fill();x.strokeStyle='#F5D42A';x.lineWidth=w/60;x.beginPath();x.arc(w/2,w/2,w*0.12,0,Math.PI*2);x.stroke();x.fillStyle='#FFFFFF';x.font='bold '+Math.round(w*0.07)+'px '+FF();x.textAlign='center';x.fillText('verbrannt',w/2,w*0.8);}
+  var cB=$('cvB'),w2=cB.width,y=vctx(cB,'#FFFFFF');var items=[['Taschenlampe',0.12,'#3DA35D','gering'],['Laser Kl. 2',0.62,'#F07F1E','hoch'],['Laser Kl. 4',1,'#D7263D','extrem']];
+  items.forEach(function(it,i){var yy=w2*0.12+i*w2*0.27;y.fillStyle='#E3E8F0';y.fillRect(w2*0.05,yy+w2*0.08,w2*0.9,w2*0.09);y.fillStyle=it[2];y.fillRect(w2*0.05,yy+w2*0.08,w2*0.9*it[1],w2*0.09);
+    y.fillStyle='#1A1F36';y.font=(['lamp','l2','l4'][i]===st.src?'bold ':'')+Math.round(w2*0.06)+'px '+FF();y.textAlign='left';y.textBaseline='bottom';y.fillText(it[0]+': '+it[3],w2*0.05,yy+w2*0.07);});
+}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur,cls){return '<span class="seg full'+(cls?' '+cls:'')+'" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function renderCtl(){
+  var sc=STATIONS[st.station].scene,h='';
+  if(sc==='uv'){h='<div class="lift"><div class="disp g"><small>UHRZEIT</small><span id="dispT">'+fmtT(st.time)+'</span></div><div class="keys"><button class="key" id="Tm" type="button" aria-label="früher">◀</button><button class="key" id="Tp" type="button" aria-label="später">▶</button></div></div>'+
+    '<input type="range" id="TS" min="6" max="20" step="0.5" value="'+st.time+'" aria-label="Uhrzeit"><div class="scale"><span>6 Uhr</span><span>20 Uhr</span></div>'+
+    '<div class="ctlrow"><span>ORT</span>'+segHTML('sP',Object.keys(PLACES).map(function(k){return [k,PLACES[k].t];}),st.place,'wrap')+'</div>'+
+    '<div class="ctlrow"><span>HIMMEL</span>'+segHTML('sC',Object.keys(CLOUDS).map(function(k){return [k,CLOUDS[k].t];}),st.cloud)+'</div>';}
+  else if(sc==='beads'){h='<div class="ctlrow"><span>WAS LIEGT ZWISCHEN SONNE UND UV-PERLEN?</span><div class="choice grid2" id="sProt">'+Object.keys(PROT).map(function(k){return '<button type="button" class="opt'+(st.prot===k?' sel':'')+'" data-v="'+k+'">'+PROT[k].t+'</button>';}).join('')+'</div></div>';}
+  else{h='<div class="ctlrow"><span>LICHTQUELLE</span>'+segHTML('sS',Object.keys(SRC).map(function(k){return [k,SRC[k].t];}),st.src,'wrap')+'</div><p class="muted">Achtung: Im echten Leben niemals in einen Laser schauen, auch nicht in Klasse 2!</p>';}
+  $('ctl').innerHTML=h;
+  if(sc==='uv'){function u(v){st.time=Math.max(6,Math.min(20,v));$('TS').value=st.time;$('dispT').textContent=fmtT(st.time);draw();}
+    $('TS').addEventListener('input',function(){u(parseFloat(this.value));});$('Tm').addEventListener('click',function(){u(st.time-0.5);});$('Tp').addEventListener('click',function(){u(st.time+0.5);});
+    bindSeg('sP',function(v){st.place=v;draw();});bindSeg('sC',function(v){st.cloud=v;draw();});}
+  else if(sc==='beads'){Array.prototype.forEach.call($('sProt').children,function(b){b.addEventListener('click',function(){st.prot=b.dataset.v;Array.prototype.forEach.call($('sProt').children,function(x){x.className='opt'+(x===b?' sel':'');});draw();});});}
+  else bindSeg('sS',function(v){st.src=v;draw();});
+}
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function esc(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+
+/* ---------- Vermutung ---------- */
+var GUESS=[{k:'A',t:'die <b>dunkelste</b> Brille'},{k:'B',t:'eine Brille mit <b>CE-Zeichen und UV400</b>'},{k:'C',t:'die <b>teuerste</b> Brille'},{k:'D',t:'Egal, <b>alle</b> Sonnenbrillen schützen gleich.'}];
+function guessName(k){return {A:'A (die dunkelste)',B:'B (CE und UV400)',C:'C (die teuerste)',D:'D (alle gleich)'}[k]||'';}
+
+/* ---------- Station 1: UV-Strahlung ---------- */
+var Q1=[
+ {id:'a',q:'Schau dir das Spektrum an. Können wir UV-Strahlung sehen?',o:['Nein, sie ist unsichtbar.','Ja, sie ist violett.'],a:0,ok:'Richtig! UV-Strahlung liegt hinter dem violetten Licht und ist unsichtbar. Deshalb merken wir sie nicht und bekommen trotzdem Sonnenbrand.',bad:['','Violett ist die letzte Farbe, die wir sehen. UV liegt dahinter.']},
+ {id:'b',q:'Welche UV-Strahlung kommt kaum bei uns an?',o:['UV-A','UV-B','UV-C'],a:2,ok:'Genau! UV-C wird in der Atmosphäre (Ozonschicht) abgehalten. UV-A und UV-B erreichen uns.',bad:['UV-A kommt bei uns an. Schau auf die Pfeile im Modell.','UV-B kommt bei uns an. Schau auf die Pfeile im Modell.','']},
+ {id:'c',q:'Stelle verschiedene Uhrzeiten ein. Wann ist die UV-Strahlung am stärksten?',o:['morgens um 8 Uhr','mittags zwischen 11 und 15 Uhr','abends um 19 Uhr'],a:1,ok:'Richtig! Mittags steht die Sonne am höchsten. Dann ist die UV-Strahlung am stärksten.',bad:['Schau auf die Kurve: Wo ist sie am höchsten?','','Schau auf die Kurve: Wo ist sie am höchsten?']},
+ {id:'d',q:'Stelle „Schleierwolken“ ein. Wie stark ist die UV-Strahlung dann?',o:['fast genauso stark wie bei klarem Himmel','fast null'],a:0,ok:'Genau! Dünne Wolken halten kaum UV ab. Man bekommt auch bei leicht bewölktem Himmel Sonnenbrand.',bad:['','Vergleiche den UV-Index bei „klar“ und bei „Schleierwolken“.']},
+ {id:'e',q:'Wo ist die UV-Strahlung um 13:30 Uhr am stärksten?',o:['in Velbert','am Strand','im Schnee in den Bergen'],a:2,ok:'Richtig! In den Bergen ist die Luft dünner und Schnee wirft die UV-Strahlung zusätzlich zurück.',bad:['Probiere alle Orte aus und vergleiche den UV-Index.','Am Strand ist es schon stark. Probiere noch die anderen Orte.','']}
+];
+function chain(list,store,key0,onDone){ /* Fragen nacheinander */
+  var h='';for(var i=0;i<list.length;i++){var q=list[i];h+=mcHTML(key0+q.id,q.q,q.o,store[q.id],q.a);if(!store[q.id+'Ok'])break;}return h;}
+function bindChain(list,store,key0,rerender,onDone){
+  list.forEach(function(q,i){if(i>0&&!store[list[i-1].id+'Ok'])return;
+    bindMC(key0+q.id,q.a,key0+q.id,q.ok,q.bad,function(){store[q.id+'Ok']=true;if(i===list.length-1&&onDone)onDone();save();rerender();showFb(key0+q.id,true,q.ok);},function(j){store[q.id]=j;});
+    if(store[q.id+'Ok'])showFb(key0+q.id,true,q.ok);});}
+function r1(){
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Welche Sonnenbrille schützt deine Augen am besten?</p><div class="choice" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 2 prüfst du sie.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · UV-Strahlung</p><h2>Die unsichtbare Gefahr</h2></div><p>Im Modell siehst du, wie die UV-Strahlung der Sonne zu uns kommt. Verändere Uhrzeit, Ort und Himmel und beobachte den UV-Index.</p>'+
+    '<p class="note"><b>UV-Index:</b> 0–2 kein Schutz nötig · 3–7 Schutz nötig · ab 8 mittags möglichst drinnen bleiben.</p>'+
+    chain(Q1,st.s1,'q1')+(st.done[0]?'<p class="win"><b>Super!</b> Du weißt, wann UV-Strahlung besonders gefährlich ist.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  bindChain(Q1,st.s1,'q1',r1,function(){finish(0);});bindNext();
+}
+
+/* ---------- Station 2: UV-Schutz ---------- */
+var SORT=[
+  {id:'billig',q:'dunkle Brille ohne UV-Schutz',o:['schützt gut','schützt kaum'],a:1,w:'Wähle im Steuerpult die dunkle Brille und schau auf die UV-Perlen.'},
+  {id:'uv400',q:'Sonnenbrille mit CE und UV400',o:['schützt gut','schützt kaum'],a:0,w:'Wähle im Steuerpult die Sonnenbrille mit UV400 und schau auf die UV-Perlen.'},
+  {id:'shirt',q:'dichtes T-Shirt',o:['schützt gut','schützt kaum'],a:0,w:'Probiere das T-Shirt im Steuerpult aus.'},
+  {id:'schirm',q:'Schatten unter dem Sonnenschirm',o:['schützt vollständig','schützt nur teilweise'],a:1,w:'Probiere den Sonnenschirm aus: Kommt noch UV an?'}
+];
+var Q2=[
+ {id:'good',q:'Woran erkennst du eine gute Sonnenbrille?',o:['am CE-Zeichen und der Angabe UV400','an besonders dunklen Gläsern','am hohen Preis'],a:0,ok:'Richtig! Die Tönung sagt nichts über den UV-Schutz. Wichtig sind das CE-Zeichen und UV400 (oder „100 % UV-Schutz“).',bad:['','Die dunkle Billigbrille war auch dunkel und hat kaum geschützt.','Auch teure Brillen brauchen die Kennzeichnung. Der Preis allein sagt nichts.']},
+ {id:'dark',q:'Warum ist eine dunkle Brille ohne UV-Schutz sogar schlechter als gar keine Brille?',o:['Hinter dunklen Gläsern wird die Pupille größer. Dann gelangt mehr UV-Strahlung ins Auge.','Sie wird in der Sonne heiß.','Sie macht das Licht bunt.'],a:0,ok:'Genau! Im Dunkeln öffnet sich die Pupille. Ohne UV-Filter kommt dann noch mehr UV-Strahlung ins Auge.',bad:['','Das ist nicht das Problem. Denk an die Pupille (Std. 9: Iris und Pupille).','Das ist nicht das Problem. Denk an die Pupille (Std. 9: Iris und Pupille).']},
+ {id:'lsf',q:'Ohne Schutz bekommt Mia nach 10 Minuten Sonnenbrand. Sie cremt sich gut mit LSF 30 ein. Was stimmt?',o:['Sie ist theoretisch bis zu 30-mal länger geschützt. Sicherer ist es, nur einen Teil davon auszunutzen. Nachcremen verlängert die Zeit nicht.','Sie ist den ganzen Tag geschützt, wenn sie oft nachcremt.','LSF 30 bedeutet 30 Minuten Schutz.'],a:0,ok:'Richtig! LSF 30 heißt höchstens 30-mal so lange wie ohne Schutz. Nachcremen hält den Schutz aufrecht, verlängert ihn aber nicht.',bad:['','Nachcremen verlängert die Schutzzeit nicht, es hält den Schutz nur aufrecht (z. B. nach dem Baden).','Der LSF ist keine Minutenangabe, sondern ein Faktor (ein Mal-Zeichen).']}
+];
+function r2(){
+  var s=st.s2;
+  var sort='<div class="stack"><p><b>Teste im Modell</b> (oder mit echten UV-Perlen): Was schützt gut?</p>'+segQHTML(SORT,s.sort,s.sortOk)+(s.sortOk?'':'<div class="row"><button class="btn pri" type="button" id="c2s">Prüfen</button></div>')+'<p class="fb" id="fb2s"></p></div>';
+  var rest=s.sortOk?chain(Q2,s,'q2'):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · UV-Schutz</p><h2>Der UV-Perlen-Test</h2></div><p>UV-Perlen färben sich lila, wenn UV-Strahlung auf sie trifft. Lege verschiedene Dinge zwischen Sonne und Perlen und vergleiche.</p>'+
+    sort+rest+(st.done[1]?'<p class="win"><b>Stark!</b> Du kannst Schutzmaßnahmen vergleichen und bewerten.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.sort,function(){return s.sortOk;});
+  if(!s.sortOk)$('c2s').addEventListener('click',function(){if(checkSegQ(SORT,s.sort,'s2sort','fb2s',r2)){s.sortOk=true;save();r2();}});
+  else helpMsg('fb2s','Richtig! Am besten schützen Kleidung, UV400-Brille und Sonnencreme. Schatten hilft, reicht aber allein nicht.');
+  if(s.sortOk)bindChain(Q2,s,'q2',r2,function(){finish(1);});
+  bindNext();
+}
+
+/* ---------- Station 3: Laser ---------- */
+var QWHY={q:'Ein Laserpointer der Klasse 2 hat viel weniger Leistung als eine Taschenlampe. Warum ist er für das Auge trotzdem viel gefährlicher? Vergleiche im Modell.',o:['Das Laserlicht ist parallel. Die Augenlinse bündelt es auf einen winzigen Punkt der Netzhaut.','Laserlicht ist heißer als anderes Licht.','Laserlicht ist rot.'],a:0,ok:'Genau! Wie bei einer Lupe im Sonnenlicht wird alles Licht auf einen winzigen Punkt gebündelt. Dort kann die Netzhaut verbrennen.',bad:['','Nicht die Wärme des Strahls ist das Problem. Schau, wie die Augenlinse das Licht bündelt.','Auch grüne Laser sind gefährlich. Schau, wie die Augenlinse das Licht bündelt.']};
+var CLS=[
+  {id:'a',q:'Laserpointer, Klasse 2, für Präsentationen',o:['erlaubt','verboten'],a:0,w:'Klasse 1, 1M, 2 und 2M (bis 1 mW) dürfen an Privatleute verkauft werden.'},
+  {id:'b',q:'„Super-Laser“ aus dem Internet, Klasse 3B, lässt Luftballons platzen',o:['erlaubt','verboten'],a:1,w:'Klasse 3B und 4 dürfen nicht an Privatleute verkauft werden.'},
+  {id:'c',q:'Laser-Entfernungsmesser, Klasse 1',o:['erlaubt','verboten'],a:0,w:'Klasse 1 ist bei normaler Benutzung ungefährlich.'},
+  {id:'d',q:'Laserpointer, Klasse 4, „zum Sternezeigen“',o:['erlaubt','verboten'],a:1,w:'Klasse 4 ist extrem gefährlich und für Privatleute verboten.'}
+];
+var QACT={q:'Ein Laserstrahl trifft dich ins Auge. Was tust du?',o:['Sofort die Augen schließen und den Kopf wegdrehen.','Hineinschauen, um zu sehen, woher er kommt.','Nichts, Blinzeln schützt immer.'],a:0,ok:'Richtig! Augen zu, Kopf weg. Auf den Blinzel-Reflex darf man sich nicht verlassen.',bad:['','Niemals hineinschauen! Auch kurz kann die Netzhaut geschädigt werden.','Auf den Blinzel-Reflex darf man sich nicht verlassen. Er ist oft zu langsam.']};
+var QPLANE={q:'Warum ist es eine Straftat, mit einem Laser auf Flugzeuge, Autos oder Busse zu zielen?',o:['Die Fahrer und Piloten werden geblendet. Es kann zu schweren Unfällen kommen.','Weil der Laser dabei kaputtgeht.','Weil es Strom verschwendet.'],a:0,ok:'Genau! Schon eine kurze Blendung kann einen Unfall verursachen. Dafür drohen hohe Strafen, bis zu Gefängnis.',bad:['','Denk an die Menschen im Flugzeug oder Auto.','Denk an die Menschen im Flugzeug oder Auto.']};
+function r3(){
+  var s=st.s3;
+  var h=mcHTML('why',QWHY.q,QWHY.o,s.why,QWHY.a);
+  if(s.whyOk)h+='<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Warum ist Laserlicht für das Auge so gefährlich? Schreibe ein bis zwei Sätze.</p><textarea class="free" id="own" rows="3" placeholder="Laserlicht ist gefährlich, weil …">'+esc(s.own)+'</textarea>'+(s.ownOk?'':'<div class="row"><button class="btn pri" type="button" id="c3o">Weiter</button></div>')+'<p class="fb" id="fb3o"></p></div>';
+  if(s.ownOk)h+='<div class="stack"><p><b>Laser-Check:</b> Darf man das als Privatperson kaufen und benutzen?</p>'+segQHTML(CLS,s.cls,s.clsOk)+(s.clsOk?'':'<div class="row"><button class="btn pri" type="button" id="c3c">Prüfen</button></div>')+'<p class="fb" id="fb3c"></p></div>';
+  if(s.clsOk)h+=mcHTML('act',QACT.q,QACT.o,s.act,QACT.a);
+  if(s.actOk)h+=mcHTML('plane',QPLANE.q,QPLANE.o,s.plane,QPLANE.a);
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Laser</p><h2>Warum Laserlicht ins Auge geht</h2></div><p>Wähle im Steuerpult die Lichtquelle und vergleiche, was auf der Netzhaut ankommt.</p>'+h+
+    (st.done[2]?'<p class="win"><b>Klasse!</b> Laser sind Werkzeuge, keine Spielzeuge.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindMC('why',QWHY.a,'s3why',QWHY.ok,QWHY.bad,function(){s.whyOk=true;save();r3();showFb('why',true,QWHY.ok);},function(j){s.why=j;});if(s.whyOk)showFb('why',true,QWHY.ok);
+  if(s.whyOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ownOk)$('c3o').addEventListener('click',function(){var fb=$('fb3o');if(s.own.trim().length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}s.ownOk=true;save();r3();});else helpMsg('fb3o','Gespeichert.');}
+  if(s.ownOk){bindSegQ(s.cls,function(){return s.clsOk;});if(!s.clsOk)$('c3c').addEventListener('click',function(){if(checkSegQ(CLS,s.cls,'s3cls','fb3c',r3)){s.clsOk=true;save();r3();}});else helpMsg('fb3c','Richtig! Für Privatleute sind nur Laser bis Klasse 2 (höchstens 1 mW) erlaubt.');}
+  if(s.clsOk){bindMC('act',QACT.a,'s3act',QACT.ok,QACT.bad,function(){s.actOk=true;save();r3();showFb('act',true,QACT.ok);},function(j){s.act=j;});if(s.actOk)showFb('act',true,QACT.ok);}
+  if(s.actOk){bindMC('plane',QPLANE.a,'s3plane',QPLANE.ok,QPLANE.bad,function(){s.planeOk=true;finish(2);save();r3();showFb('plane',true,QPLANE.ok);},function(j){s.plane=j;});if(s.planeOk)showFb('plane',true,QPLANE.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'UV-Strahlung können wir nicht ',post:'.',o:['sehen','abhalten'],a:0},
+  {pre:'UV-A- und UV-B-Strahlung können Sonnenbrand, Augenschäden und ',post:' verursachen.',o:['Hautkrebs','Erkältungen'],a:0},
+  {pre:'Am stärksten ist die UV-Strahlung ',post:' zwischen 11 und 15 Uhr.',o:['mittags','nachts'],a:0},
+  {pre:'Eine gute Sonnenbrille hat das CE-Zeichen und die Angabe ',post:'.',o:['UV400','extra dunkel'],a:0},
+  {pre:'Kleidung, Hut, Sonnenbrille, Sonnencreme und ',post:' schützen vor UV-Strahlung.',o:['Schatten','Fensterplätze'],a:0},
+  {pre:'Die Augenlinse bündelt Laserlicht auf einen winzigen Punkt der ',post:'.',o:['Netzhaut','Hornhaut'],a:0},
+  {pre:'Schaue nie in einen ',post:' und richte ihn nie auf Menschen oder Fahrzeuge.',o:['Laserstrahl','Spiegel'],a:0}
+];
+var WORTE='Netzhaut · Hautkrebs · sehen · UV400 · Laserstrahl · Schatten · mittags';
+var MERK='<div class="merk"><h3>Merksatz: Wann wird Licht gefährlich?</h3><p>'+GAPS.map(function(g){return g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post;}).join(' ')+'</p></div>';
+var TIM={q:'Tim kauft am Strand für 2 € eine sehr dunkle Sonnenbrille ohne Kennzeichnung. Was rätst du ihm?',o:['Lieber nicht tragen. Eine Brille mit CE-Zeichen und UV400 kaufen.','Super, je dunkler, desto besser.','Nur mittags tragen, dann ist sie gut.'],a:0,
+  ok:'Richtig! Ohne UV-Filter wird hinter den dunklen Gläsern die Pupille groß und noch mehr UV gelangt ins Auge.',bad:['','Die Tönung sagt nichts über den UV-Schutz. Denk an die Pupille.','Gerade mittags ist die UV-Strahlung am stärksten. Ohne UV-Filter schadet die Brille dann am meisten.']};
+function r4(){
+  var refl=st.s4.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='B'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist B: CE-Zeichen und UV400.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>B</b>.</p>')+
+    '<p>Begründe kurz, warum B richtig ist:</p><textarea class="free" id="refl" rows="2" placeholder="B ist richtig, weil …">'+esc(st.s4.refl)+'</textarea></div>':'';
+  var tim=st.s4.ok?mcHTML('tim',TIM.q,TIM.o,st.s4.tim,TIM.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+tim+(st.s4.timOk?saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=st.s4.gaps[i];if(st.s4.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){st.s4.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(st.s4.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.a;s.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){st.s4.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){$('refl').addEventListener('input',function(){st.s4.refl=this.value;save();});
+    bindMC('tim',TIM.a,'s4tim',TIM.ok,TIM.bad,function(){st.s4.timOk=true;finish(3);save();r4();showFb('tim',true,TIM.ok);},function(j){st.s4.tim=j;});if(st.s4.timOk)showFb('tim',true,TIM.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Skifahren',task:'Stelle im Modell „Schnee in den Bergen“ und 13:30 Uhr ein.',q:'Warum brauchen Skifahrer eine besonders gute Sonnenbrille, auch bei Wolken?',
+   o:['In den Bergen ist die UV-Strahlung stärker und Schnee wirft sie zurück. Ohne Schutz droht Schneeblindheit (eine Entzündung der Augen).','Weil Schnee so kalt ist.','Damit man keine Schneeflocken ins Auge bekommt.'],a:0,ok:'Richtig! Schnee wirft einen großen Teil der UV-Strahlung zurück. Die Augen bekommen dann von oben und unten UV ab.',bad:'Schau auf den UV-Index im Schnee und denk an die Reflexion.'},
+  {id:'b',title:'Solarium',task:'Lea (13) will sich vor den Ferien im Solarium „vorbräunen“, damit sie keinen Sonnenbrand bekommt.',q:'Was stimmt?',
+   o:['In Deutschland ist das Solarium für unter 18-Jährige verboten. Die UV-Strahlung erhöht das Hautkrebsrisiko.','Vorbräunen ist ein guter Sonnenschutz.','Im Solarium gibt es keine UV-Strahlung.'],a:0,ok:'Genau! Seit 2009 dürfen Minderjährige in Deutschland nicht ins Solarium. Vorbräunen schützt kaum vor Sonnenbrand.',bad:'Solarien arbeiten mit UV-Strahlung. Was weißt du über UV und Hautkrebs?'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Knobel-Aufgaben</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b></p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['q1a','Station 1 · UV unsichtbar?'],['q1b','Station 1 · UV-C'],['q1c','Station 1 · Tageszeit'],['q1d','Station 1 · Schleierwolken'],['q1e','Station 1 · Ort'],
+  ['s2sort','Station 2 · Was schützt gut?'],['q2good','Station 2 · Gute Sonnenbrille'],['q2dark','Station 2 · Dunkle Brille ohne UV'],['q2lsf','Station 2 · Lichtschutzfaktor'],
+  ['s3why','Station 3 · Warum Laser gefährlich'],['s3cls','Station 3 · Laser-Check'],['s3act','Station 3 · Laser im Auge'],['s3plane','Station 3 · Flugzeuge blenden'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4tim','Station 4 · Tims Sonnenbrille'],['s5a','Profi · Skifahren'],['s5b','Profi · Solarium']];
+function resText(){
+  var r=st.res||{},d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  L.push('LICHTSCHUTZ-LABOR · Wann wird Licht gefährlich?');
+  L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='B'?'  → stimmt':'  → richtig ist B'));
+  L.push('');L.push('STATION 1 · UV-Strahlung');Q1.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s1[q.id]));});
+  L.push('');L.push('STATION 2 · UV-Schutz');SORT.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s2.sort[q.id]));});Q2.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s2[q.id]));});
+  L.push('');L.push('STATION 3 · Laser');L.push('  '+QWHY.q+' → '+a(QWHY,st.s3.why));L.push('  Meine Erklärung (Laser und Auge): '+((st.s3.own||'').trim()||'(leer)'));
+  CLS.forEach(function(q){L.push('  '+q.q+' → '+a(q,st.s3.cls[q.id]));});L.push('  Laser im Auge: '+a(QACT,st.s3.act));L.push('  Flugzeuge blenden: '+a(QPLANE,st.s3.plane));
+  L.push('');L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){var tmp=document.createElement('div');tmp.innerHTML=MERK;L.push('  '+tmp.textContent.replace('Merksatz: Wann wird Licht gefährlich?','Wann wird Licht gefährlich? '));}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Begründung zur Vermutung: '+((st.s4.refl||'').trim()||'(leer)'));L.push('  Tims Sonnenbrille: '+a(TIM,st.s4.tim));
+  L.push('');L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];if(!t){if(x[0].charAt(1)!=='5')L.push('  '+x[1]+': nicht bearbeitet');return;}if(x[0].charAt(1)!=='5'){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');L.push('PROFI-ZUSATZ ★');P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,tries:st.tries,tips:{},own:st.s3.own||'',refl:st.s4.refl||'',tim:st.s4.tim,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LS-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Lichtschutz-Labor_'+n+'.txt';}
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||'7d')+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „Lichtschutz-Labor“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wann wird Licht gefährlich?</p><h2 id="stH">Willkommen im Lichtschutz-Labor!</h2>'+
+    '<p>Heute findest du heraus, wann UV-Strahlung und Laserlicht gefährlich werden und wie du dich schützt.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+
+/* ---------- Gesamt ---------- */
+var lastScene=null;
+function render(){var sc=STATIONS[st.station].scene;
+  if(sc!==lastScene){if(sc==='uv'){st.time=13.5;st.place='velbert';st.cloud='klar';}if(sc==='beads'){st.prot='none';}if(sc==='laser'){st.src='lamp';}lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();remind();startDialog();
+})();
+</script>
+</body>
+</html>

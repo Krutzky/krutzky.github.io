@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+.choice.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.choice.grid3 .opt{padding:8px 8px;font-size:14px;display:flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25);flex:none}
+.tick{color:var(--ok);font-weight:700}
+.chip{display:inline-block;border:1.5px solid var(--line);border-radius:999px;padding:1px 8px;font-size:13px;margin:2px 0;color:var(--ink-soft)}
+.chip.on{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+table.mt{border-collapse:collapse;width:100%;font-size:15px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt input.num{width:100%;max-width:5.5em;text-align:center}
+table.mt select{max-width:100%}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+ol.ladder{margin:0;padding-left:1.4em}
+ol.ladder li{padding:3px 0}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg.long{display:flex;flex-direction:column;border-radius:12px}
+.seg.long button{text-align:left;border-top:1px solid var(--line);font-weight:600}
+.seg.long button:first-child{border-top:none}
+@media (max-width:440px){.choice.grid3{grid-template-columns:1fr 1fr}}
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 5</b><span>Wie entsteht Spannung?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: Ladungs-Pumpe, Entladen über eine Lampe oder Spannungsquellen"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 5';
+var STATIONS=[
+  {key:'s1',name:'Ladungs-Pumpe',scene:'pump'},
+  {key:'s2',name:'Energie freilassen',scene:'rel'},
+  {key:'s3',name:'Spannungsquellen',scene:'src'},
+  {key:'s4',name:'Merksatz',scene:'pump'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'src'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{m1:false,m2:false,max:0,obs:{},obsOk:false,why:null,whyOk:false},
+  s2:{lit:{},iso:false,obs:{},obsOk:false,ener:null,enerOk:false,own:'',ok:false},
+  s3:{seen:{},obs:{},obsOk:false,gem:null,gemOk:false,safe:null,safeOk:false},
+  s4:{gaps:{},ok:false,refl:'',batt:null,battOk:false},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[]};
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-5-v1',RKEY='ladungslabor-5-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Ladungspumpe: Elektronen werden von der linken auf die rechte Platte geschoben. Gegen die Anziehung muss Energie aufgewendet werden.
+   Im Modell gilt: Spannung U = 100 V pro getrenntem Elektron, gespeicherte Energie ~ n², Kraftaufwand ~ n.
+   Entladen: Über einen Metalldraht fließen die Elektronen von der negativen zur positiven Platte zurück, die Lampe leuchtet.
+   Spannungsquellen: In jeder Quelle werden Ladungen getrennt. */
+var M={},T=0,NMAX=10,UPER=100;
+var SRC=[
+  {k:'sol',n:'Solarzelle',u:0.5,t:'0,5 V',how:'durch Licht',cmp:'Licht'},
+  {k:'bat',n:'Batterie (Mignon)',u:1.5,t:'1,5 V',how:'durch chemische Vorgänge im Inneren',cmp:'chemisch'},
+  {k:'blk',n:'Blockbatterie',u:9,t:'9 V',how:'durch chemische Vorgänge im Inneren',cmp:'chemisch'},
+  {k:'auto',n:'Autobatterie',u:12,t:'12 V',how:'durch chemische Vorgänge im Inneren',cmp:'chemisch'},
+  {k:'dose',n:'Steckdose',u:230,t:'230 V',how:'im Kraftwerk durch Generatoren',danger:true},
+  {k:'pul',n:'Pullover ausziehen',u:5000,t:'einige 1 000 V',how:'durch Reibung',est:true},
+  {k:'band',n:'Bandgenerator',u:100000,t:'bis zu 100 000 V',how:'durch Reibung an einem Gummiband',est:true}];
+function src(k){return SRC.filter(function(s){return s.k===k;})[0]||SRC[1];}
+function freshModel(){
+  M={pump:{n:0,fly:null,shake:0,hint:0},
+     rel:{n:8,wire:'me',on:false,fly:[],acc:0,glow:0,start:0,litMax:0},
+     src:{k:'bat',shown:0}};
+}
+freshModel();
+function fmtV(v){if(v<10)return String(Math.round(v*10)/10).replace('.',',');return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+
+/* ---------- Zeichnen ---------- */
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return false;}
+function bg(){return col('surface');}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='pump')drawPump(c,lupe);else if(sc==='rel')drawRel(c,lupe);else drawSrc(c,lupe);}
+function electron(c,x,y,r){c.fillStyle='#2F6FD3';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+  c.fillStyle='#fff';c.font='bold '+Math.round(r*1.5)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('–',x,y+0.5);}
+function plus(c,x,y,r){c.fillStyle='#E8322B';c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+  c.fillStyle='#fff';c.font='bold '+Math.round(r*1.4)+'px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('+',x,y+0.5);}
+function rrect(c,x,y,w,h,r){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
+function plate(c,x,y,h){var g=c.createLinearGradient(x,0,x+22,0);g.addColorStop(0,'#AEB5C2');g.addColorStop(.5,'#E8ECF2');g.addColorStop(1,'#9AA3B5');c.fillStyle=g;rrect(c,x,y,22,h,5);c.fill();c.strokeStyle='#6B7385';c.lineWidth=1.5;c.stroke();}
+var PL=150,PR=468,PY=86,PH=210;
+function slotY(i){return PY+14+i*(PH-28)/(NMAX-1);}
+function drawPlates(c,n,lupe,flyHide){
+  plate(c,PL,PY,PH);plate(c,PR,PY,PH);
+  /* Anziehung zwischen + und – */
+  for(var i=0;i<n;i++){if(flyHide&&i===n-1)continue;var y=slotY(i);c.strokeStyle='rgba(107,63,176,.28)';c.setLineDash([5,6]);c.lineWidth=1.5;c.beginPath();c.moveTo(PL+38,y);c.lineTo(PR-16,y);c.stroke();c.setLineDash([]);}
+  for(var j=0;j<n;j++){var yy=slotY(j);plus(c,PL+32,yy,9);if(!(flyHide&&j===n-1))electron(c,PR-8,yy,9);}
+  if(!lupe){c.font='bold 14px '+ff();c.textAlign='center';c.textBaseline='top';
+    c.fillStyle=n?'#C8423D':col('ink-soft');c.fillText(n?'Elektronen-':'ungeladen',PL+11,PY+PH+8);if(n)c.fillText('mangel (+)',PL+11,PY+PH+25);
+    c.fillStyle=n?'#1C66C0':col('ink-soft');c.fillText(n?'Elektronen-':'ungeladen',PR+11,PY+PH+8);if(n)c.fillText('überschuss (–)',PR+11,PY+PH+25);
+    c.font='bold 14px '+ff();c.fillStyle=col('ink');c.textBaseline='bottom';c.fillText('Platte A',PL+11,PY-8);c.fillText('Platte B',PR+11,PY-8);}
+}
+function meter(c,x,y,w,u,label){c.fillStyle='#2B2F3A';rrect(c,x,y,w,46,10);c.fill();c.fillStyle='#C9F2D0';rrect(c,x+8,y+7,w-16,32,6);c.fill();
+  c.fillStyle='#14361C';c.font='bold 22px '+(getComputedStyle(document.documentElement).getPropertyValue('--f-mono')||'monospace');c.textAlign='right';c.textBaseline='middle';c.fillText(fmtV(u)+' V',x+w-16,y+24);
+  c.fillStyle='#C9F2D0';c.font='bold 12px '+ff();c.textAlign='left';c.fillText('U',x+14,y+24);
+  if(label){c.fillStyle=col('ink-soft');c.font='12px '+ff();c.textAlign='center';c.textBaseline='top';c.fillText(label,x+w/2,y+50);}}
+function drawPump(c,lupe){var P=M.pump,n=P.n,sh=P.shake?Math.sin(P.shake*40)*3:0;
+  c.save();c.translate(sh,0);drawPlates(c,n,lupe,!!P.fly);c.restore();
+  /* Pumpen-Bogen */
+  c.strokeStyle='rgba(240,154,72,.8)';c.lineWidth=3;c.setLineDash([8,6]);c.beginPath();c.moveTo(PL+40,PY+4);c.quadraticCurveTo(320,8,PR-14,PY+4);c.stroke();c.setLineDash([]);
+  c.fillStyle='rgba(240,154,72,.9)';c.beginPath();c.moveTo(PR-14,PY+4);c.lineTo(PR-30,PY-6);c.lineTo(PR-26,PY+12);c.closePath();c.fill();
+  if(P.fly){var t=P.fly.t,y0=slotY(n-1),x=(1-t)*(1-t)*(PL+32)+2*(1-t)*t*320+t*t*(PR-8),y=(1-t)*(1-t)*y0+2*(1-t)*t*(-10)+t*t*y0;electron(c,x,y,10);}
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle='#B4671F';c.textAlign='center';c.textBaseline='bottom';c.fillText('Elektronen hinüberschieben',320,40);
+    meter(c,260,316,120,n*UPER,'');
+    c.strokeStyle='#4E5677';c.lineWidth=2;c.beginPath();c.moveTo(PL,PY+PH-16);c.lineTo(PL-60,PY+PH-16);c.lineTo(PL-60,339);c.lineTo(260,339);c.moveTo(PR+22,PY+PH-16);c.lineTo(PR+82,PY+PH-16);c.lineTo(PR+82,339);c.lineTo(380,339);c.stroke();
+    c.font='12px '+ff();c.fillStyle=col('ink-soft');c.textAlign='center';c.textBaseline='top';c.fillText('Spannungsmesser',320,300);}
+}
+var WIREP=[[PR+22,PY+PH-16],[PR+82,PY+PH-16],[PR+82,338],[340,338],[300,338],[PL-60,338],[PL-60,PY+PH-16],[PL,PY+PH-16]];
+function pathPt(t){var L=[],tot=0;for(var i=1;i<WIREP.length;i++){var d=Math.hypot(WIREP[i][0]-WIREP[i-1][0],WIREP[i][1]-WIREP[i-1][1]);L.push(d);tot+=d;}
+  var s=t*tot;for(var j=0;j<L.length;j++){if(s<=L[j]){var f=s/L[j];return [WIREP[j][0]+(WIREP[j+1][0]-WIREP[j][0])*f,WIREP[j][1]+(WIREP[j+1][1]-WIREP[j][1])*f];}s-=L[j];}return WIREP[WIREP.length-1];}
+function drawRel(c,lupe){var R=M.rel,me=R.wire==='me';drawPlates(c,R.n,lupe,false);
+  /* Leitung */
+  c.lineWidth=me?5:4;c.strokeStyle=me?'#C8763C':'#E8C33A';if(!me)c.setLineDash([6,5]);
+  var gx=R.on?PL:PL-26;c.beginPath();c.moveTo(PR+22,PY+PH-16);c.lineTo(PR+82,PY+PH-16);c.lineTo(PR+82,338);c.lineTo(340,338);c.moveTo(300,338);c.lineTo(PL-60,338);c.lineTo(PL-60,PY+PH-16);c.lineTo(gx,PY+PH-16-(R.on?0:14));c.stroke();c.setLineDash([]);
+  if(!R.on){c.fillStyle='#4E5677';c.font='bold 12px '+ff();c.textAlign='center';c.textBaseline='bottom';c.fillText('offen',PL-34,PY+PH-34);}
+  /* Lampe */
+  var g=R.glow;if(g>0.02){var rg=c.createRadialGradient(320,322,4,320,322,70*g+20);rg.addColorStop(0,'rgba(255,220,90,'+Math.min(.95,g)+')');rg.addColorStop(1,'rgba(255,220,90,0)');c.fillStyle=rg;c.beginPath();c.arc(320,322,90,0,7);c.fill();}
+  c.fillStyle=g>0.02?'rgba(255,236,150,'+(0.5+g/2)+')':'#F1F3F7';c.strokeStyle='#6B7385';c.lineWidth=2;c.beginPath();c.arc(320,320,15,0,7);c.fill();c.stroke();
+  c.fillStyle='#8A93A6';c.fillRect(313,333,14,8);
+  c.strokeStyle=g>0.02?'#E8892B':'#8A93A6';c.lineWidth=1.5;c.beginPath();c.moveTo(314,330);c.lineTo(316,314);c.lineTo(320,322);c.lineTo(324,314);c.lineTo(326,330);c.stroke();
+  R.fly.forEach(function(f){var p=pathPt(f.t);electron(c,p[0],p[1],7);});
+  if(!lupe){meter(c,260,22,120,R.n*UPER,'');c.font='12px '+ff();c.fillStyle=col('ink-soft');c.textAlign='center';c.textBaseline='top';c.fillText('Spannung zwischen A und B',320,72);
+    c.font='bold 13px '+ff();c.fillStyle=col('ink');c.textAlign='left';c.textBaseline='middle';c.textAlign='center';c.textBaseline='bottom';c.fillText(me?'Metalldraht':'Kunststofffaden',PR+82,PY+PH-24);c.textBaseline='middle';
+    c.textAlign='center';c.fillText(R.on?'verbunden':'nicht verbunden',PL-60,362);c.fillText('Lampe',320,362);}
+}
+function srcIcon(c,s,x,y){c.save();c.translate(x,y);c.lineWidth=2;c.strokeStyle='#4E5677';
+  if(s.k==='sol'){c.fillStyle='#1E3F8A';rrect(c,-70,-50,140,100,6);c.fill();c.strokeStyle='#9FB6E8';c.lineWidth=1.5;for(var i=1;i<4;i++){c.beginPath();c.moveTo(-70+i*35,-50);c.lineTo(-70+i*35,50);c.stroke();}c.beginPath();c.moveTo(-70,0);c.lineTo(70,0);c.stroke();
+    c.fillStyle='#F5B82E';c.beginPath();c.arc(-60,-80,16,0,7);c.fill();}
+  else if(s.k==='bat'){c.fillStyle='#2F6FD3';rrect(c,-80,-28,150,56,10);c.fill();c.fillStyle='#C9CED8';rrect(c,70,-12,12,24,3);c.fill();c.fillStyle='#fff';c.font='bold 18px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('1,5 V',-5,0);}
+  else if(s.k==='blk'){c.fillStyle='#22865A';rrect(c,-55,-45,110,100,8);c.fill();c.fillStyle='#C9CED8';rrect(c,-35,-62,22,17,3);c.fill();rrect(c,12,-62,22,17,3);c.fill();c.fillStyle='#fff';c.font='bold 20px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('9 V',0,5);}
+  else if(s.k==='auto'){c.fillStyle='#2B2F3A';rrect(c,-85,-45,170,95,8);c.fill();c.fillStyle='#C9CED8';rrect(c,-65,-60,24,15,3);c.fill();rrect(c,40,-60,24,15,3);c.fill();c.fillStyle='#fff';c.font='bold 20px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('12 V',0,5);}
+  else if(s.k==='dose'){c.fillStyle='#F7F8FA';rrect(c,-70,-70,140,140,18);c.fill();c.stroke();c.beginPath();c.arc(0,0,48,0,7);c.stroke();c.fillStyle='#4E5677';c.beginPath();c.arc(-16,0,7,0,7);c.arc(16,0,7,0,7);c.fill();}
+  else if(s.k==='pul'){c.fillStyle='#B45F3C';c.beginPath();c.moveTo(-40,-55);c.lineTo(40,-55);c.lineTo(90,-20);c.lineTo(72,5);c.lineTo(45,-10);c.lineTo(45,60);c.lineTo(-45,60);c.lineTo(-45,-10);c.lineTo(-72,5);c.lineTo(-90,-20);c.closePath();c.fill();
+    c.fillStyle='#F6D3B0';c.beginPath();c.arc(0,-78,22,0,7);c.fill();c.strokeStyle='#5B3A1E';c.lineWidth=3;for(var h=0;h<7;h++){var a=(-160+h*23)*Math.PI/180;c.beginPath();c.moveTo(Math.cos(a)*22,-78+Math.sin(a)*22);c.lineTo(Math.cos(a)*34,-78+Math.sin(a)*34);c.stroke();}}
+  else{c.fillStyle='#C9CED8';rrect(c,-14,-40,28,110,6);c.fill();c.fillStyle='#4E5677';rrect(c,-50,70,100,14,4);c.fill();var g=c.createRadialGradient(-12,-78,6,0,-70,42);g.addColorStop(0,'#F4F6FA');g.addColorStop(1,'#8A93A6');c.fillStyle=g;c.beginPath();c.arc(0,-70,42,0,7);c.fill();}
+  c.restore();}
+function drawSrc(c,lupe){var s=src(M.src.k),cx=170,cy=196;
+  c.font='bold 17px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='bottom';c.fillText(s.n,cx,60);
+  srcIcon(c,s,cx,cy);
+  if(s.danger){c.fillStyle='#F9E1DF';rrect(c,370,110,240,150,14);c.fill();c.strokeStyle='#C8423D';c.lineWidth=3;c.stroke();
+    c.fillStyle='#C8423D';c.beginPath();c.moveTo(490,124);c.lineTo(512,162);c.lineTo(468,162);c.closePath();c.fill();c.fillStyle='#fff';c.font='bold 26px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('!',490,148);
+    c.fillStyle='#8E2420';c.font='bold 16px '+ff();c.fillText('Lebensgefahr!',490,184);c.font='14px '+ff();c.fillText('Niemals selbst an der',490,210);c.fillText('Steckdose messen.',490,230);
+    if(!lupe){c.font='bold 18px '+ff();c.fillStyle=col('ink');c.fillText('Spannung: 230 V',490,290);c.font='12px '+ff();c.fillStyle=col('ink-soft');c.fillText('(bekannter Wert)',490,312);}return;}
+  /* Kabel */
+  c.lineWidth=4;c.strokeStyle='#C8423D';c.beginPath();c.moveTo(cx+40,cy-50);c.bezierCurveTo(cx+140,cy-110,400,90,430,150);c.stroke();
+  c.strokeStyle='#2B2F3A';c.beginPath();c.moveTo(cx+40,cy+50);c.bezierCurveTo(cx+140,cy+110,400,260,430,200);c.stroke();
+  c.font='bold 16px '+ff();c.textAlign='center';c.textBaseline='middle';plus(c,cx+40,cy-50,11);electron(c,cx+40,cy+50,11);
+  /* Messgerät */
+  c.fillStyle='#F2D04A';rrect(c,420,100,190,180,18);c.fill();c.strokeStyle='#8A6D00';c.lineWidth=2;c.stroke();
+  meter(c,436,120,158,M.src.shown,'');
+  c.fillStyle='#2B2F3A';c.font='bold 13px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText('Spannungsmesser',515,196);
+  if(s.est){c.font='12px '+ff();c.fillStyle='#5A4500';c.fillText('Schätzwert',515,218);}
+  c.fillStyle='#C8423D';c.beginPath();c.arc(470,250,9,0,7);c.fill();c.fillStyle='#2B2F3A';c.beginPath();c.arc(560,250,9,0,7);c.fill();
+  if(!lupe){c.font='bold 18px '+ff();c.fillStyle=col('ink');c.textAlign='center';c.textBaseline='top';c.fillText('Spannung: '+s.t,515,300);}
+}
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='pump'){var n=M.pump.n;bars(A,'Kraftaufwand',[['für das nächste Elektron',Math.min(1,(n+1)/NMAX),'#F09A48']],n>=NMAX?'Maximum erreicht':(n?'Es wird immer schwerer.':'Das erste Elektron geht leicht.'));
+    bars(B,'Energiespeicher',[['in den getrennten Ladungen',n*n/(NMAX*NMAX),'#6B3FB0']],'Spannung: '+fmtV(n*UPER)+' V');
+    $('capA').innerHTML='<b>Anstrengung</b> beim Schieben';$('capB').innerHTML='<b>Gespeicherte Energie</b>';}
+  else if(sc==='rel'){var R=M.rel;bars(A,'Lampe',[['Helligkeit jetzt',R.glow,'#F5B82E']],R.litMax?'hellstes Leuchten: '+Math.round(R.litMax*100)+' %':'noch nicht geleuchtet');
+    bars(B,'Energiespeicher',[['in den getrennten Ladungen',R.n*R.n/(NMAX*NMAX),'#6B3FB0']],'Spannung: '+fmtV(R.n*UPER)+' V');
+    $('capA').innerHTML='<b>Lampe</b>';$('capB').innerHTML='<b>Gespeicherte Energie</b>';}
+  else{var s=src(M.src.k),x=A.getContext('2d'),w=A.width;paper(x,w,'#FFFFFF');
+    var cx=w/2;x.fillStyle='#FCE4E2';x.fillRect(w*0.08,w*0.2,w*0.36,w*0.5);x.fillStyle='#E1ECFB';x.fillRect(w*0.56,w*0.2,w*0.36,w*0.5);
+    for(var i=0;i<6;i++){var px=w*(0.15+(i%2)*0.2),py=w*(0.28+Math.floor(i/2)*0.15);x.fillStyle='#E8322B';x.beginPath();x.arc(px,py,w*0.04,0,7);x.fill();x.fillStyle='#fff';x.font='bold '+Math.round(w*0.06)+'px '+ff();x.textAlign='center';x.textBaseline='middle';x.fillText('+',px,py);
+      var qx=w*(0.65+(i%2)*0.2);x.fillStyle='#2F6FD3';x.beginPath();x.arc(qx,py,w*0.04,0,7);x.fill();x.fillStyle='#fff';x.fillText('–',qx,py);}
+    x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.06)+'px '+ff();x.textAlign='center';x.textBaseline='top';x.fillText('Ladungen getrennt',cx,w*0.06);
+    x.font=Math.round(w*0.052)+'px '+ff();x.fillStyle='#C8423D';x.fillText('Elektronen-',w*0.26,w*0.74);x.fillText('mangel (+)',w*0.26,w*0.8);x.fillStyle='#1C66C0';x.fillText('Elektronen-',w*0.74,w*0.74);x.fillText('überschuss (–)',w*0.74,w*0.8);
+    var x2=B.getContext('2d'),w2=B.width;paper(x2,w2);
+    vtext(x2,w2,[{t:'Steckbrief',s:0.085,b:true},{t:s.n,s:0.066,b:true,c:'#1C66C0'},{t:'Spannung: '+s.t,s:0.064,b:true},{t:'Ladungstrennung '+s.how+'.',s:0.058,c:'#4E5677'}].concat(s.danger?[{t:'Lebensgefahr!',s:0.066,b:true,c:'#C8423D'}]:[]));
+    $('capA').innerHTML='<b>Im Inneren</b> (vereinfacht)';$('capB').innerHTML='<b>Steckbrief</b>';}
+}
+function bars(B,title,items,foot){var x=B.getContext('2d'),w=B.width;paper(x,w,'#FFFFFF');
+  x.fillStyle='#1A1F36';x.font='bold '+Math.round(w*0.08)+'px '+ff();x.textAlign='left';x.textBaseline='top';x.fillText(title,w*0.08,w*0.08);
+  items.forEach(function(it,i){var y=w*(0.3+i*0.3);x.font=Math.round(w*0.055)+'px '+ff();x.fillStyle='#4E5677';x.fillText(it[0],w*0.08,y);
+    x.fillStyle='#E3E8F0';x.fillRect(w*0.08,y+w*0.09,w*0.84,w*0.12);x.fillStyle=it[2];x.fillRect(w*0.08,y+w*0.09,w*0.84*Math.max(0,Math.min(1,it[1])),w*0.12);});
+  x.font='bold '+Math.round(w*0.06)+'px '+ff();x.fillStyle='#1A1F36';x.fillText(foot,w*0.08,w*0.78);}
+function statusInfo(){var sc=scene();
+  if(sc==='pump'){var n=M.pump.n;if(!n)return ['info','Keine Ladungen getrennt. Der Spannungsmesser zeigt 0 V.'];if(n>=NMAX)return ['ok','10 Elektronen getrennt: 1 000 V. Mehr geht im Modell nicht.'];return ['ok',n+' Elektron'+(n>1?'en':'')+' getrennt. Spannung: '+fmtV(n*UPER)+' V.'];}
+  if(sc==='rel'){var R=M.rel;if(R.on&&R.wire!=='me')return ['bad','Kunststoff ist ein Isolator. Es fließen keine Elektronen.'];if(R.on&&R.n>0)return ['info','Die Elektronen fließen durch die Lampe zurück …'];if(R.on)return ['ok','Alle Elektronen sind zurück. Spannung: 0 V. Die Energie wurde als Licht abgegeben.'];return ['info','Stelle ein, wie viele Elektronen getrennt sind. Dann verbinde die Platten.'];}
+  var s=src(M.src.k);return [s.danger?'bad':'info',s.danger?'Steckdose: 230 V. Lebensgefahr!':s.n+': '+s.t];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();if(e.textContent!==s[1]){e.className='status '+s[0];e.textContent=s[1];}}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0,reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;T+=dt;var moving=false,sc=scene();
+  var P=M.pump;if(P.fly){P.fly.t+=dt*(1.6-P.n*0.08);if(P.fly.t>=1)P.fly=null;moving=true;}
+  if(P.shake>0){P.shake=Math.max(0,P.shake-dt*2);moving=true;}
+  var R=M.rel;
+  if(R.on&&R.wire==='me'&&R.n>0){R.acc+=dt;var iv=0.5-R.n*0.03;if(R.acc>iv){R.acc=0;R.fly.push({t:0});R.n--;}moving=true;}
+  R.fly.forEach(function(f){f.t+=dt*1.4;});R.fly=R.fly.filter(function(f){return f.t<1;});if(R.fly.length)moving=true;
+  var target=(R.on&&R.wire==='me'&&(R.n>0||R.fly.length))?Math.min(1,(R.n+R.fly.length*0.5)/NMAX+0.08):0;
+  R.glow+=(target-R.glow)*Math.min(1,dt*5);if(R.glow>R.litMax&&target>0)R.litMax=R.glow;if(Math.abs(target-R.glow)>0.005)moving=true;
+  if(R.on&&R.n===0&&!R.fly.length&&R.start&&!R.done){R.done=true;relDone(R.start,R.litMax);}
+  var S=M.src,goal=src(S.k).u;if(S.shown!==goal){S.shown=S.shown+(goal-S.shown)*Math.min(1,dt*4);if(Math.abs(goal-S.shown)<goal*0.004+0.01)S.shown=goal;moving=true;}
+  draw();if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max,unit){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+(unit==null?'×':unit);draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='';var eb=$('ctlCard').querySelector('.eyebrow');
+  if(needGuess()){eb.textContent='Bevor du startest';eb.classList.add('pro');$('ctl').innerHTML=guessBox();bindGuess();return;}
+  eb.textContent='Steuerpult';eb.classList.remove('pro');
+  if(sc==='pump'){var P=M.pump;h='<div class="lift"><div class="disp"><small>GETRENNTE ELEKTRONEN</small><span>'+P.n+' von '+NMAX+'</span></div></div>'+
+      '<div class="row"><button class="btn pri" type="button" id="pPush"'+(P.n>=NMAX?' disabled':'')+'>Ein Elektron von A nach B schieben</button></div>'+
+      '<div class="row"><button class="btn sec" type="button" id="pBack"'+(P.n?'':' disabled')+'>Alle Elektronen zurück</button></div>';}
+  else if(sc==='rel'){var R=M.rel;h=(R.on?'<p class="locked">Die Platten sind verbunden. Löse die Verbindung, um neu aufzuladen.</p>':slider('N','GETRENNTE ELEKTRONEN (VORHER)',R.n+' von '+NMAX,0,NMAX,1,R.n,'0','10','g'))+
+      '<div class="ctlrow"><span>VERBINDUNG ÜBER</span>'+segHTML('sW',[['me','Metalldraht'],['ku','Kunststofffaden']],R.wire)+'</div>'+
+      '<div class="row"><button class="btn pri" type="button" id="rOn">'+(R.on?'Verbindung lösen':'Platten verbinden')+'</button></div>';}
+  else{h='<div class="ctlrow"><span>SPANNUNGSQUELLE</span><div class="choice grid3" id="srcs">'+SRC.map(function(s){return '<button type="button" class="opt'+(M.src.k===s.k?' sel':'')+'" data-k="'+s.k+'">'+s.n+((st.s3.seen||{})[s.k]?' <small class="tick">✓</small>':'')+'</button>';}).join('')+'</div></div>';}
+  h+='<p class="status info" id="stat"></p>';
+  $('ctl').innerHTML=h;
+  if(sc==='pump'){$('pPush').addEventListener('click',function(){var P=M.pump;if(P.fly||P.n>=NMAX)return;P.n++;P.fly={t:0};P.shake=P.n/NMAX;st.s1.max=Math.max(st.s1.max||0,P.n);save();renderCtl();kick();});
+    $('pBack').addEventListener('click',function(){M.pump.n=0;M.pump.fly=null;renderCtl();kick();});}
+  else if(sc==='rel'){if(!M.rel.on)bindSlider('N',function(){return M.rel.n;},function(v){M.rel.n=v;M.rel.fly=[];},1,0,NMAX,' von 10');
+    bindSeg('sW',function(v){var R=M.rel;R.wire=v;if(R.on){R.on=false;R.fly=[];}renderCtl();kick();});
+    $('rOn').addEventListener('click',function(){var R=M.rel;R.on=!R.on;R.fly=[];if(R.on){R.start=R.n;R.done=false;R.litMax=0;if(R.wire!=='me'){st.s2.iso=true;save();}}renderCtl();kick();if(st.station===1&&!needGuess())r2keep();});}
+  else{Array.prototype.forEach.call(document.querySelectorAll('#srcs .opt'),function(b){b.addEventListener('click',function(){M.src.k=b.dataset.k;M.src.shown=0;st.s3.seen=st.s3.seen||{};st.s3.seen[b.dataset.k]=true;save();renderCtl();kick();if(st.station===2)r3keep();});});}
+  updStatus();
+}
+function relDone(start,lit){var s=st.s2;s.lit=s.lit||{};if(start>0&&M.rel.wire==='me'){s.lit[start]=Math.round(lit*100);save();if(st.station===1)r2keep();}}
+function keepScroll(fn){var y=window.scrollY;fn();window.scrollTo(0,y);}
+function r2keep(){keepScroll(r2);}
+function r3keep(){keepScroll(r3);}
+
+/* ---------- Vermutung ---------- */
+function pic(kind){var inner='';
+  var harder=kind==='A'||kind==='C',up=kind==='A'||kind==='B';
+  inner+='<text x="40" y="28" text-anchor="middle" font-size="10" fill="#4E5677">Schieben</text><text x="40" y="45" text-anchor="middle" font-size="13" font-weight="700" fill="'+(harder?'#C8423D':'#22865A')+'">'+(kind==='D'?'=':(harder?'schwerer':'leichter'))+'</text>';
+  inner+='<text x="40" y="66" text-anchor="middle" font-size="13" font-weight="700" fill="#1C66C0">U '+(kind==='D'?'= 0 V':(up?'↑':'↓'))+'</text>';
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="3" y="3" width="74" height="74" rx="14" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="3"/>'+inner+'</svg>';}
+var GUESS=[{k:'A',n:'Es wird immer schwerer. Die Spannung wird größer.'},{k:'B',n:'Es wird immer leichter. Die Spannung wird größer.'},{k:'C',n:'Es wird immer schwerer. Die Spannung wird kleiner.'},{k:'D',n:'Es bleibt gleich schwer. Es entsteht keine Spannung.'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+function guessBox(){var tmp=st.guessTmp||null;
+  return '<div class="guess stack"><p>Zwei Metallplatten sind ungeladen. Du schiebst Elektronen von Platte A zu Platte B, eins nach dem anderen. <b>Was passiert, je mehr Elektronen du hinüberschiebst?</b></p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(tmp===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.k)+'<span style="font-size:13px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Erst wenn du deine Vermutung festgelegt hast, geht es los.</p>'+
+    '<div class="row"><button class="btn pri" type="button" id="gsOk"'+(tmp?'':' disabled')+'>Vermutung festlegen</button></div></div>';}
+function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guessTmp=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(x){x.classList.toggle('sel',x===b);});$('gsOk').disabled=false;});});
+  $('gsOk').addEventListener('click',function(){if(!st.guessTmp)return;st.guess=st.guessTmp;save();render();});}
+function needGuess(){return st.station===0&&!st.guess;}
+
+
+/* ---------- Station 1: Ladungs-Pumpe ---------- */
+var MISS=[
+  {id:'m1',t:'Mission 1',q:'Trenne Ladungen, bis der Spannungsmesser <b>300 V</b> zeigt.',check:function(){return M.pump.n===3;},hint:function(){return M.pump.n<3?'Schiebe noch mehr Elektronen hinüber.':'Das sind zu viele. Tippe auf „Alle Elektronen zurück“ und zähle mit.';}},
+  {id:'m2',t:'Mission 2',q:'Trenne so viele Ladungen, dass der Spannungsmesser <b>1 000 V</b> zeigt. Achte darauf, wie sich das Schieben anfühlt.',check:function(){return M.pump.n===10;},hint:function(){return 'Schiebe weiter, bis 10 Elektronen getrennt sind.';}}
+];
+var OBS1=[
+  {id:'a',q:'1. Nach dem Schieben ist <b>Platte A</b> …',o:['positiv geladen','negativ geladen','ungeladen'],a:0,w:'Platte A hat Elektronen abgegeben. Es fehlen dort Elektronen.'},
+  {id:'b',q:'2. Je mehr Elektronen du hinüberschiebst, desto …',o:['größer wird die Spannung','kleiner wird die Spannung'],a:0,w:'Schau beim Schieben auf den Spannungsmesser.'},
+  {id:'c',q:'3. Das nächste Elektron hinüberzuschieben wird …',o:['immer schwerer','immer leichter','nicht schwerer und nicht leichter'],a:0,w:'Schau auf die Anzeige „Kraftaufwand“ unter dem Modell.'},
+  {id:'d',q:'4. Sind keine Ladungen getrennt, zeigt der Spannungsmesser …',o:['0 V','1 000 V'],a:0,w:'Tippe auf „Alle Elektronen zurück“ und schau auf den Spannungsmesser.'}
+];
+var QWHY={q:'Warum wird es immer schwerer, das nächste Elektron hinüberzuschieben?',o:['Platte A (+) zieht das Elektron zurück, Platte B (–) stößt es ab.','Die Elektronen werden beim Schieben schwerer.','Die Platten werden heiß.'],a:0,
+  ok:'Genau! Du musst gegen die Kräfte zwischen den Ladungen arbeiten. Dafür brauchst du Energie. Diese Energie steckt jetzt in den getrennten Ladungen.',bad:['','Alle Elektronen sind gleich. Denk an Stunde 2: Welche Kräfte wirken zwischen Ladungen?','Denk an Stunde 2: Welche Kräfte wirken zwischen + und –?']};
+var FACH1='<div class="merk"><h3>Fachbegriffe</h3><ul style="margin:0;padding-left:1.2em"><li>Sind positive und negative Ladungen getrennt, gibt es zwischen ihnen eine elektrische <span class="k">Spannung</span>.</li><li>Formelzeichen: <span class="k">U</span> · Einheit: <span class="k">Volt (V)</span></li><li>Die Spannung misst man mit einem <span class="k">Spannungsmesser</span>.</li></ul></div>';
+var MRN=[0,2,4,6,8,10];
+function numVal(t){t=String(t||'').replace(/[^0-9]/g,'');return t===''?null:+t;}
+function r1(){var s=st.s1;s.mr=s.mr||{};
+  if(needGuess()){$('task').innerHTML='<div><p class="eyebrow">Station 1 · Ladungs-Pumpe</p><h2>Wie entsteht eine Spannung?</h2></div><p class="note">Lege zuerst oben im Kasten <b>„Bevor du startest“</b> deine Vermutung fest. Danach erscheint das Steuerpult und es geht los.</p>';return;}
+  var g='<div class="guess"><p class="eyebrow pro">Deine Vermutung</p><p><b>'+guessName(st.guess)+'</b>. In Station 4 prüfst du sie.</p></div>';
+  var info='<div class="stack"><p>Zwei Metallplatten sind ungeladen. Mit der Ladungs-Pumpe schiebst du Elektronen von Platte A zu Platte B. Ein <b>Spannungsmesser</b> zeigt, welche Spannung zwischen den Platten entsteht.</p></div>';
+  var stars=MISS.filter(function(m){return s[m.id];}).length;
+  var mis='<p class="eyebrow">Teil A · Missionen</p>'+MISS.map(function(m,i){var open=i===0||s[MISS[i-1].id];if(!open)return '';
+    return '<div class="q"><p class="eyebrow">'+m.t+(s[m.id]?' · geschafft ★':'')+'</p><p>'+m.q+'</p>'+(s[m.id]?'':'<div class="row"><button class="btn pri" type="button" data-m="'+i+'">Prüfen</button></div>')+'<p class="fb'+(s[m.id]?' ok':'')+'" id="fbm'+i+'">'+(s[m.id]?'Geschafft!':'')+'</p></div>';}).join('');
+  var mr=s.m2?'<div class="stack"><p class="eyebrow">Teil B · Deine Messreihe</p><p>Tippe auf „Alle Elektronen zurück“. Schiebe dann Schritt für Schritt Elektronen hinüber und trage die Spannung in die Tabelle ein.</p>'+
+    '<table class="mt"><tr><th>getrennte Elektronen</th>'+MRN.map(function(n){return '<th>'+n+'</th>';}).join('')+'</tr><tr><th>Spannung in V</th>'+MRN.map(function(n,i){var v=s.mr[i];return '<td><input class="num'+(s.mrOk?' ok':'')+'" id="mr'+i+'" inputmode="numeric" autocomplete="off" value="'+esc(v==null?'':v)+'"'+(s.mrOk?' readonly':'')+'></td>';}).join('')+'</tr></table>'+
+    (s.mrOk?'':'<div class="row"><button class="btn pri" type="button" id="c1m">Prüfen</button></div>')+'<p class="fb" id="fb1m"></p></div>':'';
+  var jd=s.mrOk?'<div class="q"><p><b>Schreibe einen Je-desto-Satz zu deiner Messreihe.</b> Benutze das Wort <b>Spannung</b>.</p><textarea class="free" id="jd" rows="2" placeholder="Je mehr Elektronen …, desto …">'+esc(s.jd||'')+'</textarea>'+(s.jdOk?'':'<div class="row"><button class="btn pri" type="button" id="c1j">Fertig</button></div>')+'<p class="fb" id="fb1j"></p></div>':'';
+  var obs=s.jdOk?'<div class="stack"><p class="eyebrow">Teil C · Was hast du beobachtet?</p>'+segQHTML(OBS1,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p></div>':'';
+  var why=s.obsOk?FACH1+mcHTML('why',QWHY.q,QWHY.o,s.why,QWHY.a):'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Ladungs-Pumpe</p><h2>Wie entsteht eine Spannung?</h2></div>'+info+'<p class="hint"><b>Missionen:</b> '+'★'.repeat(stars)+'☆'.repeat(2-stars)+'</p>'+mis+mr+jd+obs+why+
+    (st.done[0]?'<p class="win"><b>Klasse!</b> Wer Ladungen trennt, muss Energie aufwenden. Dabei entsteht eine Spannung.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m]'),function(b){b.addEventListener('click',function(){var i=+b.dataset.m,m=MISS[i],ok=m.check();tryInc('s1'+m.id,ok,M.pump.n);
+    var fb=$('fbm'+i);if(ok){s[m.id]=true;save();r1();}else{fb.className='fb bad';fb.textContent=m.hint();
+      showHelp(fb,'s1'+m.id,function(){M.pump.n=[3,10][i];M.pump.fly=null;kick();renderCtl();helpMsg('fbm'+i,'Das Modell ist jetzt richtig eingestellt. Schau es dir an und tippe auf „Prüfen“.');});}});});
+  if(s.m2){MRN.forEach(function(n,i){var el=$('mr'+i);el.addEventListener('input',function(){s.mr[i]=this.value;this.className='num';save();});});
+    if(!s.mrOk)$('c1m').addEventListener('click',function(){var fb=$('fb1m'),empty=0,wrong=0;MRN.forEach(function(n,i){var v=numVal($('mr'+i).value);if(v==null){empty++;return;}var ok=v===n*UPER;$('mr'+i).className='num '+(ok?'ok':'bad');if(!ok)wrong++;});
+      if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Werte.';return;}
+      tryInc('s1mr',!wrong,MRN.map(function(n,i){return $('mr'+i).value;}).join('/'));
+      if(wrong){fb.className='fb bad';fb.textContent=wrong+' Wert'+(wrong>1?'e stimmen':' stimmt')+' noch nicht. Stelle im Modell genau diese Anzahl ein und lies den Spannungsmesser ab.';
+        showHelp(fb,'s1mr',function(){MRN.forEach(function(n,i){s.mr[i]=String(n*UPER);});save();r1();helpMsg('fb1m','Die Werte sind eingetragen. Vergleiche sie mit dem Modell und tippe auf „Prüfen“.');});return;}
+      s.mrOk=true;save();r1();});
+    else helpMsg('fb1m','Sauber gemessen! Pro Elektron steigt die Spannung im Modell um 100 V.');}
+  if(s.mrOk){$('jd').addEventListener('input',function(){s.jd=this.value;save();});
+    if(!s.jdOk)$('c1j').addEventListener('click',function(){var fb=$('fb1j'),t=(s.jd||'').trim();if(!/\bje\b/i.test(t)||!/desto/i.test(t)){fb.className='fb bad';fb.textContent='Benutze „Je …, desto …“.';return;}if(!/spannung/i.test(t)){fb.className='fb bad';fb.textContent='Benutze das Wort „Spannung“.';return;}s.jdOk=true;save();r1();});
+    else helpMsg('fb1j','Gut formuliert! Vergleiche mit: Je mehr Elektronen getrennt sind, desto größer ist die Spannung.');}
+  if(s.jdOk){bindSegQ(s.obs,function(){return s.obsOk;},OBS1);
+    if(!s.obsOk)$('c1').addEventListener('click',function(){if(checkSegQ(OBS1,s.obs,'s1obs','fb1',r1)){s.obsOk=true;save();r1();}});
+    else helpMsg('fb1','Gut beobachtet! Das Schieben wird immer schwerer, die Spannung immer größer.');}
+  if(s.obsOk){bindMC('why',QWHY.a,'s1why',QWHY.ok,QWHY.bad,function(){s.whyOk=true;finish(0);save();r1();showFb('why',true,QWHY.ok);},function(j){s.why=j;});if(s.whyOk)showFb('why',true,QWHY.ok);}
+  bindNext();
+}
+
+/* ---------- Station 2: Energie freilassen ---------- */
+var OBS2=[
+  {id:'a',q:'1. Über den <b>Metalldraht</b> fließen die Elektronen …',o:['von Platte B (–) zu Platte A (+)','von Platte A (+) zu Platte B (–)'],a:0,w:'Verbinde die Platten mit dem Metalldraht und beobachte die blauen Punkte.'},
+  {id:'b',q:'2. Über den <b>Kunststofffaden</b> …',o:['fließen keine Elektronen','fließen die Elektronen schneller'],a:0,w:'Wähle den Kunststofffaden und verbinde. Denk an Stunde 4: Leiter oder Isolator?'},
+  {id:'c',q:'3. Nach dem Leuchten zeigt der Spannungsmesser …',o:['0 V','die gleiche Spannung wie vorher'],a:0,w:'Warte, bis alle Elektronen zurück sind. Schau dann auf den Spannungsmesser.'},
+  {id:'d',q:'4. Bei 10 getrennten Elektronen leuchtet die Lampe … als bei 2.',o:['heller und länger','genauso','schwächer und kürzer'],a:0,w:'Probiere beides aus: erst 2, dann 10 getrennte Elektronen. Vergleiche die Lampe.'}
+];
+var QENER={q:'Woher kommt die Energie für das Licht der Lampe?',o:['Sie wurde beim Trennen der Ladungen in ihnen gespeichert.','Sie entsteht im Draht aus dem Nichts.','Sie kommt aus dem Spannungsmesser.'],a:0,
+  ok:'Richtig! Beim Trennen hast du Energie aufgewendet. Fließen die Elektronen zurück, wird diese Energie wieder frei, hier als Licht.',bad:['','Energie entsteht nicht aus dem Nichts. Was hast du in Station 1 aufgewendet?','Der Spannungsmesser misst nur. Woher kommt die Energie wirklich?']};
+var CMPN=[2,5,10],CMPO=['schwach','mittel','hell'];
+function r2(){var s=st.s2,lit=s.lit||{},tried=Object.keys(lit);s.cmp=s.cmp||{};
+  var info='<div class="stack"><p>Jetzt lässt du die getrennten Ladungen wieder zusammenkommen. Zwischen den Platten hängt eine kleine Lampe. Stelle ein, wie viele Elektronen getrennt sind, und verbinde die Platten.</p>'+
+    '<p class="hint"><b>Ausprobiert:</b> '+(tried.length?tried.sort(function(a,b){return a-b;}).map(function(k){return '<span class="chip on">'+k+' Elektronen: '+lit[k]+' %</span>';}).join(' '):'noch nichts')+(s.iso?' <span class="chip on">Kunststofffaden</span>':'')+'</p></div>';
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Beobachte</p>'+segQHTML(OBS2,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var cmp=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Vergleiche die Lampe</p><p>Lade die Platten mit <b>2</b>, mit <b>5</b> und mit <b>10</b> Elektronen und verbinde jedes Mal mit dem Metalldraht. Wie hell leuchtet die Lampe höchstens?</p>'+
+    '<table class="mt"><tr><th>getrennte Elektronen</th><th>Spannung</th><th>Lampe leuchtet …</th></tr>'+CMPN.map(function(n,i){var v=s.cmp[i];return '<tr><td>'+n+(lit[n]!=null?' <small class="tick">✓</small>':'')+'</td><td>'+fmtV(n*UPER)+' V</td><td><select class="sel'+(s.cmpOk?' ok':'')+'" id="cm'+i+'"'+(s.cmpOk?' disabled':'')+'><option value="">…</option>'+CMPO.map(function(o,j){return '<option value="'+j+'"'+(String(v)===String(j)?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td></tr>';}).join('')+'</table>'+
+    (s.cmpOk?'':'<div class="row"><button class="btn pri" type="button" id="c2c">Prüfen</button></div>')+'<p class="fb" id="fb2c"></p></div>':'';
+  var en=s.cmpOk?mcHTML('ener',QENER.q,QENER.o,s.ener,QENER.a):'';
+  var own=s.enerOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Was zeigt die Spannung an? Benutze die Wörter <b>Ladungen</b> und <b>Energie</b>.</p><textarea class="free" id="own" rows="3" placeholder="Die Spannung zeigt an, …">'+esc(s.own)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c2o">Fertig</button></div>')+'<p class="fb" id="fb2o"></p></div>':'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Energie freilassen</p><h2>Was steckt in getrennten Ladungen?</h2></div>'+info+obs+cmp+en+own+
+    (st.done[1]?'<p class="win"><b>Stark!</b> In getrennten Ladungen ist Energie gespeichert. Die Spannung zeigt an, wie viel.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;},OBS2);
+  if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(OBS2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});
+  else helpMsg('fb2','Richtig beobachtet! Die Elektronen fließen über den Leiter zurück, die Lampe leuchtet, die Spannung sinkt auf 0 V.');
+  if(s.obsOk){CMPN.forEach(function(n,i){$('cm'+i).addEventListener('change',function(){s.cmp[i]=this.value;this.className='sel';save();});});
+    if(!s.cmpOk)$('c2c').addEventListener('click',function(){var fb=$('fb2c'),empty=0,wrong=0;CMPN.forEach(function(n,i){var e=$('cm'+i);if(e.value===''){empty++;return;}var ok=+e.value===i;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+      if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Angaben.';return;}
+      var miss=CMPN.filter(function(n){return lit[n]==null;});
+      tryInc('s2cmp',!wrong,CMPN.map(function(n,i){return $('cm'+i).value;}).join('/'));
+      if(wrong){fb.className='fb bad';fb.textContent=miss.length?'Probiere zuerst '+miss.join(' und ')+' Elektronen im Modell aus.':'Schau auf die Chips oben: Bei welcher Anzahl war das Leuchten am stärksten?';
+        showHelp(fb,'s2cmp',function(){CMPN.forEach(function(n,i){s.cmp[i]=String(i);});save();r2();helpMsg('fb2c','Die Lösung ist eingetragen. Tippe auf „Prüfen“.');});return;}
+      s.cmpOk=true;save();r2();});
+    else helpMsg('fb2c','Genau! Je größer die Spannung, desto mehr Energie ist gespeichert und desto heller leuchtet die Lampe.');}
+  if(s.cmpOk){bindMC('ener',QENER.a,'s2ener',QENER.ok,QENER.bad,function(){s.enerOk=true;save();r2();showFb('ener',true,QENER.ok);},function(j){s.ener=j;});if(s.enerOk)showFb('ener',true,QENER.ok);}
+  if(s.enerOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c2o').addEventListener('click',function(){var fb=$('fb2o');var t=(s.own||'').trim();if(t.length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}if(!/ladung/i.test(t)||!/energie/i.test(t)){fb.className='fb bad';fb.textContent='Benutze die Wörter „Ladungen“ und „Energie“.';return;}s.ok=true;finish(1);save();r2();});
+    else helpMsg('fb2o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 3: Spannungsquellen ---------- */
+var OBS3=[
+  {id:'a',q:'1. Spannung einer <b>Batterie (Mignon)</b>:',o:['0,5 V','1,5 V','9 V'],a:1,w:'Wähle im Steuerpult „Batterie (Mignon)“ und lies den Spannungsmesser ab.'},
+  {id:'b',q:'2. Spannung einer <b>Blockbatterie</b>:',o:['1,5 V','9 V','230 V'],a:1,w:'Wähle im Steuerpult „Blockbatterie“.'},
+  {id:'c',q:'3. Spannung an der <b>Steckdose</b>:',o:['12 V','230 V','5 000 V'],a:1,w:'Wähle im Steuerpult „Steckdose“.'},
+  {id:'d',q:'4. In der <b>Solarzelle</b> werden die Ladungen getrennt …',o:['durch Licht','durch Reibung','durch chemische Vorgänge'],a:0,w:'Schau in den Steckbrief der Solarzelle.'},
+  {id:'e',q:'5. Beim <b>Bandgenerator</b> werden die Ladungen getrennt …',o:['durch Reibung','durch Licht','durch chemische Vorgänge'],a:0,w:'Schau in den Steckbrief des Bandgenerators.'}
+];
+var QGEM={q:'Was passiert in jeder Spannungsquelle?',o:['Positive und negative Ladungen werden getrennt.','Es entstehen neue Elektronen.','Protonen wandern zum Minuspol.'],a:0,
+  ok:'Genau! Jede Spannungsquelle trennt Ladungen. Auf der einen Seite gibt es Elektronenüberschuss (–), auf der anderen Elektronenmangel (+).',bad:['','Elektronen entstehen nicht neu. Sie werden nur getrennt.','Protonen sitzen fest im Kern. Was wird getrennt?']};
+var QSAFE={q:'Die Steckdose hat 230 V. Was bedeutet das für dich?',o:['Lebensgefahr! Ich stecke nie etwas in die Steckdose und messe dort nicht selbst.','230 V ist wenig, das ist ungefährlich.','Mit einem Spannungsmesser darf ich dort selbst messen.'],a:0,
+  ok:'Richtig! Die Steckdose ist lebensgefährlich. Messen darf dort nur eine Elektrofachkraft.',bad:['','Vorsicht! 230 V an der Steckdose sind lebensgefährlich.','Nein! An der Steckdose misst nur eine Elektrofachkraft.']};
+var SORTORD=['sol','bat','blk','auto','dose','pul','band'],SORTSHOW=['dose','bat','band','sol','pul','auto','blk'];
+function sortStars(e){return e===0?3:e<=2?2:e<=4?1:0;}
+function r3(){var s=st.s3;s.seen=s.seen||{};s.seen[M.src.k]=true;var seen=s.seen,n=SRC.filter(function(x){return seen[x.k];}).length;s.sort=s.sort||{p:[],err:0};var so=s.sort,sdone=so.p.length>=SORTORD.length;
+  var info='<div class="stack"><p>In Batterien, Solarzellen oder Generatoren werden Ladungen getrennt. Man nennt sie <b>Spannungsquellen</b>. Wähle im Steuerpult eine Quelle und lies den Spannungsmesser und den Steckbrief.</p>'+
+    '<p class="hint"><b>Angeschaut:</b> '+n+' von '+SRC.length+' '+SRC.map(function(x){return '<span class="chip'+(seen[x.k]?' on':'')+'">'+x.n+'</span>';}).join(' ')+'</p></div>';
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Lies ab</p>'+segQHTML(OBS3,s.obs,s.obsOk)+(s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button></div>')+'<p class="fb" id="fb3"></p></div>';
+  var sort=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Spannungs-Leiter (Spiel)</p><p>Ordne alle sieben Spannungsquellen nach ihrer Spannung. Tippe sie <b>von der kleinsten zur größten</b> an. Im Modell kannst du nachschauen. Jeder Fehler kostet dich einen Stern.</p>'+
+    '<ol class="ladder">'+so.p.map(function(k){var x=src(k);return '<li><b>'+x.n+'</b> · '+x.t+'</li>';}).join('')+'</ol>'+
+    (sdone?'<p class="win"><b>'+'★'.repeat(sortStars(so.err))+'☆'.repeat(3-sortStars(so.err))+'</b> Geschafft mit '+so.err+' Fehler'+(so.err===1?'':'n')+'. '+(so.err?'<button class="btn sm sec" type="button" id="sAgain">Noch einmal</button>':'')+'</p>':
+      '<div class="choice grid3" id="sortBox">'+SORTSHOW.filter(function(k){return so.p.indexOf(k)<0;}).map(function(k){return '<button type="button" class="opt" data-s="'+k+'">'+src(k).n+'</button>';}).join('')+'</div>')+'<p class="fb" id="fb3s"></p></div>':'';
+  var gem=sdone?mcHTML('gem',QGEM.q,QGEM.o,s.gem,QGEM.a):'';
+  var safe=s.gemOk?mcHTML('safe',QSAFE.q,QSAFE.o,s.safe,QSAFE.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Spannungsquellen</p><h2>Wo werden Ladungen getrennt?</h2></div>'+info+obs+sort+gem+safe+
+    (st.done[2]?'<p class="win"><b>Super!</b> Jede Spannungsquelle trennt Ladungen. Die Spannung reicht von 0,5 V bis zu 100 000 V.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;},OBS3);
+  if(!s.obsOk)$('c3').addEventListener('click',function(){if(checkSegQ(OBS3,s.obs,'s3obs','fb3',r3)){s.obsOk=true;save();r3();}});
+  else helpMsg('fb3','Gut abgelesen!');
+  if(s.obsOk&&!sdone){Array.prototype.forEach.call(document.querySelectorAll('#sortBox .opt'),function(b){b.addEventListener('click',function(){var k=b.dataset.s,exp=SORTORD[so.p.length],fb=$('fb3s');
+      if(k===exp){so.p.push(k);if(so.p.length>=SORTORD.length)tryInc('s3sort',true,'fertig');save();r3keep();return;}
+      so.err++;tryInc('s3sort',false,k);save();b.classList.add('bad');fb.className='fb bad';fb.textContent=src(k).n+' ist noch nicht dran. Gesucht ist die kleinste Spannung unter den übrigen Quellen.';
+      showHelp(fb,'s3sort',function(){so.p=SORTORD.slice();save();r3();});});});}
+  var ag=$('sAgain');if(ag)ag.addEventListener('click',function(){s.sort={p:[],err:0,round:(so.round||1)+1};save();r3();});
+  if(sdone){bindMC('gem',QGEM.a,'s3gem',QGEM.ok,QGEM.bad,function(){s.gemOk=true;save();r3();showFb('gem',true,QGEM.ok);},function(j){s.gem=j;});if(s.gemOk)showFb('gem',true,QGEM.ok);}
+  kick();
+  if(s.gemOk){bindMC('safe',QSAFE.a,'s3safe',QSAFE.ok,QSAFE.bad,function(){s.safeOk=true;finish(2);save();r3();showFb('safe',true,QSAFE.ok);},function(j){s.safe=j;});if(s.safeOk)showFb('safe',true,QSAFE.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Werden positive und negative Ladungen voneinander getrennt, entsteht eine elektrische ',post:'.',o:['Spannung','Kraft','Leitung'],a:0},
+  {pre:'Um Ladungen zu trennen, muss man ',post:' aufwenden.',o:['Energie','Elektronen','Protonen'],a:0},
+  {pre:'Die Spannung zeigt an, wie viel elektrische Energie durch die ',post:' bereitgestellt wird.',o:['Ladungstrennung','Lampe','Reibung'],a:0},
+  {pre:'Die Spannung hat das Formelzeichen U und wird in ',post:' (V) gemessen.',o:['Volt','Meter','Gramm'],a:0},
+  {pre:'Am Minuspol einer Spannungsquelle gibt es ',post:', am Pluspol Elektronenmangel.',o:['Elektronenüberschuss','Elektronenmangel'],a:0},
+  {pre:'Verbindet man die Pole über Drähte und eine Lampe, fließen Elektronen vom ',post:' zum Pluspol. Die gespeicherte Energie wird dabei abgegeben.',o:['Minuspol','Pluspol'],a:0}
+];
+var WORTE='Spannung · Energie · Ladungstrennung · Volt · Elektronenüberschuss · Minuspol';
+var MERK='<div class="merk"><h3>Merksatz: Spannung und Ladungstrennung</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var FD=[
+  {id:'a',q:'„In einer Batterie ist Strom gespeichert, der verbraucht wird.“',o:['richtig','falsch'],a:1,w:'Denk an Station 3: Was passiert in jeder Spannungsquelle?'},
+  {id:'b',q:'„Um Ladungen zu trennen, braucht man Energie.“',o:['richtig','falsch'],a:0,w:'Denk an die Ladungs-Pumpe in Station 1.'},
+  {id:'c',q:'„Die Spannung wird in Volt gemessen.“',o:['richtig','falsch'],a:0,w:'Schau auf den Spannungsmesser.'},
+  {id:'d',q:'„Über einen Kunststofffaden gleichen sich getrennte Ladungen aus.“',o:['richtig','falsch'],a:1,w:'Denk an Station 2: Was passierte mit dem Kunststofffaden?'},
+  {id:'e',q:'„Am Minuspol einer Batterie gibt es Elektronenmangel.“',o:['richtig','falsch'],a:1,w:'Minus heißt: zu viele Elektronen.'}
+];
+var BATT={q:'Eine neue Batterie hat 1,5 V. An einer leeren Batterie zeigt der Spannungsmesser fast 0 V. Was ist passiert?',o:['In ihr können kaum noch Ladungen getrennt werden. Sie stellt keine Energie mehr bereit.','Die Elektronen sind aus der Batterie herausgefallen.','Die Batterie hat jetzt zu viele Protonen.'],a:0,
+  ok:'Richtig! Die chemischen Stoffe in der Batterie sind verbraucht. Darum werden keine Ladungen mehr getrennt.',bad:['','Elektronen fallen nicht heraus. Was passiert in jeder Spannungsquelle?','Protonen ändern sich nicht. Was passiert in jeder Spannungsquelle?']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b></p>'+(st.guess==='A'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A: Es wird immer schwerer, und die Spannung wird größer.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A</b>.</p>')+
+    '<p>Beantworte jetzt die Leitfrage in einem Satz: <b>Wie entsteht eine elektrische Spannung?</b></p><textarea class="free" id="refl" rows="2" placeholder="Eine Spannung entsteht, wenn …">'+esc(s.refl)+'</textarea></div>':'';
+  s.fd=s.fd||{};var fd=s.ok?'<div class="stack"><p class="eyebrow">Fehler-Detektiv</p><p>Richtig oder falsch? Prüfe die Aussagen.</p>'+segQHTML(FD,s.fd,s.fdOk)+(s.fdOk?'':'<div class="row"><button class="btn pri" type="button" id="c4f">Prüfen</button></div>')+'<p class="fb" id="fb4f"></p></div>':'';
+  var bt=s.fdOk?mcHTML('batt',BATT.q,BATT.o,s.batt,BATT.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+fd+bt+(s.battOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindSegQ(s.fd,function(){return s.fdOk;},FD);
+    if(!s.fdOk)$('c4f').addEventListener('click',function(){if(checkSegQ(FD,s.fd,'s4fd','fb4f',r4)){s.fdOk=true;save();r4();}});else helpMsg('fb4f','Alle Fehler gefunden!');}
+  if(s.fdOk){
+    bindMC('batt',BATT.a,'s4batt',BATT.ok,BATT.bad,function(){s.battOk=true;finish(3);save();r4();showFb('batt',true,BATT.ok);},function(j){s.batt=j;});if(s.battOk)showFb('batt',true,BATT.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Pullover und Steckdose',task:'Beim Ausziehen eines Pullovers entstehen einige tausend Volt. Das ist ungefährlich. Die Steckdose hat nur 230 V, ist aber lebensgefährlich.',q:'Woran liegt das?',
+   o:['Beim Pullover ist nur sehr wenig Ladung getrennt. Die Steckdose liefert ständig sehr viel Ladung nach.','Beim Pullover gibt es gar keine Spannung.','Hohe Spannungen sind immer ungefährlich.'],a:0,ok:'Genau! Es kommt nicht nur auf die Spannung an, sondern auch darauf, wie viel Ladung fließen kann.',bad:'Der Pullover hat eine hohe Spannung. Wie viel Ladung ist dort aber getrennt?'},
+  {id:'b',title:'Die Kurbel',task:'Ein Bandgenerator trennt Ladungen mit einem Gummiband. Das Band wird mit einer Kurbel angetrieben.',q:'Woher kommt die Energie für die Ladungstrennung?',
+   o:['Von der Person, die die Kurbel dreht.','Aus der Kugel des Bandgenerators.','Sie entsteht von selbst.'],a:0,ok:'Richtig! Beim Kurbeln wendest du Energie auf. Sie steckt danach in den getrennten Ladungen.',bad:'Energie entsteht nicht von selbst. Wer arbeitet beim Bandgenerator?'},
+  {id:'c',title:'Die Gewitterwolke',task:'In einer Gewitterwolke werden Ladungen getrennt. Unten in der Wolke sammelt sich negative Ladung.',q:'Was passiert bei einem Blitz?',
+   o:['Die getrennten Ladungen gleichen sich aus. Dabei wird sehr viel Energie als Licht, Wärme und Knall frei.','Im Blitz entstehen neue Ladungen.','Der Blitz trennt die Ladungen in der Wolke.'],a:0,ok:'Genau! Mehr dazu in der nächsten Stunde: Elektrische Phänomene und Gewitter.',bad:'Denk an die Lampe in Station 2: Was passiert, wenn getrennte Ladungen zusammenkommen?'}
+];
+P5.push(
+  {id:'d',title:'Zwei Batterien',task:'In einer Taschenlampe liegen zwei 1,5-V-Batterien hintereinander.',q:'Welche Spannung haben sie zusammen?',
+   o:['3 V','1,5 V','0,75 V'],a:0,ok:'Richtig! Hintereinander geschaltet werden die Spannungen zusammengezählt. Mehr dazu, wenn wir Stromkreise bauen.',bad:'Hintereinander geschaltet werden die Spannungen zusammengezählt.'},
+  {id:'e',title:'Der Fotoblitz',task:'Ein Fotoblitz piept eine Weile, bevor er blitzen kann.',q:'Was passiert, während er piept?',
+   o:['Im Blitzgerät werden Ladungen getrennt und gespeichert. Beim Blitz gleichen sie sich aus.','Das Gerät kühlt ab.','Im Blitzgerät entstehen neue Elektronen.'],a:0,ok:'Genau! Wie bei deinen Platten: erst trennen (Energie rein), dann ausgleichen (Energie raus, als Licht).',bad:'Denk an deine Platten: Was musst du tun, bevor die Lampe leuchten kann?'});
+var P5TXT='Erkläre einem jüngeren Kind, was die Angabe „1,5 V“ auf einer Batterie bedeutet. Schreibe zwei Sätze.';
+function p5done(){return P5.every(function(x){return st.s5[x.id]===x.a;})&&st.s5.txtOk;}
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Profi-Fälle zur Spannung</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    '<div class="q"><h3>Erkläre es einfach</h3><p><b>'+P5TXT+'</b></p><textarea class="free" id="p5t" rows="3" placeholder="Auf der Batterie steht 1,5 V. Das bedeutet …">'+esc(st.s5.txt||'')+'</textarea>'+(st.s5.txtOk?'':'<div class="row"><button class="btn pri" type="button" id="c5t">Fertig</button></div>')+'<p class="fb'+(st.s5.txtOk?' ok':'')+'" id="fb5t">'+(st.s5.txtOk?'Gespeichert.':'')+'</p></div>'+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(p5done())finish(4);r5();});});});
+  $('p5t').addEventListener('input',function(){st.s5.txt=this.value;save();});
+  var c5=$('c5t');if(c5)c5.addEventListener('click',function(){var t=(st.s5.txt||'').trim(),fb=$('fb5t');if(t.length<30){fb.className='fb bad';fb.textContent='Schreibe zwei ganze Sätze.';return;}st.s5.txtOk=true;save();if(p5done())finish(4);r5();});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1m1','Station 1 · Mission 1 (300 V)'],['s1m2','Station 1 · Mission 2 (1 000 V)'],['s1mr','Station 1 · Messreihe'],['s1obs','Station 1 · Beobachtungen Ladungs-Pumpe'],['s1why','Station 1 · Warum wird es schwerer?'],
+  ['s2obs','Station 2 · Beobachtungen Entladen'],['s2cmp','Station 2 · Lampe vergleichen'],['s2ener','Station 2 · Woher kommt die Energie?'],['s3obs','Station 3 · Spannungsquellen ablesen'],['s3sort','Station 3 · Spannungs-Leiter'],['s3gem','Station 3 · Was passiert in jeder Quelle?'],['s3safe','Station 3 · Steckdose'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4fd','Station 4 · Fehler-Detektiv'],['s4batt','Station 4 · Leere Batterie'],['s5a','Profi · Pullover und Steckdose'],['s5b','Profi · Die Kurbel'],['s5c','Profi · Gewitterwolke'],['s5d','Profi · Zwei Batterien'],['s5e','Profi · Fotoblitz']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  var seen=SRC.filter(function(x){return (st.s3.seen||{})[x.k];}).length,lit=st.s2.lit||{};
+  L.push('LADUNGSLABOR 5 · Wie verhalten sich ruhende Ladungen? · Spannung und Ladungstrennung');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → stimmt':'  → richtig ist A'));
+  L.push('');
+  L.push('STATION 1 · Ladungs-Pumpe');L.push('  Missionen geschafft: '+['m1','m2'].filter(function(k){return st.s1[k];}).length+' von 2');L.push('  Messreihe: '+MRN.map(function(n,i){var v=numVal((st.s1.mr||{})[i]);return n+' e → '+(v==null?'–':v+' V');}).join(' | ')+(st.s1.mrOk?'  ✓':''));L.push('  Je-desto-Satz: '+((st.s1.jd||'').trim()||'(leer)'));segs(OBS1,st.s1.obs);L.push('  Warum wird es schwerer: '+a(QWHY,st.s1.why));L.push('');
+  L.push('STATION 2 · Energie freilassen');L.push('  Ausprobiert: '+(Object.keys(lit).length?Object.keys(lit).map(function(k){return k+' Elektronen → Lampe '+lit[k]+' %';}).join(', '):'nichts')+(st.s2.iso?'; Kunststofffaden getestet':''));
+  segs(OBS2,st.s2.obs);L.push('  Lampe: '+CMPN.map(function(n,i){var v=(st.s2.cmp||{})[i];return n+' e → '+(v==null||v===''?'–':CMPO[v]);}).join(' | ')+(st.s2.cmpOk?'  ✓':''));L.push('  Woher kommt die Energie: '+a(QENER,st.s2.ener));L.push('  Meine Erklärung (Spannung): '+((st.s2.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 3 · Spannungsquellen');L.push('  Angeschaut: '+seen+' von '+SRC.length+' Quellen');segs(OBS3,st.s3.obs);var so=st.s3.sort||{p:[],err:0};L.push('  Spannungs-Leiter: '+(so.p.length>=7?'geschafft mit '+so.err+' Fehlern ('+sortStars(so.err)+' Sterne)':'nicht fertig'));L.push('  In jeder Quelle: '+a(QGEM,st.s3.gem));L.push('  Steckdose: '+a(QSAFE,st.s3.safe));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(gp,i){L.push('  '+(i+1)+'. '+gp.pre+gp.o[gp.a]+gp.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Fehler-Detektiv:');segs(FD,st.s4.fd||{});
+  L.push('  Leere Batterie: '+a(BATT,st.s4.batt));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});L.push('  Erklärung 1,5 V: '+((st.s5.txt||'').trim()||'(leer)'));
+  var data={v:1,app:'LL5',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,own:st.s2.own||'',refl:st.s4.refl||'',seen:seen,lit:Object.keys(lit).length,jd:st.s1.jd||'',sortErr:(st.s3.sort||{}).err,sortDone:((st.s3.sort||{}).p||[]).length>=7,p5txt:st.s5.txt||'',
+    tries:st.tries,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL5-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-5_'+n+'.txt';}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg'+(q.o.join('').length>34?' long':'')+'" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,list){Array.prototype.forEach.call(list?document.querySelectorAll(list.map(function(q){return '[data-sq="'+q.id+'"]';}).join(',')):document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 5</p><h2 id="stH">Willkommen im Ladungslabor 5!</h2>'+
+    '<p>Heute trennst du selbst Ladungen: Wie entsteht eine elektrische Spannung? Pumpe Elektronen, bring eine Lampe zum Leuchten und miss Spannungsquellen aus dem Alltag.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();kick();
+
+})();
+</script>
+</body>
+</html>

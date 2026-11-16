@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skatepark-Bauleitung</title>
+<style>
+/* Gleiche Bildsprache wie Parabel-Fahrstuhl (Stunde 3) und Parabel-Kran (Stunde 4).
+   Drei Steuerungen: Form-Regler a (grün), Kran d (orange), Fahrstuhl e (blau). */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --green:#138A72; --green-soft:#DCF1EB;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --norm:#8C96B4; --curve:#E8892B; --target:#C8423D; --ramp:#D9DEE8;
+  --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --green:#4CC9AC; --green-soft:#103A33;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --ramp:#1F2A5E;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --green:#4CC9AC; --green-soft:#103A33;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --ramp:#1F2A5E;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding:12px 16px}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px 10px 6px}
+@media (max-width:860px){.plot{position:static}}
+.term{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,3.6vw,34px);text-align:center;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.term .a{color:var(--green)} .term .d{color:var(--accent)} .term .e{color:var(--blue)}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:13px;color:var(--ink-soft);padding:4px 0 2px}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ctl:first-of-type{border-top:none}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:10px;padding:4px 8px;text-align:center;min-width:118px;box-shadow:inset 0 0 0 3px #333}
+.disp small{display:block;font-size:10px;letter-spacing:1.5px;color:#9a9a9a}
+.disp em{display:block;font-style:normal;font-size:12px;color:#d8d8d8;font-family:var(--f-body)}
+.disp span{font-size:22px;white-space:nowrap;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.ctl.a .disp span{color:#7DF0D2} .ctl.e .disp span{color:#9CC8FF}
+.keys{display:flex;gap:6px}
+.key{width:48px;height:44px;border-radius:10px;border:2px solid var(--line);background:var(--surface-2);font-size:18px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;height:30px}
+.ctl.a input{accent-color:var(--green)} .ctl.d input{accent-color:var(--accent)} .ctl.e input{accent-color:var(--blue)}
+.ctl .lbl{grid-column:1/-1;font-size:13px;color:var(--ink-soft);display:flex;justify-content:space-between}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px;margin-top:6px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+
+/* Tabellen & Eingaben */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:6px 5px;text-align:center}
+thead th{background:var(--blue);color:var(--on-blue);font-weight:700}
+thead th:first-child{background:var(--navy);color:var(--navy-ink)}
+.num{width:3.4em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.spt{white-space:nowrap}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);border:1.5px solid var(--line)}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:420px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:8px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.big{font-size:21px;font-weight:700}
+.tf{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.tf .why{grid-column:1/-1;font-size:15px}
+@media (max-width:520px){.tf{grid-template-columns:1fr}}
+textarea{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.lvl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.ramps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ramps div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:15px;background:var(--surface-2)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- Ergebnisse abgeben ---- */
+.abg-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-box ol{margin:0;padding-left:1.3em}
+.abg-box li{margin-bottom:6px}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-close{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;color:var(--ink)}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.abg-txt{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="hwrap">
+    <div class="brand"><b>Skatepark-Bauleitung</b><span>Baupläne lesen: y = a(x − d)² + e</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="abg-btn" id="abgBtn" type="button">Ergebnisse abgeben</button><button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+
+
+<main>
+  <section class="card plot" aria-label="Koordinatensystem">
+    <div class="term" id="term">y = x²</div>
+    <canvas id="cv" aria-label="Koordinatensystem mit Parabeln"></canvas>
+    <div class="legend"><span><i style="border-color:var(--norm);border-top-style:dashed"></i>Normalparabel</span><span><i style="border-color:var(--curve)"></i>deine Rampe</span><span id="lgT" hidden><i style="border-color:var(--target);border-top-style:dashed"></i>Bauauftrag</span></div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="ctlCard">
+      <p class="eyebrow">Baustellen-Steuerung</p>
+      <div id="ctlOn">
+        <div class="ctl a" id="rowA">
+          <div class="disp"><small>FORM a · VORNE</small><span id="vA">1</span><em id="hA">wie Normalparabel</em></div>
+          <input type="range" id="sA" min="0" max="9" step="1" value="7" aria-label="Regler für a">
+          <div class="keys"><button class="key" id="aM" type="button" aria-label="a verkleinern">−</button><button class="key" id="aP" type="button" aria-label="a vergrößern">+</button></div>
+          <div class="lbl"><span>◀ a negativ: nach unten geöffnet</span><span>a größer als 1: gestreckt ▶</span></div>
+        </div>
+        <div class="ctl d" id="rowD">
+          <div class="disp"><small>KRAN d · KLAMMER</small><span id="vD">(x)</span><em id="hD">nicht verschoben</em></div>
+          <input type="range" id="sD" min="-5" max="5" step="0.5" value="0" aria-label="Regler für d">
+          <div class="keys"><button class="key" id="dM" type="button" aria-label="d um 0,5 verringern">◀</button><button class="key" id="dP" type="button" aria-label="d um 0,5 erhöhen">▶</button></div>
+          <div class="lbl"><span>◀ links: Plus in der Klammer</span><span>Minus in der Klammer: rechts ▶</span></div>
+        </div>
+        <div class="ctl e" id="rowE">
+          <div class="disp"><small>FAHRSTUHL e · HINTEN</small><span id="vE">+ 0</span><em id="hE">nicht verschoben</em></div>
+          <input type="range" id="sE" min="-4" max="6" step="0.5" value="0" aria-label="Regler für e">
+          <div class="keys"><button class="key" id="eM" type="button" aria-label="e um 0,5 verringern">▼</button><button class="key" id="eP" type="button" aria-label="e um 0,5 erhöhen">▲</button></div>
+          <div class="lbl"><span>◀ unten: Minus hinten</span><span>Plus hinten: oben ▶</span></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="tNorm" checked> Normalparabel y = x² zum Vergleich zeigen</label>
+      </div>
+      <p class="locked" id="ctlOff" hidden></p>
+    </section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'Ein Regler'},
+  {key:'s2',name:'Kran + Fahrstuhl'},
+  {key:'s3',name:'Form + eins'},
+  {key:'s4',name:'Alle drei'},
+  {key:'s5',name:'Profi-Zusatz',pro:true}
+];
+var LEVELS=[{k:'mini',t:'Mini-Ramp'},{k:'half',t:'Halfpipe'},{k:'vert',t:'Vert-Ramp'}];
+var A_VALS=[-3,-2,-1,-0.5,-0.25,0.25,0.5,1,2,3];
+function T_(a,d,e){return {a:a,d:d,e:e};}
+var TASKS={
+  s1:{mini:[T_(1,0,3),T_(1,2,0),T_(2,0,0),T_(1,0,-2)],half:[T_(1,0,-4),T_(1,-3,0),T_(0.5,0,0),T_(1,4,0)],vert:[T_(1,-2.5,0),T_(-1,0,0),T_(0.25,0,0),T_(1,0,-3.5)]},
+  s2:{mini:[T_(1,2,1),T_(1,1,3),T_(1,3,2),T_(1,-1,2)],half:[T_(1,-2,3),T_(1,3,-1),T_(1,-4,-2),T_(1,1,4)],vert:[T_(1,-1.5,2),T_(1,2.5,-3),T_(1,-3,-1.5),T_(1,0.5,4)]},
+  s3:{mini:[T_(2,0,1),T_(0.5,3,0),T_(2,-1,0),T_(0.5,0,2)],half:[T_(3,0,-2),T_(0.5,-2,0),T_(-1,0,4),T_(2,3,0)],vert:[T_(-2,0,3),T_(0.25,-3,0),T_(-0.5,2,0),T_(3,0,-1.5)]},
+  s4:{mini:[T_(0.5,-2,1),T_(2,3,1),T_(2,1,3)],half:[T_(0.5,-2,1),T_(2,3,1),T_(2,-1,-3)],vert:[T_(0.5,-2,1),T_(2,3,1),T_(-1,2,4)]}
+};
+var NEED={s1:4,s2:4,s3:4,s4:3};
+var CHANGES=['nach oben verschoben','nach unten verschoben','nach rechts verschoben','nach links verschoben','gestreckt','gestaucht','nach unten geöffnet'];
+function changeOf(T){if(T.a<0)return 'nach unten geöffnet';if(T.a>1)return 'gestreckt';if(T.a<1)return 'gestaucht';
+  if(T.e>0)return 'nach oben verschoben';if(T.e<0)return 'nach unten verschoben';if(T.d>0)return 'nach rechts verschoben';return 'nach links verschoben';}
+function formOf(a){var b=Math.abs(a);return b>1?'gestreckt':(b<1?'gestaucht':'weder gestreckt noch gestaucht');}
+
+function blank(){return {i:0,hits:0,solved:false,anim:null};}
+var st={station:0,done:[false,false,false,false,false],a:1,d:0,e:0,norm:true,
+  lv:{s1:'half',s2:'half',s3:'half',s4:'half'},
+  s1:blank(),s2:blank(),s3:blank(),s4:blank(),begr:null,begrDone:false,
+  s5:{mode:'zuordnen',i:0,solved:{}}};
+
+var KEY='skatepark-bauleitung-v2';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,lv:st.lv,h:[st.s1.hits,st.s2.hits,st.s3.hits,st.s4.hits],i:[st.s1.i,st.s2.i,st.s3.i,st.s4.i],begr:st.begr,bd:st.begrDone,s5:st.s5.solved}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;st.station=x.station||0;st.done=x.done||st.done;st.lv=x.lv||st.lv;
+  ['s1','s2','s3','s4'].forEach(function(k,j){st[k].hits=(x.h||[])[j]||0;st[k].i=(x.i||[])[j]||0;});st.begr=x.begr||null;st.begrDone=!!x.bd;st.s5.solved=x.s5||{};}catch(e){}}
+
+/* ---------- Zahlen & Terme ---------- */
+function fmt(v){var r=Math.round(v*100)/100;if(Object.is(r,-0))r=0;var s=Math.abs(r).toString().replace('.',',');return (r<0?'−':'')+s;}
+function parse(str){if(str==null)return NaN;var s=String(str).trim().replace(/[−–—]/g,'-').replace(',','.').replace(/\s+/g,'');if(s===''||s==='-'||s==='+')return NaN;return Number(s);}
+function aPart(a,html){if(a===1)return '';if(a===-1)return html?'<span class="a">−</span>':'−';var t=fmt(a);return html?'<span class="a">'+t+'</span>':t;}
+function term(a,d,e,html){
+  var core=d===0?'x²':'(x '+(d>0?'−':'+')+' '+(html?'<span class="d">'+fmt(Math.abs(d))+'</span>':fmt(Math.abs(d)))+')²';
+  var t='y = '+aPart(a,html)+core;
+  if(e)t+=' '+(e>0?'+':'−')+' '+(html?'<span class="e">'+fmt(Math.abs(e))+'</span>':fmt(Math.abs(e)));
+  return t;
+}
+function f(x,a,d,e){return a*(x-d)*(x-d)+e;}
+function rnd(lo,hi,not){var v;do{v=Math.floor(Math.random()*(hi-lo+1))+lo;}while(not&&not.indexOf(v)>=0);return v;}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function formWord(a){var b=Math.abs(a);return b>1?'gestreckt':(b<1?'gestaucht':'gleich');}
+
+/* ---------- Zeichnen ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,PAD=30;
+var X0=-7,X1=7,Y0=-5,Y1=10;
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function resize(){var w=cv.getBoundingClientRect().width||600;var h=Math.max(300,Math.min(w*0.85,window.innerHeight-190));var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;draw();}
+function sx(x){return PAD+(x-X0)/(X1-X0)*(W-2*PAD);}
+function sy(y){return H-PAD-(y-Y0)/(Y1-Y0)*(H-2*PAD);}
+function font(px,b,it){return (it?'italic ':'')+(b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+function arrowTo(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();var an=Math.atan2(y2-y1,x2-x1),L=10;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-L*Math.cos(an-.4),y2-L*Math.sin(an-.4));ctx.lineTo(x2-L*Math.cos(an+.4),y2-L*Math.sin(an+.4));ctx.closePath();ctx.fill();}
+function grid(){
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);ctx.strokeStyle=col('grid');ctx.lineWidth=1;var x,y;
+  for(x=X0;x<=X1;x++){ctx.beginPath();ctx.moveTo(sx(x),sy(Y0));ctx.lineTo(sx(x),sy(Y1));ctx.stroke();}
+  for(y=Y0;y<=Y1;y++){ctx.beginPath();ctx.moveTo(sx(X0),sy(y));ctx.lineTo(sx(X1),sy(y));ctx.stroke();}
+  var ax=col('axis');ctx.strokeStyle=ax;ctx.fillStyle=ax;ctx.lineWidth=1.8;
+  arrowTo(sx(X0),sy(0),sx(X1)+12,sy(0));arrowTo(sx(0),sy(Y0),sx(0),sy(Y1)-12);
+  ctx.font=font(W<480?11:13);ctx.textAlign='center';ctx.textBaseline='top';
+  for(x=X0;x<=X1;x++){if(x===0)continue;ctx.fillText(fmt(x),sx(x),sy(0)+5);}
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  for(y=Y0;y<=Y1;y++){if(y===0)continue;ctx.fillText(fmt(y),sx(0)-6,sy(y));}
+  ctx.font=font(16,false,true);ctx.textAlign='left';ctx.fillText('x',sx(X1)+2,sy(0)-14);ctx.fillText('y',sx(0)+9,sy(Y1)-6);
+}
+function clip(){ctx.beginPath();ctx.rect(PAD,PAD-4,W-2*PAD,H-2*PAD+8);ctx.clip();}
+function path(a,d,e){ctx.beginPath();for(var i=0;i<=500;i++){var x=X0+(X1-X0)*i/500,y=f(x,a,d,e);y=Math.max(Y0-40,Math.min(Y1+40,y));if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}}
+function parabola(a,d,e,color,width,dash){ctx.save();clip();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.lineCap='round';path(a,d,e);ctx.stroke();ctx.restore();}
+function ramp(a,d,e){if(a<=0)return;ctx.save();clip();path(a,d,e);ctx.lineTo(sx(X1),sy(Y0));ctx.lineTo(sx(X0),sy(Y0));ctx.closePath();ctx.globalAlpha=.55;ctx.fillStyle=col('ramp');ctx.fill();ctx.restore();}
+function dot(x,y,color,r){ctx.beginPath();ctx.arc(sx(x),sy(y),r||7,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function flag(x,y,color){var px=sx(x),py=sy(y);ctx.save();ctx.strokeStyle=col('axis');ctx.fillStyle=color;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px,py-34);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(px,py-34);ctx.lineTo(px+20,py-28);ctx.lineTo(px,py-22);ctx.closePath();ctx.fill();ctx.restore();dot(x,y,color,7);}
+function label(t,x,y,color,right){ctx.font=font(15,true);ctx.textBaseline='middle';ctx.textAlign=right?'right':'left';var w=ctx.measureText(t).width,px=sx(x)+(right?-14:14),py=sy(y);ctx.fillStyle=col('surface');ctx.globalAlpha=.9;ctx.fillRect(right?px-w-4:px-4,py-11,w+8,22);ctx.globalAlpha=1;ctx.fillStyle=color;ctx.fillText(t,px,py);}
+function rampWithS(a,d,e){ramp(a,d,e);parabola(a,d,e,col('curve'),5);if(d>=X0&&d<=X1&&e>=Y0&&e<=Y1)dot(d,e,col('curve'),6);}
+function norm(){if(st.norm)parabola(1,0,0,col('norm'),2.5,[9,7]);}
+/* Schritt-Hilfe: vom Scheitelpunkt 1 nach rechts, a nach oben/unten */
+function stepHelp(a,d,e){ctx.save();ctx.strokeStyle=col('green');ctx.fillStyle=col('green');ctx.lineWidth=2.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(sx(d),sy(e));ctx.lineTo(sx(d+1),sy(e));ctx.lineTo(sx(d+1),sy(e+a));ctx.stroke();ctx.restore();
+  label('1',d+0.5,e-0.45,col('green'));label(fmt(a),d+1,e+a/2,col('green'));}
+
+function curTask(k){var L=TASKS[k][st.lv[k]];return L[st[k].i%L.length];}
+function draw(){
+  if(!W)return;grid();$('lgT').hidden=true;var k=STATIONS[st.station].key;
+  norm();
+  if(k!=='s5'){var s=st[k];
+    if(st.lv[k]==='mini'&&!s.anim)rampWithS(st.a,st.d,st.e);
+    if(s.anim)rampWithS(s.anim.a,s.anim.d,s.anim.e);}
+  else{var Z=st.s5;if(Z.mode==='zuordnen'){var A=ZUO[Z.i];if(Z.shown)rampWithS(Z.shown.a,Z.shown.d,Z.shown.e);flag(A.S[0],A.S[1],col('target'));label('S('+fmt(A.S[0])+' | '+fmt(A.S[1])+')',A.S[0]-0.15,A.S[1]+0.6,col('target'),true);}
+    else{var F=FEHLER[Z.i];$('lgT').hidden=false;rampWithS(F.ist.a,F.ist.d,F.ist.e);parabola(F.soll.a,F.soll.d,F.soll.e,col('target'),3,[4,8]);}}
+}
+function aIdx(a){var i=A_VALS.indexOf(a);return i<0?7:i;}
+function setA(i){i=Math.max(0,Math.min(A_VALS.length-1,i));st.a=A_VALS[i];$('sA').value=i;showA();onCtl();}
+function setD(v){v=Math.max(-5,Math.min(5,Math.round(v*2)/2));if(Object.is(v,-0))v=0;st.d=v;$('sD').value=v;showD();onCtl();}
+function setE(v){v=Math.max(-4,Math.min(6,Math.round(v*2)/2));if(Object.is(v,-0))v=0;st.e=v;$('sE').value=v;showE();onCtl();}
+function onCtl(){updateTerm();draw();}
+function ctlMode(on,msg){$('ctlOn').hidden=!on;$('ctlOff').hidden=on;if(!on)$('ctlOff').textContent=msg;}
+function updateTerm(){var k=STATIONS[st.station].key,t=$('term');
+  if(k==='s5'){var Z=st.s5;t.innerHTML=Z.mode==='zuordnen'?'Welcher Bauplan passt?':'Plan des Azubis: '+term(FEHLER[Z.i].ist.a,FEHLER[Z.i].ist.d,FEHLER[Z.i].ist.e,true);return;}
+  var T=curTask(k);t.innerHTML='Bauplan: '+term(T.a,T.d,T.e,true);}
+function showA(){var a=st.a,b=Math.abs(a);$('vA').textContent=fmt(a);$('hA').textContent=a<0?'nach unten geöffnet'+(b>1?', gestreckt':(b<1?', gestaucht':'')):(a>1?'gestreckt':(a<1?'gestaucht':'wie Normalparabel'));}
+function showD(){var d=st.d;$('vD').textContent=d===0?'(x)':'(x '+(d>0?'−':'+')+' '+fmt(Math.abs(d))+')';$('hD').textContent=d===0?'nicht verschoben':fmt(Math.abs(d))+' nach '+(d>0?'rechts':'links');}
+function showE(){var e=st.e;$('vE').textContent=(e<0?'− ':'+ ')+fmt(Math.abs(e));$('hE').textContent=e===0?'nicht verschoben':fmt(Math.abs(e))+' nach '+(e>0?'oben':'unten');}
+function resetCtl(){st.a=1;st.d=0;st.e=0;$('sA').value=7;$('sD').value=0;$('sE').value=0;showA();showD();showE();}
+/* ---------- Gerüst ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+  h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;each('#route .stop',function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=4)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zum Profi-Zusatz ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function each(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn);}
+function levelBar(key){return '<div class="lvl"><span class="muted">Dein Level:</span><span class="seg" id="lvSeg">'+LEVELS.map(function(l){return '<button type="button" data-l="'+l.k+'"'+(st.lv[key]===l.k?' class="sel"':'')+'>'+l.t+'</button>';}).join('')+'</span></div>';}
+function bindLevel(key,reset){each('#lvSeg button',function(b){b.addEventListener('click',function(){st.lv[key]=b.dataset.l;reset();save();render();});});}
+function dots(n,max){var h='<span class="dots">';for(var i=0;i<max;i++)h+='<i class="'+(i<n?'on':'')+'"></i>';return h+'</span>';}
+function animate(from,to,set,done){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var dist=Math.abs(to.a-from.a)*2+Math.abs(to.d-from.d)+Math.abs(to.e-from.e);
+  if(reduce||dist===0){set(to);done();return;}
+  var t0=null,dur=900+dist*110;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),q=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    set({a:from.a+(to.a-from.a)*q,d:from.d+(to.d-from.d)*q,e:from.e+(to.e-from.e)*q});if(p<1)requestAnimationFrame(step);else{set(to);done();}}
+  requestAnimationFrame(step);
+}
+function signSel(id){return '<select class="sel" id="'+id+'" aria-label="Rechenzeichen"><option value="">±</option><option value="-">−</option><option value="+">+</option></select>';}
+function opts(id,list,cur){return '<select class="sel" id="'+id+'"><option value="">…</option>'+list.map(function(o){return '<option value="'+o+'"'+(cur===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';}
+
+/* ---------- Lese-Stationen 1–4 ---------- */
+var INFO={
+  s1:{h:'Wiederholung: Was macht die Zahl?',p:'Im Bauplan ist nur <b>eine</b> Zahl verändert. Was passiert mit der Normalparabel? Wo liegt der Scheitelpunkt?',change:true,form:false,
+      tips:['Zahl hinten (e) → nach oben/unten. Zahl in der Klammer (d) → nach rechts/links. Zahl vor dem x² (a) → Form.','Minus in der Klammer → rechts, Plus in der Klammer → links.']},
+  s2:{h:'Kran und Fahrstuhl zusammen',p:'Jetzt sind <b>zwei</b> Zahlen verändert: die Zahl in der Klammer (d) und die Zahl hinten (e). Wo liegt der Scheitelpunkt?',change:false,form:false,
+      tips:['x-Koordinate: Plus in der Klammer → links (x negativ), Minus in der Klammer → rechts (x positiv).','y-Koordinate: die Zahl hinten (mit Vorzeichen).']},
+  s3:{h:'Form-Regler plus eine Verschiebung',p:'Jetzt ist die Zahl <b>vor</b> der Klammer (a) dabei – und eine Verschiebung. Wo liegt der Scheitelpunkt? Wie sieht die Rampe aus?',change:false,form:true,
+      tips:['Der Scheitelpunkt hängt nur von d und e ab – a ändert ihn nicht.','a größer als 1 → gestreckt. a zwischen 0 und 1 → gestaucht. a negativ → nach unten geöffnet.']},
+  s4:{h:'Alle drei Zahlen – das Ziel!',p:'Jetzt sind <b>alle drei</b> Zahlen im Bauplan. Bestimme den Scheitelpunkt und beschreibe die Rampe.',change:false,form:true,
+      tips:['Schritt 1: Plus in der Klammer → links, Minus → rechts (x). Schritt 2: Zahl hinten → oben/unten (y). Schritt 3: Zahl vor der Klammer → Form.','a ändert nur die Form, nicht den Scheitelpunkt.']}
+};
+function rRead(k,idx){
+  var s=st[k],lv=st.lv[k],I=INFO[k],T=curTask(k),mini=lv==='mini',profi=k==='s4'&&s.i%TASKS.s4[lv].length<2,isB=profi&&s.i%TASKS.s4[lv].length===1,hpA=profi&&!isB;
+  ctlMode(mini,'Erst überlegen, dann bauen lassen. (Im Level Mini-Ramp darfst du vorher mit den Reglern ausprobieren.)');
+  var html=levelBar(k)+'<div><p class="eyebrow">Station '+(idx+1)+' · '+STATIONS[idx].name+'</p><h2>'+(profi?(isB?'Halfpipe B':'Halfpipe A'):I.h)+'</h2></div>'+
+   '<p>'+(profi?'Das ist der Bauplan für <b>'+(isB?'Halfpipe B':'Halfpipe A')+'</b>. Wo liegt ihr tiefster Punkt, wie sieht sie aus – und ist sie für Anfänger oder für Profis?':I.p)+'</p>'+
+   (mini?'<p class="hint"><b>Mini-Ramp:</b> Stelle den Bauplan oben mit den Reglern ein und schau dir die Rampe an. Dann beantworte die Fragen.</p>':'')+
+   (mini?'<div class="stack">'+I.tips.map(function(t){return '<p class="hint">'+t+'</p>';}).join('')+'</div>':'')+
+   '<div class="stack">'+
+   (I.change?'<p class="row">Die Normalparabel wird '+opts('ch',CHANGES)+'.</p>':'')+
+   '<p class="row big">S( <input class="num" id="sx" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="sy" inputmode="decimal" aria-label="y-Koordinate"> )</p>'+
+   (I.form?'<p class="row">Die Rampe ist nach '+opts('op',['oben','unten'])+' geöffnet und '+opts('fo',['gestreckt','gestaucht','weder gestreckt noch gestaucht'])+'.</p>':'')+
+   (profi?'<p class="row">Diese Halfpipe ist für '+opts('anf',['Anfänger','Profis'])+'.</p>':'')+
+   '</div>'+
+   '<div class="row"><button class="btn pri" type="button" id="go">Rampe bauen</button>'+(!mini?'<button class="btn tip" type="button" id="tp">Tipp</button>':'')+'</div>'+
+   '<div id="tips"></div><p class="fb" id="fb"></p>'+
+   '<div id="more"></div>'+
+   '<div class="row"><span class="muted">Geschafft:</span><span id="dt">'+dots(Math.min(s.hits,NEED[k]),NEED[k])+'</span></div>'+
+   (k==='s4'&&st.begrDone?begrBox():'')+
+   '<div class="row">'+nextBtn(idx)+'</div>';
+  $('task').innerHTML=html;
+  bindLevel(k,function(){s.i=0;s.anim=null;s.solved=false;resetCtl();});
+  var tn=0;if($('tp'))$('tp').addEventListener('click',function(){if(tn<I.tips.length){$('tips').innerHTML+='<p class="hint"><b>Tipp '+(tn+1)+':</b> '+I.tips[tn]+'</p>';tn++;}});
+  $('go').addEventListener('click',function(){
+    var fb=$('fb'),x=parse($('sx').value),y=parse($('sy').value),ch=I.change?$('ch').value:'x',op=I.form?$('op').value:'x',fo=I.form?$('fo').value:'x',anf=profi?$('anf').value:'x';
+    if(isNaN(x)||isNaN(y)||!ch||!op||!fo||!anf){fb.className='fb bad';fb.textContent='Fülle zuerst alles aus.';return;}
+    var okX=x===T.d,okY=y===T.e,okC=!I.change||ch===changeOf(T),okO=!I.form||op===(T.a>0?'oben':'unten'),okF=!I.form||fo===formOf(T.a),okA=!profi||anf===(isB?'Profis':'Anfänger');
+    $('sx').className='num '+(okX?'ok':'bad');$('sy').className='num '+(okY?'ok':'bad');
+    if(I.change)$('ch').className='sel '+(okC?'ok':'bad');if(I.form){$('op').className='sel '+(okO?'ok':'bad');$('fo').className='sel '+(okF?'ok':'bad');}if(profi)$('anf').className='sel '+(okA?'ok':'bad');
+    $('go').disabled=true;fb.className='fb';fb.textContent='Die Rampe wird gebaut …';
+    animate({a:1,d:0,e:0},T,function(v){s.anim=v;draw();},function(){$('go').disabled=false;
+      if(okX&&okY&&okC&&okO&&okF&&okA){
+        if(!s.solved){s.hits++;s.solved=true;}$('dt').innerHTML=dots(Math.min(s.hits,NEED[k]),NEED[k]);
+        if(s.hits>=NEED[k]&&(k!=='s4'||st.begrDone))finish(idx);
+        save();fb.className='fb ok';fb.textContent='Richtig! Scheitelpunkt S('+fmt(T.d)+' | '+fmt(T.e)+')'+(I.form?', nach '+(T.a>0?'oben':'unten')+' geöffnet, '+formOf(T.a):'')+'.'+(profi?(isB?' Gestreckt → für Profis.':' Gestaucht → gut für Anfänger.'):'');
+        if(hpA&&!st.begrDone){st.begr={T:T};save();}
+        $('more').innerHTML=(hpA&&!st.begrDone?'<div id="bgw">'+begrBox()+'</div>':'')+'<div class="row"><button class="btn sec" type="button" id="nx">Nächster Bauplan →</button></div>';
+        $('nx').addEventListener('click',function(){s.i++;s.solved=false;s.anim=null;resetCtl();save();render();});
+        if(hpA&&!st.begrDone)bindBegr(idx);
+        else if(st.done[idx]&&!$('nextSt')){var w=document.createElement('div');w.className='row';w.innerHTML=nextBtn(idx);$('task').appendChild(w);bindNext();}
+      } else {
+        fb.className='fb bad';var t=[];
+        if(!okX)t.push(x===-T.d&&T.d!==0?'Vorzeichen-Falle: Plus in der Klammer heißt links, Minus heißt rechts.':'x-Koordinate: Plus in der Klammer → links, Minus → rechts.');
+        if(!okY)t.push(x===T.e&&y===T.d?'x und y vertauscht!':'y-Koordinate: Schau auf die Zahl hinten.');
+        if(!okC)t.push('Welche Zahl ist verändert – vor dem x², in der Klammer oder hinten?');
+        if(!okO||!okF)t.push('Form: Schau auf die Zahl vor der Klammer.');
+        if(!okA)t.push('Eine gestauchte Parabel ist gut für Anfänger, eine gestreckte für Profis.');
+        fb.textContent=t.join(' ');
+      }
+    });
+  });
+  bindNext();updateTerm();draw();
+}
+
+/* ---------- Begründung zur neuen Halfpipe (Station 4) ---------- */
+function begrBox(){
+  if(!st.begr)return '';
+  if(st.begrDone)return '<div class="win"><p class="eyebrow" style="color:var(--ok)">Eure Begründung zu Halfpipe A (zum Vorstellen)</p><p>'+st.begr.text.replace(/</g,'&lt;')+'</p></div>';
+  var lv=st.lv.s4;
+  return '<div class="stack note" style="border-left-color:var(--ok)"><p><b>Begründet eure Antwort zu Halfpipe A: y = 0,5(x + 2)² + 1</b></p>'+
+   '<p class="row">In der Klammer steht '+opts('g1',['+ 2','− 2'])+'. Die Normalparabel ist also um 2 Einheiten nach '+opts('g1b',['links','rechts'])+' verschoben.</p>'+
+   '<p class="row">Der Parameter e = 1 verschiebt die Normalparabel um 1 Einheit nach '+opts('g3',['oben','unten'])+'.</p>'+
+   '<p class="row">Der Streckfaktor a = 0,5 ist '+opts('g4',['kleiner','größer'])+' als 1. Die Parabel ist also '+opts('g4b',['gestaucht','gestreckt'])+'.</p>'+
+   '<p class="row">Der Scheitelpunkt liegt bei S(−2 | 1). Deshalb steht die Halfpipe '+opts('g5b',['links','rechts'])+' von der alten Halfpipe und ist '+opts('g5',['für Anfänger','für Profis'])+' geeignet.</p>'+
+   (lv==='vert'?'<p><b>Vert-Ramp:</b> Erkläre zusätzlich in einem eigenen Satz, warum a den Scheitelpunkt nicht verändert.</p><textarea id="g6" rows="2" placeholder="a verändert den Scheitelpunkt nicht, weil …"></textarea>':'')+
+   '<div class="row"><button class="btn pri" type="button" id="gb">Begründung speichern</button><span class="fb" id="fbg"></span></div></div>';
+}
+function bindBegr(idx){var b=$('gb');if(!b)return;
+  b.addEventListener('click',function(){var ans={g1:'+ 2',g1b:'links',g3:'oben',g4:'kleiner',g4b:'gestaucht',g5b:'links',g5:'für Anfänger'},ok=true;
+    Object.keys(ans).forEach(function(id){var el=$(id),g=el.value===ans[id];el.className='sel '+(g?'ok':'bad');if(!g)ok=false;});
+    var extra='';if($('g6')){var t=$('g6').value.trim();if(t.length<20){ok=false;$('g6').style.borderColor='var(--bad)';}else extra=' '+t;}
+    if(!ok){$('fbg').className='fb bad';$('fbg').textContent='Noch nicht ganz – schaut auf die rot markierten Felder.';return;}
+    st.begr.text='In der Klammer steht + 2. Die Normalparabel ist also um 2 Einheiten nach links verschoben. Der Parameter e = 1 verschiebt sie um 1 Einheit nach oben. Der Streckfaktor a = 0,5 ist kleiner als 1. Die Parabel ist also gestaucht. Der Scheitelpunkt liegt bei S(−2 | 1). Deshalb steht die Halfpipe links von der alten Halfpipe und ist für Anfänger geeignet.'+extra;
+    st.begrDone=true;if(st.s4.hits>=NEED.s4)finish(idx);save();$('bgw').innerHTML=begrBox();});
+}
+
+/* ---------- Station 5: Profi-Zusatz ---------- */
+var ZUO=[
+  {t:'Halfpipe mit tiefstem Punkt S(3 | 2), gestreckt.',S:[3,2],o:[T_(2,3,2),T_(2,-3,2),T_(0.5,3,2),T_(1,2,3)],ok:0},
+  {t:'Hügel (Spine) mit höchstem Punkt S(−1 | 4).',S:[-1,4],o:[T_(1,-1,4),T_(-1,-1,4),T_(-1,1,4),T_(-1,4,-1)],ok:1},
+  {t:'Anfänger-Rampe mit S(0 | −2), gestaucht.',S:[0,-2],o:[T_(2,0,-2),T_(0.5,-2,0),T_(0.5,0,-2),T_(0.5,0,2)],ok:2}
+];
+var FEHLER=[
+  {auftrag:'S(2 | 1), Form wie die Normalparabel',soll:T_(1,2,1),ist:T_(1,-2,1),w:'d',why:'Die Rampe soll nach rechts: Dafür muss in der Klammer ein Minus stehen, also (x − 2)².'},
+  {auftrag:'S(−1 | 3), gestreckt: a = 2',soll:T_(2,-1,3),ist:T_(2,-1,-3),w:'e',why:'Die Rampe soll 3 nach oben, also + 3 hinten.'},
+  {auftrag:'S(1 | −2), gestaucht: a = 0,5',soll:T_(0.5,1,-2),ist:T_(2,1,-2),w:'a',why:'Gestaucht heißt a zwischen 0 und 1, also a = 0,5 statt 2.'},
+  {auftrag:'S(0 | 4), Hügel: a = −1',soll:T_(-1,0,4),ist:T_(1,0,4),w:'a',why:'Ein Hügel ist nach unten geöffnet: a muss negativ sein.'}
+];
+function r5(){
+  ctlMode(false,'Profi-Bereich: Hier entscheidest du, ohne Regler.');
+  var Z=st.s5,body;
+  if(Z.mode==='zuordnen'){var A=ZUO[Z.i];
+    body='<h3>Welcher Bauplan passt zum Auftrag?</h3><p><b>Auftrag:</b> '+A.t+'</p><div class="choice grid2" id="zo">'+A.o.map(function(o,j){return '<button type="button" class="opt" data-j="'+j+'">'+term(o.a,o.d,o.e)+'</button>';}).join('')+'</div>';}
+  else{var F=FEHLER[Z.i];
+    body='<h3>Der Azubi hat falsch gebaut</h3><p><b>Auftrag:</b> '+F.auftrag+' (rot gestrichelt). Gebaut hat der Azubi die orange Rampe – sein Plan steht oben.</p><p>Welche Zahl ist falsch?</p><div class="choice grid2" id="fe">'+['a','d','e'].map(function(w){return '<button type="button" class="opt" data-w="'+w+'">Die Zahl '+w+'</button>';}).join('')+'</div>';}
+  $('task').innerHTML='<div><p class="eyebrow pro">★ Profi-Zusatz</p><h2>Für Schnelle</h2></div>'+
+   '<div class="seg" id="seg5"><button type="button" data-m="zuordnen"'+(Z.mode==='zuordnen'?' class="sel"':'')+'>Bauplan zuordnen</button><button type="button" data-m="fehler"'+(Z.mode==='fehler'?' class="sel"':'')+'>Fehler-Detektiv</button></div>'+
+   body+'<p class="fb" id="fb5"></p><div class="row"><button class="btn sec" type="button" id="n5">Nächste Aufgabe →</button></div><p class="muted">Gelöst: '+Object.keys(Z.solved).length+'</p>';
+  each('#seg5 button',function(b){b.addEventListener('click',function(){Z.mode=b.dataset.m;Z.i=0;Z.shown=null;r5();updateTerm();draw();});});
+  $('n5').addEventListener('click',function(){Z.i=(Z.i+1)%(Z.mode==='zuordnen'?ZUO.length:FEHLER.length);Z.shown=null;r5();updateTerm();draw();});
+  if(Z.mode==='zuordnen'){var A2=ZUO[Z.i];each('#zo .opt',function(b){b.addEventListener('click',function(){var j=+b.dataset.j;Z.shown=A2.o[j];draw();
+      each('#zo .opt',function(x){x.className='opt'+(+x.dataset.j===j?(j===A2.ok?' ok':' bad'):'');});
+      if(j===A2.ok){Z.solved['z'+Z.i]=1;save();$('fb5').className='fb ok';$('fb5').textContent='Richtig! Die Rampe passt zum Auftrag.';}
+      else{$('fb5').className='fb bad';$('fb5').textContent='Schau, wo die gebaute Rampe liegt und wie sie aussieht. Passt das zur Fahne und zur Form?';}});});}
+  else{var F2=FEHLER[Z.i];each('#fe .opt',function(b){b.addEventListener('click',function(){var w=b.dataset.w;
+      each('#fe .opt',function(x){x.className='opt'+(x.dataset.w===w?(w===F2.w?' ok':' bad'):'');});
+      if(w===F2.w){Z.solved['f'+Z.i]=1;save();$('fb5').className='fb ok';$('fb5').textContent='Richtig! '+F2.why;}
+      else{$('fb5').className='fb bad';$('fb5').textContent='Vergleiche: Stimmt der Scheitelpunkt? Stimmt die Form?';}});});}
+  updateTerm();draw();
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();var k=STATIONS[st.station].key;if(k==='s5')r5();else rRead(k,st.station);updateTerm();draw();}
+$('sA').addEventListener('input',function(){setA(+this.value);});
+$('aM').addEventListener('click',function(){setA(aIdx(st.a)-1);});
+$('aP').addEventListener('click',function(){setA(aIdx(st.a)+1);});
+$('sD').addEventListener('input',function(){setD(parseFloat(this.value));});
+$('dM').addEventListener('click',function(){setD(st.d-.5);});
+$('dP').addEventListener('click',function(){setD(st.d+.5);});
+$('sE').addEventListener('input',function(){setE(parseFloat(this.value));});
+$('eM').addEventListener('click',function(){setE(st.e-.5);});
+$('eP').addEventListener('click',function(){setE(st.e+.5);});
+$('tNorm').addEventListener('change',function(){st.norm=this.checked;draw();});
+var armed=false;
+$('reset').addEventListener('click',function(){if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();});
+cv.addEventListener('contextmenu',function(ev){ev.preventDefault();});
+window.addEventListener('resize',resize);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+window.__st=st;
+load();if(!unlocked(st.station))st.station=0;
+resetCtl();render();resize();
+
+/* ---------- Ergebnisse abgeben (jederzeit) ---------- */
+(function(){
+  var APP='Skatepark-Bauleitung';
+  var AKEY=(typeof KEY!=='undefined'?KEY:APP)+'-abgabe';
+  function lget(){try{return JSON.parse(localStorage.getItem(AKEY)||'{}')||{};}catch(e){return {};}}
+  function lset(o){try{localStorage.setItem(AKEY,JSON.stringify(o));}catch(e){}}
+  var A=lget();if(!A.t0){A.t0=Date.now();lset(A);}
+  function e(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+  
+  function abgText(A){
+    var d=new Date(),L=[];
+    var title=(document.querySelector('.brand b')||{}).textContent||APP;
+    var subt=(document.querySelector('.brand span')||{}).textContent||'';
+    L.push(title.toUpperCase()+(subt?' · '+subt:''));
+    L.push('Name: '+A.name+'    Klasse: '+(A.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+    var n=0;STATIONS.forEach(function(x,i){if(st.done[i])n++;});
+    L.push('Geschafft: '+n+' von '+STATIONS.length+' Stationen');
+    L.push('');
+    var LAB={hits:'richtig gelöst',tip:'Tipps benutzt',tips:'Tipps benutzt',tries:'Versuche',solved:'gelöst',begr:'Begründung',refl:'Begründung',text:'Text',guess:'Vermutung'};
+    function fmt(v){if(v===true)return 'ja';if(v===false)return 'nein';if(Array.isArray(v)){if(v.every(function(z){return typeof z==='boolean';}))return v.filter(Boolean).length+' von '+v.length;return v.map(fmt).join(', ');}if(v&&typeof v==='object')return null;return String(v);}
+    function details(o,pre,out){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){var v=o[k];
+      if(LAB[k]==null)return;var f=fmt(v);if(f==null||f===''||f==='null'||f==='undefined')return;
+      if(typeof v==='string'&&v.length>0)out.push(pre+LAB[k]+': '+v.trim());else out.push(pre+LAB[k]+': '+f);});}
+    STATIONS.forEach(function(x,i){
+      var mark=st.done[i]?'✓ geschafft':(i===st.station?'→ bearbeitet gerade':'–');
+      L.push('Station '+(i+1)+' · '+x.name+(x.pro?' (Profi)':'')+':  '+mark);
+      var out=[];if(st.done[i]||i===st.station)details(st[x.key],'   ',out);out.forEach(function(z){L.push(z);});
+    });
+    var extra=[];['begr','refl','guess'].forEach(function(k){if(st[k]!=null&&st[k]!==''){var f=fmt(st[k]);if(f)extra.push('   '+LAB[k]+': '+f);}});
+    if(extra.length){L.push('');L.push('Weitere Angaben:');L=L.concat(extra);}
+    L.push('');
+    L.push('Zeit seit dem ersten Öffnen der App: '+Math.round((Date.now()-A.t0)/60000)+' min');
+    var raw='';try{raw=localStorage.getItem(KEY)||'';}catch(err){}
+    L.push('');L.push('Die folgende Zeile ist für die Auswertung. Bitte nicht verändern.');
+    L.push('#DATEN '+raw);
+    return L.join('\n');
+  }
+
+  var ov=document.createElement('div');ov.className='abg-ov';ov.hidden=true;
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="abgH">'+
+    '<h2 id="abgH">Ergebnisse abgeben</h2>'+
+    '<ol><li>Trage deinen <b>Namen</b> und deine <b>Klasse</b> ein.</li>'+
+    '<li>Tippe auf <b>„Datei herunterladen“</b>. Auf dem iPad fragt Safari nach: Tippe auf <b>„Laden“</b>. Die Datei liegt dann in der App <b>Dateien</b> im Ordner <b>Downloads</b>.</li>'+
+    '<li>Öffne <b>IServ → Aufgaben → „'+e(APP)+'“</b>, lade die Datei hoch (aus <b>Dateien → Downloads</b>) und tippe auf <b>Abgeben</b>.</li></ol>'+
+    '<p class="muted">Du kannst auch abgeben, wenn du noch nicht fertig bist. Im Text steht, wie weit du gekommen bist.</p>'+
+    '<div class="abg-row"><label for="abgName">Name</label><input class="abg-in" id="abgName" autocomplete="off" style="width:12em">'+
+    '<label for="abgKl">Klasse</label><input class="abg-in" id="abgKl" autocomplete="off" style="width:5em"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="abgDl">Datei herunterladen</button>'+
+    '<button class="abg-close" type="button" id="abgClose">Schließen</button></div>'+
+    '<p class="muted" style="font-size:14px">Klappt das Herunterladen nicht? Dann <button type="button" id="abgCopy" style="background:none;border:none;padding:0;color:var(--blue);text-decoration:underline;font:inherit;cursor:pointer">kopiere den Text</button> und frag deine Lehrkraft.</p>'+
+    '<p class="abg-fb" id="abgFb"></p>'+
+    '<textarea class="abg-txt" id="abgTxt" rows="10" readonly hidden></textarea></div>';
+  document.body.appendChild(ov);
+  var $n=ov.querySelector('#abgName'),$k=ov.querySelector('#abgKl'),$t=ov.querySelector('#abgTxt'),$f=ov.querySelector('#abgFb');
+  function msg(ok,t){$f.className='abg-fb '+(ok?'ok':'bad');$f.textContent=t;}
+  function open(){A=lget();$n.value=A.name||'';$k.value=A.klasse||'';$t.hidden=true;msg(true,'');ov.hidden=false;setTimeout(function(){($n.value?ov.querySelector('#abgDl'):$n).focus();},30);}
+  function close(){ov.hidden=true;}
+  function upd(){A.name=$n.value.trim();A.klasse=$k.value.trim();lset(A);}
+  $n.addEventListener('input',upd);$k.addEventListener('input',upd);
+  ov.querySelector('#abgClose').addEventListener('click',close);
+  ov.addEventListener('click',function(ev){if(ev.target===ov)close();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!ov.hidden)close();});
+  ov.querySelector('#abgCopy').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A);$t.value=txt;
+    function sel(){$t.hidden=false;$t.focus();$t.select();msg(true,'Der Text ist markiert. Tippe lange darauf und wähle „Kopieren“.');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Text kopiert.');},sel);}catch(err){sel();}
+  });
+  function dateiname(){return (APP+'_'+(A.name||'Name')+'_'+(A.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'')+'.txt';}
+  ov.querySelector('#abgDl').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A).replace(/\r?\n/g,'\r\n'),name=dateiname();
+    try{var bl=new Blob(['\ufeff'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),a=document.createElement('a');
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},10000);
+      msg(true,'Die Datei „'+name+'“ wird heruntergeladen. Lade sie jetzt in IServ bei der Aufgabe „'+APP+'“ hoch.');}
+    catch(err){msg(false,'Herunterladen klappt hier nicht. Kopiere stattdessen den Text.');}
+  });
+  document.getElementById('abgBtn').addEventListener('click',open);
+})();
+})();
+</script>
+</body>
+</html>

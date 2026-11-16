@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parabel-Kran</title>
+<style>
+/* Layout: Kopfleiste mit Stationen-Weg · links Koordinatensystem (fest) · rechts Kran-Steuerpult + Stationsaufgabe; auf schmalen Geräten untereinander.
+   Gleiche Bildsprache wie der Parabel-Fahrstuhl (Stunde 3), Akzent jetzt Baustellen-Gelb/Orange für den Kran. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --norm:#8C96B4; --curve:#E8892B; --target:#C8423D; --pt:#1C66C0; --curve2:#1C66C0;
+  --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --pt:#6FA8F0; --curve2:#6FA8F0;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --pt:#6FA8F0; --curve2:#6FA8F0;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-inline:16px}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-inline:16px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px 10px 6px}
+@media (max-width:860px){.plot{position:static}}
+.term{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,4vw,36px);text-align:center;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.term .d{color:var(--accent)}
+.term .e{color:var(--blue)}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Kran-Steuerpult */
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:8px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:34px;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:64px;height:58px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+
+/* Tabellen & Eingaben */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:6px 5px;text-align:center}
+thead th{background:var(--blue);color:var(--on-blue);font-weight:700}
+thead th:first-child{background:var(--navy);color:var(--navy-ink)}
+tbody th{background:var(--blue-soft);font-weight:700;white-space:nowrap}
+.num{width:3.4em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface)}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.spt{white-space:nowrap}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);border:1.5px solid var(--line)}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:420px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:8px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.gap li{margin-bottom:10px}
+.gap ol{padding-left:1.2em;margin:0}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+.big{font-size:21px;font-weight:700}
+.tf{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.tf .why{grid-column:1/-1;font-size:15px}
+@media (max-width:520px){.tf{grid-template-columns:1fr}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- Ergebnisse abgeben ---- */
+.abg-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-box ol{margin:0;padding-left:1.3em}
+.abg-box li{margin-bottom:6px}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-close{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;color:var(--ink)}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.abg-txt{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="hwrap">
+    <div class="brand"><b>Parabel-Kran</b><span>Wie verschiebt d die Parabel y = (x − d)²?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="abg-btn" id="abgBtn" type="button">Ergebnisse abgeben</button><button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+
+
+<main>
+  <section class="card plot" aria-label="Koordinatensystem">
+    <div class="term" id="term">y = x²</div>
+    <canvas id="cv" aria-label="Koordinatensystem mit Parabeln"></canvas>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="liftCard">
+      <p class="eyebrow">Kran-Steuerung</p>
+      <div id="liftOn">
+        <div class="lift">
+          <div class="disp"><small>POSITION d</small><span id="dispVal">0</span></div>
+          <div class="keys">
+            <button class="key" id="left" type="button" aria-label="d um 0,5 verringern">◀</button>
+            <button class="key" id="right" type="button" aria-label="d um 0,5 erhöhen">▶</button>
+          </div>
+        </div>
+        <input type="range" id="d" min="-5" max="5" step="0.5" value="0" aria-label="Regler für d">
+        <div class="scale"><span>−5 (links)</span><span>0</span><span>+5 (rechts)</span></div>
+        <label class="chk" style="margin-top:6px"><input type="checkbox" id="tNorm" checked> Normalparabel y = x² zum Vergleich zeigen</label>
+        <label class="chk"><input type="checkbox" id="tAxis"> Symmetrieachse zeigen</label>
+      </div>
+      <p class="locked" id="liftOff" hidden></p>
+    </section>
+
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'Beobachten'},
+  {key:'s2',name:'Vorhersagen'},
+  {key:'s3',name:'Begründen'},
+  {key:'s4',name:'Regel finden'},
+  {key:'s5',name:'Training'},
+  {key:'s6',name:'Profi-Zusatz',pro:true}
+];
+var GUESSES=[
+  {k:'A',t:'y = x² + 3'},
+  {k:'B',t:'y = (x + 3)²'},
+  {k:'C',t:'y = (x − 3)²'},
+  {k:'D',t:'y = x² − 3'}
+];
+var S1_ROWS=[0,2,-1,4,-3];            /* d-Werte; gezeigt werden die Terme */
+var S1_T=[7,-10,2.5];
+var S3_SETS=[{d:3,xs:[0,1,2,3,4,5,6]},{d:-2,xs:[-5,-4,-3,-2,-1,0,1]}];
+
+var st={station:0,done:[false,false,false,false,false,false],d:0,norm:true,axis:false,guess:null,
+  s1:{vals:{},mc:null,mcOk:false,t:{},tOk:false,tip:0},
+  s2:{d:null,dir:null,hits:0,phase:'ask',last:null,anim:null},
+  s3:{set:0,vals:{},solved:[false,false],zeroOk:[false,false],tip:0},
+  s4:{ok:false,text:'',saved:false,reflect:''},
+  s5:{mode:'graph',target:null,hits:0,solved:false},
+  s6:{mode:'doppel',i:0,solved:{},combo:null,shown:null}};
+
+/* ---------- Speicher (nur Bequemlichkeit) ---------- */
+var KEY='parabel-kran-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s3:st.s3,s4:st.s4,s2hits:st.s2.hits,s5hits:st.s5.hits,s6solved:st.s6.solved}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;st.done=x.done||st.done;while(st.done.length<6)st.done.push(false);st.guess=x.guess||null;
+  st.s1=x.s1||st.s1;st.s3=x.s3||st.s3;st.s4=x.s4||st.s4;st.s2.hits=x.s2hits||0;st.s5.hits=x.s5hits||0;st.s6.solved=x.s6solved||{};}catch(e){}}
+
+/* ---------- Zahlen & Terme ---------- */
+function fmt(v){var r=Math.round(v*100)/100;if(Object.is(r,-0))r=0;var s=Math.abs(r).toString().replace('.',',');return (r<0?'−':'')+s;}
+function parse(str){if(str==null)return NaN;var s=String(str).trim().replace(/[−–—]/g,'-').replace(',','.').replace(/\s+/g,'');if(s===''||s==='-'||s==='+')return NaN;return Number(s);}
+function br(d,cls){if(d===0)return 'x';return '(x '+(d>0?'−':'+')+' '+(cls?'<span class="'+cls+'">'+fmt(Math.abs(d))+'</span>':fmt(Math.abs(d)))+')';}
+function termHTML(d,e){var b=d===0?'x²':br(d,'d')+'²';var t='y = '+b;if(e)t+=' '+(e>0?'+':'−')+' <span class="e">'+fmt(Math.abs(e))+'</span>';return t;}
+function termTxt(d,e){var b=d===0?'x²':br(d)+'²';var t='y = '+b;if(e)t+=' '+(e>0?'+ ':'− ')+fmt(Math.abs(e));return t;}
+function f(x,d,e){return (x-d)*(x-d)+(e||0);}
+
+/* ---------- Zeichnen ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,PAD=30;
+var X0=-7,X1=7,Y0=-3,Y1=10;
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function resize(){
+  var w=cv.getBoundingClientRect().width||600;
+  var h=Math.max(280,Math.min(w*0.8,window.innerHeight-170));
+  var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;draw();
+}
+function sx(x){return PAD+(x-X0)/(X1-X0)*(W-2*PAD);}
+function sy(y){return H-PAD-(y-Y0)/(Y1-Y0)*(H-2*PAD);}
+function arrowTo(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();var a=Math.atan2(y2-y1,x2-x1),L=10;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-L*Math.cos(a-.4),y2-L*Math.sin(a-.4));ctx.lineTo(x2-L*Math.cos(a+.4),y2-L*Math.sin(a+.4));ctx.closePath();ctx.fill();}
+function font(px,b,it){return (it?'italic ':'')+(b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+function grid(){
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=col('grid');ctx.lineWidth=1;
+  var x,y;
+  for(x=X0;x<=X1;x++){ctx.beginPath();ctx.moveTo(sx(x),sy(Y0));ctx.lineTo(sx(x),sy(Y1));ctx.stroke();}
+  for(y=Y0;y<=Y1;y++){ctx.beginPath();ctx.moveTo(sx(X0),sy(y));ctx.lineTo(sx(X1),sy(y));ctx.stroke();}
+  var ax=col('axis');ctx.strokeStyle=ax;ctx.fillStyle=ax;ctx.lineWidth=1.8;
+  arrowTo(sx(X0),sy(0),sx(X1)+12,sy(0));arrowTo(sx(0),sy(Y0),sx(0),sy(Y1)-12);
+  ctx.font=font(W<480?12:14);ctx.textAlign='center';ctx.textBaseline='top';
+  for(x=X0;x<=X1;x++){if(x===0)continue;ctx.fillText(fmt(x),sx(x),sy(0)+5);}
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  for(y=Y0;y<=Y1;y++){if(y===0)continue;ctx.fillText(fmt(y),sx(0)-6,sy(y));}
+  ctx.font=font(16,false,true);ctx.textAlign='left';
+  ctx.fillText('x',sx(X1)+2,sy(0)-14);ctx.fillText('y',sx(0)+9,sy(Y1)-6);
+}
+function parabola(d,e,color,width,dash){
+  ctx.save();ctx.beginPath();ctx.rect(PAD,PAD-4,W-2*PAD,H-2*PAD+8);ctx.clip();
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();
+  for(var i=0;i<=400;i++){var x=X0+(X1-X0)*i/400,y=f(x,d,e);if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.stroke();ctx.restore();
+}
+function vline(x,color,txt){ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([3,6]);ctx.beginPath();ctx.moveTo(sx(x),sy(Y0));ctx.lineTo(sx(x),sy(Y1));ctx.stroke();ctx.restore();if(txt)label(txt,x,Y1-.6,color,x>4);}
+function dot(x,y,color,r){ctx.beginPath();ctx.arc(sx(x),sy(y),r||7,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function label(t,x,y,color,right){ctx.font=font(15,true);ctx.textBaseline='middle';ctx.textAlign=right?'right':'left';var w=ctx.measureText(t).width,px=sx(x)+(right?-12:12),py=sy(y);ctx.fillStyle=col('surface');ctx.globalAlpha=.9;ctx.fillRect(right?px-w-4:px-4,py-11,w+8,22);ctx.globalAlpha=1;ctx.fillStyle=color;ctx.fillText(t,px,py);}
+/* kleiner Kranhaken über dem Scheitelpunkt */
+function hook(d,e){var x=sx(d),y=sy(e||0);ctx.save();ctx.strokeStyle=col('axis');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,PAD-2);ctx.lineTo(x,y-16);ctx.stroke();
+  ctx.beginPath();ctx.arc(x,y-11,5,Math.PI*1.5,Math.PI*0.9,false);ctx.stroke();ctx.restore();}
+
+function draw(){
+  if(!W)return;grid();
+  var k=STATIONS[st.station].key,norm=col('norm'),cur=col('curve');
+  if(k==='s1'||k==='s4'){
+    if(st.norm&&st.d!==0)parabola(0,0,norm,2.5,[9,7]);
+    if(st.axis)vline(st.d,col('blue'),'x = '+fmt(st.d));
+    hook(st.d,0);parabola(st.d,0,cur,5);dot(st.d,0,cur,6);
+  } else if(k==='s2'){
+    parabola(0,0,norm,2.5,[9,7]);
+    if(st.s2.anim!==null){hook(st.s2.anim,0);parabola(st.s2.anim,0,cur,5);}
+  } else if(k==='s3'){
+    var set=S3_SETS[st.s3.set];
+    parabola(0,0,norm,2.5,[9,7]);
+    if(st.s3.solved[st.s3.set])parabola(set.d,0,cur,4);
+    set.xs.forEach(function(x){var v=parse(st.s3.vals[set.d+'_'+x]);if(!isNaN(v)&&v>=Y0&&v<=Y1){dot(x,v,v===f(x,set.d)?col('ok'):col('bad'),7);}});
+    if(st.s3.zeroOk[st.s3.set])vline(set.d,col('blue'),'x '+(set.d>0?'−':'+')+' '+fmt(Math.abs(set.d))+' = 0');
+  } else if(k==='s5'){
+    parabola(0,0,norm,2.5,[9,7]);
+    if(st.s5.target!==null){var T=st.s5.target;
+      if(st.s5.mode==='graph')parabola(T,0,col('target'),3,[4,8]);
+      else if(st.s5.mode==='scheitel'){dot(T,0,col('target'),9);label('S('+fmt(T)+' | 0)',T,.9,col('target'),T>3);}
+    }
+    if(st.s5.anim!==undefined&&st.s5.anim!==null){hook(st.s5.anim,0);parabola(st.s5.anim,0,cur,5);}
+  } else if(k==='s6'){ draw6(); }
+}
+
+/* ---------- Kran ---------- */
+function setD(v){v=Math.max(-5,Math.min(5,Math.round(v*2)/2));if(Object.is(v,-0))v=0;st.d=v;$('d').value=v;$('dispVal').textContent=(v>0?'+':'')+fmt(v);updateTerm();draw();}
+function updateTerm(){
+  var k=STATIONS[st.station].key,t=$('term');
+  if(k==='s2'){t.innerHTML=st.s2.d===null?'y = x²':termHTML(st.s2.d);}
+  else if(k==='s3'){t.innerHTML=termHTML(S3_SETS[st.s3.set].d);}
+  else if(k==='s5'){t.innerHTML=st.s5.mode==='term'&&st.s5.target!==null?termHTML(st.s5.target):(st.s5.anim!=null?termHTML(Math.round(st.s5.anim*2)/2):'y = (x − ?)²');}
+  else if(k==='s6'){t.innerHTML=term6();}
+  else t.innerHTML=termHTML(st.d);
+}
+function liftMode(on,msg){$('liftOn').hidden=!on;$('liftOff').hidden=on;if(!on)$('liftOff').textContent=msg;}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=5)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Zusatzaufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function tipBox(list,n){if(!n)return '';var h='';for(var i=0;i<n&&i<list.length;i++)h+='<p class="hint"><b>Tipp '+(i+1)+':</b> '+list[i]+'</p>';return h;}
+
+/* ---------- Station 1: Vermutung + Beobachten ---------- */
+var TIPS1=['Der Scheitelpunkt ist der tiefste Punkt der orangen Parabel. Der Kranhaken zeigt genau auf ihn.',
+  'Schau auf die x-Achse: Bei welcher Zahl sitzt der Scheitelpunkt? Seine y-Koordinate ist bei allen Parabeln hier gleich.',
+  'Stelle den Kran so ein, dass oben genau der Term aus der Tabelle steht. Bei (x + 1)² musst du nach links fahren.'];
+function r1(){
+  liftMode(true);
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Die Halfpipe y = x² soll <b>3 m nach rechts</b>. Welche Vermutung hast du in deinen Steckbrief geschrieben?</p><div class="choice grid2" id="gs">'+
+    GUESSES.map(function(o){return '<button type="button" class="opt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b> &nbsp;'+o.t+'</button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. Am Ende von Station 4 prüfst du, ob sie stimmt.':'Wähle eine Antwort. Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var rows='';S1_ROWS.forEach(function(d){var given=d===0,vx=given?'0':(st.s1.vals[d+'x']||''),vy=given?'0':(st.s1.vals[d+'y']||'');
+    rows+='<tr><td>'+termTxt(d)+'</td><td class="spt">S( <input class="num" inputmode="decimal" id="s1x'+d+'" value="'+vx+'"'+(given?' disabled':'')+' aria-label="x-Koordinate für '+termTxt(d)+'"> | <input class="num" inputmode="decimal" id="s1y'+d+'" value="'+vy+'"'+(given?' disabled':'')+' aria-label="y-Koordinate für '+termTxt(d)+'"> )</td><td>'+(given?'–':'<select class="sel" id="s1r'+d+'" aria-label="Richtung"><option value="">…</option><option value="l"'+(st.s1.vals[d+'r']==='l'?' selected':'')+'>links</option><option value="r"'+(st.s1.vals[d+'r']==='r'?' selected':'')+'>rechts</option></select>')+'</td></tr>';});
+  var mc=['S(d | 0)','S(−d | 0)','S(0 | d)','S(0 | −d)'];
+  $('task').innerHTML=g+
+   '<div><p class="eyebrow">Station 1 · Beobachten</p><h2>Wohin fährt der Kran die Parabel?</h2></div>'+
+   '<p>Fahre mit dem Kran (◀ ▶ oder Regler), bis oben <b>genau der Term</b> aus der Tabelle steht. Lies den <b>Scheitelpunkt</b> ab und notiere, ob die Parabel nach links oder rechts verschoben wurde.</p>'+
+   '<div class="tw"><table><thead><tr><th>Term</th><th>Scheitelpunkt</th><th>Richtung</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button><button class="btn tip" type="button" id="t1"'+(st.s1.tip>=TIPS1.length?' hidden':'')+'>Tipp anzeigen</button></div>'+
+   '<p class="fb" id="fb1"></p><div id="tips1" class="stack">'+tipBox(TIPS1,st.s1.tip)+'</div>'+
+   '<div id="mcBox" class="stack"'+(allS1()?'':' hidden')+'><p><b>Was fällt dir auf?</b> Der Scheitelpunkt von y = (x − d)² liegt immer bei …</p><div class="choice grid2" id="mc">'+
+   mc.map(function(m,i){return '<button type="button" class="opt'+(st.s1.mc===i?(i===0?' ok':' bad'):'')+'" data-i="'+i+'">'+m+'</button>';}).join('')+'</div><p class="fb" id="fbmc"></p></div>'+
+   (st.s1.mcOk?transferHTML():'')+
+   '<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
+  $('c1').addEventListener('click',check1);
+  $('t1').addEventListener('click',function(){st.s1.tip++;save();r1();});
+  if(st.s1.mcOk)bindTransfer();
+  S1_ROWS.forEach(function(d){if(d===0)return;['x','y'].forEach(function(c){$('s1'+c+d).addEventListener('input',function(){st.s1.vals[d+c]=this.value;this.className='num';save();});});
+    $('s1r'+d).addEventListener('change',function(){st.s1.vals[d+'r']=this.value;this.className='sel';save();});});
+  Array.prototype.forEach.call(document.querySelectorAll('#mc .opt'),function(b){b.addEventListener('click',function(){pick1(+b.dataset.i);});});
+  if(st.s1.mcOk)$('fbmc').innerHTML='<span class="fb ok">Genau! Der Scheitelpunkt hängt am Kranhaken: S(d | 0).</span>';
+  bindNext();
+}
+function transferHTML(){
+  return '<div class="stack note" style="border-left-color:var(--blue)"><p><b>Jetzt ohne Kran!</b> Diese Parabeln passen nicht ins Bild. Nutze deine Entdeckung.</p>'+
+   S1_T.map(function(d){var t=st.s1.t||{},k=String(d).replace('.','_').replace('-','m');return '<p class="row"><span style="min-width:7.5em">'+termTxt(d)+'</span><span class="spt">S( <input class="num" inputmode="decimal" id="t1x'+k+'" value="'+(t[d+'x']||'')+'" aria-label="x-Koordinate"> | <input class="num" inputmode="decimal" id="t1y'+k+'" value="'+(t[d+'y']||'')+'" aria-label="y-Koordinate"> )</span></p>';}).join('')+
+   '<div class="row"><button class="btn sec" type="button" id="c1t">Prüfen</button><span class="fb'+(st.s1.tOk?' ok':'')+'" id="fb1t">'+(st.s1.tOk?'Stark – du brauchst den Kran gar nicht mehr!':'')+'</span></div></div>';
+}
+function bindTransfer(){
+  S1_T.forEach(function(d){var k=String(d).replace('.','_').replace('-','m');['x','y'].forEach(function(c){var el=$('t1'+c+k);if(st.s1.tOk)el.className='num ok';el.addEventListener('input',function(){st.s1.t=st.s1.t||{};st.s1.t[d+c]=this.value;this.className='num';save();});});});
+  $('c1t').addEventListener('click',function(){
+    var wrong=0,empty=0,sign=false;
+    S1_T.forEach(function(d){var k=String(d).replace('.','_').replace('-','m'),ix=$('t1x'+k),iy=$('t1y'+k),vx=parse(ix.value),vy=parse(iy.value);if(isNaN(vx)||isNaN(vy)){empty++;return;}ix.className='num '+(vx===d?'ok':'bad');iy.className='num '+(vy===0?'ok':'bad');if(vx===-d)sign=true;if(vx!==d||vy!==0)wrong++;});
+    var fb=$('fb1t');
+    if(empty){fb.className='fb bad';fb.textContent='Fülle alle Felder aus.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent=sign?'Vorzeichen-Falle! Bei (x + 10)² liegt der Scheitelpunkt links, also bei x = −10.':'Schau in die Klammer: Für welches x wird sie 0?';return;}
+    st.s1.tOk=true;finish(0);save();r1();
+  });
+}
+function allS1(){return S1_ROWS.every(function(d){return d===0||(parse(st.s1.vals[d+'x'])===d&&parse(st.s1.vals[d+'y'])===0&&st.s1.vals[d+'r']===(d>0?'r':'l'));});}
+function check1(){
+  var wrong=0,empty=0,sign=false,ywrong=false,rwrong=false;
+  S1_ROWS.forEach(function(d){if(d===0)return;var ix=$('s1x'+d),iy=$('s1y'+d),ir=$('s1r'+d),vx=parse(ix.value),vy=parse(iy.value),r=ir.value;
+    if(isNaN(vx)||isNaN(vy)||!r){empty++;return;}
+    ix.className='num '+(vx===d?'ok':'bad');iy.className='num '+(vy===0?'ok':'bad');var rok=r===(d>0?'r':'l');ir.className='sel '+(rok?'ok':'bad');
+    if(vx===-d)sign=true;if(vy!==0)ywrong=true;if(!rok)rwrong=true;if(vx!==d||vy!==0||!rok)wrong++;});
+  var fb=$('fb1');
+  if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch Angaben in '+empty+' Zeile'+(empty>1?'n':'')+'.';return;}
+  if(wrong){fb.className='fb bad';fb.textContent=sign?'Achtung Vorzeichen: Stelle den Term genau ein. Liegt der Scheitelpunkt dann wirklich dort, wo du ihn eingetragen hast?':(ywrong?'Liegt der Scheitelpunkt über oder unter der x-Achse? Was ist dann seine y-Koordinate?':(rwrong?'Vergleiche mit der gestrichelten Normalparabel: Liegt die orange Parabel links oder rechts davon?':'Noch nicht ganz. Stelle den Term ein und lies genau ab.'));return;}
+  fb.className='fb ok';fb.textContent='Alle richtig abgelesen!';$('mcBox').hidden=false;
+}
+function pick1(i){st.s1.mc=i;var ok=i===0;
+  Array.prototype.forEach.call(document.querySelectorAll('#mc .opt'),function(b){b.className='opt'+(+b.dataset.i===i?(ok?' ok':' bad'):'');});
+  if(ok){st.s1.mcOk=true;save();r1();}
+  else{var f_=$('fbmc');f_.className='fb bad';f_.textContent=(i===1?'Fast! Bei y = (x − 2)² ist d = 2 und S(2 | 0). Passt S(−d | 0) dazu?':'Vergleiche mit deiner Tabelle: Liegt der Scheitelpunkt auf der x-Achse oder auf der y-Achse?');save();}
+}
+
+/* ---------- Station 2: Vorhersagen ---------- */
+function newRound2(){var d;do{d=Math.floor(Math.random()*9)-4;}while(d===0||d===st.s2.last);st.s2.d=d;st.s2.last=d;st.s2.dir=null;st.s2.phase='ask';st.s2.anim=null;}
+function r2(){
+  liftMode(false,'In dieser Station steuert die App den Kran. Du sagst vorher, wohin er fährt.');
+  if(st.s2.d===null)newRound2();
+  updateTerm();
+  var need=3,dots='';for(var i=0;i<need;i++)dots+='<i class="'+(i<st.s2.hits?'on':'')+'"></i>';
+  var asking=st.s2.phase==='ask';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 2 · Vorhersagen</p><h2>Wohin fährt der Kran?</h2></div>'+
+   '<p>Oben steht ein neuer Term. Die Parabel hängt noch versteckt am Kran. Sage voraus, wohin sie fährt, dann starte den Kran.</p>'+
+   '<div class="row"><span>Die Normalparabel fährt nach</span><span class="seg" id="seg"><button type="button" data-d="links"'+(st.s2.dir==='links'?' class="sel"':'')+'>◀ links</button><button type="button" data-d="rechts"'+(st.s2.dir==='rechts'?' class="sel"':'')+'>rechts ▶</button></span></div>'+
+   '<div class="row"><span>und zwar um</span><input class="num" id="s2n" inputmode="decimal" aria-label="Anzahl Einheiten"><span>Einheiten.</span></div>'+
+   '<div class="row"><span>Scheitelpunkt: S( <input class="num" id="s2x" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="s2y" inputmode="decimal" aria-label="y-Koordinate"> )</span></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="go2"'+(asking?'':' disabled')+'>Kran starten</button><button class="btn sec" type="button" id="new2"'+(asking?' hidden':'')+'>Nächster Term</button></div>'+
+   '<p class="fb" id="fb2"></p>'+
+   '<div class="row"><span class="muted">Richtige Vorhersagen:</span><span class="dots">'+dots+'</span></div>'+
+   '<div class="row">'+nextBtn(1)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(b){b.addEventListener('click',function(){st.s2.dir=b.dataset.d;Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(x){x.className=x===b?'sel':'';});});});
+  $('go2').addEventListener('click',run2);
+  $('new2').addEventListener('click',function(){newRound2();r2();draw();});
+  bindNext();draw();
+}
+function animate(from,to,set,done){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||from===to){set(to);done();return;}
+  var t0=null,dur=900+Math.abs(to-from)*150;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),q=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;set(from+(to-from)*q);if(p<1)requestAnimationFrame(step);else{set(to);done();}}
+  requestAnimationFrame(step);
+}
+function run2(){
+  var d=st.s2.d,n=parse($('s2n').value),vx=parse($('s2x').value),vy=parse($('s2y').value),fb=$('fb2');
+  if(!st.s2.dir||isNaN(n)||isNaN(vx)||isNaN(vy)){fb.className='fb bad';fb.textContent='Fülle zuerst alles aus: Richtung, Einheiten und Scheitelpunkt.';return;}
+  st.s2.phase='show';$('go2').disabled=true;
+  var dirOk=(d>0&&st.s2.dir==='rechts')||(d<0&&st.s2.dir==='links'),nOk=n===Math.abs(d),sOk=vx===d&&vy===0;
+  animate(0,d,function(v){st.s2.anim=v;draw();},function(){
+    var cls,txt;
+    if(dirOk&&nOk&&sOk){st.s2.hits=Math.min(3,st.s2.hits+1);cls='fb ok';txt='Richtig vorhergesagt! '+termTxt(d)+' fährt '+fmt(Math.abs(d))+' nach '+(d>0?'rechts':'links')+', S('+fmt(d)+' | 0).';if(st.s2.hits>=3)finish(1);}
+    else{var t=[];if(!dirOk)t.push(d>0?'Minus in der Klammer → nach rechts':'Plus in der Klammer → nach links');if(!nOk)t.push('Einheiten: '+fmt(Math.abs(d)));if(!sOk)t.push('Scheitelpunkt: S('+fmt(d)+' | 0)');cls='fb bad';txt='Schau genau hin: '+t.join(' · ')+'.';}
+    save();r2();$('fb2').className=cls;$('fb2').textContent=txt;$('s2n').value=n;$('s2x').value=vx;$('s2y').value=vy;
+  });
+}
+
+/* ---------- Station 3: Begründen ---------- */
+function TIPS3(d){return ['Erst rechnest du die Klammer aus, dann quadrierst du. Beispiel: x = 1 → (1 '+(d>0?'−':'+')+' '+fmt(Math.abs(d))+')² = ('+fmt(1-d)+')² = '+fmt(f(1,d))+'.',
+  'Minus mal Minus ergibt Plus: (−2)² = 4. Ein Quadrat ist nie negativ.'];}
+function r3(){
+  liftMode(false,'Hier rechnest du. Die Punkte, die du einträgst, erscheinen im Koordinatensystem.');
+  var set=S3_SETS[st.s3.set],d=set.d,solved=st.s3.solved[st.s3.set],zok=st.s3.zeroOk[st.s3.set];
+  updateTerm();
+  var head='<tr><th>x</th>'+set.xs.map(function(x){return '<th>'+fmt(x)+'</th>';}).join('')+'</tr>';
+  var rN='<tr><th>y = x²</th>'+set.xs.map(function(x){return '<td>'+fmt(x*x)+'</td>';}).join('')+'</tr>';
+  var rD='<tr><th>'+termTxt(d)+'</th>'+set.xs.map(function(x){var v=st.s3.vals[d+'_'+x]||'';return '<td><input class="num" inputmode="decimal" id="s3_'+x+'" value="'+v+'" aria-label="y-Wert bei x = '+fmt(x)+'"></td>';}).join('')+'</tr>';
+  var dirW=d>0?'rechts':'links';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 3 · Begründen · Teil '+(st.s3.set+1)+' von 2</p><h2>Warum fährt die Parabel nach '+dirW+'?</h2></div>'+
+   '<p>Berechne die y-Werte für <b>'+termTxt(d)+'</b>. Jeder richtige Wert erscheint als grüner Punkt.</p>'+
+   '<div class="tw"><table><thead>'+head+'</thead><tbody>'+rN+rD+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button><button class="btn tip" type="button" id="t3"'+(st.s3.tip>=2?' hidden':'')+'>Tipp anzeigen</button></div>'+
+   '<p class="fb" id="fb3"></p><div class="stack">'+tipBox(TIPS3(d),st.s3.tip)+'</div>'+
+   '<div id="zBox" class="stack"'+(solved?'':' hidden')+'>'+
+     '<p class="row">Bei welchem x ist y = 0? &nbsp;x = <input class="num" id="z1" inputmode="decimal" aria-label="x-Wert mit y = 0"></p>'+
+     '<p class="row">Dort ist die Klammer <span class="spt">'+br(d)+'</span> gleich <input class="num" id="z2" inputmode="decimal" aria-label="Wert der Klammer">.</p>'+
+     '<p class="row">Der Wert 0 kommt bei y = x² schon bei x = 0, bei '+termTxt(d)+' erst bei x = '+fmt(d)+'. Die Parabel ist also um <input class="num" id="z3" inputmode="decimal" aria-label="Einheiten"> Einheiten nach <select class="sel" id="z4" aria-label="Richtung"><option value="">…</option><option value="l">links</option><option value="r">rechts</option></select> verschoben.</p>'+
+     '<div class="row"><button class="btn sec" type="button" id="c3z">Prüfen</button><span class="fb" id="fb3z"></span></div>'+
+   '</div>'+
+   (zok?'<p class="win">Die Klammer '+br(d)+' wird genau bei <b>x = '+fmt(d)+'</b> null. Deshalb sitzt der Scheitelpunkt bei S('+fmt(d)+' | 0). '+(d>0?'Das Minus in der Klammer schiebt die Parabel also nach <b>rechts</b>: x muss 3 größer sein, damit dasselbe herauskommt wie bei x².':'Das Plus in der Klammer schiebt die Parabel also nach <b>links</b>: x muss 2 kleiner sein, damit dasselbe herauskommt wie bei x².')+' Vergleiche die Zeilen: Die Zahlenfolge 9, 4, 1, 0, 1, 4, 9 ist dieselbe, nur verschoben.</p>':'')+
+   '<div class="row">'+(zok&&st.s3.set===0?'<button class="btn pri" type="button" id="part2">Weiter zu Teil 2 →</button>':'')+nextBtn(2)+'</div>';
+  set.xs.forEach(function(x){$('s3_'+x).addEventListener('input',function(){st.s3.vals[d+'_'+x]=this.value;this.className='num';save();draw();});});
+  $('c3').addEventListener('click',check3);
+  $('t3').addEventListener('click',function(){st.s3.tip++;save();r3();});
+  if(solved){$('c3z').addEventListener('click',check3z);if(zok){$('z1').value=fmt(d);$('z2').value='0';$('z3').value=fmt(Math.abs(d));$('z4').value=d>0?'r':'l';['z1','z2','z3'].forEach(function(id){$(id).className='num ok';});$('z4').className='sel ok';}}
+  if($('part2'))$('part2').addEventListener('click',function(){st.s3.set=1;save();r3();draw();});
+  bindNext();draw();
+}
+function check3(){
+  var set=S3_SETS[st.s3.set],d=set.d,wrong=0,empty=0,neg=false,fb=$('fb3');
+  set.xs.forEach(function(x){var i=$('s3_'+x),v=parse(i.value);if(isNaN(v)){empty++;return;}var ok=v===f(x,d);i.className='num '+(ok?'ok':'bad');if(v<0)neg=true;if(!ok)wrong++;});
+  if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Werte.';return;}
+  if(wrong){fb.className='fb bad';fb.textContent=neg?'Ein Quadrat kann nicht negativ sein. Rechne die Klammer aus und quadriere dann.':wrong+' Wert'+(wrong>1?'e stimmen':' stimmt')+' noch nicht. Erst Klammer, dann quadrieren.';draw();return;}
+  st.s3.solved[st.s3.set]=true;save();r3();$('fb3').className='fb ok';$('fb3').textContent='Alle Werte stimmen!';
+}
+function check3z(){
+  var d=S3_SETS[st.s3.set].d,a=parse($('z1').value),b=parse($('z2').value),c=parse($('z3').value),r=$('z4').value,fb=$('fb3z');
+  $('z1').className='num '+(a===d?'ok':'bad');$('z2').className='num '+(b===0?'ok':'bad');$('z3').className='num '+(c===Math.abs(d)?'ok':'bad');$('z4').className='sel '+(r===(d>0?'r':'l')?'ok':'bad');
+  if(a===d&&b===0&&c===Math.abs(d)&&r===(d>0?'r':'l')){st.s3.zeroOk[st.s3.set]=true;if(st.s3.zeroOk[0]&&st.s3.zeroOk[1])finish(2);save();r3();$('fb3').className='fb ok';$('fb3').textContent='Alle Werte stimmen!';}
+  else{fb.className='fb bad';fb.textContent='Suche in deiner Tabelle die 0 in der unteren Zeile. Über ihr steht das x.';}
+}
+
+/* ---------- Station 4: Regel finden + Vermutung prüfen ---------- */
+var GAPS=[
+  {pre:'Bei y = (x − d)² wird die Normalparabel in ',post:' verschoben.',opts:['x-Richtung','y-Richtung','keine Richtung'],ans:0},
+  {pre:'Steht in der Klammer ein Minus, z. B. (x − 3)², wird sie nach ',post:' verschoben.',opts:['links','rechts','oben'],ans:1},
+  {pre:'Steht in der Klammer ein Plus, z. B. (x + 3)², wird sie nach ',post:' verschoben.',opts:['links','rechts','unten'],ans:0},
+  {pre:'Bei y = (x + 3)² ist d = ',post:'.',opts:['3','−3','0'],ans:1},
+  {pre:'Der Scheitelpunkt liegt bei ',post:'.',opts:['S(0 | d)','S(−d | 0)','S(d | 0)'],ans:2},
+  {pre:'Die Form der Parabel ',post:'.',opts:['bleibt gleich','wird breiter','wird schmaler'],ans:0}
+];
+function r4(){
+  liftMode(true);
+  var gObj=GUESSES.filter(function(o){return o.k===st.guess;})[0];
+  var refl='';
+  if(st.s4.saved){
+    refl='<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+     (gObj?'<p>Du hast vermutet: <b>'+gObj.k+' &nbsp;'+gObj.t+'</b>.</p>'+(gObj.k==='C'?'<p class="fb ok">Deine Vermutung stimmt! Die Halfpipe y = (x − 3)² steht 3 m weiter rechts.</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist C: y = (x − 3)². '+(gObj.k==='B'?'Viele denken „+ heißt rechts“. Die Klammer wird aber bei x = 3 null, wenn dort ein Minus steht.':'Mit '+gObj.t+' fährt die Halfpipe nach '+(gObj.k==='A'?'oben':'unten')+', nicht zur Seite.')+'</p>'):'<p>Du hast am Anfang keine Vermutung gewählt. Richtig ist <b>C: y = (x − 3)²</b>.</p>')+
+     '<p>Erkläre in einem Satz, warum C richtig ist (das brauchst du für deinen Steckbrief):</p>'+
+     '<textarea id="refl" rows="3" style="width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)" placeholder="C ist richtig, weil …">'+(st.s4.reflect||'').replace(/</g,'&lt;')+'</textarea></div>';
+  }
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 4 · Regel finden</p><h2>Eure Kran-Regel</h2></div>'+
+   '<p>Wähle die passenden Wörter. Mit dem Kran kannst du jederzeit nachprüfen.</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.opts.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?'<div class="stack note" style="border-left-color:var(--ok)"><p><b>Jetzt ihr!</b> Schreibt eure Kran-Regel <b>in ganzen Sätzen</b>. Benutzt mindestens drei dieser Wörter: <i>Klammer, Minus, Plus, links, rechts, Scheitelpunkt, Form</i>.</p>'+
+     '<textarea id="own" rows="4" style="width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)" placeholder="Wenn in der Klammer ein Minus steht, …">'+(st.s4.text||'').replace(/</g,'&lt;')+'</textarea>'+
+     '<div class="row"><button class="btn pri" type="button" id="sv4">Regel speichern</button><span class="fb" id="fb4b"></span></div></div>':'')+
+   (st.s4.saved?'<div class="win"><p class="eyebrow" style="color:var(--ok)">Unsere Kran-Regel</p><p id="ruleOut"></p><p class="muted" style="margin-top:6px">Übertragt sie mit einer Skizze auf euer Arbeitsblatt.</p></div>':'')+
+   refl+
+   '<div class="row">'+nextBtn(3)+'</div>';
+  if(st.s4.ok)GAPS.forEach(function(g,i){$('g'+i).value=String(g.ans);$('g'+i).className='sel ok';});
+  GAPS.forEach(function(g,i){$('g'+i).addEventListener('change',function(){this.className='sel';});});
+  $('c4').addEventListener('click',function(){
+    var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.ans;s.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');
+    if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Teste mit dem Kran!';return;}
+    st.s4.ok=true;save();r4();
+  });
+  if(st.s4.ok){
+    $('own').addEventListener('input',function(){st.s4.text=this.value;save();});
+    $('sv4').addEventListener('click',function(){
+      var t=$('own').value.trim(),fb=$('fb4b'),words=['klammer','minus','plus','links','rechts','scheitel','form'];
+      var hits=words.filter(function(w){return t.toLowerCase().indexOf(w)>=0;}).length;
+      if(t.length<30){fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';return;}
+      if(hits<3){fb.className='fb bad';fb.textContent='Benutzt mindestens drei Wörter aus der Liste.';return;}
+      st.s4.text=t;st.s4.saved=true;finish(3);save();r4();
+    });
+    if(st.s4.saved){$('ruleOut').textContent=st.s4.text;$('refl').addEventListener('input',function(){st.s4.reflect=this.value;save();});}
+  }
+  bindNext();
+}
+
+/* ---------- Station 5: Training ---------- */
+function newTask5(){var s=st.s5,d;do{d=Math.floor(Math.random()*11)-5;}while(d===0||d===s.target);s.target=d;s.solved=false;s.anim=null;}
+function r5(){
+  liftMode(false,'Hier gibst du die Lösung ein. Dann fährt der Kran dorthin, und du siehst, ob es passt.');
+  var s=st.s5;if(s.target===null)newTask5();
+  var body;
+  if(s.mode==='graph'){
+    body='<p>Welcher Term gehört zur <b style="color:var(--target)">rot gestrichelten</b> Parabel? Wähle das Rechenzeichen und trage die Zahl ein.</p>'+inTerm();
+  } else if(s.mode==='scheitel'){
+    body='<p>Eine verschobene Normalparabel hat den Scheitelpunkt <b style="color:var(--target)">S('+fmt(s.target)+' | 0)</b>. Wie heißt ihr Term?</p>'+inTerm();
+  } else {
+    body='<p>Oben steht der Term. Wo liegt der Scheitelpunkt?</p><p class="row big">S( <input class="num" id="tx" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="ty" inputmode="decimal" aria-label="y-Koordinate"> )</p>';
+  }
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 5 · Training</p><h2>'+{graph:'Graph → Term',scheitel:'Scheitelpunkt → Term',term:'Term → Scheitelpunkt'}[s.mode]+'</h2></div>'+
+   '<div class="seg" id="seg5"><button type="button" data-m="graph"'+(s.mode==='graph'?' class="sel"':'')+'>Graph → Term</button><button type="button" data-m="scheitel"'+(s.mode==='scheitel'?' class="sel"':'')+'>S → Term</button><button type="button" data-m="term"'+(s.mode==='term'?' class="sel"':'')+'>Term → S</button></div>'+
+   body+
+   '<div class="row"><button class="btn pri" type="button" id="c5">Kran starten</button><button class="btn sec" type="button" id="n5">Neue Aufgabe</button></div>'+
+   '<p class="fb" id="fb5"></p><p class="muted" id="hits5">Treffer: '+s.hits+(s.hits<4?' · ab 4 Treffern öffnen sich die Profi-Zusatzaufgaben ★':'')+'</p>'+
+   '<div class="row">'+nextBtn(4)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#seg5 button'),function(b){b.addEventListener('click',function(){s.mode=b.dataset.m;newTask5();r5();updateTerm();draw();});});
+  $('n5').addEventListener('click',function(){newTask5();r5();updateTerm();draw();});
+  $('c5').addEventListener('click',check5);
+  bindNext();updateTerm();draw();
+}
+function inTerm(){return '<p class="row big">y = (x <select class="sel" id="sg" aria-label="Rechenzeichen"><option value="">±</option><option value="-">−</option><option value="+">+</option></select> <input class="num" id="nn" inputmode="decimal" aria-label="Zahl"> )²</p>';}
+function check5(){
+  var s=st.s5,fb=$('fb5'),T=s.target,v;
+  if(s.mode==='term'){
+    var a=parse($('tx').value),b=parse($('ty').value);
+    if(isNaN(a)||isNaN(b)){fb.className='fb bad';fb.textContent='Trage beide Koordinaten ein.';return;}
+    $('tx').className='num '+(a===T?'ok':'bad');$('ty').className='num '+(b===0?'ok':'bad');
+    if(a===T&&b===0){hit5('Richtig! Die Klammer wird bei x = '+fmt(T)+' null.');s.anim=T;draw();}
+    else{fb.className='fb bad';fb.textContent=a===-T?'Vorzeichen-Falle! Für welches x wird die Klammer 0?':'Noch nicht. Für welches x wird die Klammer 0?';}
+    return;
+  }
+  var sg=$('sg').value,n=parse($('nn').value);
+  if(!sg||isNaN(n)){fb.className='fb bad';fb.textContent='Wähle das Rechenzeichen und trage eine Zahl ein.';return;}
+  if(n<0){fb.className='fb bad';fb.textContent='Das Vorzeichen wählst du links. Trage rechts eine Zahl ohne Minus ein.';return;}
+  v=sg==='-'?n:-n;if(Object.is(v,-0))v=0;
+  if(Math.abs(v)>7){fb.className='fb bad';fb.textContent='So weit fährt der Kran nicht. Prüfe deine Zahl.';return;}
+  $('c5').disabled=true;fb.className='fb';fb.textContent='Der Kran fährt …';
+  animate(0,v,function(x){s.anim=x;updateTerm();draw();},function(){
+    $('c5').disabled=false;
+    if(v===T){$('nn').className='num ok';$('sg').className='sel ok';hit5('Treffer! '+termTxt(T)+' hat den Scheitelpunkt S('+fmt(T)+' | 0).');}
+    else{$('nn').className='num '+(n===Math.abs(T)?'ok':'bad');$('sg').className='sel '+((T>0)===(sg==='-')?'ok':'bad');fb.className='fb bad';
+      fb.textContent=v===-T?'Genau falsch herum! Minus in der Klammer schiebt nach rechts, Plus nach links.':(v<T?'Zu weit links. Schau, wo der rote Scheitelpunkt liegt.':'Zu weit rechts. Schau, wo der rote Scheitelpunkt liegt.');}
+  });
+}
+function hit5(msg){var s=st.s5,fb=$('fb5');if(!s.solved){s.hits++;s.solved=true;}fb.className='fb ok';fb.textContent=msg;if(s.hits>=4&&!st.done[4]){finish(4);save();r5();$('fb5').className='fb ok';$('fb5').textContent=msg+' Die Profi-Zusatzaufgaben sind jetzt offen.';return;}$('hits5').textContent='Treffer: '+s.hits+(s.hits<4?' · ab 4 Treffern öffnen sich die Profi-Zusatzaufgaben ★':'');save();}
+
+/* ---------- Station 6: Profi-Zusatz ---------- */
+var DOPPEL=[{P:[5,4],ans:[3,7]},{P:[-1,9],ans:[-4,2]},{P:[1,1],ans:[0,2]},{P:[-2,4],ans:[-4,0]}];
+var BINOM=[{t:'x² − 6x + 9',d:3},{t:'x² + 8x + 16',d:-4},{t:'x² − 2x + 1',d:1},{t:'x² + 5x + 6,25',d:-2.5}];
+var TF=[
+  {s:'Die Parabel y = (x + 4)² ist um 4 Einheiten nach rechts verschoben.',a:false,w:'Plus in der Klammer → nach links. Die Klammer wird bei x = −4 null.'},
+  {s:'y = (x − 1)² und y = (1 − x)² beschreiben dieselbe Parabel.',a:true,w:'(1 − x)² = (−(x − 1))² = (x − 1)². Das Quadrat „schluckt“ das Minus.'},
+  {s:'Die Symmetrieachse von y = (x − d)² ist die Gerade x = d.',a:true,w:'Die Parabel ist symmetrisch zur senkrechten Geraden durch den Scheitelpunkt S(d | 0).'},
+  {s:'Der Punkt P(0 | 9) liegt auf der Parabel y = (x + 3)².',a:true,w:'(0 + 3)² = 9 ✓'},
+  {s:'y = (x − 3)² hat den Scheitelpunkt S(0 | −3).',a:false,w:'Das wäre y = x² − 3. Bei (x − 3)² liegt S bei (3 | 0).'}
+];
+function tf6(){return st.s6.tf||(st.s6.tf={});}
+function term6(){var s=st.s6;
+  if(s.mode==='doppel'){var D=DOPPEL[s.i];return 'P('+fmt(D.P[0])+' | '+fmt(D.P[1])+') auf y = (x − d)²';}
+  if(s.mode==='kombi'){return s.shown?termHTML(s.shown[0],s.shown[1]):'y = (x − ?)² + ?';}
+  if(s.mode==='binom'){return 'y = '+BINOM[s.i].t;}
+  return 'Fehler-Detektiv';
+}
+function draw6(){var s=st.s6,norm=col('norm');parabola(0,0,norm,2.5,[9,7]);
+  if(s.mode==='doppel'){var D=DOPPEL[s.i];(s.shown||[]).forEach(function(d,j){parabola(d,0,j?col('curve2'):col('curve'),4);});dot(D.P[0],D.P[1],col('target'),9);label('P('+fmt(D.P[0])+' | '+fmt(D.P[1])+')',D.P[0],D.P[1],col('target'),D.P[0]>2);}
+  else if(s.mode==='kombi'){var c=s.combo;if(c){parabola(c[0],c[1],col('target'),3,[4,8]);}if(s.shown)parabola(s.shown[0],s.shown[1],col('curve'),5);}
+  else if(s.mode==='binom'){if(s.shown!=null){parabola(s.shown,0,col('curve'),5);dot(s.shown,0,col('curve'),6);}}
+}
+function r6(){
+  liftMode(false,'Profi-Bereich: Hier arbeitest du ohne Kran-Regler. Die Graphen zeigen dir, ob du richtig liegst.');
+  var s=st.s6,body='',solvedN=Object.keys(s.solved).length;
+  if(s.mode==='doppel'){var D=DOPPEL[s.i];
+    body='<h3>Doppel-Treffer</h3><p>Der Punkt <b style="color:var(--target)">P('+fmt(D.P[0])+' | '+fmt(D.P[1])+')</b> soll auf einer Parabel y = (x − d)² liegen. Es gibt <b>zwei</b> passende Werte für d. Finde beide!</p>'+
+     '<p class="row big">d₁ = <input class="num" id="d1" inputmode="decimal" aria-label="erster Wert für d"> &nbsp; d₂ = <input class="num" id="d2" inputmode="decimal" aria-label="zweiter Wert für d"></p>'+
+     '<div class="row"><button class="btn pri" type="button" id="c6">Prüfen</button><button class="btn tip" type="button" id="tp6">Tipp</button><button class="btn sec" type="button" id="n6">Andere Aufgabe</button></div><div id="hint6"></div>';
+  } else if(s.mode==='kombi'){
+    if(!s.combo){var d,e;do{d=Math.floor(Math.random()*7)-3;e=Math.floor(Math.random()*6)-2;}while(d===0||e===0);s.combo=[d,e];}
+    body='<h3>Kran + Fahrstuhl</h3><p>Jetzt wird in <b>beide</b> Richtungen verschoben. Welcher Term gehört zur <b style="color:var(--target)">rot gestrichelten</b> Parabel? Schreibe sie in der Form y = (x − d)² + e.</p>'+
+     '<p class="row big">d = <input class="num" id="kd" inputmode="decimal" aria-label="d"> &nbsp; e = <input class="num" id="ke" inputmode="decimal" aria-label="e"></p>'+
+     '<p class="row">Scheitelpunkt: S( <input class="num" id="kx" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="ky" inputmode="decimal" aria-label="y-Koordinate"> )</p>'+
+     '<div class="row"><button class="btn pri" type="button" id="c6">Prüfen</button><button class="btn sec" type="button" id="n6">Neue Parabel</button></div>';
+  } else if(s.mode==='binom'){var B=BINOM[s.i];
+    body='<h3>Binomi-Detektiv</h3><p>Oben steht ein ausmultiplizierter Term. Er ist eine verschobene Normalparabel. Schreibe ihn mit der binomischen Formel als y = (x − d)² und gib den Scheitelpunkt an.</p>'+
+     '<p class="row big">y = (x <select class="sel" id="sg6" aria-label="Rechenzeichen"><option value="">±</option><option value="-">−</option><option value="+">+</option></select> <input class="num" id="nn6" inputmode="decimal" aria-label="Zahl"> )²</p>'+
+     '<p class="row">S( <input class="num" id="bx" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="by" inputmode="decimal" aria-label="y-Koordinate"> )</p>'+
+     '<div class="row"><button class="btn pri" type="button" id="c6">Prüfen</button><button class="btn tip" type="button" id="tp6">Tipp</button><button class="btn sec" type="button" id="n6">Andere Aufgabe</button></div><div id="hint6"></div>';
+  } else {
+    var T=tf6();
+    body='<h3>Fehler-Detektiv</h3><p>Stimmt die Aussage? Entscheide und lies die Begründung.</p>'+
+     TF.map(function(q,i){var a=T[i];return '<div class="tf"><span>'+q.s+'</span><span class="seg" data-i="'+i+'"><button type="button" data-v="1"'+(a===true?' class="sel"':'')+'>wahr</button><button type="button" data-v="0"'+(a===false?' class="sel"':'')+'>falsch</button></span>'+
+       (a!==undefined?'<p class="why fb '+(a===q.a?'ok':'bad')+'">'+(a===q.a?'Richtig. ':'Leider nicht. ')+'<span style="font-weight:400;color:var(--ink)">'+q.w+'</span></p>':'')+'</div>';}).join('');
+  }
+  $('task').innerHTML=
+   '<div><p class="eyebrow pro">★ Profi-Zusatz</p><h2>Für Schnelle: knifflige Kran-Aufgaben</h2></div>'+
+   '<div class="seg" id="seg6"><button type="button" data-m="doppel"'+(s.mode==='doppel'?' class="sel"':'')+'>Doppel-Treffer</button><button type="button" data-m="kombi"'+(s.mode==='kombi'?' class="sel"':'')+'>Kran + Fahrstuhl</button><button type="button" data-m="binom"'+(s.mode==='binom'?' class="sel"':'')+'>Binomi</button><button type="button" data-m="tf"'+(s.mode==='tf'?' class="sel"':'')+'>Fehler-Detektiv</button></div>'+
+   body+'<p class="fb" id="fb6"></p><p class="muted">Gelöste Profi-Aufgaben: '+solvedN+'</p>';
+  Array.prototype.forEach.call(document.querySelectorAll('#seg6 button'),function(b){b.addEventListener('click',function(){s.mode=b.dataset.m;s.i=0;s.shown=null;s.combo=null;r6();updateTerm();draw();});});
+  if(s.mode==='tf'){Array.prototype.forEach.call(document.querySelectorAll('.tf .seg'),function(g){Array.prototype.forEach.call(g.querySelectorAll('button'),function(b){b.addEventListener('click',function(){var i=+g.dataset.i,v=b.dataset.v==='1';tf6()[i]=v;if(v===TF[i].a)s.solved['tf'+i]=1;save();r6();});});});}
+  else{
+    $('c6').addEventListener('click',check6);
+    $('n6').addEventListener('click',function(){if(s.mode==='kombi')s.combo=null;else s.i=(s.i+1)%(s.mode==='doppel'?DOPPEL.length:BINOM.length);s.shown=null;r6();updateTerm();draw();});
+    if($('tp6'))$('tp6').addEventListener('click',function(){var h;
+      if(s.mode==='doppel'){var D=DOPPEL[s.i],r=Math.sqrt(D.P[1]);h='Setze P ein: '+fmt(D.P[1])+' = ('+fmt(D.P[0])+' − d)². Welche Zahlen ergeben quadriert '+fmt(D.P[1])+'? Es sind '+fmt(r)+' und '+fmt(-r)+'. Also ist '+fmt(D.P[0])+' − d = '+fmt(r)+' oder '+fmt(D.P[0])+' − d = '+fmt(-r)+'.';}
+      else{h='2. binomische Formel: (x − d)² = x² − 2·d·x + d². Die Zahl vor x ist −2d, die Zahl am Ende ist d². Bei x² − 6x + 9 ist also d = 3, denn 3² = 9.';}
+      $('hint6').innerHTML='<p class="hint"><b>Tipp:</b> '+h+'</p>';});
+  }
+  updateTerm();draw();
+}
+function cnt6(){var c=$('cnt6');if(c)c.textContent='Gelöste Profi-Aufgaben: '+Object.keys(st.s6.solved).length;}
+function check6(){
+  var s=st.s6,fb=$('fb6');setTimeout(cnt6,0);
+  if(s.mode==='doppel'){var D=DOPPEL[s.i],a=parse($('d1').value),b=parse($('d2').value);
+    if(isNaN(a)||isNaN(b)){fb.className='fb bad';fb.textContent='Trage zwei Werte für d ein.';return;}
+    var okA=D.ans.indexOf(a)>=0,okB=D.ans.indexOf(b)>=0;$('d1').className='num '+(okA?'ok':'bad');$('d2').className='num '+(okB&&a!==b?'ok':'bad');
+    s.shown=[a,b].filter(function(v){return Math.abs(v)<=8;});draw();
+    if(okA&&okB&&a!==b){s.solved['dp'+s.i]=1;save();fb.className='fb ok';fb.textContent='Doppel-Treffer! Beide Parabeln gehen durch P. Sie liegen symmetrisch zur Senkrechten durch P.';}
+    else if(okA||okB){fb.className='fb bad';fb.textContent='Einer stimmt schon. Es gibt aber noch eine zweite Parabel durch P.';}
+    else{fb.className='fb bad';fb.textContent='Die Parabeln verfehlen P. Hol dir einen Tipp.';}
+    return;}
+  if(s.mode==='kombi'){var c=s.combo,kd=parse($('kd').value),ke=parse($('ke').value),kx=parse($('kx').value),ky=parse($('ky').value);
+    if([kd,ke,kx,ky].some(isNaN)){fb.className='fb bad';fb.textContent='Fülle d, e und den Scheitelpunkt aus.';return;}
+    $('kd').className='num '+(kd===c[0]?'ok':'bad');$('ke').className='num '+(ke===c[1]?'ok':'bad');$('kx').className='num '+(kx===c[0]?'ok':'bad');$('ky').className='num '+(ky===c[1]?'ok':'bad');
+    s.shown=[kd,ke];updateTerm();draw();
+    if(kd===c[0]&&ke===c[1]&&kx===c[0]&&ky===c[1]){s.solved['k'+c.join('_')]=1;save();fb.className='fb ok';fb.textContent='Perfekt! '+termTxt(c[0],c[1])+': '+fmt(Math.abs(c[0]))+' nach '+(c[0]>0?'rechts':'links')+', '+fmt(Math.abs(c[1]))+' nach '+(c[1]>0?'oben':'unten')+', S('+fmt(c[0])+' | '+fmt(c[1])+').';}
+    else{fb.className='fb bad';fb.textContent=kd===-c[0]?'Vorzeichen-Falle bei d! Der Scheitelpunkt liegt bei x = '+fmt(c[0])+'.':'Lies den roten Scheitelpunkt ab: Seine x-Koordinate ist d, seine y-Koordinate ist e.';}
+    return;}
+  if(s.mode==='binom'){var B=BINOM[s.i],sg=$('sg6').value,n=parse($('nn6').value),bx=parse($('bx').value),by=parse($('by').value);
+    if(!sg||isNaN(n)||isNaN(bx)||isNaN(by)){fb.className='fb bad';fb.textContent='Fülle den Term und den Scheitelpunkt aus.';return;}
+    var v=sg==='-'?n:-n,ok=v===B.d;$('nn6').className='num '+(n===Math.abs(B.d)?'ok':'bad');$('sg6').className='sel '+((B.d>0)===(sg==='-')?'ok':'bad');
+    $('bx').className='num '+(bx===B.d?'ok':'bad');$('by').className='num '+(by===0?'ok':'bad');
+    if(ok&&bx===B.d&&by===0){s.shown=B.d;s.solved['b'+s.i]=1;save();draw();fb.className='fb ok';fb.textContent='Richtig! '+B.t+' = '+br(B.d)+'², also S('+fmt(B.d)+' | 0).';}
+    else{fb.className='fb bad';fb.textContent=ok?'Der Term stimmt. Prüfe den Scheitelpunkt.':'Multipliziere deine Klammer zur Probe aus. Kommt '+B.t+' heraus?';}
+  }
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();[r1,r2,r3,r4,r5,r6][st.station]();updateTerm();draw();}
+
+$('d').addEventListener('input',function(){setD(parseFloat(this.value));});
+$('left').addEventListener('click',function(){setD(st.d-.5);});
+$('right').addEventListener('click',function(){setD(st.d+.5);});
+$('tNorm').addEventListener('change',function(){st.norm=this.checked;draw();});
+$('tAxis').addEventListener('change',function(){st.axis=this.checked;draw();});
+var armed=false;
+$('reset').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();
+});
+cv.addEventListener('contextmenu',function(ev){ev.preventDefault();});
+window.addEventListener('resize',resize);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+load();if(!unlocked(st.station))st.station=0;
+render();resize();setD(0);
+
+/* ---------- Ergebnisse abgeben (jederzeit) ---------- */
+(function(){
+  var APP='Parabel-Kran';
+  var AKEY=(typeof KEY!=='undefined'?KEY:APP)+'-abgabe';
+  function lget(){try{return JSON.parse(localStorage.getItem(AKEY)||'{}')||{};}catch(e){return {};}}
+  function lset(o){try{localStorage.setItem(AKEY,JSON.stringify(o));}catch(e){}}
+  var A=lget();if(!A.t0){A.t0=Date.now();lset(A);}
+  function e(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+  
+  function abgText(A){
+    var d=new Date(),L=[];
+    var title=(document.querySelector('.brand b')||{}).textContent||APP;
+    var subt=(document.querySelector('.brand span')||{}).textContent||'';
+    L.push(title.toUpperCase()+(subt?' · '+subt:''));
+    L.push('Name: '+A.name+'    Klasse: '+(A.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+    var n=0;STATIONS.forEach(function(x,i){if(st.done[i])n++;});
+    L.push('Geschafft: '+n+' von '+STATIONS.length+' Stationen');
+    L.push('');
+    var LAB={hits:'richtig gelöst',tip:'Tipps benutzt',tips:'Tipps benutzt',tries:'Versuche',solved:'gelöst',begr:'Begründung',refl:'Begründung',text:'Text',guess:'Vermutung'};
+    function fmt(v){if(v===true)return 'ja';if(v===false)return 'nein';if(Array.isArray(v)){if(v.every(function(z){return typeof z==='boolean';}))return v.filter(Boolean).length+' von '+v.length;return v.map(fmt).join(', ');}if(v&&typeof v==='object')return null;return String(v);}
+    function details(o,pre,out){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){var v=o[k];
+      if(LAB[k]==null)return;var f=fmt(v);if(f==null||f===''||f==='null'||f==='undefined')return;
+      if(typeof v==='string'&&v.length>0)out.push(pre+LAB[k]+': '+v.trim());else out.push(pre+LAB[k]+': '+f);});}
+    STATIONS.forEach(function(x,i){
+      var mark=st.done[i]?'✓ geschafft':(i===st.station?'→ bearbeitet gerade':'–');
+      L.push('Station '+(i+1)+' · '+x.name+(x.pro?' (Profi)':'')+':  '+mark);
+      var out=[];if(st.done[i]||i===st.station)details(st[x.key],'   ',out);out.forEach(function(z){L.push(z);});
+    });
+    var extra=[];['begr','refl','guess'].forEach(function(k){if(st[k]!=null&&st[k]!==''){var f=fmt(st[k]);if(f)extra.push('   '+LAB[k]+': '+f);}});
+    if(extra.length){L.push('');L.push('Weitere Angaben:');L=L.concat(extra);}
+    L.push('');
+    L.push('Zeit seit dem ersten Öffnen der App: '+Math.round((Date.now()-A.t0)/60000)+' min');
+    var raw='';try{raw=localStorage.getItem(KEY)||'';}catch(err){}
+    L.push('');L.push('Die folgende Zeile ist für die Auswertung. Bitte nicht verändern.');
+    L.push('#DATEN '+raw);
+    return L.join('\n');
+  }
+
+  var ov=document.createElement('div');ov.className='abg-ov';ov.hidden=true;
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="abgH">'+
+    '<h2 id="abgH">Ergebnisse abgeben</h2>'+
+    '<ol><li>Trage deinen <b>Namen</b> und deine <b>Klasse</b> ein.</li>'+
+    '<li>Tippe auf <b>„Datei herunterladen“</b>. Auf dem iPad fragt Safari nach: Tippe auf <b>„Laden“</b>. Die Datei liegt dann in der App <b>Dateien</b> im Ordner <b>Downloads</b>.</li>'+
+    '<li>Öffne <b>IServ → Aufgaben → „'+e(APP)+'“</b>, lade die Datei hoch (aus <b>Dateien → Downloads</b>) und tippe auf <b>Abgeben</b>.</li></ol>'+
+    '<p class="muted">Du kannst auch abgeben, wenn du noch nicht fertig bist. Im Text steht, wie weit du gekommen bist.</p>'+
+    '<div class="abg-row"><label for="abgName">Name</label><input class="abg-in" id="abgName" autocomplete="off" style="width:12em">'+
+    '<label for="abgKl">Klasse</label><input class="abg-in" id="abgKl" autocomplete="off" style="width:5em"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="abgDl">Datei herunterladen</button>'+
+    '<button class="abg-close" type="button" id="abgClose">Schließen</button></div>'+
+    '<p class="muted" style="font-size:14px">Klappt das Herunterladen nicht? Dann <button type="button" id="abgCopy" style="background:none;border:none;padding:0;color:var(--blue);text-decoration:underline;font:inherit;cursor:pointer">kopiere den Text</button> und frag deine Lehrkraft.</p>'+
+    '<p class="abg-fb" id="abgFb"></p>'+
+    '<textarea class="abg-txt" id="abgTxt" rows="10" readonly hidden></textarea></div>';
+  document.body.appendChild(ov);
+  var $n=ov.querySelector('#abgName'),$k=ov.querySelector('#abgKl'),$t=ov.querySelector('#abgTxt'),$f=ov.querySelector('#abgFb');
+  function msg(ok,t){$f.className='abg-fb '+(ok?'ok':'bad');$f.textContent=t;}
+  function open(){A=lget();$n.value=A.name||'';$k.value=A.klasse||'';$t.hidden=true;msg(true,'');ov.hidden=false;setTimeout(function(){($n.value?ov.querySelector('#abgDl'):$n).focus();},30);}
+  function close(){ov.hidden=true;}
+  function upd(){A.name=$n.value.trim();A.klasse=$k.value.trim();lset(A);}
+  $n.addEventListener('input',upd);$k.addEventListener('input',upd);
+  ov.querySelector('#abgClose').addEventListener('click',close);
+  ov.addEventListener('click',function(ev){if(ev.target===ov)close();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!ov.hidden)close();});
+  ov.querySelector('#abgCopy').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A);$t.value=txt;
+    function sel(){$t.hidden=false;$t.focus();$t.select();msg(true,'Der Text ist markiert. Tippe lange darauf und wähle „Kopieren“.');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Text kopiert.');},sel);}catch(err){sel();}
+  });
+  function dateiname(){return (APP+'_'+(A.name||'Name')+'_'+(A.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'')+'.txt';}
+  ov.querySelector('#abgDl').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A).replace(/\r?\n/g,'\r\n'),name=dateiname();
+    try{var bl=new Blob(['\ufeff'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),a=document.createElement('a');
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},10000);
+      msg(true,'Die Datei „'+name+'“ wird heruntergeladen. Lade sie jetzt in IServ bei der Aufgabe „'+APP+'“ hoch.');}
+    catch(err){msg(false,'Herunterladen klappt hier nicht. Kopiere stattdessen den Text.');}
+  });
+  document.getElementById('abgBtn').addEventListener('click',open);
+})();
+})();
+</script>
+</body>
+</html>

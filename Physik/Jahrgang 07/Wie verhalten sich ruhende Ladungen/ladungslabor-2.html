@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ladungslabor 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Optik-Werkstatt“: Kopfleiste mit Stationen-Weg · links Modell mit zwei Ansichten (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.status{font-weight:700;border-radius:10px;padding:8px 12px;font-size:15px;text-align:center}
+.status.ok{background:var(--ok-soft);color:var(--ok)} .status.bad{background:var(--bad-soft);color:var(--bad)} .status.info{background:var(--surface-2);color:var(--ink-soft)}
+.patient{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.patient .av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-family:var(--f-display);color:#fff;grid-row:1/3}
+.pic{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.pic svg{width:100%;max-width:84px;height:auto}
+.choice.grid4{display:grid;grid-template-columns:repeat(4,1fr)}
+@media (max-width:440px){.choice.grid4{grid-template-columns:1fr 1fr}}
+
+/* ---- Start-Dialog ---- */
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Ladungslabor 2</b><span>Welche Kräfte wirken zwischen Ladungen?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell: zwei Ballons, drehbarer Stab oder Ballon und Stab"></canvas>
+    <div class="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP='Ladungslabor 2';
+var STATIONS=[
+  {key:'s1',name:'Zwei Ballons',scene:'pair'},
+  {key:'s2',name:'Drehbarer Stab',scene:'rot'},
+  {key:'s3',name:'Abstand',scene:'dist'},
+  {key:'s4',name:'Merksatz',scene:'dist'},
+  {key:'s5',name:'Profi-Zusatz',pro:true,scene:'pair'}
+];
+var st={station:0,done:[false,false,false,false,false],guess:null,
+  s1:{obs:{},obsOk:false,same:null,sameOk:false,strong:null,strongOk:false,own:'',ok:false},
+  s2:{obs:{},obsOk:false,rule:null,ruleOk:false,app:null,appOk:false},
+  s3:{obs:{},obsOk:false,je:null,jeOk:false,touch:null,touchOk:false},
+  s4:{gaps:{},ok:false,refl:'',hair:null,hairOk:false},
+  s5:{},res:{},tries:{},help:{},t0:null,log:[],meas:[]};
+/* ---------- Speicher ---------- */
+var KEY='ladungslabor-2-v1',RKEY='ladungslabor-2-resets';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,res:st.res,tries:st.tries,help:st.help,t0:st.t0,log:st.log,meas:st.meas,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;if(x.done)st.done=x.done;while(st.done.length<5)st.done.push(false);st.guess=x.guess||null;
+  ['s1','s2','s3','s4','s5'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});
+  if(x.res)st.res=x.res;if(x.tries)st.tries=x.tries;if(x.help)st.help=x.help;if(x.t0)st.t0=x.t0;if(x.log)st.log=x.log;if(x.meas)st.meas=x.meas;st.saves=x.saves||0;st.remindOff=!!x.remindOff;}catch(e){}}
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* ---------- Zeichnen (Basis) ---------- */
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(260,Math.min(w*0.58,430))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function tag(c,t,x,y,color,align){c.font='bold 13px '+ff();c.textBaseline='middle';c.textAlign=align||'center';var w=c.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  c.fillStyle=darkScene()?'#1E2438':col('surface');c.globalAlpha=.94;c.fillRect(x0-5,y-11,w+10,22);c.globalAlpha=1;c.fillStyle=color;c.fillText(t,x,y);}
+function paper(x,w,colr){x.setTransform(1,0,0,1,0,0);x.fillStyle=colr||'#FFF3D6';x.fillRect(0,0,w,w);}
+function zoom(cnv,f,back){var x=cnv.getContext('2d'),w=cnv.width;paper(x,w,back);x.save();x.translate(w/2,w/2);x.scale(w/f.s,w/f.s);x.translate(-f.x,-f.y);paint(x,true);x.restore();
+  x.strokeStyle='rgba(58,106,168,.6)';x.lineWidth=w*0.02;x.beginPath();x.arc(w/2,w/2,w*0.47,0,Math.PI*2);x.stroke();}
+function vtext(x,w,lines){var y=w*0.1;lines.forEach(function(l){x.font=(l.b?'bold ':'')+Math.round(w*(l.s||0.075))+'px '+ff();x.fillStyle=l.c||'#1A1F36';x.textAlign=l.a||'left';x.textBaseline='top';
+  var words=String(l.t).split(' '),line='',maxw=w*0.84,xx=l.a==='center'?w/2:w*0.08;words.forEach(function(wd){var t=line?line+' '+wd:wd;if(x.measureText(t).width>maxw&&line){x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25;line=wd;}else line=t;});x.fillText(line,xx,y);y+=w*(l.s||0.075)*1.25+w*(l.gap||0.03);});}
+
+/* ---------- Modell (nicht gespeichert) ----------
+   Ballons am Haar gerieben: negativ. Kunststoffstab mit Wolle: negativ. Glasstab mit Seide: positiv.
+   Gleichnamig: Abstoßung, ungleichnamig: Anziehung, geladen + ungeladen: Anziehung. Kraft wächst mit Ladung, fällt mit Abstand. */
+var M={};
+var MAXR=15;
+function freshModel(){
+  M={pair:{l:0,r:0,th:0,show:false,wl:0,wr:0},
+     rot:{a:'kunststoff',b:'kunststoff',near:false,phi:0,hand:0,show:false},
+     dist:{d:20,rub:10,kind:'kunststoff',x:0,show:false,rub0:0}};
+}
+freshModel();
+function strength(n){return Math.max(0,Math.min(1,(n-2)/8));}
+function kindName(k){return k==='kunststoff'?'Kunststoffstab':'Glasstab';}
+function kindSign(k){return k==='kunststoff'?-1:1;}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+
+/* Station 1: zwei Ballons an Fäden */
+var PV={y:46,xl:250,xr:390,len:200,r:34};
+function pairForce(d){var ql=strength(M.pair.l),qr=strength(M.pair.r);
+  if(ql>0&&qr>0)return 36000*ql*qr/(d*d);            // Abstoßung (+)
+  if(ql>0||qr>0){var q=Math.max(ql,qr);return -26000*q*q/(d*d*d)*60;} // Anziehung (-)
+  return 0;}
+function pairTarget(){var Lt=PV.len+42,d0=PV.xr-PV.xl,th=0;
+  for(var i=0;i<80;i++){var d=Math.max(2*PV.r,d0+2*Lt*Math.sin(th));var f=pairForce(d);var t=Math.atan(f);th=th*0.6+t*0.4;
+    if(d0+2*Lt*Math.sin(th)<2*PV.r){th=Math.asin((2*PV.r-d0)/(2*Lt));}}
+  return th;}
+function pairState(){var ql=strength(M.pair.l),qr=strength(M.pair.r);if(ql>0&&qr>0)return 'ab';if(ql>0||qr>0)return 'an';return 'ruhig';}
+
+/* Station 2: drehbarer Stab (Draufsicht) */
+var RV={px:250,py:170,len:300,bx:400,by:330};
+function rotTarget(){var r=M.rot;if(!r.near)return 0;var same=kindSign(r.a)===kindSign(r.b);return same?-0.55:0.28;}
+
+/* Station 3: Abstand */
+var DV={px:250,py:30,len:190,r:30,sc:8};
+function ballCX(){return DV.px;}
+function tipX(){return DV.px+DV.r+M.dist.d*DV.sc;}
+function distTarget(){var q=strength(M.dist.rub); /* Ballon ist negativ geladen */
+  var same=kindSign(M.dist.kind)<0; if(q<=0)return 0;
+  var x=0,gap0=M.dist.d*DV.sc;
+  for(var i=0;i<80;i++){var D=gap0-x+30;if(D<4)D=4;var F=333000*q/(D*D);var t=same?-F:F;x=x*0.5+t*0.5;if(!same&&x>gap0){x=gap0;}}
+  if(!same&&x>gap0-0.5)x=gap0;return x;}
+function deflCm(){return Math.abs(M.dist.x)/DV.sc;}
+
+/* ---------- Zeichnen ---------- */
+function scene(){return STATIONS[st.station].scene;}
+function darkScene(){return false;}
+function bg(){return col('surface');}
+function draw(){if(!W)return;
+  ctx.fillStyle=bg();ctx.fillRect(0,0,W,H);
+  var k=Math.min(W/640,H/372);ctx.save();ctx.translate((W-640*k)/2,(H-372*k)/2);ctx.scale(k,k);paint(ctx,false);ctx.restore();
+  ctx.font='11px '+ff();ctx.fillStyle=col('ink-soft');ctx.textAlign='right';ctx.textBaseline='bottom';ctx.fillText('Modell, nicht maßstäblich',W-8,H-6);
+  drawViews();updStatus();}
+function paint(c,lupe){var sc=scene();if(sc==='pair')drawPair(c,lupe);else if(sc==='rot')drawRot(c,lupe);else drawDist(c,lupe);}
+function charges(c,cx,cy,rx,ry,n,sign){if(n<=0)return;for(var i=0;i<n;i++){var a=-Math.PI/2+i*(2*Math.PI/n)+0.3;var x=cx+Math.cos(a)*rx*0.6,y=cy+Math.sin(a)*ry*0.6;
+  c.fillStyle=sign<0?'#2F6FD3':'#E8322B';c.beginPath();c.arc(x,y,7,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold 12px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText(sign<0?'–':'+',x,y+0.5);}}
+function balloonAt(c,x,y,rx,ry,color,rot){c.save();c.translate(x,y);c.rotate(rot||0);c.fillStyle=color;c.beginPath();c.ellipse(0,0,rx,ry,0,0,Math.PI*2);c.fill();
+  c.fillStyle='rgba(255,255,255,.35)';c.beginPath();c.ellipse(-rx*0.35,-ry*0.4,rx*0.2,ry*0.3,-0.4,0,Math.PI*2);c.fill();
+  c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.moveTo(-5,-ry-6);c.lineTo(5,-ry-6);c.lineTo(0,-ry+2);c.fill();c.restore();}
+function stand(c,x1,x2,y){c.fillStyle='#8A93A6';c.fillRect(x1,y-6,x2-x1,10);c.fillRect(x1,y-6,10,320);c.fillStyle='#5B6278';c.fillRect(x1-30,y+306,70,14);}
+function drawPair(c,lupe){var p=M.pair,Lt=PV.len+42,th=p.th;
+  c.fillStyle=col('line');c.fillRect(0,350,640,22);
+  stand(c,70,570,PV.y);
+  [[PV.xl,-1,'#D8433B',p.l,p.wl],[PV.xr,1,'#E9A92B',p.r,p.wr]].forEach(function(b){var ang=b[1]*th,wig=b[4]?Math.sin(b[4]*Math.PI*6)*0.12:0;ang+=wig;
+    var kx=b[0]+Math.sin(ang)*PV.len,ky=PV.y+Math.cos(ang)*PV.len,cx=b[0]+Math.sin(ang)*Lt,cy=PV.y+Math.cos(ang)*Lt;
+    c.strokeStyle=col('ink-soft');c.lineWidth=1.6;c.beginPath();c.moveTo(b[0],PV.y);c.lineTo(kx,ky);c.stroke();
+    balloonAt(c,cx,cy,PV.r,42,b[2],-ang);
+    if(p.show)charges(c,cx,cy,PV.r,42,Math.round(strength(b[3])*6),-1);
+    if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign=b[1]<0?'right':'left';c.textBaseline='top';c.fillText(b[1]<0?'links':'rechts',cx+(b[1]<0?12:-12),cy+50);}});
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='bottom';c.fillText('Stativ mit zwei Fäden',90,PV.y-10);}
+}
+function rodShape(c,kind,len,w){c.fillStyle=kind==='kunststoff'?'#5A6578':'#9FD3E0';c.beginPath();if(c.roundRect)c.roundRect(-len/2,-w/2,len,w,w/2);else c.rect(-len/2,-w/2,len,w);c.fill();
+  if(kind==='glas'){c.fillStyle='rgba(255,255,255,.5)';c.fillRect(-len/2+8,-w/2+3,len-16,3);}}
+function drawRot(c,lupe){var r=M.rot;
+  c.fillStyle=col('surface-2');c.fillRect(0,0,640,372);
+  /* Halterung */
+  c.fillStyle='#C9CFDB';c.beginPath();c.arc(RV.px,RV.py,26,0,Math.PI*2);c.fill();c.strokeStyle='#8A93A6';c.lineWidth=2;c.stroke();
+  c.save();c.translate(RV.px,RV.py);c.rotate(r.phi);rodShape(c,r.a,RV.len,18);
+  if(r.show){for(var i=0;i<5;i++){var x=-RV.len/2+30+i*(RV.len-60)/4;var s=kindSign(r.a);c.fillStyle=s<0?'#2F6FD3':'#E8322B';c.beginPath();c.arc(x,0,7,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold 12px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText(s<0?'–':'+',x,0.5);}}
+  c.restore();
+  c.fillStyle='#4B5568';c.beginPath();c.arc(RV.px,RV.py,6,0,Math.PI*2);c.fill();
+  /* Stab in der Hand: von unten, senkrecht */
+  var ty=RV.py+46+(1-r.hand)*150;
+  c.save();c.translate(RV.bx,ty+130);c.rotate(Math.PI/2);rodShape(c,r.b,260,18);
+  if(r.show){for(var j=0;j<4;j++){var y=-110+j*45;var s2=kindSign(r.b);c.fillStyle=s2<0?'#2F6FD3':'#E8322B';c.beginPath();c.arc(y,0,7,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold 12px '+ff();c.textAlign='center';c.textBaseline='middle';c.save();c.translate(y,0.5);c.rotate(-Math.PI/2);c.fillText(s2<0?'–':'+',0,0);c.restore();}}
+  c.restore();
+  c.fillStyle='#E9B98F';c.beginPath();c.ellipse(RV.bx,ty+250,22,26,0,0,Math.PI*2);c.fill();
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='top';c.fillText('Draufsicht (von oben)',12,12);
+    c.textAlign='center';c.fillText('drehbare Halterung',RV.px-20,RV.py+64);
+    c.textAlign='left';c.fillText('Stab in der Hand',RV.bx+20,Math.min(340,ty+150));
+    c.textAlign='center';c.textBaseline='bottom';c.fillText('drehbarer '+kindName(r.a),RV.px,RV.py-80);}
+}
+function drawDist(c,lupe){var d=M.dist,bx=ballCX()+d.x,by=DV.py+DV.len+36,tip=tipX();
+  c.fillStyle=col('line');c.fillRect(0,350,640,22);
+  stand(c,120,300,DV.py);
+  c.strokeStyle=col('ink-soft');c.lineWidth=1.6;c.beginPath();c.moveTo(DV.px,DV.py);c.lineTo(bx,by-36);c.stroke();
+  balloonAt(c,bx,by,DV.r,36,'#D8433B',-Math.atan2(d.x,DV.len));
+  if(d.show)charges(c,bx,by,DV.r,36,5,-1);
+  /* Stab von rechts */
+  c.save();c.translate(tip+150,by);rodShape(c,d.kind,300,18);
+  if(d.show){var n=Math.round(strength(d.rub)*5);for(var i=0;i<n;i++){var x=-130+i*28;var s=kindSign(d.kind);c.fillStyle=s<0?'#2F6FD3':'#E8322B';c.beginPath();c.arc(x,0,7,0,Math.PI*2);c.fill();c.fillStyle='#fff';c.font='bold 12px '+ff();c.textAlign='center';c.textBaseline='middle';c.fillText(s<0?'–':'+',x,0.5);}}
+  c.restore();
+  c.fillStyle='#E9B98F';c.beginPath();c.ellipse(Math.min(640,tip+300),by,18,22,0,0,Math.PI*2);c.fill();
+  /* Lineal: Abstand vom ruhenden Ballon */
+  var ry=318,x0=DV.px+DV.r;c.fillStyle='#FFF3D6';c.fillRect(x0-50*1-6,ry-4,640,26);c.strokeStyle='#A08A5A';c.lineWidth=1;c.strokeRect(x0-56,ry-4,700,26);
+  c.fillStyle='#4E5677';c.font='10px '+ff();c.textAlign='center';c.textBaseline='top';
+  for(var cm=-6;cm<=40;cm++){var xx=x0+cm*DV.sc;if(xx<0||xx>640)continue;c.fillStyle='#4E5677';c.fillRect(xx,ry-4,1,cm%5===0?10:5);if(cm%5===0)c.fillText(String(cm),xx,ry+8);}
+  /* Ruhelage */
+  c.setLineDash([4,4]);c.strokeStyle=col('ink-soft');c.beginPath();c.moveTo(DV.px,DV.py);c.lineTo(DV.px,by+40);c.stroke();c.setLineDash([]);
+  if(!lupe){c.font='bold 13px '+ff();c.fillStyle=col('ink-soft');c.textAlign='left';c.textBaseline='bottom';c.fillText('Ballon (am Haar gerieben)',DV.px+40,DV.py+70);
+    c.fillText(kindName(d.kind)+(d.kind==='kunststoff'?' (Wolle)':' (Seide)'),Math.min(500,tip+20),by-18);
+    c.textAlign='left';c.fillText('Abstand in cm',x0+8,ry-8);}
+}
+function drawViews(){var sc=scene(),A=$('cvA'),B=$('cvB');
+  if(sc==='pair'){zoom(A,{x:320,y:PV.y+PV.len+42,s:Math.max(240,PV.xr-PV.xl+2*(PV.len+42)*Math.sin(M.pair.th)+120)},bg());forceView(B);$('capA').innerHTML='<b>Ballons</b> von nah';$('capB').innerHTML='<b>Kraftpfeile</b>';}
+  else if(sc==='rot'){zoom(A,{x:RV.bx-40,y:RV.py+40,s:240},bg());var x=B.getContext('2d'),w=B.width;paper(x,w);
+    var logs=st.log.filter(function(l){return l.indexOf('rot: ')===0;}).slice(-5).map(function(l){return l.slice(5);});
+    vtext(x,w,[{t:'Deine Tests',s:0.085,b:true}].concat(logs.length?logs.map(function(l){return {t:l,s:0.06,c:l.indexOf('weg')>=0?'#C8423D':'#22865A',gap:0.015};}):[{t:'Noch kein Test. Kreuze „Stab annähern“ an.',s:0.065,c:'#4E5677'}]));
+    $('capA').innerHTML='<b>Stabenden</b> von nah';$('capB').innerHTML='<b>Protokoll</b>';}
+  else{zoom(A,{x:DV.px+40,y:DV.py+DV.len+36,s:220},bg());chartView(B);$('capA').innerHTML='<b>Ballon</b> von nah';$('capB').innerHTML='<b>Messwerte</b>';}
+}
+function arrow(x,x1,y,x2,colr,w){x.strokeStyle=colr;x.fillStyle=colr;x.lineWidth=w;x.beginPath();x.moveTo(x1,y);x.lineTo(x2,y);x.stroke();var dir=Math.sign(x2-x1)||1;
+  x.beginPath();x.moveTo(x2+dir*w*1.6,y);x.lineTo(x2-dir*w*1.2,y-w*1.5);x.lineTo(x2-dir*w*1.2,y+w*1.5);x.closePath();x.fill();}
+function forceView(B){var x=B.getContext('2d'),w=B.width;paper(x,w);var s=pairState(),d=PV.xr-PV.xl+2*(PV.len+42)*Math.sin(M.pair.th),F=Math.abs(pairForce(Math.max(68,d)));
+  var cy=w*0.42,lx=w*0.36,rx=w*0.64,r=w*0.09;
+  x.fillStyle='#D8433B';x.beginPath();x.ellipse(lx,cy,r,r*1.2,0,0,Math.PI*2);x.fill();x.fillStyle='#E9A92B';x.beginPath();x.ellipse(rx,cy,r,r*1.2,0,0,Math.PI*2);x.fill();
+  var L=Math.min(w*0.3,w*0.05+F*w*0.5);
+  if(s==='ab'){arrow(x,lx-r-4,cy,lx-r-4-L,'#C8423D',w*0.018);arrow(x,rx+r+4,cy,rx+r+4+L,'#C8423D',w*0.018);}
+  if(s==='an'){arrow(x,lx+r*0.2,cy+r*1.6,lx+r*0.2+L*0.6,'#22865A',w*0.018);arrow(x,rx-r*0.2,cy+r*1.6,rx-r*0.2-L*0.6,'#22865A',w*0.018);}
+  vtext(x,w,[{t:'',s:0.5},{t:s==='ab'?'Die Ballons stoßen sich ab.':s==='an'?'Die Ballons ziehen sich an.':'Keine Kraft: Die Ballons hängen ruhig.',s:0.068,b:true,a:'center',c:s==='ab'?'#C8423D':s==='an'?'#22865A':'#4E5677'}]);}
+function chartView(B){var x=B.getContext('2d'),w=B.width;paper(x,w,'#FFFFFF');var L=w*0.16,R=w*0.94,T=w*0.12,Bo=w*0.78;
+  x.strokeStyle='#CBD3E1';x.lineWidth=w*0.003;x.font=Math.round(w*0.045)+'px '+ff();x.fillStyle='#4E5677';x.textAlign='center';x.textBaseline='top';
+  for(var cm=0;cm<=30;cm+=10){var X=L+(cm/30)*(R-L);x.beginPath();x.moveTo(X,T);x.lineTo(X,Bo);x.stroke();x.fillText(cm,X,Bo+w*0.015);}
+  x.textAlign='right';x.textBaseline='middle';for(var a=0;a<=6;a+=2){var Y=Bo-(a/6)*(Bo-T);x.beginPath();x.moveTo(L,Y);x.lineTo(R,Y);x.stroke();x.fillText(a,L-w*0.02,Y);}
+  x.textAlign='center';x.textBaseline='top';x.fillText('Abstand in cm',(L+R)/2,Bo+w*0.075);
+  x.save();x.translate(w*0.04,(T+Bo)/2);x.rotate(-Math.PI/2);x.fillText('Ausschlag in cm',0,0);x.restore();
+  var pts=st.meas||[];pts.forEach(function(p){var X=L+(Math.min(30,p.d)/30)*(R-L),Y=Bo-(Math.min(6,p.a)/6)*(Bo-T);x.fillStyle=p.k==='kunststoff'?'#1C66C0':'#E8892B';x.beginPath();x.arc(X,Y,w*0.018,0,Math.PI*2);x.fill();});
+  if(!pts.length){x.fillStyle='#4E5677';x.font=Math.round(w*0.05)+'px '+ff();x.fillText('Tippe auf „Messwert notieren“.',(L+R)/2,T+w*0.25);}}
+function statusInfo(){var sc=scene();
+  if(sc==='pair'){var s=pairState();return s==='ab'?['ok','Die Ballons stoßen sich ab.']:s==='an'?['ok','Die Ballons ziehen sich an.']:['info','Die Ballons hängen ruhig nebeneinander.'];}
+  if(sc==='rot'){var r=M.rot;if(!r.near)return ['info','Der Stab in der Hand ist noch weit weg.'];return kindSign(r.a)===kindSign(r.b)?['bad','Der drehbare Stab dreht sich weg (Abstoßung).']:['ok','Der drehbare Stab dreht sich zum Stab hin (Anziehung).'];}
+  var d=M.dist,c=deflCm();if(c<0.05)return ['info','Kein Ausschlag.'];if(d.x>0&&d.x>=d.d*DV.sc-0.5)return ['ok','Der Ballon wird angezogen und berührt den Stab.'];
+  return [d.x<0?'bad':'ok','Ausschlag: '+fmt(c,1)+' cm '+(d.x<0?'vom Stab weg (Abstoßung)':'zum Stab hin (Anziehung)')];}
+function updStatus(){var e=$('stat');if(!e)return;var s=statusInfo();e.className='status '+s[0];e.textContent=s[1];var g=$('dispA');if(g)g.textContent=fmt(deflCm(),1)+' cm';}
+
+/* ---------- Animation ---------- */
+var raf=0,lastT=0;
+function kick(){if(!raf){lastT=performance.now();raf=requestAnimationFrame(tick);}}
+function tick(t){var dt=Math.min(0.05,(t-lastT)/1000);lastT=t;var moving=false,p=M.pair,r=M.rot,d=M.dist;
+  var tt=pairTarget();if(Math.abs(tt-p.th)>0.002){p.th+=(tt-p.th)*Math.min(1,dt*4);moving=true;}else p.th=tt;
+  ['wl','wr'].forEach(function(k){if(p[k]>0){p[k]=Math.max(0,p[k]-dt*2);moving=true;}});
+  var hn=r.near?1:0;if(Math.abs(hn-r.hand)>0.01){r.hand+=(hn-r.hand)*Math.min(1,dt*5);moving=true;}else r.hand=hn;
+  var pt=r.hand>0.85?rotTarget():0;if(Math.abs(pt-r.phi)>0.003){r.phi+=(pt-r.phi)*Math.min(1,dt*3);moving=true;}else r.phi=pt;
+  var xt=distTarget();if(Math.abs(xt-d.x)>0.05){d.x+=(xt-d.x)*Math.min(1,dt*5);moving=true;}else d.x=xt;
+  draw();if(moving)raf=requestAnimationFrame(tick);else raf=0;}
+
+/* ---------- Aktionen ---------- */
+function logAct(k,t){st.log.push(k+': '+t);if(st.log.length>60)st.log.shift();save();draw();}
+var rotTimer=null;
+function setNear(on){var r=M.rot;r.near=on;kick();clearTimeout(rotTimer);
+  if(on)rotTimer=setTimeout(function(){if(!M.rot.near)return;logAct('rot',kindName(r.a).replace('stab','')+' + '+kindName(r.b).replace('stab','')+': '+(kindSign(r.a)===kindSign(r.b)?'dreht sich weg':'dreht sich hin'));},900);}
+function addMeas(){var d=M.dist;st.meas=st.meas||[];st.meas.push({d:d.d,a:Math.round(deflCm()*10)/10,r:d.rub,k:d.kind});if(st.meas.length>30)st.meas.shift();save();draw();
+  var f=$('measFb');if(f){f.className='fb ok';f.textContent='Notiert: '+d.d+' cm → '+fmt(deflCm(),1)+' cm Ausschlag.';}}
+
+/* ---------- Steuerpult ---------- */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max,unit){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;$('disp'+id).textContent=v+(unit||'×');draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+function renderCtl(){var sc=scene(),h='';var eb=$('ctlCard').querySelector('.eyebrow');
+  if(needGuess()){eb.textContent='Bevor du startest';eb.classList.add('pro');$('ctl').innerHTML=guessBox();bindGuess();return;}
+  eb.textContent='Steuerpult';eb.classList.remove('pro');
+  if(sc==='pair'){var p=M.pair;h=slider('L','BALLON LINKS GERIEBEN',p.l+'×',0,MAXR,1,p.l,'0 (nicht gerieben)',MAXR+'×','g')+slider('R','BALLON RECHTS GERIEBEN',p.r+'×',0,MAXR,1,p.r,'0 (nicht gerieben)',MAXR+'×','g')+
+    '<label class="chk"><input type="checkbox" id="tShow"'+(p.show?' checked':'')+'> Röntgenblick: Ladungen zeigen</label>';}
+  else if(sc==='rot'){var r=M.rot;h='<div class="ctlrow"><span>DREHBARER STAB</span>'+segHTML('sA',[['kunststoff','Kunststoffstab (Wolle)'],['glas','Glasstab (Seide)']],r.a)+'</div>'+
+    '<div class="ctlrow"><span>STAB IN DER HAND</span>'+segHTML('sB',[['kunststoff','Kunststoffstab (Wolle)'],['glas','Glasstab (Seide)']],r.b)+'</div>'+
+    '<p class="muted" style="font-size:14px">Beide Stäbe sind schon gerieben.</p>'+
+    '<label class="chk"><input type="checkbox" id="tNear"'+(r.near?' checked':'')+'> Stab annähern</label>'+
+    '<label class="chk"><input type="checkbox" id="tShow"'+(r.show?' checked':'')+'> Röntgenblick: Ladungen zeigen</label>';}
+  else{var d=M.dist;h='<div class="ctlrow"><span>STAB</span>'+segHTML('sK',[['kunststoff','Kunststoffstab (Wolle)'],['glas','Glasstab (Seide)']],d.kind)+'</div>'+
+    slider('D','ABSTAND STAB – BALLON',d.d+' cm',3,30,1,d.d,'3 cm (nah)','30 cm (weit)','g')+slider('R','STAB SO OFT GERIEBEN',d.rub+'×',0,MAXR,1,d.rub,'0 (nicht gerieben)',MAXR+'×')+
+    '<div class="disp"><small>AUSSCHLAG DES BALLONS</small><span id="dispA">–</span></div>'+
+    '<div class="row"><button class="btn sec" type="button" id="bMeas">Messwert notieren</button><button class="btn tip sm" type="button" id="bClr">Messwerte löschen</button></div><p class="fb" id="measFb"></p>'+
+    '<label class="chk"><input type="checkbox" id="tShow"'+(d.show?' checked':'')+'> Röntgenblick: Ladungen zeigen</label>';}
+  h+='<p class="status info" id="stat"></p>';
+  $('ctl').innerHTML=h;
+  if(sc==='pair'){bindSlider('L',function(){return M.pair.l;},function(v){if(v>M.pair.l)M.pair.wl=1;M.pair.l=v;kick();},1,0,MAXR,'×');bindSlider('R',function(){return M.pair.r;},function(v){if(v>M.pair.r)M.pair.wr=1;M.pair.r=v;kick();},1,0,MAXR,'×');}
+  else if(sc==='rot'){bindSeg('sA',function(v){M.rot.a=v;M.rot.near=false;$('tNear').checked=false;kick();});bindSeg('sB',function(v){M.rot.b=v;M.rot.near=false;$('tNear').checked=false;kick();});
+    $('tNear').addEventListener('change',function(){setNear(this.checked);});}
+  else{bindSeg('sK',function(v){M.dist.kind=v;kick();});bindSlider('D',function(){return M.dist.d;},function(v){M.dist.d=v;kick();},1,3,30,' cm');bindSlider('R',function(){return M.dist.rub;},function(v){M.dist.rub=v;kick();},1,0,MAXR,'×');
+    $('bMeas').addEventListener('click',addMeas);$('bClr').addEventListener('click',function(){st.meas=[];save();draw();});}
+  $('tShow').addEventListener('change',function(){var o=sc==='pair'?M.pair:sc==='rot'?M.rot:M.dist;o.show=this.checked;draw();});
+  updStatus();
+}
+
+/* ---------- Vermutung ---------- */
+function pic(kind){var th={an:-0.18,ab:0.32,ruhig:0}[kind],inner='';
+  if(kind==='frage')inner='<text x="40" y="52" text-anchor="middle" font-size="34" font-weight="700" fill="#4E5677">?</text>';
+  else{var px=[30,50];inner='<rect x="14" y="14" width="52" height="4" fill="#8A93A6"/>';px.forEach(function(x0,i){var s=i?1:-1,a=s*th,L=30,bx=x0+Math.sin(a)*L,by=16+Math.cos(a)*L;
+    inner+='<line x1="'+x0+'" y1="16" x2="'+bx.toFixed(1)+'" y2="'+by.toFixed(1)+'" stroke="#4E5677" stroke-width="1.5"/><ellipse cx="'+(x0+Math.sin(a)*(L+9)).toFixed(1)+'" cy="'+(16+Math.cos(a)*(L+9)).toFixed(1)+'" rx="8" ry="10" fill="'+(i?'#E9A92B':'#D8433B')+'"/>';});}
+  return '<svg viewBox="0 0 80 80" aria-hidden="true"><rect x="4" y="4" width="72" height="72" rx="36" fill="#FFF3D6" stroke="#3A6AA8" stroke-width="4"/>'+inner+'</svg>';}
+var GUESS=[{k:'A',t:'an',n:'ziehen sich an'},{k:'B',t:'ab',n:'stoßen sich ab'},{k:'C',t:'ruhig',n:'hängen ruhig'},{k:'D',t:'frage',n:'Das ist jedes Mal anders.'}];
+function guessName(k){var g=GUESS.filter(function(x){return x.k===k;})[0];return g?g.k+' ('+g.n+')':'';}
+
+function guessBox(){var tmp=st.guessTmp||null;
+  return '<div class="guess stack"><p>Zwei Luftballons werden <b>beide</b> an den Haaren gerieben und an Fäden nebeneinander aufgehängt. <b>Was passiert?</b></p><div class="choice grid4" id="gs">'+
+    GUESS.map(function(o){return '<button type="button" class="opt pic'+(tmp===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b>'+pic(o.t)+'<span style="font-size:14px">'+o.n+'</span></button>';}).join('')+
+    '</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Erst wenn du deine Vermutung festgelegt hast, kannst du im Modell experimentieren.</p>'+
+    '<div class="row"><button class="btn pri" type="button" id="gsOk"'+(tmp?'':' disabled')+'>Vermutung festlegen</button></div></div>';}
+function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guessTmp=b.dataset.k;Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(x){x.classList.toggle('sel',x===b);});$('gsOk').disabled=false;});});
+  $('gsOk').addEventListener('click',function(){if(!st.guessTmp)return;st.guess=st.guessTmp;st.guessTs=Date.now();save();render();});}
+function needGuess(){return st.station===0&&!st.guess;}
+
+/* ---------- Station 1: Zwei Ballons ---------- */
+var P3=['hängen ruhig','stoßen sich ab','ziehen sich an'];
+var OBS1=[
+  {id:'a',q:'1. Beide Ballons <b>0-mal</b> gerieben. Die Ballons …',o:P3,a:0,w:'Stelle beide Regler auf 0 und schau auf die Ballons.'},
+  {id:'b',q:'2. Beide Ballons mindestens <b>5-mal</b> am Haar gerieben. Die Ballons …',o:P3,a:1,w:'Stelle beide Regler auf 5 oder mehr. Schau auf die Kraftpfeile.'},
+  {id:'c',q:'3. Nur der <b>linke</b> Ballon gerieben, der rechte 0-mal. Die Ballons …',o:P3,a:2,w:'Linker Regler auf 5 oder mehr, rechter Regler auf 0. Schau auf die Kraftpfeile.'}
+];
+var QSAME={q:'Beide Ballons wurden auf dieselbe Weise am Haar gerieben. Wie sind sie geladen?',o:['gleich (beide negativ)','verschieden','gar nicht'],a:0,
+  ok:'Genau! Beide Ballons sind gleich geladen. Schalte den Röntgenblick ein: Beide tragen negative Ladung (–).',bad:['','Beide wurden genau gleich behandelt. Schalte den Röntgenblick ein und vergleiche.','Die Ballons wurden gerieben. Was passiert beim Reiben? Denk an die letzte Stunde.']};
+var QSTRONG={q:'Stelle beide Regler einmal auf 4 und einmal auf 15. Was stellst du fest?',o:['Je stärker die Ballons geladen sind, desto weiter stoßen sie sich ab.','Die Zahl der Reibzüge ist egal.','Je öfter man reibt, desto näher kommen sich die Ballons.'],a:0,
+  ok:'Richtig! Je stärker die Ballons geladen sind, desto größer ist die Kraft zwischen ihnen.',bad:['','Vergleiche den Abstand der Ballons bei 4 und bei 15.','Schau genau: Gehen die Ballons bei 15 weiter auseinander oder näher zusammen?']};
+function r1(){var s=st.s1;
+  if(needGuess()){$('task').innerHTML='<div><p class="eyebrow">Station 1 · Zwei Ballons</p><h2>Was passiert, wenn sich geladene Ballons nähern?</h2></div><p class="note">Lege zuerst oben im Kasten <b>„Bevor du startest“</b> deine Vermutung fest. Danach erscheint das Steuerpult und es geht los.</p>';return;}
+  var g='<div class="guess"><p class="eyebrow pro">Deine Vermutung</p><p><b>'+guessName(st.guess)+'</b>. In Station 4 prüfst du sie.</p></div>';
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Zwei Ballons im Modell</p><p>Mit den Reglern stellst du ein, wie oft jeder Ballon am Haar gerieben wird. Probiere jeden Schritt aus.</p>'+segQHTML(OBS1,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button></div>')+'<p class="fb" id="fb1"></p></div>';
+  var same=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Warum?</p>'+mcHTML('same',QSAME.q,QSAME.o,s.same,QSAME.a)+'</div>':'';
+  var strong=s.sameOk?mcHTML('strong',QSTRONG.q,QSTRONG.o,s.strong,QSTRONG.a):'';
+  var own=s.strongOk?'<div class="q"><p><b>Erkläre es einem Mitschüler:</b> Warum stoßen sich die beiden geriebenen Ballons ab? Schreibe ein bis zwei Sätze.</p><textarea class="free" id="own" rows="3" placeholder="Die Ballons stoßen sich ab, weil …">'+esc(s.own)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1o">Fertig</button></div>')+'<p class="fb" id="fb1o"></p></div>':'';
+  $('task').innerHTML=g+'<div><p class="eyebrow">Station 1 · Zwei Ballons</p><h2>Was passiert, wenn sich geladene Ballons nähern?</h2></div>'+obs+same+strong+own+(st.done[0]?'<p class="win"><b>Super!</b> Zwischen geladenen Gegenständen wirken Kräfte.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c1').addEventListener('click',function(){if(checkSegQ(OBS1,s.obs,'s1obs','fb1',r1)){s.obsOk=true;save();r1();}});
+  else helpMsg('fb1','Gut beobachtet! Ungeladen: keine Kraft. Beide geladen: Abstoßung. Nur einer geladen: Anziehung.');
+  if(s.obsOk){bindMC('same',QSAME.a,'s1same',QSAME.ok,QSAME.bad,function(){s.sameOk=true;save();r1();showFb('same',true,QSAME.ok);},function(j){s.same=j;});if(s.sameOk)showFb('same',true,QSAME.ok);}
+  if(s.sameOk){bindMC('strong',QSTRONG.a,'s1strong',QSTRONG.ok,QSTRONG.bad,function(){s.strongOk=true;save();r1();showFb('strong',true,QSTRONG.ok);},function(j){s.strong=j;});if(s.strongOk)showFb('strong',true,QSTRONG.ok);}
+  if(s.strongOk){$('own').addEventListener('input',function(){s.own=this.value;save();});
+    if(!s.ok)$('c1o').addEventListener('click',function(){var fb=$('fb1o');if((s.own||'').trim().length<15){fb.className='fb bad';fb.textContent='Schreibe einen ganzen Satz.';return;}s.ok=true;finish(0);save();r1();});
+    else helpMsg('fb1o','Gespeichert.');}
+  bindNext();
+}
+
+/* ---------- Station 2: Drehbarer Stab ---------- */
+var P2=['dreht sich hin','dreht sich weg'];
+var OBS2=[
+  {id:'a',q:'1. Drehbar: <b>Kunststoffstab</b> · In der Hand: <b>Kunststoffstab</b>. Der drehbare Stab …',o:P2,a:1,w:'Wähle zweimal Kunststoffstab und kreuze „Stab annähern“ an.'},
+  {id:'b',q:'2. Drehbar: <b>Glasstab</b> · In der Hand: <b>Glasstab</b>. Der drehbare Stab …',o:P2,a:1,w:'Wähle zweimal Glasstab und kreuze „Stab annähern“ an.'},
+  {id:'c',q:'3. Drehbar: <b>Kunststoffstab</b> · In der Hand: <b>Glasstab</b>. Der drehbare Stab …',o:P2,a:0,w:'Wähle oben Kunststoffstab, unten Glasstab, und nähere den Stab an.'},
+  {id:'d',q:'4. Drehbar: <b>Glasstab</b> · In der Hand: <b>Kunststoffstab</b>. Der drehbare Stab …',o:P2,a:0,w:'Wähle oben Glasstab, unten Kunststoffstab, und nähere den Stab an.'}
+];
+var QRULE={q:'Schalte den Röntgenblick ein. Was fällt dir auf?',o:['Gleich geladene Stäbe stoßen sich ab. Verschieden geladene Stäbe ziehen sich an.','Ein Glasstab zieht immer an.','Die Stäbe stoßen sich immer ab.'],a:0,
+  ok:'Genau! Gleiche Ladungen stoßen sich ab, verschiedene Ladungen ziehen sich an.',bad:['','Vergleiche Test 1 und Test 4: Beide Male ist ein Glasstab dabei.','Schau auf Test 3 und 4: Dort dreht sich der Stab hin.']};
+var FACH='<div class="merk"><h3>Fachbegriffe</h3><ul style="margin:0;padding-left:1.2em"><li><span class="k">gleichnamig</span> heißt: gleiche Ladungsart (+ und + oder – und –). Gleichnamige Ladungen <b>stoßen sich ab</b>.</li><li><span class="k">ungleichnamig</span> heißt: verschiedene Ladungsarten (+ und –). Ungleichnamige Ladungen <b>ziehen sich an</b>.</li></ul></div>';
+var QAPP2={q:'Ein Wolltuch wurde an einem Kunststoffstab gerieben. Danach ist der Stab negativ und das Tuch positiv geladen. Was passiert, wenn du sie wieder näherst?',o:['Sie ziehen sich an.','Sie stoßen sich ab.','Nichts.'],a:0,
+  ok:'Richtig! Stab und Tuch sind ungleichnamig geladen. Sie ziehen sich an.',bad:['','Negativ und positiv: Sind das gleiche oder verschiedene Ladungen?','Beide sind geladen. Also wirkt eine Kraft.']};
+function r2(){var s=st.s2;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Versuch im Modell</p><p>Ein geriebener Stab liegt auf einer <b>drehbaren Halterung</b>. Du hältst einen zweiten geriebenen Stab daneben. Du siehst alles <b>von oben</b>.</p>'+segQHTML(OBS2,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div>')+'<p class="fb" id="fb2"></p></div>';
+  var rule=s.obsOk?mcHTML('rule',QRULE.q,QRULE.o,s.rule,QRULE.a):'';
+  var app=s.ruleOk?FACH+mcHTML('app2',QAPP2.q,QAPP2.o,s.app,QAPP2.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 2 · Drehbarer Stab</p><h2>Anziehen oder abstoßen?</h2></div>'+obs+rule+app+
+    (st.done[1]?'<p class="win"><b>Klasse!</b> Gleichnamige Ladungen stoßen sich ab, ungleichnamige ziehen sich an.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c2').addEventListener('click',function(){if(checkSegQ(OBS2,s.obs,'s2obs','fb2',r2)){s.obsOk=true;save();r2();}});
+  else helpMsg('fb2','Gut beobachtet! Gleiche Stäbe: weg. Verschiedene Stäbe: hin.');
+  if(s.obsOk){bindMC('rule',QRULE.a,'s2rule',QRULE.ok,QRULE.bad,function(){s.ruleOk=true;save();r2();showFb('rule',true,QRULE.ok);},function(j){s.rule=j;});if(s.ruleOk)showFb('rule',true,QRULE.ok);}
+  if(s.ruleOk){bindMC('app2',QAPP2.a,'s2app',QAPP2.ok,QAPP2.bad,function(){s.appOk=true;finish(1);save();r2();showFb('app2',true,QAPP2.ok);},function(j){s.app=j;});if(s.appOk)showFb('app2',true,QAPP2.ok);}
+  bindNext();
+}
+
+/* ---------- Station 3: Abstand ---------- */
+var OBS3=[
+  {id:'a',q:'1. Kunststoffstab, 10-mal gerieben. Schiebe ihn von <b>25 cm</b> auf <b>8 cm</b> heran. Der Ausschlag wird …',o:['größer','kleiner','bleibt gleich'],a:0,w:'Stelle den Abstand auf 25 cm, dann auf 8 cm. Vergleiche die Anzeige „Ausschlag“.'},
+  {id:'b',q:'2. Abstand 10 cm. Reibe den Stab einmal <b>3-mal</b> und einmal <b>15-mal</b>. Bei 15 Reibzügen ist der Ausschlag …',o:['größer','kleiner','gleich'],a:0,w:'Abstand auf 10 cm. Stelle „so oft gerieben“ auf 3 und dann auf 15.'},
+  {id:'c',q:'3. Nimm den <b>Glasstab</b> (Abstand 10 cm). Der Ballon wird …',o:['weggedrückt','angezogen'],a:1,w:'Wähle oben „Glasstab (Seide)“ und schau, in welche Richtung der Ballon ausschlägt.'}
+];
+var QJE={q:'Notiere Messwerte bei 25, 15, 10 und 5 cm. Welcher Satz passt zu deinen Messwerten?',o:['Je kleiner der Abstand ist, desto stärker ist die Kraft.','Je größer der Abstand ist, desto stärker ist die Kraft.','Der Abstand spielt keine Rolle.'],a:0,
+  ok:'Richtig! Je näher sich geladene Gegenstände kommen, desto stärker ist die Kraft zwischen ihnen.',bad:['','Schau in dein Diagramm: Wo ist der Ausschlag am größten?','Schau in dein Diagramm: Ist der Ausschlag überall gleich?']};
+var QTOUCH={q:'Berühren sich Stab und Ballon, wenn der Ballon (beim Kunststoffstab) ausschlägt?',o:['Nein. Die Kraft wirkt durch die Luft, ohne Berührung.','Ja, sonst gäbe es keine Kraft.'],a:0,
+  ok:'Genau! Die elektrische Kraft wirkt auch ohne Berührung, wie bei einem Magneten.',bad:['','Schau genau hin: Zwischen Stab und Ballon ist Luft.']};
+function r3(){var s=st.s3,n=(st.meas||[]).length;
+  var obs='<div class="stack"><p class="eyebrow">Teil A · Wovon hängt die Kraft ab?</p><p>Ein geriebener Ballon hängt an einem Faden. Du schiebst einen geriebenen Stab heran. Die Anzeige <b>Ausschlag</b> zeigt, wie weit der Ballon ausweicht.</p>'+segQHTML(OBS3,s.obs,s.obsOk)+
+    (s.obsOk?'':'<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button></div>')+'<p class="fb" id="fb3"></p></div>';
+  var je=s.obsOk?'<div class="stack"><p class="eyebrow">Teil B · Messreihe</p><p class="note">Kunststoffstab, 10-mal gerieben. Stelle den Abstand nacheinander auf 25, 15, 10 und 5 cm. Tippe jedes Mal auf <b>Messwert notieren</b>. Die Punkte erscheinen im Diagramm.</p>'+
+    '<p class="muted">Notierte Messwerte: '+n+'</p>'+mcHTML('je',QJE.q,QJE.o,s.je,QJE.a)+'</div>':'';
+  var touch=s.jeOk?mcHTML('touch',QTOUCH.q,QTOUCH.o,s.touch,QTOUCH.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 3 · Abstand</p><h2>Wie stark ist die Kraft?</h2></div>'+obs+je+touch+
+    (st.done[2]?'<p class="win"><b>Stark!</b> Je näher und je stärker geladen, desto größer ist die Kraft.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  bindSegQ(s.obs,function(){return s.obsOk;});
+  if(!s.obsOk)$('c3').addEventListener('click',function(){if(checkSegQ(OBS3,s.obs,'s3obs','fb3',r3)){s.obsOk=true;save();r3();}});
+  else helpMsg('fb3','Gut beobachtet! Näher und stärker geladen: größerer Ausschlag. Glasstab: Anziehung.');
+  if(s.obsOk){bindMC('je',QJE.a,'s3je',QJE.ok,QJE.bad,function(){s.jeOk=true;save();r3();showFb('je',true,QJE.ok);},function(j){s.je=j;});if(s.jeOk)showFb('je',true,QJE.ok);}
+  if(s.jeOk){bindMC('touch',QTOUCH.a,'s3touch',QTOUCH.ok,QTOUCH.bad,function(){s.touchOk=true;finish(2);save();r3();showFb('touch',true,QTOUCH.ok);},function(j){s.touch=j;});if(s.touchOk)showFb('touch',true,QTOUCH.ok);}
+  bindNext();
+}
+
+/* ---------- Station 4: Merksatz ---------- */
+var GAPS=[
+  {pre:'Zwischen elektrisch geladenen Gegenständen wirken ',post:'.',o:['Kräfte','Ströme','Magnete'],a:0},
+  {pre:'Gleichnamige Ladungen ',post:' sich ab.',o:['stoßen','ziehen'],a:0},
+  {pre:'Ungleichnamige Ladungen ',post:' sich an.',o:['ziehen','stoßen'],a:0},
+  {pre:'Die Kraft wirkt auch ohne ',post:'.',o:['Berührung','Reibung','Luft'],a:0},
+  {pre:'Je kleiner der Abstand ist, desto ',post:' ist die Kraft.',o:['stärker','schwächer'],a:0},
+  {pre:'Je stärker die Gegenstände geladen sind, desto ',post:' ist die Kraft.',o:['größer','kleiner'],a:0}
+];
+var WORTE='Kräfte · stoßen · ziehen · Berührung · stärker · größer';
+var MERK='<div class="merk"><h3>Merksatz: Kräfte zwischen Ladungen</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+'<span class="k">'+g.o[g.a]+'</span>'+g.post+'</li>';}).join('')+'</ol></div>';
+var HAIR={q:'Mia legt ihre Hand auf die Kugel eines Bandgenerators. Die Kugel lädt Mia auf. Ihre Haare stehen in alle Richtungen ab. Warum?',o:['Alle Haare sind gleichnamig geladen und stoßen sich gegenseitig ab.','Die Haare werden von der Decke angezogen.','Die Haare sind magnetisch geworden.'],a:0,
+  ok:'Richtig! Jedes Haar trägt die gleiche Ladung. Gleichnamige Ladungen stoßen sich ab, also will jedes Haar weg von den anderen.',bad:['','Die Decke ist nicht geladen. Was haben alle Haare gemeinsam?','Haare sind nicht magnetisch. Denk an die Ballons aus Station 1.']};
+function r4(){var s=st.s4;
+  var refl=s.ok?'<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+    (st.guess?'<p>Du hast vermutet: <b>'+guessName(st.guess)+'</b>.</p>'+(st.guess==='B'?'<p class="fb ok">Deine Vermutung stimmt!</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist B: Die Ballons sind gleichnamig geladen und stoßen sich ab.</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>B</b>.</p>')+
+    '<p>Beantworte jetzt die Leitfrage in einem Satz: <b>Welche Kräfte wirken zwischen geladenen Gegenständen?</b></p><textarea class="free" id="refl" rows="2" placeholder="Zwischen geladenen Gegenständen …">'+esc(s.refl)+'</textarea></div>':'';
+  var hair=s.ok?mcHTML('hair',HAIR.q,HAIR.o,s.hair,HAIR.a):'';
+  $('task').innerHTML='<div><p class="eyebrow">Station 4 · Merksatz</p><h2>Unser Merksatz</h2></div><p>Wähle die passenden Wörter. Im Modell kannst du alles nachprüfen.</p><p class="hint"><b>Wortspeicher:</b> '+WORTE+'</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select class="sel" id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.o.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (s.ok?MERK+'<p class="muted">Schreibe den Merksatz gleich in dein Heft. Wir besprechen ihn gemeinsam.</p>':'')+refl+hair+(s.hairOk?'<p class="win"><b>Geschafft!</b> Speichere jetzt deine Ergebnisse. Wenn du noch Zeit hast: Profi-Zusatz ★</p>'+saveCTA(true):'')+'<div class="row">'+nextBtn(3)+'</div>';
+  GAPS.forEach(function(g,i){var el=$('g'+i),v=s.gaps[i];if(s.ok){el.value=String(g.a);el.className='sel ok';}else if(v!=null&&v!=='')el.value=v;
+    el.addEventListener('change',function(){s.gaps[i]=this.value;this.className='sel';save();});});
+  $('c4').addEventListener('click',function(){if(s.ok)return;var wrong=0,empty=0;GAPS.forEach(function(g,i){var e=$('g'+i);if(e.value===''){empty++;return;}var ok=+e.value===g.a;e.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    tryInc('s4gaps',!wrong,GAPS.map(function(g,i){var v=$('g'+i).value;return v!==''&&+v!==g.a?i+':'+v:null;}).filter(Boolean).join(','));
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Schau in deine Ergebnisse aus Station 1 bis 3!';
+      showHelp(fb,'s4gaps',function(){GAPS.forEach(function(g,i){s.gaps[i]=String(g.a);});save();r4();helpMsg('fb4','Die Lösung ist eingetragen. Lies sie dir durch und tippe auf „Prüfen“.');});return;}
+    s.ok=true;save();r4();});
+  if(s.ok){$('refl').addEventListener('input',function(){s.refl=this.value;save();});
+    bindMC('hair',HAIR.a,'s4hair',HAIR.ok,HAIR.bad,function(){s.hairOk=true;finish(3);save();r4();showFb('hair',true,HAIR.ok);},function(j){s.hair=j;});if(s.hairOk)showFb('hair',true,HAIR.ok);}
+  bindCTA();bindNext();
+}
+
+/* ---------- Station 5: Profi ---------- */
+var P5=[
+  {id:'a',title:'Die Folienstreifen',task:'Du reibst zwei Streifen einer Plastiktüte mit demselben Wolltuch. Dann hältst du sie oben zusammen und lässt sie herunterhängen.',q:'Was passiert mit den unteren Enden?',
+   o:['Sie spreizen sich auseinander.','Sie kleben aneinander.','Sie hängen glatt herunter.'],a:0,ok:'Richtig! Beide Streifen sind gleichnamig geladen und stoßen sich ab. So funktioniert auch ein Elektroskop.',bad:'Beide Streifen wurden gleich behandelt. Wie sind sie also geladen?'},
+  {id:'b',title:'Der schwebende Ring',task:'Ein Ring aus dünner Plastikfolie und ein Luftballon werden beide mit einem Wolltuch gerieben. Man lässt den Ring über dem Ballon los.',q:'Der Ring schwebt über dem Ballon. Warum?',
+   o:['Ring und Ballon sind gleichnamig geladen. Die abstoßende Kraft hält den Ring in der Luft.','Der Ring ist leichter als Luft.','Der Ballon bläst Luft nach oben.'],a:0,ok:'Genau! Die abstoßende Kraft wirkt gegen die Gewichtskraft des Rings.',bad:'Beide wurden mit demselben Tuch gerieben. Welche Kraft wirkt dann zwischen ihnen?'},
+  {id:'c',title:'Staub auf dem Bildschirm',task:'Auf einem Bildschirm sammelt sich nach dem Abwischen mit einem trockenen Tuch schnell Staub.',q:'Was passiert hier?',
+   o:['Der Bildschirm wird beim Wischen geladen und zieht die leichten Staubteilchen an.','Das Tuch hinterlässt Fusseln.','Der Bildschirm stößt den Staub ab.'],a:0,ok:'Richtig! Wie bei den Papierschnipseln: Geladene Gegenstände ziehen leichte Gegenstände an.',bad:'Denk an die Papierschnipsel aus der letzten Stunde.'}
+];
+function r5(){
+  $('task').innerHTML='<div><p class="eyebrow pro">Profi-Zusatz ★</p><h2>Kräfte zwischen Ladungen im Alltag</h2></div>'+
+    P5.map(function(p){var v=st.s5[p.id];return '<div class="q"><h3>'+p.title+'</h3><p>'+p.task+'</p><p><b>'+p.q+'</b></p><div class="choice" data-p="'+p.id+'">'+p.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?(j===p.a?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb'+(v===p.a?' ok':(v!=null?' bad':''))+'">'+(v==null?'':(v===p.a?p.ok:p.bad))+'</p></div>';}).join('')+
+    (st.done[4]?'<p class="win"><b>Profi-Level geschafft!</b> Erkläre einem Mitschüler eine der Aufgaben.</p>':'')+saveCTA(true);
+  Array.prototype.forEach.call(document.querySelectorAll('.choice[data-p]'),function(box){var p=P5.filter(function(x){return x.id===box.dataset.p;})[0];
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc('s5'+p.id,j===p.a,j);st.s5[p.id]=j;save();if(P5.every(function(x){return st.s5[x.id]===x.a;}))finish(4);r5();});});});
+  bindCTA();
+}
+
+/* ---------- Ergebnisse ---------- */
+var TL=[['s1obs','Station 1 · Beobachtungen an zwei Ballons'],['s1same','Station 1 · Wie sind die Ballons geladen?'],['s1strong','Station 1 · Je stärker geladen, desto …'],
+  ['s2obs','Station 2 · Tests mit dem drehbaren Stab'],['s2rule','Station 2 · Regel: anziehen oder abstoßen'],['s2app','Station 2 · Stab und Tuch'],
+  ['s3obs','Station 3 · Abstand und Ladung'],['s3je','Station 3 · Je kleiner der Abstand, desto …'],['s3touch','Station 3 · Kraft ohne Berührung'],
+  ['s4gaps','Station 4 · Merksatz-Lückentext'],['s4hair','Station 4 · Bandgenerator'],['s5a','Profi · Folienstreifen'],['s5b','Profi · Schwebender Ring'],['s5c','Profi · Bildschirm']];
+function who(){var r=st.res||{};return {name:r.name||'',klasse:r.klasse||''};}
+function resText(){
+  var r=who(),d=new Date(),L=[];
+  function a(q,v){return v==null?'(keine Antwort)':q.o[v]+(v===q.a?'  ✓':'  ✗');}
+  function segs(list,store){list.forEach(function(q){var t=q.q.replace(/<[^>]+>/g,'');L.push('  '+t+' → '+(store[q.id]==null?'(keine Antwort)':q.o[store[q.id]]+(store[q.id]===q.a?'  ✓':'  ✗')));});}
+  L.push('LADUNGSLABOR 2 · Wie verhalten sich ruhende Ladungen? · Kräfte zwischen Ladungen');
+  L.push('Name: '+r.name+'    Klasse: '+r.klasse+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  var n=st.done.filter(Boolean).length;
+  L.push('Stand: '+(st.done.slice(0,4).filter(Boolean).length>=4?'fertig (alle 4 Stationen)':'Zwischenstand ('+st.done.slice(0,4).filter(Boolean).length+' von 4 Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)'));
+  L.push('Geschafft ('+n+' von '+STATIONS.length+'): '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='B'?'  → stimmt':'  → richtig ist B'));
+  L.push('');
+  L.push('STATION 1 · Zwei Ballons');segs(OBS1,st.s1.obs);L.push('  Ladung der Ballons: '+a(QSAME,st.s1.same));L.push('  Je stärker geladen: '+a(QSTRONG,st.s1.strong));
+  L.push('  Meine Erklärung: '+((st.s1.own||'').trim()||'(leer)'));L.push('');
+  L.push('STATION 2 · Drehbarer Stab');segs(OBS2,st.s2.obs);L.push('  Regel: '+a(QRULE,st.s2.rule));L.push('  Stab und Tuch: '+a(QAPP2,st.s2.app));L.push('');
+  L.push('STATION 3 · Abstand');segs(OBS3,st.s3.obs);L.push('  Je – desto: '+a(QJE,st.s3.je));L.push('  Ohne Berührung: '+a(QTOUCH,st.s3.touch));
+  var ms=(st.meas||[]).map(function(m){return m.d+' cm → '+String(m.a).replace('.',',')+' cm ('+(m.k==='kunststoff'?'Kunststoff':'Glas')+', '+m.r+'×)';});L.push('  Messwerte: '+(ms.length?ms.join('; '):'keine notiert'));L.push('');
+  L.push('STATION 4 · Merksatz');
+  if(st.s4.ok){GAPS.forEach(function(g,i){L.push('  '+(i+1)+'. '+g.pre+g.o[g.a]+g.post);});}else L.push('  (Lückentext noch nicht gelöst)');
+  L.push('  Antwort auf die Leitfrage: '+((st.s4.refl||'').trim()||'(leer)'));
+  L.push('  Bandgenerator: '+a(HAIR,st.s4.hair));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]];var pro=x[0].charAt(1)==='5';if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  P5.forEach(function(x){var v=st.s5[x.id];L.push('  '+x.title+': '+(v==null?'(nicht bearbeitet)':x.o[v]+(v===x.a?'  ✓':'  ✗')));});
+  var data={v:1,app:'LL2',name:r.name,klasse:r.klasse,ts:Date.now(),done:st.done,guess:st.guess,own:st.s1.own||'',refl:st.s4.refl||'',meas:(st.meas||[]).length,
+    tries:st.tries,s5:st.s5,help:hk,mins:mins0,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('LL2-v1|'+json));
+  return L.join('\r\n');
+}
+function resFile(){var r=who();var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return 'Ladungslabor-2_'+n+'.txt';}
+
+/* ---------- Stationen-Weg & Bausteine ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){var j=+b.dataset.j;tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Probiere es im Modell aus.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antwort'+(miss>1?'en':'')+'.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+
+function standInfo(){var n=st.done.slice(0,4).filter(Boolean).length,cur=STATIONS[st.station]?STATIONS[st.station].name:'';
+  if(n>=4)return '<b>Alle 4 Stationen geschafft.</b>'+(st.done[4]?' Profi-Zusatz auch!':' Wenn noch Zeit ist: Profi-Zusatz ★.');
+  return '<b>Zwischenstand: '+n+' von 4 Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP+'“ öffnen → Datei hochladen → in <b>Dateien → Downloads</b> die gespeicherte Datei auswählen → Abgeben.</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">Wie verhalten sich ruhende Ladungen? · Stunde 2</p><h2 id="stH">Willkommen im Ladungslabor!</h2>'+
+    '<p>Heute findest du heraus, welche Kräfte zwischen geladenen Gegenständen wirken. Die Versuche machst du hier im Modell.</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="7a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+
+/* ---------- Ablauf ---------- */
+var lastScene=null;
+function render(){var sc=scene();if(sc!==lastScene){freshModel();lastScene=sc;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r5][st.station]();resize();}
+$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});
+window.addEventListener('resize',resize);
+$('saveOpen').addEventListener('click',openSave);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+$('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+setInterval(remind,30000);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+render();startDialog();remind();
+
+})();
+
+</script>
+</body>
+</html>

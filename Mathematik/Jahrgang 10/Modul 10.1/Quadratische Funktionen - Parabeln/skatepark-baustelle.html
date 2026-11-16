@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skatepark-Baustelle</title>
+<style>
+/* Gleiche Bildsprache wie Parabel-Fahrstuhl (Stunde 3) und Parabel-Kran (Stunde 4).
+   Drei Steuerungen: Form-Regler a (grün), Kran d (orange), Fahrstuhl e (blau). */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --green:#138A72; --green-soft:#DCF1EB;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --norm:#8C96B4; --curve:#E8892B; --target:#C8423D; --ramp:#D9DEE8;
+  --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --green:#4CC9AC; --green-soft:#103A33;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --ramp:#1F2A5E;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --green:#4CC9AC; --green-soft:#103A33;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --ramp:#1F2A5E;
+  --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding:12px 16px}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px 10px 6px}
+@media (max-width:860px){.plot{position:static}}
+.term{font-family:var(--f-display);font-weight:600;font-size:clamp(24px,3.6vw,34px);text-align:center;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.term .a{color:var(--green)} .term .d{color:var(--accent)} .term .e{color:var(--blue)}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:13px;color:var(--ink-soft);padding:4px 0 2px}
+.legend i{display:inline-block;width:22px;height:0;border-top:3px solid;vertical-align:middle;margin-right:5px}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ctl:first-of-type{border-top:none}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:10px;padding:4px 8px;text-align:center;min-width:84px;box-shadow:inset 0 0 0 3px #333}
+.disp small{display:block;font-size:10px;letter-spacing:1.5px;color:#9a9a9a}
+.disp span{font-size:24px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.ctl.a .disp span{color:#7DF0D2} .ctl.e .disp span{color:#9CC8FF}
+.keys{display:flex;gap:6px}
+.key{width:48px;height:44px;border-radius:10px;border:2px solid var(--line);background:var(--surface-2);font-size:18px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;height:30px}
+.ctl.a input{accent-color:var(--green)} .ctl.d input{accent-color:var(--accent)} .ctl.e input{accent-color:var(--blue)}
+.ctl .lbl{grid-column:1/-1;font-size:13px;color:var(--ink-soft);display:flex;justify-content:space-between}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px;margin-top:6px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+
+/* Tabellen & Eingaben */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:6px 5px;text-align:center}
+thead th{background:var(--blue);color:var(--on-blue);font-weight:700}
+thead th:first-child{background:var(--navy);color:var(--navy-ink)}
+.num{width:3.4em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.spt{white-space:nowrap}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);border:1.5px solid var(--line)}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:420px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:8px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.big{font-size:21px;font-weight:700}
+.tf{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.tf .why{grid-column:1/-1;font-size:15px}
+@media (max-width:520px){.tf{grid-template-columns:1fr}}
+textarea{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.ramps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ramps div{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:15px;background:var(--surface-2)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- Ergebnisse abgeben ---- */
+.abg-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-box ol{margin:0;padding-left:1.3em}
+.abg-box li{margin-bottom:6px}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-close{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;color:var(--ink)}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.abg-txt{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="hwrap">
+    <div class="brand"><b>Skatepark-Baustelle</b><span>Kran-Check (d) und der neue Form-Regler a</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="abg-btn" id="abgBtn" type="button">Ergebnisse abgeben</button><button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+
+
+<main>
+  <section class="card plot" aria-label="Koordinatensystem">
+    <div class="term" id="term">y = x²</div>
+    <canvas id="cv" aria-label="Koordinatensystem mit Parabeln"></canvas>
+    <div class="legend"><span><i style="border-color:var(--norm);border-top-style:dashed"></i>Normalparabel</span><span><i style="border-color:var(--curve)"></i>deine Rampe</span><span id="lgT" hidden><i style="border-color:var(--target);border-top-style:dashed"></i>Bauauftrag</span></div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="ctlCard">
+      <p class="eyebrow">Baustellen-Steuerung</p>
+      <div id="ctlOn">
+        <div class="ctl a" id="rowA">
+          <div class="disp"><small>FORM a</small><span id="vA">1</span></div>
+          <input type="range" id="sA" min="0" max="9" step="1" value="7" aria-label="Regler für a">
+          <div class="keys"><button class="key" id="aM" type="button" aria-label="a verkleinern">−</button><button class="key" id="aP" type="button" aria-label="a vergrößern">+</button></div>
+          <div class="lbl"><span>−3 (nach unten offen)</span><span>+3 (steil)</span></div>
+        </div>
+        <div class="ctl d" id="rowD">
+          <div class="disp"><small>KRAN d</small><span id="vD">0</span></div>
+          <input type="range" id="sD" min="-5" max="5" step="0.5" value="0" aria-label="Regler für d">
+          <div class="keys"><button class="key" id="dM" type="button" aria-label="d um 0,5 verringern">◀</button><button class="key" id="dP" type="button" aria-label="d um 0,5 erhöhen">▶</button></div>
+          <div class="lbl"><span>−5 (links)</span><span>+5 (rechts)</span></div>
+        </div>
+        <div class="ctl e" id="rowE">
+          <div class="disp"><small>FAHRSTUHL e</small><span id="vE">0</span></div>
+          <input type="range" id="sE" min="-4" max="6" step="0.5" value="0" aria-label="Regler für e">
+          <div class="keys"><button class="key" id="eM" type="button" aria-label="e um 0,5 verringern">▼</button><button class="key" id="eP" type="button" aria-label="e um 0,5 erhöhen">▲</button></div>
+          <div class="lbl"><span>−4 (unten)</span><span>+6 (oben)</span></div>
+        </div>
+        <label class="chk"><input type="checkbox" id="tNorm" checked> Normalparabel y = x² zum Vergleich zeigen</label>
+      </div>
+      <p class="locked" id="ctlOff" hidden></p>
+    </section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'Kran-Check (d)'},
+  {key:'s2',name:'Beobachten'},
+  {key:'s3',name:'Begründen'},
+  {key:'s4',name:'Regel finden'},
+  {key:'s5',name:'Training'},
+  {key:'s6',name:'Profi-Zusatz',pro:true}
+];
+var A_VALS=[-3,-2,-1,-0.5,-0.25,0.25,0.5,1,2,3];
+var GUESSES=[
+  {k:'A',t:'Die Rampe wird steiler und schmaler.'},
+  {k:'B',t:'Die Rampe wird flacher und breiter.'},
+  {k:'C',t:'Die Rampe wird 2 nach oben verschoben.'},
+  {k:'D',t:'Die Rampe wird 2 nach rechts verschoben.'},
+  {k:'E',t:'Es passiert gar nichts.'}
+];
+var GUESS_WHY={B:'Flacher wird die Rampe bei a zwischen 0 und 1, z. B. bei y = 0,5x². Bei a = 2 werden alle y-Werte verdoppelt – die Rampe wird steiler.',
+  C:'Nach oben verschiebt die Zahl hinten (e) wie in y = x² + 2. Die Zahl vor dem x² wird mit x² multipliziert, der Scheitelpunkt bleibt bei S(0 | 0).',
+  D:'Nach rechts verschiebt die Zahl in der Klammer (d) wie in y = (x − 2)². Bei 2x² bleibt der Scheitelpunkt bei S(0 | 0).',
+  E:'Es passiert etwas: Alle y-Werte werden verdoppelt, die Rampe wird steiler.'};
+var S1_ROWS=[4,-2,1,-5];
+var S2_ROWS=[2,0.5,3,0.25,-1];
+var FORMS=['gestreckt: steiler und schmaler','gestaucht: flacher und breiter','nach unten geöffnet, gleiche Form'];
+function formOf(a){return a<0?2:(a>1?0:1);}
+var S3_X=[-2,-1,0,1,2];
+
+var st={station:0,done:[false,false,false,false,false,false],a:1,d:0,e:0,norm:true,guess:null,
+  s1:{vals:{},tip:0},
+  s2:{vals:{},tabOk:false,mc:null,mcOk:false},
+  s3:{vals:{},tabOk:false,gap:{},gapOk:false,step:{}},
+  s4:{ok:false,text:'',saved:false,reflect:''},
+  s5:{mode:'graph',task:null,hits:0,solved:false,anim:null},
+  s6:{mode:'kombi',tf:{},solved:{},task:null,shown:null}};
+
+/* ---------- Speicher (nur Bequemlichkeit) ---------- */
+var KEY='skatepark-baustelle-a-v1';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,h5:st.s5.hits,s6:{tf:st.s6.tf,solved:st.s6.solved}}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  st.station=x.station||0;st.done=x.done||st.done;while(st.done.length<6)st.done.push(false);st.guess=x.guess||null;
+  st.s1=x.s1||st.s1;st.s2=x.s2||st.s2;st.s3=x.s3||st.s3;st.s4=x.s4||st.s4;st.s5.hits=x.h5||0;
+  if(x.s6){st.s6.tf=x.s6.tf||{};st.s6.solved=x.s6.solved||{};}}catch(e){}}
+
+/* ---------- Zahlen & Terme ---------- */
+function fmt(v){var r=Math.round(v*100)/100;if(Object.is(r,-0))r=0;var s=Math.abs(r).toString().replace('.',',');return (r<0?'−':'')+s;}
+function parse(str){if(str==null)return NaN;var s=String(str).trim().replace(/[−–—]/g,'-').replace(',','.').replace(/\s+/g,'');if(s===''||s==='-'||s==='+')return NaN;return Number(s);}
+function aPart(a,html){if(a===1)return '';if(a===-1)return html?'<span class="a">−</span>':'−';var t=fmt(a);return html?'<span class="a">'+t+'</span>':t;}
+function term(a,d,e,html){
+  var core;
+  if(d===0)core='x²';else core='(x '+(d>0?'−':'+')+' '+(html?'<span class="d">'+fmt(Math.abs(d))+'</span>':fmt(Math.abs(d)))+')²';
+  var t='y = '+aPart(a,html)+core;
+  if(e)t+=' '+(e>0?'+':'−')+' '+(html?'<span class="e">'+fmt(Math.abs(e))+'</span>':fmt(Math.abs(e)));
+  return t;
+}
+function f(x,a,d,e){return a*(x-d)*(x-d)+(e||0);}
+function rnd(lo,hi,not){var v;do{v=Math.floor(Math.random()*(hi-lo+1))+lo;}while(not&&not.indexOf(v)>=0);return v;}
+function pick(arr,not){var v;do{v=arr[Math.floor(Math.random()*arr.length)];}while(arr.length>1&&v===not);return v;}
+
+/* ---------- Zeichnen ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,PAD=30;
+var X0=-7,X1=7,Y0=-5,Y1=10;
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function resize(){
+  var w=cv.getBoundingClientRect().width||600;
+  var h=Math.max(300,Math.min(w*0.85,window.innerHeight-190));
+  var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;draw();
+}
+function sx(x){return PAD+(x-X0)/(X1-X0)*(W-2*PAD);}
+function sy(y){return H-PAD-(y-Y0)/(Y1-Y0)*(H-2*PAD);}
+function font(px,b,it){return (it?'italic ':'')+(b?'bold ':'')+px+'px '+getComputedStyle(document.body).fontFamily;}
+function arrowTo(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();var an=Math.atan2(y2-y1,x2-x1),L=10;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-L*Math.cos(an-.4),y2-L*Math.sin(an-.4));ctx.lineTo(x2-L*Math.cos(an+.4),y2-L*Math.sin(an+.4));ctx.closePath();ctx.fill();}
+function grid(){
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=col('grid');ctx.lineWidth=1;var x,y;
+  for(x=X0;x<=X1;x++){ctx.beginPath();ctx.moveTo(sx(x),sy(Y0));ctx.lineTo(sx(x),sy(Y1));ctx.stroke();}
+  for(y=Y0;y<=Y1;y++){ctx.beginPath();ctx.moveTo(sx(X0),sy(y));ctx.lineTo(sx(X1),sy(y));ctx.stroke();}
+  var ax=col('axis');ctx.strokeStyle=ax;ctx.fillStyle=ax;ctx.lineWidth=1.8;
+  arrowTo(sx(X0),sy(0),sx(X1)+12,sy(0));arrowTo(sx(0),sy(Y0),sx(0),sy(Y1)-12);
+  ctx.font=font(W<480?11:13);ctx.textAlign='center';ctx.textBaseline='top';
+  for(x=X0;x<=X1;x++){if(x===0)continue;ctx.fillText(fmt(x),sx(x),sy(0)+5);}
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  for(y=Y0;y<=Y1;y++){if(y===0)continue;ctx.fillText(fmt(y),sx(0)-6,sy(y));}
+  ctx.font=font(16,false,true);ctx.textAlign='left';
+  ctx.fillText('x',sx(X1)+2,sy(0)-14);ctx.fillText('y',sx(0)+9,sy(Y1)-6);
+}
+function clip(){ctx.beginPath();ctx.rect(PAD,PAD-4,W-2*PAD,H-2*PAD+8);ctx.clip();}
+function path(a,d,e){ctx.beginPath();for(var i=0;i<=500;i++){var x=X0+(X1-X0)*i/500,y=f(x,a,d,e);y=Math.max(Y0-40,Math.min(Y1+40,y));if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}}
+function parabola(a,d,e,color,width,dash){ctx.save();clip();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.lineCap='round';path(a,d,e);ctx.stroke();ctx.restore();}
+function ramp(a,d,e){if(a<=0)return;ctx.save();clip();path(a,d,e);ctx.lineTo(sx(X1),sy(Y0));ctx.lineTo(sx(X0),sy(Y0));ctx.closePath();ctx.globalAlpha=.55;ctx.fillStyle=col('ramp');ctx.fill();ctx.restore();}
+function dot(x,y,color,r){ctx.beginPath();ctx.arc(sx(x),sy(y),r||7,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function label(t,x,y,color,right){ctx.font=font(15,true);ctx.textBaseline='middle';ctx.textAlign=right?'right':'left';var w=ctx.measureText(t).width,px=sx(x)+(right?-14:14),py=sy(y);ctx.fillStyle=col('surface');ctx.globalAlpha=.9;ctx.fillRect(right?px-w-4:px-4,py-11,w+8,22);ctx.globalAlpha=1;ctx.fillStyle=color;ctx.fillText(t,px,py);}
+function rampWithS(a,d,e){ramp(a,d,e);parabola(a,d,e,col('curve'),5);if(d>=X0&&d<=X1&&e>=Y0&&e<=Y1)dot(d,e||0,col('curve'),6);}
+function norm(){if(st.norm)parabola(1,0,0,col('norm'),2.5,[9,7]);}
+
+function draw(){
+  if(!W)return;grid();$('lgT').hidden=true;
+  var k=STATIONS[st.station].key;
+  if(k==='s1'){norm();rampWithS(1,st.d,0);}
+  else if(k==='s2'||k==='s4'){norm();rampWithS(st.a,0,0);}
+  else if(k==='s3'){norm();
+    if(st.s3.tabOk){parabola(2,0,0,col('green'),4);parabola(0.5,0,0,col('blue'),4);label('y = 2x²',1.7,7.5,col('green'),true);label('y = 0,5x²',4.2,7.0,col('blue'),true);}
+    S3_X.forEach(function(x){[[2,'g'],[0.5,'h']].forEach(function(r){var v=parse(st.s3.vals[r[1]+x]);if(!isNaN(v)&&v>=Y0&&v<=Y1)dot(x,v,v===r[0]*x*x?col('ok'):col('bad'),6);});});}
+  else if(k==='s5'){norm();var m=st.s5.anim;if(m)rampWithS(m.a,0,0);var T=st.s5.task;
+    if(T){$('lgT').hidden=false;if(st.s5.mode==='graph')parabola(T.a,0,0,col('target'),3,[4,8]);else{dot(T.px,T.py,col('target'),9);label('P('+fmt(T.px)+' | '+fmt(T.py)+')',T.px,T.py,col('target'),T.px>2);}}}
+  else if(k==='s6'){norm();var s=st.s6;if(s.mode==='kombi'&&s.task){if(s.shown)rampWithS(s.shown.a,s.shown.d,0);$('lgT').hidden=false;parabola(s.task.a,s.task.d,0,col('target'),3,[4,8]);}}
+}
+
+/* ---------- Steuerung ---------- */
+function aIdx(a){var i=A_VALS.indexOf(a);return i<0?7:i;}
+function setA(i){i=Math.max(0,Math.min(A_VALS.length-1,i));st.a=A_VALS[i];$('sA').value=i;$('vA').textContent=fmt(st.a);updateTerm();draw();}
+function setD(v){v=Math.max(-5,Math.min(5,Math.round(v*2)/2));if(Object.is(v,-0))v=0;st.d=v;$('sD').value=v;$('vD').textContent=(v>0?'+':'')+fmt(v);updateTerm();draw();}
+function ctlMode(rows,msg){var on=rows&&rows.length;$('ctlOn').hidden=!on;$('ctlOff').hidden=!!on;if(!on){$('ctlOff').textContent=msg;return;}
+  $('rowA').hidden=rows.indexOf('a')<0;$('rowD').hidden=rows.indexOf('d')<0;$('rowE').hidden=true;}
+function updateTerm(){
+  var k=STATIONS[st.station].key,t=$('term');
+  if(k==='s1')t.innerHTML=term(1,st.d,0,true);
+  else if(k==='s3')t.innerHTML='y = <span class="a">a</span> · x²';
+  else if(k==='s5'){var m=st.s5.anim;t.innerHTML=m&&st.s5.showTerm?term(Math.round(m.a*100)/100,0,0,true):'y = <span class="a">?</span> · x²';}
+  else if(k==='s6'){var s=st.s6;t.innerHTML=s.mode==='kombi'?(s.shown?term(s.shown.a,s.shown.d,0,true):'y = ?·(x − ?)²'):'Fehler-Detektiv';}
+  else t.innerHTML=term(st.a,0,0,true);
+}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=5)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Zusatzaufgaben ★':'Weiter zu Station '+(i+2)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+function tipBox(list,n){var h='';for(var i=0;i<n&&i<list.length;i++)h+='<p class="hint"><b>Tipp '+(i+1)+':</b> '+list[i]+'</p>';return h;}
+function each(sel,fn){Array.prototype.forEach.call(document.querySelectorAll(sel),fn);}
+function animate(from,to,set,done){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var dist=Math.abs(to.a-from.a)*2+Math.abs((to.d||0)-(from.d||0));
+  if(reduce||dist===0){set(to);done();return;}
+  var t0=null,dur=900+dist*150;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),q=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    set({a:from.a+(to.a-from.a)*q,d:(from.d||0)+((to.d||0)-(from.d||0))*q});if(p<1)requestAnimationFrame(step);else{set(to);done();}}
+  requestAnimationFrame(step);
+}
+function signIn(id){return '<select class="sel" id="'+id+'" aria-label="Rechenzeichen"><option value="">±</option><option value="-">−</option><option value="+">+</option></select>';}
+
+/* ---------- Station 1: Kran-Check (Wiederholung d) ---------- */
+var TIPS1=['Für welches x wird die Klammer null? Das ist die x-Koordinate des Scheitelpunkts.','Minus in der Klammer → rechts, Plus in der Klammer → links. Stelle den Term mit dem Kran ein und prüfe.'];
+function r1(){
+  ctlMode(['d']);if(st.a!==1)setA(7);
+  var rows='';S1_ROWS.forEach(function(d,j){var v=st.s1.vals;
+    rows+='<tr><td class="spt">'+term(1,d,0)+'</td><td class="spt">S( <input class="num" inputmode="decimal" id="s1x'+j+'" value="'+(v[j+'x']||'')+'" aria-label="x-Koordinate"> | <input class="num" inputmode="decimal" id="s1y'+j+'" value="'+(v[j+'y']||'')+'" aria-label="y-Koordinate"> )</td><td><select class="sel" id="s1r'+j+'" aria-label="Richtung"><option value="">…</option><option value="l"'+(v[j+'r']==='l'?' selected':'')+'>links</option><option value="r"'+(v[j+'r']==='r'?' selected':'')+'>rechts</option></select></td></tr>';});
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 1 · Wiederholung</p><h2>Kran-Check: Was macht die Zahl in der Klammer?</h2></div>'+
+   '<p class="note">Erinnerung: <b>Die Klammer muss null werden.</b> Dort liegt der Scheitelpunkt.</p>'+
+   '<p>Lies ab oder überlege – mit dem <b style="color:var(--accent)">Kran d</b> kannst du prüfen.</p>'+
+   '<div class="tw"><table><thead><tr><th>Bauplan</th><th>Scheitelpunkt</th><th>Richtung</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button><button class="btn tip" type="button" id="t1"'+(st.s1.tip>=2?' hidden':'')+'>Tipp anzeigen</button></div>'+
+   '<p class="fb" id="fb1"></p><div class="stack">'+tipBox(TIPS1,st.s1.tip)+'</div>'+
+   (st.done[0]?'<p class="win">Kran-Check bestanden! Jetzt kommt ein <b>neuer Regler</b> dazu: die Zahl <b>vor</b> dem x².</p>':'')+
+   '<div class="row">'+nextBtn(0)+'</div>';
+  S1_ROWS.forEach(function(d,j){['x','y'].forEach(function(c){var el=$('s1'+c+j);if(st.done[0])el.className='num ok';el.addEventListener('input',function(){st.s1.vals[j+c]=this.value;this.className='num';save();});});
+    $('s1r'+j).addEventListener('change',function(){st.s1.vals[j+'r']=this.value;this.className='sel';save();});if(st.done[0])$('s1r'+j).className='sel ok';});
+  $('t1').addEventListener('click',function(){st.s1.tip++;save();r1();});
+  $('c1').addEventListener('click',function(){var wrong=0,empty=0,sign=false;
+    S1_ROWS.forEach(function(d,j){var ix=$('s1x'+j),iy=$('s1y'+j),ir=$('s1r'+j),vx=parse(ix.value),vy=parse(iy.value),r=ir.value;
+      if(isNaN(vx)||isNaN(vy)||!r){empty++;return;}
+      var rok=r===(d>0?'r':'l');ix.className='num '+(vx===d?'ok':'bad');iy.className='num '+(vy===0?'ok':'bad');ir.className='sel '+(rok?'ok':'bad');
+      if(vx===-d)sign=true;if(vx!==d||vy!==0||!rok)wrong++;});
+    var fb=$('fb1');
+    if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch Angaben in '+empty+' Zeile'+(empty>1?'n':'')+'.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent=sign?'Vorzeichen-Falle! Für welches x wird die Klammer null?':'Noch nicht ganz. Prüfe mit dem Kran.';return;}
+    finish(0);r1();});
+  bindNext();
+}
+
+/* ---------- Station 2: Vermutung + Beobachten (a) ---------- */
+function r2(){
+  ctlMode(['a']);if(st.d!==0)setD(0);
+  var s=st.s2,v=s.vals;
+  var g='<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Die neue Rampe hat den Bauplan <b>y = 2x²</b>. Was macht die <b>2 vor dem x²</b>? Welche Vermutung hast du in deinen Steckbrief geschrieben?</p><div class="choice" id="gs">'+
+    GUESSES.map(function(o){return '<button type="button" class="opt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><b>'+o.k+'</b> &nbsp;'+o.t+'</button>';}).join('')+
+    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. In Station 4 prüfst du, ob sie stimmt.':'Wähle eine Antwort. Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
+  var rows=S2_ROWS.map(function(a,j){return '<tr><td class="spt">'+term(a,0,0)+'</td><td><select class="sel" id="f2'+j+'" aria-label="Form"><option value="">…</option>'+FORMS.map(function(o,k){return '<option value="'+k+'"'+(v[j]===String(k)?' selected':'')+'>'+o+'</option>';}).join('')+'</select></td></tr>';}).join('');
+  var mc=['S(0 | 0)','S(0 | a)','S(a | 0)'];
+  $('task').innerHTML=g+
+   '<div><p class="eyebrow">Station 2 · Beobachten</p><h2>Der Form-Regler a</h2></div>'+
+   '<p>Mit dem <b style="color:var(--green)">Form-Regler a</b> änderst du die Zahl <b>vor dem x²</b>. Stelle jeden Bauplan ein und vergleiche mit der gestrichelten Normalparabel.</p>'+
+   '<div class="tw"><table><thead><tr><th>Bauplan</th><th>Form der Rampe</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c2">Prüfen</button></div><p class="fb" id="fb2"></p>'+
+   (s.tabOk?'<div class="stack"><p><b>Und der Scheitelpunkt?</b> Bei allen Rampen y = a · x² liegt er bei …</p><div class="choice grid2" id="mc2">'+
+     mc.map(function(m,i){return '<button type="button" class="opt'+(s.mc===i?(i===0?' ok':' bad'):'')+'" data-i="'+i+'">'+m+'</button>';}).join('')+'</div><p class="fb" id="fb2m"></p></div>':'')+
+   '<div class="row">'+nextBtn(1)+'</div>';
+  each('#gs .opt',function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r2();});});
+  S2_ROWS.forEach(function(a,j){$('f2'+j).addEventListener('change',function(){v[j]=this.value;this.className='sel';save();});if(s.tabOk)$('f2'+j).className='sel ok';});
+  $('c2').addEventListener('click',function(){var wrong=0,empty=0;
+    S2_ROWS.forEach(function(a,j){var x=$('f2'+j);if(x.value===''){empty++;return;}var ok=+x.value===formOf(a);x.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb2');if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Angaben.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent='Stelle den Term mit dem Form-Regler ein und vergleiche genau mit der gestrichelten Normalparabel.';return;}
+    s.tabOk=true;save();r2();});
+  if(s.tabOk){each('#mc2 .opt',function(b){b.addEventListener('click',function(){var i=+b.dataset.i;s.mc=i;
+      if(i===0){s.mcOk=true;finish(1);save();r2();}
+      else{save();each('#mc2 .opt',function(x){x.className='opt'+(+x.dataset.i===i?' bad':'');});$('fb2m').className='fb bad';$('fb2m').textContent='Beobachte den orangen Punkt, während du a änderst. Bewegt er sich?';}});});
+    if(s.mcOk){$('fb2m').className='fb ok';$('fb2m').textContent='Genau: a ändert nur die Form, der Scheitelpunkt bleibt bei S(0 | 0).';}}
+  bindNext();
+}
+
+/* ---------- Station 3: Begründen (Wertetabelle + Schritt-Muster) ---------- */
+var GAP3=[
+  {id:'g1',pre:'Bei y = 2x² ist jeder y-Wert ',post:' wie bei y = x².',opts:['doppelt so groß','halb so groß','um 2 größer'],ans:0},
+  {id:'g2',pre:'Deshalb ist die Rampe ',post:'.',opts:['steiler (gestreckt)','flacher (gestaucht)','nach oben verschoben'],ans:0},
+  {id:'g3',pre:'Bei y = 0,5x² ist jeder y-Wert ',post:' wie bei y = x².',opts:['doppelt so groß','halb so groß','um 0,5 kleiner'],ans:1},
+  {id:'g4',pre:'Deshalb ist die Rampe ',post:'.',opts:['steiler (gestreckt)','flacher (gestaucht)','nach unten verschoben'],ans:1},
+  {id:'g5',pre:'Geht man vom Scheitelpunkt 1 Schritt nach rechts, geht es immer genau ',post:' nach oben.',opts:['a','1','2'],ans:0}
+];
+function r3(){
+  ctlMode(null,'Hier rechnest du. Die Punkte, die du einträgst, erscheinen im Koordinatensystem.');
+  var s=st.s3;
+  var head='<tr><th>x</th>'+S3_X.map(function(x){return '<th>'+fmt(x)+'</th>';}).join('')+'</tr>';
+  var rN='<tr><td class="spt"><b>y = x²</b></td>'+S3_X.map(function(x){return '<td>'+fmt(x*x)+'</td>';}).join('')+'</tr>';
+  function rowIn(a,key){return '<tr><td class="spt"><b>'+term(a,0,0)+'</b></td>'+S3_X.map(function(x){return '<td><input class="num" inputmode="decimal" id="t3'+key+x+'" value="'+(s.vals[key+x]||'')+'" aria-label="y-Wert"></td>';}).join('')+'</tr>';}
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 3 · Begründen</p><h2>Warum wird die Rampe steiler oder flacher?</h2></div>'+
+   '<p>Berechne die y-Werte. Richtige Werte erscheinen als grüne Punkte.</p>'+
+   '<div class="tw"><table><thead>'+head+'</thead><tbody>'+rN+rowIn(2,'g')+rowIn(0.5,'h')+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button></div><p class="fb" id="fb3"></p>'+
+   (s.tabOk?'<div class="gap stack note" style="border-left-color:var(--green)"><p><b>Was fällt dir auf?</b></p><ol>'+GAP3.map(function(q){return '<li>'+q.pre+'<select class="sel" id="'+q.id+'" aria-label="Lücke"><option value="">…</option>'+q.opts.map(function(o,j){return '<option value="'+j+'"'+(s.gap[q.id]===String(j)?' selected':'')+'>'+o+'</option>';}).join('')+'</select>'+q.post+'</li>';}).join('')+'</ol>'+
+     '<div class="row"><button class="btn sec" type="button" id="c3g">Prüfen</button><span class="fb" id="fb3g"></span></div></div>':'')+
+   (s.gapOk?'<p class="win">Die Zahl a <b>multipliziert</b> jeden y-Wert. Ist a größer als 1, werden die Werte größer – die Rampe wird steiler. Liegt a zwischen 0 und 1, werden sie kleiner – die Rampe wird flacher.</p>':'')+
+   '<div class="row">'+nextBtn(2)+'</div>';
+  S3_X.forEach(function(x){['g','h'].forEach(function(k){var el=$('t3'+k+x);if(s.tabOk)el.className='num ok';el.addEventListener('input',function(){s.vals[k+x]=this.value;this.className='num';save();draw();});});});
+  $('c3').addEventListener('click',function(){var wrong=0,empty=0;
+    S3_X.forEach(function(x){[[2,'g'],[0.5,'h']].forEach(function(r){var el=$('t3'+r[1]+x),v=parse(el.value);if(isNaN(v)){empty++;return;}var ok=v===r[0]*x*x;el.className='num '+(ok?'ok':'bad');if(!ok)wrong++;});});
+    var fb=$('fb3');if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Werte.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent='Erst quadrieren, dann mit a malnehmen. Beispiel: x = −2 → (−2)² = 4 → 2 · 4 = 8.';draw();return;}
+    s.tabOk=true;save();r3();draw();});
+  if(s.tabOk){GAP3.forEach(function(q){$(q.id).addEventListener('change',function(){s.gap[q.id]=this.value;this.className='sel';save();});if(s.gapOk)$(q.id).className='sel ok';});
+    $('c3g').addEventListener('click',function(){var wrong=0,empty=0;GAP3.forEach(function(q){var x=$(q.id);if(x.value===''){empty++;return;}var ok=+x.value===q.ans;x.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+      var fb=$('fb3g');if(empty){fb.className='fb bad';fb.textContent='Es sind noch Lücken offen.';return;}
+      if(wrong){fb.className='fb bad';fb.textContent='Vergleiche die Zeilen der Tabelle: 4 → 8 oder 4 → 2?';return;}
+      s.gapOk=true;finish(2);save();r3();});}
+  bindNext();
+}
+
+/* ---------- Station 4: Regel finden + Vermutung prüfen ---------- */
+var GAPS=[
+  {pre:'Bei y = a · x² bestimmt die Zahl a ',post:'.',opts:['die Form der Parabel','die Verschiebung nach oben','die Verschiebung nach rechts'],ans:0},
+  {pre:'Ist a größer als 1, ist die Parabel ',post:'.',opts:['gestreckt: steiler und schmaler','gestaucht: flacher und breiter','nach unten geöffnet'],ans:0},
+  {pre:'Liegt a zwischen 0 und 1, ist die Parabel ',post:'.',opts:['gestreckt: steiler und schmaler','gestaucht: flacher und breiter','nach unten geöffnet'],ans:1},
+  {pre:'Ist a negativ, ist die Parabel ',post:'.',opts:['gestreckt','nach oben verschoben','nach unten geöffnet'],ans:2},
+  {pre:'Der Scheitelpunkt liegt immer bei ',post:'.',opts:['S(0 | a)','S(0 | 0)','S(a | 0)'],ans:1}
+];
+function r4(){
+  ctlMode(['a']);
+  var g=GUESSES.filter(function(o){return o.k===st.guess;})[0],refl='';
+  if(st.s4.saved){
+    refl='<div class="guess stack"><p class="eyebrow pro">Zurück zu deiner Vermutung</p>'+
+     (g?'<p>Du hast vermutet: <b>'+g.k+' &nbsp;'+g.t+'</b></p>'+(g.k==='A'?'<p class="fb ok">Deine Vermutung stimmt! Bei y = 2x² werden alle y-Werte verdoppelt – die Rampe wird steiler und schmaler.</p>':'<p class="fb bad">Deine Vermutung stimmt nicht. Richtig ist A. '+GUESS_WHY[g.k]+'</p>'):'<p>Du hast keine Vermutung gewählt. Richtig ist <b>A: Die Rampe wird steiler und schmaler.</b></p>')+
+     '<p>Erkläre in einem Satz, warum A richtig ist:</p><textarea id="refl" rows="3" placeholder="A ist richtig, weil …">'+(st.s4.reflect||'').replace(/</g,'&lt;')+'</textarea></div>';
+  }
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 4 · Regel finden</p><h2>Eure Regel für den Form-Regler a</h2></div>'+
+   '<p>Wähle die passenden Satzteile. Mit dem Form-Regler kannst du nachprüfen.</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(q,i){return '<li>'+q.pre+'<select class="sel" id="q'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+q.opts.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+q.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?'<div class="stack note" style="border-left-color:var(--ok)"><p><b>Jetzt ihr!</b> Schreibt eure Regel <b>in ganzen Sätzen</b>. Benutzt mindestens drei dieser Wörter: <i>a, größer, kleiner, negativ, gestreckt, gestaucht, steiler, flacher, Scheitelpunkt</i>.</p>'+
+     '<textarea id="own" rows="4" placeholder="Wenn a größer als 1 ist, …">'+(st.s4.text||'').replace(/</g,'&lt;')+'</textarea>'+
+     '<div class="row"><button class="btn pri" type="button" id="sv4">Regel speichern</button><span class="fb" id="fb4b"></span></div></div>':'')+
+   (st.s4.saved?'<div class="win"><p class="eyebrow" style="color:var(--ok)">Unsere Regel</p><p id="ruleOut"></p><p class="muted" style="margin-top:6px">Diese Regel stellt ihr am Ende der Klasse vor.</p></div>':'')+
+   refl+'<div class="row">'+nextBtn(3)+'</div>';
+  if(st.s4.ok)GAPS.forEach(function(q,i){$('q'+i).value=String(q.ans);$('q'+i).className='sel ok';});
+  GAPS.forEach(function(q,i){$('q'+i).addEventListener('change',function(){this.className='sel';});});
+  $('c4').addEventListener('click',function(){var wrong=0,empty=0;
+    GAPS.forEach(function(q,i){var x=$('q'+i);if(x.value===''){empty++;return;}var ok=+x.value===q.ans;x.className='sel '+(ok?'ok':'bad');if(!ok)wrong++;});
+    var fb=$('fb4');if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Teste mit dem Form-Regler!';return;}
+    st.s4.ok=true;save();r4();});
+  if(st.s4.ok){$('own').addEventListener('input',function(){st.s4.text=this.value;save();});
+    $('sv4').addEventListener('click',function(){var t=$('own').value.trim(),fb=$('fb4b'),low=' '+t.toLowerCase().replace(/[.,;:!?()]/g,' ')+' ';
+      var words=[' a ','größer','kleiner','negativ','gestreckt','gestaucht','steil','flach','scheitel'];
+      var hits=words.filter(function(w){return low.indexOf(w)>=0;}).length;
+      if(t.length<30){fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';return;}
+      if(hits<3){fb.className='fb bad';fb.textContent='Benutzt mindestens drei Wörter aus der Liste.';return;}
+      st.s4.text=t;st.s4.saved=true;finish(3);save();r4();});
+    if(st.s4.saved){$('ruleOut').textContent=st.s4.text;$('refl').addEventListener('input',function(){st.s4.reflect=this.value;save();});}}
+  bindNext();
+}
+
+/* ---------- Station 5: Training ---------- */
+var T5A=[2,0.5,3,-1,-2,0.25,-0.5,1];
+var T5P=[[2,8,2],[2,2,0.5],[1,3,3],[2,-4,-1],[4,4,0.25],[1,-2,-2],[3,4.5,0.5],[-2,8,2]];
+function new5(){var s=st.s5,o=s.task;
+  if(s.mode==='graph')s.task={a:pick(T5A,o&&o.a)};
+  else{var p;do{p=T5P[Math.floor(Math.random()*T5P.length)];}while(o&&o.px===p[0]&&o.py===p[1]);s.task={px:p[0],py:p[1],a:p[2]};}
+  s.solved=false;s.anim=null;s.showTerm=false;}
+function r5(){
+  ctlMode(null,'Hier gibst du a ein. Dann wird deine Rampe gebaut, und du siehst, ob sie passt.');
+  var s=st.s5;if(!s.task)new5();
+  var body=s.mode==='graph'?'<p>Welcher Bauplan gehört zur <b style="color:var(--target)">rot gestrichelten</b> Rampe? Tipp: Geh vom Scheitelpunkt 1 Schritt nach rechts.</p>':
+    '<p>Die Rampe soll durch den Punkt <b style="color:var(--target)">P('+fmt(s.task.px)+' | '+fmt(s.task.py)+')</b> gehen. Wie groß muss a sein?</p>';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 5 · Training</p><h2>'+(s.mode==='graph'?'Graph → Bauplan':'Punkt-Mission')+'</h2></div>'+
+   '<div class="seg" id="seg5"><button type="button" data-m="graph"'+(s.mode==='graph'?' class="sel"':'')+'>Graph → Bauplan</button><button type="button" data-m="punkt"'+(s.mode==='punkt'?' class="sel"':'')+'>Punkt-Mission</button></div>'+
+   body+'<p class="row big"><span>y =</span><input class="num" id="n5a" inputmode="decimal" aria-label="a"><span>· x²</span></p>'+
+   '<div class="row"><button class="btn pri" type="button" id="c5">Rampe bauen</button><button class="btn sec" type="button" id="n5">Neue Aufgabe</button></div>'+
+   '<p class="fb" id="fb5"></p><p class="muted" id="h5">Treffer: '+s.hits+(s.hits<4?' · ab 4 Treffern öffnen sich die Profi-Zusatzaufgaben ★':'')+'</p>'+
+   '<div class="row">'+nextBtn(4)+'</div>';
+  each('#seg5 button',function(b){b.addEventListener('click',function(){s.mode=b.dataset.m;s.task=null;new5();r5();updateTerm();draw();});});
+  $('n5').addEventListener('click',function(){new5();r5();updateTerm();draw();});
+  $('c5').addEventListener('click',check5);
+  bindNext();updateTerm();draw();
+}
+function check5(){
+  var s=st.s5,T=s.task,fb=$('fb5'),a=parse($('n5a').value);
+  if(isNaN(a)){fb.className='fb bad';fb.textContent='Trage eine Zahl für a ein (z. B. 2 oder 0,5).';return;}
+  if(a===0){fb.className='fb bad';fb.textContent='Mit a = 0 gibt es keine Rampe mehr – nur eine flache Linie!';return;}
+  if(Math.abs(a)>5){fb.className='fb bad';fb.textContent='So steil baut niemand. Prüfe deine Zahl.';return;}
+  $('c5').disabled=true;s.showTerm=true;fb.className='fb';fb.textContent='Die Rampe wird gebaut …';
+  animate({a:1},{a:a},function(v){s.anim=v;updateTerm();draw();},function(){
+    $('c5').disabled=false;s.anim={a:a};updateTerm();draw();
+    if(a===T.a){$('n5a').className='num ok';if(!s.solved){s.hits++;s.solved=true;}
+      var msg='Treffer! '+term(a,0,0)+(s.mode==='punkt'?' geht durch P.':' passt genau.');
+      if(s.hits>=4&&!st.done[4]){finish(4);save();r5();s.anim={a:a};s.showTerm=true;updateTerm();draw();$('fb5').className='fb ok';$('fb5').textContent=msg+' Die Profi-Zusatzaufgaben sind jetzt offen.';return;}
+      save();fb.className='fb ok';fb.textContent=msg;$('h5').textContent='Treffer: '+s.hits+(s.hits<4?' · ab 4 Treffern öffnen sich die Profi-Zusatzaufgaben ★':'');}
+    else{$('n5a').className='num bad';fb.className='fb bad';
+      if((a>0)!==(T.a>0))fb.textContent=T.a<0?'Die Rampe muss nach unten geöffnet sein – a ist negativ.':'Die Rampe ist nach oben geöffnet – a ist positiv.';
+      else if(Math.abs(a)>Math.abs(T.a))fb.textContent='Deine Rampe ist zu steil. Wähle a näher an 0.';
+      else fb.textContent='Deine Rampe ist zu flach. Wähle a weiter weg von 0.';
+      if(s.mode==='punkt')fb.textContent+=' Setze x = '+fmt(T.px)+' ein: a · '+fmt(T.px*T.px)+' soll '+fmt(T.py)+' ergeben.';}
+  });
+}
+
+/* ---------- Station 6: Profi-Zusatz ---------- */
+var TF=[
+  {s:'y = 3x² ist steiler als die Normalparabel.',a:true,w:'3 ist größer als 1: Die Parabel ist gestreckt.'},
+  {s:'y = 0,5x² ist steiler als die Normalparabel.',a:false,w:'0,5 liegt zwischen 0 und 1: Die Parabel ist gestaucht, also flacher.'},
+  {s:'Bei y = −2x² liegt der Scheitelpunkt bei S(0 | −2).',a:false,w:'a ändert den Scheitelpunkt nicht. Er bleibt bei S(0 | 0); die Parabel ist nach unten geöffnet.'},
+  {s:'y = −x² ist nach unten geöffnet und hat die gleiche Form wie y = x².',a:true,w:'Alle y-Werte haben nur das andere Vorzeichen: Die Normalparabel wird an der x-Achse gespiegelt.'},
+  {s:'Je größer a ist, desto breiter wird die Parabel.',a:false,w:'Umgekehrt: Je größer a (über 1), desto schmaler und steiler.'},
+  {s:'Der Punkt P(3 | 18) liegt auf der Parabel y = 2x².',a:true,w:'2 · 3² = 2 · 9 = 18 ✓'}
+];
+function new6(){var o=st.s6.task,t;do{t={a:pick([2,0.5,-1,3,-0.5]),d:rnd(-3,3,[0])};}while(o&&o.a===t.a&&o.d===t.d);st.s6.task=t;st.s6.shown=null;}
+function r6(){
+  ctlMode(null,'Profi-Bereich: Hier arbeitest du ohne Regler.');
+  var s=st.s6,body;
+  if(s.mode==='kombi'){if(!s.task)new6();
+    body='<h3>Form + Kran</h3><p>Jetzt arbeiten <b style="color:var(--green)">a</b> und <b style="color:var(--accent)">d</b> zusammen. Welcher Bauplan gehört zur <b style="color:var(--target)">rot gestrichelten</b> Rampe?</p>'+
+     '<p class="row big"><span>y =</span><input class="num" id="ka" inputmode="decimal" aria-label="a"><span>· (x</span>'+signIn('kg')+'<input class="num" id="kn" inputmode="decimal" aria-label="Zahl in der Klammer"><span>)²</span></p>'+
+     '<div class="row"><button class="btn pri" type="button" id="c6">Prüfen</button><button class="btn sec" type="button" id="n6">Neue Rampe</button></div>';
+  } else {
+    body='<h3>Fehler-Detektiv</h3><p>Stimmt die Aussage? Entscheide und lies die Begründung.</p>'+
+     TF.map(function(q,i){var v=s.tf[i];return '<div class="tf"><span>'+q.s+'</span><span class="seg" data-i="'+i+'"><button type="button" data-v="1"'+(v===true?' class="sel"':'')+'>wahr</button><button type="button" data-v="0"'+(v===false?' class="sel"':'')+'>falsch</button></span>'+
+       (v!==undefined?'<p class="why fb '+(v===q.a?'ok':'bad')+'">'+(v===q.a?'Richtig. ':'Leider nicht. ')+'<span style="font-weight:400;color:var(--ink)">'+q.w+'</span></p>':'')+'</div>';}).join('');
+  }
+  $('task').innerHTML='<div><p class="eyebrow pro">★ Profi-Zusatz</p><h2>Für Schnelle: knifflige Bauaufträge</h2></div>'+
+   '<div class="seg" id="seg6"><button type="button" data-m="kombi"'+(s.mode==='kombi'?' class="sel"':'')+'>Form + Kran</button><button type="button" data-m="tf"'+(s.mode==='tf'?' class="sel"':'')+'>Fehler-Detektiv</button></div>'+
+   body+'<p class="fb" id="fb6"></p><p class="muted">Gelöste Profi-Aufgaben: '+Object.keys(s.solved).length+'</p>';
+  each('#seg6 button',function(b){b.addEventListener('click',function(){s.mode=b.dataset.m;r6();updateTerm();draw();});});
+  if(s.mode==='tf'){each('.tf .seg',function(g){Array.prototype.forEach.call(g.querySelectorAll('button'),function(b){b.addEventListener('click',function(){var i=+g.dataset.i,v=b.dataset.v==='1';s.tf[i]=v;if(v===TF[i].a)s.solved['tf'+i]=1;save();r6();});});});}
+  else{$('n6').addEventListener('click',function(){new6();r6();updateTerm();draw();});
+    $('c6').addEventListener('click',function(){var T=s.task,fb=$('fb6'),a=parse($('ka').value),g=$('kg').value,n=parse($('kn').value);
+      if($('ka').value.trim()==='')a=1;
+      if(isNaN(a)||a===0||!g||isNaN(n)||n<0){fb.className='fb bad';fb.textContent='Trage a ein, wähle das Rechenzeichen und eine Zahl ohne Minus.';return;}
+      var d=g==='-'?n:-n;if(Object.is(d,-0))d=0;
+      s.shown={a:Math.max(-5,Math.min(5,a)),d:Math.max(-6,Math.min(6,d))};updateTerm();draw();
+      $('ka').className='num '+(a===T.a?'ok':'bad');$('kn').className='num '+(n===Math.abs(T.d)?'ok':'bad');$('kg').className='sel '+(d===T.d?'ok':'bad');
+      if(a===T.a&&d===T.d){s.solved['k'+T.a+'_'+T.d]=1;save();fb.className='fb ok';fb.textContent='Perfekt! '+term(T.a,T.d,0)+': Form durch a, Verschiebung durch d.';}
+      else{fb.className='fb bad';fb.textContent=d===T.d?'Die Lage stimmt, die Form noch nicht. Geh vom Scheitelpunkt 1 Schritt nach rechts.':(d===-T.d?'Vorzeichen-Falle in der Klammer!':'Lies zuerst den Scheitelpunkt ab: Dort wird die Klammer null.');}});}
+  updateTerm();draw();
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();[r1,r2,r3,r4,r5,r6][st.station]();updateTerm();draw();}
+$('sA').addEventListener('input',function(){setA(+this.value);});
+$('aM').addEventListener('click',function(){setA(aIdx(st.a)-1);});
+$('aP').addEventListener('click',function(){setA(aIdx(st.a)+1);});
+$('sD').addEventListener('input',function(){setD(parseFloat(this.value));});
+$('dM').addEventListener('click',function(){setD(st.d-.5);});
+$('dP').addEventListener('click',function(){setD(st.d+.5);});
+$('tNorm').addEventListener('change',function(){st.norm=this.checked;draw();});
+var armed=false;
+$('reset').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();
+});
+cv.addEventListener('contextmenu',function(ev){ev.preventDefault();});
+window.addEventListener('resize',resize);
+if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+load();if(!unlocked(st.station))st.station=0;
+setA(7);setD(0);render();resize();
+
+/* ---------- Ergebnisse abgeben (jederzeit) ---------- */
+(function(){
+  var APP='Skatepark-Baustelle';
+  var AKEY=(typeof KEY!=='undefined'?KEY:APP)+'-abgabe';
+  function lget(){try{return JSON.parse(localStorage.getItem(AKEY)||'{}')||{};}catch(e){return {};}}
+  function lset(o){try{localStorage.setItem(AKEY,JSON.stringify(o));}catch(e){}}
+  var A=lget();if(!A.t0){A.t0=Date.now();lset(A);}
+  function e(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+  
+  function abgText(A){
+    var d=new Date(),L=[];
+    var title=(document.querySelector('.brand b')||{}).textContent||APP;
+    var subt=(document.querySelector('.brand span')||{}).textContent||'';
+    L.push(title.toUpperCase()+(subt?' · '+subt:''));
+    L.push('Name: '+A.name+'    Klasse: '+(A.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+    var n=0;STATIONS.forEach(function(x,i){if(st.done[i])n++;});
+    L.push('Geschafft: '+n+' von '+STATIONS.length+' Stationen');
+    L.push('');
+    var LAB={hits:'richtig gelöst',tip:'Tipps benutzt',tips:'Tipps benutzt',tries:'Versuche',solved:'gelöst',begr:'Begründung',refl:'Begründung',text:'Text',guess:'Vermutung'};
+    function fmt(v){if(v===true)return 'ja';if(v===false)return 'nein';if(Array.isArray(v)){if(v.every(function(z){return typeof z==='boolean';}))return v.filter(Boolean).length+' von '+v.length;return v.map(fmt).join(', ');}if(v&&typeof v==='object')return null;return String(v);}
+    function details(o,pre,out){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){var v=o[k];
+      if(LAB[k]==null)return;var f=fmt(v);if(f==null||f===''||f==='null'||f==='undefined')return;
+      if(typeof v==='string'&&v.length>0)out.push(pre+LAB[k]+': '+v.trim());else out.push(pre+LAB[k]+': '+f);});}
+    STATIONS.forEach(function(x,i){
+      var mark=st.done[i]?'✓ geschafft':(i===st.station?'→ bearbeitet gerade':'–');
+      L.push('Station '+(i+1)+' · '+x.name+(x.pro?' (Profi)':'')+':  '+mark);
+      var out=[];if(st.done[i]||i===st.station)details(st[x.key],'   ',out);out.forEach(function(z){L.push(z);});
+    });
+    var extra=[];['begr','refl','guess'].forEach(function(k){if(st[k]!=null&&st[k]!==''){var f=fmt(st[k]);if(f)extra.push('   '+LAB[k]+': '+f);}});
+    if(extra.length){L.push('');L.push('Weitere Angaben:');L=L.concat(extra);}
+    L.push('');
+    L.push('Zeit seit dem ersten Öffnen der App: '+Math.round((Date.now()-A.t0)/60000)+' min');
+    var raw='';try{raw=localStorage.getItem(KEY)||'';}catch(err){}
+    L.push('');L.push('Die folgende Zeile ist für die Auswertung. Bitte nicht verändern.');
+    L.push('#DATEN '+raw);
+    return L.join('\n');
+  }
+
+  var ov=document.createElement('div');ov.className='abg-ov';ov.hidden=true;
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="abgH">'+
+    '<h2 id="abgH">Ergebnisse abgeben</h2>'+
+    '<ol><li>Trage deinen <b>Namen</b> und deine <b>Klasse</b> ein.</li>'+
+    '<li>Tippe auf <b>„Datei herunterladen“</b>. Auf dem iPad fragt Safari nach: Tippe auf <b>„Laden“</b>. Die Datei liegt dann in der App <b>Dateien</b> im Ordner <b>Downloads</b>.</li>'+
+    '<li>Öffne <b>IServ → Aufgaben → „'+e(APP)+'“</b>, lade die Datei hoch (aus <b>Dateien → Downloads</b>) und tippe auf <b>Abgeben</b>.</li></ol>'+
+    '<p class="muted">Du kannst auch abgeben, wenn du noch nicht fertig bist. Im Text steht, wie weit du gekommen bist.</p>'+
+    '<div class="abg-row"><label for="abgName">Name</label><input class="abg-in" id="abgName" autocomplete="off" style="width:12em">'+
+    '<label for="abgKl">Klasse</label><input class="abg-in" id="abgKl" autocomplete="off" style="width:5em"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="abgDl">Datei herunterladen</button>'+
+    '<button class="abg-close" type="button" id="abgClose">Schließen</button></div>'+
+    '<p class="muted" style="font-size:14px">Klappt das Herunterladen nicht? Dann <button type="button" id="abgCopy" style="background:none;border:none;padding:0;color:var(--blue);text-decoration:underline;font:inherit;cursor:pointer">kopiere den Text</button> und frag deine Lehrkraft.</p>'+
+    '<p class="abg-fb" id="abgFb"></p>'+
+    '<textarea class="abg-txt" id="abgTxt" rows="10" readonly hidden></textarea></div>';
+  document.body.appendChild(ov);
+  var $n=ov.querySelector('#abgName'),$k=ov.querySelector('#abgKl'),$t=ov.querySelector('#abgTxt'),$f=ov.querySelector('#abgFb');
+  function msg(ok,t){$f.className='abg-fb '+(ok?'ok':'bad');$f.textContent=t;}
+  function open(){A=lget();$n.value=A.name||'';$k.value=A.klasse||'';$t.hidden=true;msg(true,'');ov.hidden=false;setTimeout(function(){($n.value?ov.querySelector('#abgDl'):$n).focus();},30);}
+  function close(){ov.hidden=true;}
+  function upd(){A.name=$n.value.trim();A.klasse=$k.value.trim();lset(A);}
+  $n.addEventListener('input',upd);$k.addEventListener('input',upd);
+  ov.querySelector('#abgClose').addEventListener('click',close);
+  ov.addEventListener('click',function(ev){if(ev.target===ov)close();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!ov.hidden)close();});
+  ov.querySelector('#abgCopy').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A);$t.value=txt;
+    function sel(){$t.hidden=false;$t.focus();$t.select();msg(true,'Der Text ist markiert. Tippe lange darauf und wähle „Kopieren“.');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Text kopiert.');},sel);}catch(err){sel();}
+  });
+  function dateiname(){return (APP+'_'+(A.name||'Name')+'_'+(A.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'')+'.txt';}
+  ov.querySelector('#abgDl').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A).replace(/\r?\n/g,'\r\n'),name=dateiname();
+    try{var bl=new Blob(['\ufeff'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),a=document.createElement('a');
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},10000);
+      msg(true,'Die Datei „'+name+'“ wird heruntergeladen. Lade sie jetzt in IServ bei der Aufgabe „'+APP+'“ hoch.');}
+    catch(err){msg(false,'Herunterladen klappt hier nicht. Kopiere stattdessen den Text.');}
+  });
+  document.getElementById('abgBtn').addEventListener('click',open);
+})();
+})();
+</script>
+</body>
+</html>

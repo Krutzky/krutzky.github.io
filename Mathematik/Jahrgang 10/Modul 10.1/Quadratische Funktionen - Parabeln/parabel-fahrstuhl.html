@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parabel-Fahrstuhl</title>
+<style>
+/* Layout: Kopfleiste mit Stationen-Weg · links Koordinatensystem (fest) · rechts Fahrstuhl-Bedienfeld + Stationsaufgabe; auf schmalen Geräten untereinander */
+:root{
+  --bg:#EDF1F8; --surface:#FFFFFF; --surface-2:#F3F6FB; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF;
+  --grid:#E3E8F0; --axis:#4A5068; --norm:#8C96B4; --curve:#E8892B; --target:#C8423D; --pt:#1C66C0;
+  --display:#111111; --display-ink:#FFB347;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --pt:#6FA8F0;
+  --display:#000000; --display-ink:#FFB347; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C;
+  --grid:#1E2858; --axis:#AEB6D8; --norm:#8792C2; --curve:#F3A04F; --target:#F07A73; --pt:#6FA8F0;
+  --display:#000000; --display-ink:#FFB347; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-inline:16px}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column;gap:0}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-inline:16px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px 10px 6px}
+@media (max-width:860px){.plot{position:static}}
+.term{font-family:var(--f-display);font-weight:600;font-size:clamp(26px,4vw,36px);text-align:center;margin:2px 0 4px;font-variant-numeric:tabular-nums}
+.term .e{color:var(--accent)}
+.term .q{color:var(--bad)}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Fahrstuhl-Bedienfeld */
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:8px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:34px;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.keys{display:flex;flex-direction:column;gap:8px}
+.key{width:84px;height:50px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+
+/* Tabellen & Eingaben */
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{border:1px solid var(--line);padding:6px 6px;text-align:center}
+thead th{background:var(--blue);color:var(--on-blue);font-weight:700}
+thead th:first-child{background:var(--navy);color:var(--navy-ink)}
+tbody th{background:var(--blue-soft);font-weight:700;white-space:nowrap}
+.num{width:3.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.spt{white-space:nowrap}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface-2);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:8px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.gap select{font:inherit;border:2px solid var(--line);border-radius:8px;padding:3px 6px;background:var(--surface);max-width:100%}
+.gap select.ok{border-color:var(--ok);background:var(--ok-soft)}
+.gap select.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gap li{margin-bottom:10px}
+.gap ol{padding-left:1.2em;margin:0}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- Ergebnisse abgeben ---- */
+.abg-btn{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:50}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-box ol{margin:0;padding-left:1.3em}
+.abg-box li{margin-bottom:6px}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-close{background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:700;color:var(--ink)}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.abg-txt{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface-2);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="hwrap">
+    <div class="brand"><b>Parabel-Fahrstuhl</b><span>Wie verändert e die Parabel y = x² + e?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="abg-btn" id="abgBtn" type="button">Ergebnisse abgeben</button><button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+
+
+<main>
+  <section class="card plot" aria-label="Koordinatensystem">
+    <div class="term" id="term">y = x²</div>
+    <canvas id="cv" aria-label="Koordinatensystem mit Parabeln"></canvas>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="liftCard">
+      <p class="eyebrow">Fahrstuhl</p>
+      <div id="liftOn">
+        <div class="lift">
+          <div class="disp"><small>STOCKWERK e</small><span id="dispVal">0</span></div>
+          <div class="keys">
+            <button class="key" id="up" type="button" aria-label="e um 0,5 erhöhen">▲</button>
+            <button class="key" id="down" type="button" aria-label="e um 0,5 verringern">▼</button>
+          </div>
+        </div>
+        <input type="range" id="e" min="-5" max="5" step="0.5" value="0" aria-label="Regler für e">
+        <div class="scale"><span>−5</span><span>0</span><span>+5</span></div>
+        <label class="chk" style="margin-top:6px"><input type="checkbox" id="tNorm" checked> Normalparabel y = x² zum Vergleich zeigen</label>
+      </div>
+      <p class="locked" id="liftOff" hidden></p>
+    </section>
+
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var STATIONS=[
+  {key:'s1',name:'Beobachten'},
+  {key:'s2',name:'Vorhersagen'},
+  {key:'s3',name:'Begründen'},
+  {key:'s4',name:'Regel finden'},
+  {key:'s5',name:'Training'}
+];
+var S1_ROWS=[3,1,0,-2,-4];
+var S3_SETS=[2,-3];
+var XS=[-2,-1,0,1,2];
+
+var st={station:0,done:[false,false,false,false,false],e:0,norm:true,
+  s1:{vals:{},mc:null,mcOk:false,t:{},tOk:false},
+  s2:{e:null,dir:null,hits:0,phase:'ask',last:null,anim:null},
+  s3:{set:0,vals:{},solved:[false,false],diffOk:[false,false]},
+  s4:{ok:false,text:'',saved:false},
+  s5:{mode:'ziel',target:null,point:null,hits:0,solved:false}};
+
+/* ---------- Speicher (nur Bequemlichkeit) ---------- */
+var KEY='parabel-fahrstuhl-v2';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,s1:st.s1,s3:st.s3,s4:st.s4,s2hits:st.s2.hits}));}catch(e){}}
+function load(){try{var d=JSON.parse(localStorage.getItem(KEY)||'null');if(!d)return;
+  st.station=d.station||0;st.done=d.done||st.done;st.s1=d.s1||st.s1;st.s3=d.s3||st.s3;st.s4=d.s4||st.s4;st.s2.hits=d.s2hits||0;}catch(e){}}
+
+/* ---------- Zahlen ---------- */
+function fmt(v){var r=Math.round(v*100)/100;var s=Math.abs(r).toString().replace('.',',');return (r<0?'−':'')+s;}
+function parse(str){if(str==null)return NaN;var s=String(str).trim().replace(/[−–—]/g,'-').replace(',','.').replace(/\s+/g,'');if(s===''||s==='-')return NaN;return Number(s);}
+function termHTML(e,cls){if(e===0)return 'y = x²';return 'y = x² '+(e>0?'+':'−')+' <span class="'+(cls||'e')+'">'+fmt(Math.abs(e))+'</span>';}
+function termTxt(e){if(e===0)return 'y = x²';return 'y = x² '+(e>0?'+ ':'− ')+fmt(Math.abs(e));}
+
+/* ---------- Zeichnen ---------- */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0,PAD=30;
+var X0=-5,X1=5,Y0=-6,Y1=11;
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function resize(){
+  var w=cv.getBoundingClientRect().width||600;
+  var h=Math.max(300,Math.min(w*0.86,window.innerHeight-170));
+  var dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;draw();
+}
+function sx(x){return PAD+(x-X0)/(X1-X0)*(W-2*PAD);}
+function sy(y){return H-PAD-(y-Y0)/(Y1-Y0)*(H-2*PAD);}
+function arrowTo(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();var a=Math.atan2(y2-y1,x2-x1),L=10;ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-L*Math.cos(a-.4),y2-L*Math.sin(a-.4));ctx.lineTo(x2-L*Math.cos(a+.4),y2-L*Math.sin(a+.4));ctx.closePath();ctx.fill();}
+function grid(){
+  ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=col('grid');ctx.lineWidth=1;
+  var x,y;
+  for(x=X0;x<=X1;x++){ctx.beginPath();ctx.moveTo(sx(x),sy(Y0));ctx.lineTo(sx(x),sy(Y1));ctx.stroke();}
+  for(y=Y0;y<=Y1;y++){ctx.beginPath();ctx.moveTo(sx(X0),sy(y));ctx.lineTo(sx(X1),sy(y));ctx.stroke();}
+  var ax=col('axis');ctx.strokeStyle=ax;ctx.fillStyle=ax;ctx.lineWidth=1.8;
+  arrowTo(sx(X0),sy(0),sx(X1)+12,sy(0));arrowTo(sx(0),sy(Y0),sx(0),sy(Y1)-12);
+  ctx.font='14px '+getComputedStyle(document.body).fontFamily;ctx.textAlign='center';ctx.textBaseline='top';
+  for(x=X0;x<=X1;x++){if(x===0)continue;ctx.fillText(fmt(x),sx(x),sy(0)+5);}
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  for(y=Y0;y<=Y1;y++){if(y===0)continue;ctx.fillText(fmt(y),sx(0)-6,sy(y));}
+  ctx.font='italic 16px '+getComputedStyle(document.body).fontFamily;ctx.textAlign='left';
+  ctx.fillText('x',sx(X1)+2,sy(0)-14);ctx.fillText('y',sx(0)+9,sy(Y1)-6);
+}
+function parabola(e,color,width,dash){
+  ctx.save();ctx.beginPath();ctx.rect(PAD,PAD-4,W-2*PAD,H-2*PAD+8);ctx.clip();
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();
+  for(var i=0;i<=300;i++){var x=X0+(X1-X0)*i/300,y=x*x+e;if(i===0)ctx.moveTo(sx(x),sy(y));else ctx.lineTo(sx(x),sy(y));}
+  ctx.stroke();ctx.restore();
+}
+function dot(x,y,color,r){ctx.beginPath();ctx.arc(sx(x),sy(y),r||7,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col('surface');ctx.stroke();}
+function label(t,x,y,color,right){ctx.font='bold 15px '+getComputedStyle(document.body).fontFamily;ctx.textBaseline='middle';ctx.textAlign=right?'right':'left';var w=ctx.measureText(t).width,px=sx(x)+(right?-12:12),py=sy(y);ctx.fillStyle=col('surface');ctx.globalAlpha=.9;ctx.fillRect(right?px-w-4:px-4,py-11,w+8,22);ctx.globalAlpha=1;ctx.fillStyle=color;ctx.fillText(t,px,py);}
+
+function draw(){
+  if(!W)return;grid();
+  var k=STATIONS[st.station].key;
+  if(k==='s1'||k==='s4'){
+    if(st.norm&&st.e!==0)parabola(0,col('norm'),2.5,[9,7]);
+    parabola(st.e,col('curve'),5);
+  } else if(k==='s2'){
+    parabola(0,col('norm'),2.5,[9,7]);
+    if(st.s2.anim!==null)parabola(st.s2.anim,col('curve'),5);
+  } else if(k==='s3'){
+    var e=S3_SETS[st.s3.set];
+    parabola(0,col('norm'),2.5,[9,7]);
+    XS.forEach(function(x){dot(x,x*x,col('norm'),5);});
+    if(st.s3.solved[st.s3.set])parabola(e,col('curve'),4);
+    XS.forEach(function(x){var v=parse(st.s3.vals[e+'_'+x]);if(!isNaN(v)&&v>=Y0&&v<=Y1){var ok=v===x*x+e;dot(x,v,ok?col('ok'):col('bad'),7);}});
+  } else if(k==='s5'){
+    parabola(0,col('norm'),2.5,[9,7]);
+    if(st.s5.mode==='ziel'&&st.s5.target!==null)parabola(st.s5.target,col('target'),3,[4,8]);
+    parabola(st.e,col('curve'),5);
+    if(st.s5.mode==='punkt'&&st.s5.point){var p=st.s5.point;dot(p[0],p[1],col('target'),9);label('P('+fmt(p[0])+' | '+fmt(p[1])+')',p[0],p[1],col('target'),p[0]<0);}
+  }
+}
+
+/* ---------- Fahrstuhl ---------- */
+function setE(v){v=Math.max(-5,Math.min(5,Math.round(v*2)/2));if(Object.is(v,-0))v=0;st.e=v;$('e').value=v;$('dispVal').textContent=(v>0?'+':'')+fmt(v);updateTerm();draw();
+  if(STATIONS[st.station].key==='s5'){$('fb5')&&($('fb5').textContent='',$('fb5').className='fb');}}
+function updateTerm(){
+  var k=STATIONS[st.station].key,t=$('term');
+  if(k==='s2'){t.innerHTML=st.s2.e===null?'y = x²':termHTML(st.s2.e);}
+  else if(k==='s3'){t.innerHTML=termHTML(S3_SETS[st.s3.set]);}
+  else t.innerHTML=termHTML(st.e);
+}
+function liftMode(on,msg){$('liftOn').hidden=!on;$('liftOff').hidden=on;if(!on)$('liftOff').textContent=msg;}
+
+/* ---------- Stationen-Weg ---------- */
+function unlocked(i){return i===0||st.done[i-1];}
+function renderRoute(){
+  var h='';STATIONS.forEach(function(s,i){var cls='stop'+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(i+1))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;
+  Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});
+}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){return st.done[i]&&i<4?'<button class="btn pri" type="button" id="nextSt">Weiter zu Station '+(i+2)+': '+STATIONS[i+1].name+' →</button>':'';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+
+/* ---------- Station 1: Beobachten ---------- */
+function r1(){
+  liftMode(true);
+  var rows='';S1_ROWS.forEach(function(e){var given=e===0,vx=given?'0':(st.s1.vals[e+'x']||''),vy=given?'0':(st.s1.vals[e+'y']||'');
+    rows+='<tr><th>'+fmt(e)+'</th><td>'+termTxt(e)+'</td><td class="spt">S( <input class="num" inputmode="decimal" id="s1x'+e+'" value="'+vx+'"'+(given?' disabled':'')+' aria-label="x-Koordinate für e = '+fmt(e)+'"> | <input class="num" inputmode="decimal" id="s1y'+e+'" value="'+vy+'"'+(given?' disabled':'')+' aria-label="y-Koordinate für e = '+fmt(e)+'"> )</td></tr>';});
+  var mc=['S(e | 0)','S(0 | e)','S(0 | 0)','S(e | e)'];
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 1 · Beobachten</p><h2>Wo landet der Scheitelpunkt?</h2></div>'+
+   '<p>Stelle mit dem Fahrstuhl nacheinander die Werte für e ein. Lies den <b>Scheitelpunkt</b> (den tiefsten Punkt der orangen Parabel) im Koordinatensystem ab und trage ihn ein.</p>'+
+   '<div class="tw"><table><thead><tr><th>e</th><th>Term</th><th>Scheitelpunkt</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c1">Prüfen</button><span class="fb" id="fb1"></span></div>'+
+   '<div id="mcBox" class="stack"'+(allS1()?'':' hidden')+'><p><b>Was fällt dir auf?</b> Der Scheitelpunkt von y = x² + e liegt immer bei …</p><div class="choice" id="mc">'+
+   mc.map(function(m,i){return '<button type="button" class="opt'+(st.s1.mc===i?(i===1?' ok':' bad'):'')+'" data-i="'+i+'">'+m+'</button>';}).join('')+'</div><p class="fb" id="fbmc"></p></div>'+
+   (st.s1.mcOk?transferHTML():'')+
+   '<div class="row">'+nextBtn(0)+'</div>';
+  $('c1').addEventListener('click',check1);
+  if(st.s1.mcOk)bindTransfer();
+  S1_ROWS.forEach(function(e){if(e===0)return;['x','y'].forEach(function(c){$('s1'+c+e).addEventListener('input',function(){st.s1.vals[e+c]=this.value;this.className='num';save();});});});
+  Array.prototype.forEach.call(document.querySelectorAll('#mc .opt'),function(b){b.addEventListener('click',function(){pick1(+b.dataset.i);});});
+  if(st.s1.mcOk)$('fbmc').innerHTML='<span class="fb ok">Genau! Der Scheitelpunkt fährt mit: S(0 | e).</span>';
+  bindNext();
+}
+var S1_T=[7,-10,2.5];
+function transferHTML(){
+  return '<div class="stack note" style="border-left-color:var(--blue)"><p><b>Jetzt ohne Fahrstuhl!</b> Diese Parabeln passen nicht mehr ins Bild. Nutze deine Entdeckung und trage die Scheitelpunkte ein.</p>'+
+   S1_T.map(function(e){var t=st.s1.t||{};return '<p class="row"><span style="min-width:7.5em">'+termTxt(e)+'</span><span class="spt">S( <input class="num" inputmode="decimal" id="t1x'+String(e).replace('.','_')+'" value="'+(t[e+'x']||'')+'" aria-label="x-Koordinate"> | <input class="num" inputmode="decimal" id="t1y'+String(e).replace('.','_')+'" value="'+(t[e+'y']||'')+'" aria-label="y-Koordinate"> )</span></p>';}).join('')+
+   '<div class="row"><button class="btn sec" type="button" id="c1t">Prüfen</button><span class="fb'+(st.s1.tOk?' ok':'')+'" id="fb1t">'+(st.s1.tOk?'Stark – du brauchst den Fahrstuhl gar nicht mehr!':'')+'</span></div></div>';
+}
+function bindTransfer(){
+  S1_T.forEach(function(e){['x','y'].forEach(function(c){var el=$('t1'+c+String(e).replace('.','_'));if(st.s1.tOk)el.className='num ok';el.addEventListener('input',function(){st.s1.t=st.s1.t||{};st.s1.t[e+c]=this.value;this.className='num';save();});});});
+  $('c1t').addEventListener('click',function(){
+    var wrong=0,empty=0;
+    S1_T.forEach(function(e){var k=String(e).replace('.','_'),ix=$('t1x'+k),iy=$('t1y'+k),vx=parse(ix.value),vy=parse(iy.value);if(isNaN(vx)||isNaN(vy)){empty++;return;}ix.className='num '+(vx===0?'ok':'bad');iy.className='num '+(vy===e?'ok':'bad');if(vx!==0||vy!==e)wrong++;});
+    var fb=$('fb1t');
+    if(empty){fb.className='fb bad';fb.textContent='Fülle alle Felder aus.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent='Schau auf die Zahl hinter x²: Sie verrät dir die Höhe des Scheitelpunkts.';return;}
+    st.s1.tOk=true;finish(0);save();r1();
+  });
+}
+function allS1(){return S1_ROWS.every(function(e){return e===0||(parse(st.s1.vals[e+'x'])===0&&parse(st.s1.vals[e+'y'])===e);});}
+function check1(){
+  var wrong=0,empty=0,hintX=false;
+  S1_ROWS.forEach(function(e){if(e===0)return;var ix=$('s1x'+e),iy=$('s1y'+e),vx=parse(ix.value),vy=parse(iy.value);
+    if(isNaN(vx)||isNaN(vy)){empty++;return;}
+    ix.className='num '+(vx===0?'ok':'bad');iy.className='num '+(vy===e?'ok':'bad');if(vx!==0)hintX=true;if(vx!==0||vy!==e)wrong++;});
+  var fb=$('fb1');
+  if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Scheitelpunkt'+(empty>1?'e':'')+'.';return;}
+  if(wrong){fb.className='fb bad';fb.textContent=hintX?'Tipp: Liegt der Scheitelpunkt links oder rechts von der y-Achse? Was ist dann seine x-Koordinate?':'Noch nicht ganz. Stelle genau dieses e ein und schau, in welcher Höhe der tiefste Punkt liegt.';return;}
+  fb.className='fb ok';fb.textContent='Alle richtig abgelesen!';$('mcBox').hidden=false;
+}
+function pick1(i){st.s1.mc=i;var ok=i===1;
+  Array.prototype.forEach.call(document.querySelectorAll('#mc .opt'),function(b){b.className='opt'+(+b.dataset.i===i?(ok?' ok':' bad'):'');});
+  var f=$('fbmc');
+  if(ok){st.s1.mcOk=true;save();r1();}
+  else{f.className='fb bad';f.textContent='Vergleiche noch einmal mit deiner Tabelle: Welche Koordinate bleibt immer gleich, welche ist gleich e?';save();}
+}
+
+/* ---------- Station 2: Vorhersagen ---------- */
+function newRound2(){var e;do{e=Math.floor(Math.random()*9)-4;}while(e===0||e===st.s2.last);st.s2.e=e;st.s2.last=e;st.s2.dir=null;st.s2.phase='ask';st.s2.anim=null;}
+function r2(){
+  liftMode(false,'In dieser Station fährt die App den Fahrstuhl. Du sagst vorher, wohin.');
+  if(st.s2.e===null)newRound2();
+  updateTerm();
+  var need=3,dots='';for(var i=0;i<need;i++)dots+='<i class="'+(i<st.s2.hits?'on':'')+'"></i>';
+  var asking=st.s2.phase==='ask';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 2 · Vorhersagen</p><h2>Wohin fährt die Parabel?</h2></div>'+
+   '<p>Oben steht ein neuer Term. Die Parabel ist noch versteckt. Sage voraus, wohin sie fährt – dann starte den Fahrstuhl.</p>'+
+   '<div class="row"><span>Die Normalparabel fährt nach</span><span class="seg" id="seg"><button type="button" data-d="oben"'+(st.s2.dir==='oben'?' class="sel"':'')+'>oben ▲</button><button type="button" data-d="unten"'+(st.s2.dir==='unten'?' class="sel"':'')+'>unten ▼</button></span></div>'+
+   '<div class="row"><span>und zwar um</span><input class="num" id="s2n" inputmode="decimal" aria-label="Anzahl Einheiten"><span>Einheiten.</span></div>'+
+   '<div class="row"><span>Scheitelpunkt: S( <input class="num" id="s2x" inputmode="decimal" aria-label="x-Koordinate"> | <input class="num" id="s2y" inputmode="decimal" aria-label="y-Koordinate"> )</span></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="go2"'+(asking?'':' disabled')+'>Fahrstuhl starten</button><button class="btn sec" type="button" id="new2"'+(asking?' hidden':'')+'>Nächster Term</button></div>'+
+   '<p class="fb" id="fb2"></p>'+
+   '<div class="row"><span class="muted">Richtige Vorhersagen:</span><span class="dots">'+dots+'</span></div>'+
+   '<div class="row">'+nextBtn(1)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(b){b.addEventListener('click',function(){st.s2.dir=b.dataset.d;Array.prototype.forEach.call(document.querySelectorAll('#seg button'),function(x){x.className=x===b?'sel':'';});});});
+  $('go2').addEventListener('click',run2);
+  $('new2').addEventListener('click',function(){newRound2();r2();draw();});
+  bindNext();draw();
+}
+function run2(){
+  var e=st.s2.e,n=parse($('s2n').value),sx_=parse($('s2x').value),sy_=parse($('s2y').value),fb=$('fb2');
+  if(!st.s2.dir||isNaN(n)||isNaN(sx_)||isNaN(sy_)){fb.className='fb bad';fb.textContent='Fülle zuerst alles aus: Richtung, Einheiten und Scheitelpunkt.';return;}
+  st.s2.phase='show';$('go2').disabled=true;
+  var dirOk=(e>0&&st.s2.dir==='oben')||(e<0&&st.s2.dir==='unten'),nOk=n===Math.abs(e),sOk=sx_===0&&sy_===e;
+  var finishShow=function(){
+    if(dirOk&&nOk&&sOk){st.s2.hits=Math.min(3,st.s2.hits+1);fb.className='fb ok';fb.textContent='Richtig vorhergesagt! '+termTxt(e)+' fährt '+fmt(Math.abs(e))+' nach '+(e>0?'oben':'unten')+', S(0 | '+fmt(e)+').';if(st.s2.hits>=3)finish(1);}
+    else{var t=[];if(!dirOk)t.push('Richtung: '+(e>0?'+ heißt nach oben':'− heißt nach unten'));if(!nOk)t.push('Einheiten: '+fmt(Math.abs(e)));if(!sOk)t.push('Scheitelpunkt: S(0 | '+fmt(e)+')');fb.className='fb bad';fb.textContent='Schau genau hin – '+t.join(' · ')+'.';}
+    save();var keep=fb.className,txt=fb.textContent;r2();$('fb2').className=keep;$('fb2').textContent=txt;
+    $('s2n').value=n;$('s2x').value=sx_;$('s2y').value=sy_;
+  };
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){st.s2.anim=e;draw();finishShow();return;}
+  var t0=null,dur=1300;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),q=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;st.s2.anim=e*q;draw();if(p<1)requestAnimationFrame(step);else{st.s2.anim=e;draw();finishShow();}}
+  requestAnimationFrame(step);
+}
+
+/* ---------- Station 3: Begründen ---------- */
+function r3(){
+  liftMode(false,'Hier rechnest du. Die Punkte, die du einträgst, erscheinen im Koordinatensystem.');
+  var e=S3_SETS[st.s3.set],solved=st.s3.solved[st.s3.set],diffOk=st.s3.diffOk[st.s3.set];
+  updateTerm();
+  var head='<tr><th>x</th>'+XS.map(function(x){return '<th>'+fmt(x)+'</th>';}).join('')+'</tr>';
+  var r0='<tr><th>y = x²</th>'+XS.map(function(x){return '<td>'+fmt(x*x)+'</td>';}).join('')+'</tr>';
+  var r1_='<tr><th>'+termTxt(e)+'</th>'+XS.map(function(x){var v=st.s3.vals[e+'_'+x]||'';return '<td><input class="num" inputmode="decimal" id="s3_'+x+'" value="'+v+'" aria-label="y-Wert bei x = '+fmt(x)+'"></td>';}).join('')+'</tr>';
+  var word=e>0?'größer':'kleiner';
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 3 · Begründen · Teil '+(st.s3.set+1)+' von 2</p><h2>Warum fährt die ganze Parabel?</h2></div>'+
+   '<p>Berechne die y-Werte für <b>'+termTxt(e)+'</b>. Jeder richtige Wert erscheint als grüner Punkt.</p>'+
+   '<div class="tw"><table><thead>'+head+'</thead><tbody>'+r0+r1_+'</tbody></table></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c3">Prüfen</button><span class="fb" id="fb3"></span></div>'+
+   '<div id="diffBox" class="stack"'+(solved?'':' hidden')+'>'+
+     '<p class="row">Vergleiche die beiden Zeilen: Jeder y-Wert ist um <input class="num" id="s3d" inputmode="decimal" aria-label="Unterschied"> '+word+'.</p>'+
+     '<div class="row"><button class="btn sec" type="button" id="c3d">Prüfen</button><span class="fb" id="fb3d"></span></div>'+
+   '</div>'+
+   (diffOk?'<p class="win">Jeder Punkt der Normalparabel fährt um '+fmt(Math.abs(e))+' nach '+(e>0?'oben':'unten')+'. Weil <b>alle</b> Punkte gleich weit fahren, fährt die <b>ganze</b> Parabel – ihre Form bleibt gleich.</p>':'')+
+   '<div class="row">'+(diffOk&&st.s3.set===0?'<button class="btn pri" type="button" id="part2">Weiter zu Teil 2 →</button>':'')+nextBtn(2)+'</div>';
+  XS.forEach(function(x){$('s3_'+x).addEventListener('input',function(){st.s3.vals[e+'_'+x]=this.value;this.className='num';save();draw();});});
+  $('c3').addEventListener('click',check3);
+  if(solved){$('c3d').addEventListener('click',check3d);if(diffOk){$('s3d').value=fmt(Math.abs(e));$('s3d').className='num ok';}}
+  if($('part2'))$('part2').addEventListener('click',function(){st.s3.set=1;save();r3();draw();});
+  bindNext();draw();
+}
+function check3(){
+  var e=S3_SETS[st.s3.set],wrong=0,empty=0,fb=$('fb3');
+  XS.forEach(function(x){var i=$('s3_'+x),v=parse(i.value);if(isNaN(v)){empty++;return;}var ok=v===x*x+e;i.className='num '+(ok?'ok':'bad');if(!ok)wrong++;});
+  if(empty){fb.className='fb bad';fb.textContent='Es fehlen noch '+empty+' Werte.';return;}
+  if(wrong){fb.className='fb bad';fb.textContent='Achtung Falle: erst quadrieren, dann '+(e>0?'addieren':'subtrahieren')+'. Beispiel: (−2)² '+(e>0?'+ ':'− ')+fmt(Math.abs(e))+' = 4 '+(e>0?'+ ':'− ')+fmt(Math.abs(e))+' = '+fmt(4+e);draw();return;}
+  st.s3.solved[st.s3.set]=true;save();r3();$('fb3').className='fb ok';$('fb3').textContent='Alle Werte stimmen!';
+}
+function check3d(){
+  var e=S3_SETS[st.s3.set],v=parse($('s3d').value),fb=$('fb3d');
+  if(v===Math.abs(e)){st.s3.diffOk[st.s3.set]=true;if(st.s3.diffOk[0]&&st.s3.diffOk[1])finish(2);save();r3();$('fb3').className='fb ok';$('fb3').textContent='Alle Werte stimmen!';}
+  else{$('s3d').className='num bad';fb.className='fb bad';fb.textContent='Rechne nach: '+(e>0?'6 − 4':'1 − 4')+' für x = 2.';}
+}
+
+/* ---------- Station 4: Regel finden ---------- */
+var GAPS=[
+  {pre:'Bei y = x² + e wird die Normalparabel in ',post:' verschoben.',opts:['x-Richtung','y-Richtung','keine Richtung'],ans:1},
+  {pre:'Ist e positiv, fährt sie nach ',post:'.',opts:['oben','unten'],ans:0},
+  {pre:'Ist e negativ, fährt sie nach ',post:'.',opts:['oben','unten'],ans:1},
+  {pre:'Sie fährt dabei ',post:'.',opts:['immer genau 1 Einheit','so viele Einheiten, wie e angibt','e² Einheiten'],ans:1},
+  {pre:'Der Scheitelpunkt liegt bei ',post:'.',opts:['S(e | 0)','S(0 | 0)','S(0 | e)'],ans:2},
+  {pre:'Die Form der Parabel ',post:' – die Schablone passt.',opts:['bleibt gleich','wird breiter','wird schmaler'],ans:0}
+];
+function r4(){
+  liftMode(true);
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 4 · Regel finden</p><h2>Eure Fahrstuhl-Regel</h2></div>'+
+   '<p>Wähle die passenden Wörter. Du kannst mit dem Fahrstuhl jederzeit nachprüfen.</p>'+
+   '<div class="gap"><ol>'+GAPS.map(function(g,i){return '<li>'+g.pre+'<select id="g'+i+'" aria-label="Lücke '+(i+1)+'"><option value="">…</option>'+g.opts.map(function(o,j){return '<option value="'+j+'">'+o+'</option>';}).join('')+'</select>'+g.post+'</li>';}).join('')+'</ol></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button><span class="fb" id="fb4"></span></div>'+
+   (st.s4.ok?'<div class="stack note" style="border-left-color:var(--ok)"><p><b>Jetzt ihr!</b> Schreibt eure Fahrstuhl-Regel <b>in eigenen Worten</b>. Benutzt mindestens zwei dieser Wörter: <i>y-Wert, Scheitelpunkt, nach oben, nach unten, Einheiten, Form</i>.</p>'+
+     '<textarea id="own" rows="4" style="width:100%;font:inherit;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)" placeholder="Wenn e positiv ist, …">'+(st.s4.text||'').replace(/</g,'&lt;')+'</textarea>'+
+     '<div class="row"><button class="btn pri" type="button" id="sv4">Regel speichern</button><span class="fb" id="fb4b"></span></div></div>':'')+
+   (st.s4.saved?'<div class="win"><p class="eyebrow" style="color:var(--ok)">Unsere Fahrstuhl-Regel</p><p id="ruleOut"></p><p class="muted" style="margin-top:6px">Übertragt sie mit einer Skizze auf eure Karte.</p></div>':'')+
+   '<div class="row">'+nextBtn(3)+'</div>';
+  if(st.s4.ok)GAPS.forEach(function(g,i){$('g'+i).value=String(g.ans);$('g'+i).className='ok';});
+  GAPS.forEach(function(g,i){$('g'+i).addEventListener('change',function(){this.className='';});});
+  $('c4').addEventListener('click',function(){
+    var wrong=0,empty=0;GAPS.forEach(function(g,i){var s=$('g'+i);if(s.value===''){empty++;return;}var ok=+s.value===g.ans;s.className=ok?'ok':'bad';if(!ok)wrong++;});
+    var fb=$('fb4');
+    if(empty){fb.className='fb bad';fb.textContent='Es sind noch '+empty+' Lücken offen.';return;}
+    if(wrong){fb.className='fb bad';fb.textContent=wrong+' Lücke'+(wrong>1?'n stimmen':' stimmt')+' noch nicht. Teste mit dem Fahrstuhl!';return;}
+    st.s4.ok=true;save();r4();
+  });
+  if(st.s4.ok){
+    $('own').addEventListener('input',function(){st.s4.text=this.value;save();});
+    $('sv4').addEventListener('click',function(){
+      var t=$('own').value.trim(),fb=$('fb4b'),words=['y-wert','scheitel','oben','unten','einheit','form'];
+      var hits=words.filter(function(w){return t.toLowerCase().indexOf(w)>=0;}).length;
+      if(t.length<30){fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';return;}
+      if(hits<2){fb.className='fb bad';fb.textContent='Benutzt mindestens zwei Wörter aus der Liste.';return;}
+      st.s4.text=t;st.s4.saved=true;finish(3);save();r4();
+    });
+    if(st.s4.saved)$('ruleOut').textContent=st.s4.text;
+  }
+  bindNext();
+}
+
+/* ---------- Station 5: Training ---------- */
+function animE(to,cb){
+  var from=st.e,reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce||from===to){st.e=to;updateTerm();draw();cb&&cb();return;}
+  var t0=null,dur=900+Math.abs(to-from)*120;
+  function step(ts){if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/dur),q=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;st.e=from+(to-from)*q;draw();if(p<1)requestAnimationFrame(step);else{st.e=to;updateTerm();draw();cb&&cb();}}
+  requestAnimationFrame(step);
+}
+function newTask5(){
+  var s=st.s5,e;s.solved=false;
+  if(s.mode==='ziel'){do{e=Math.floor(Math.random()*13)-6;}while(e===0||e===s.target);if(e<-5)e=-5;s.target=e;}
+  else{do{e=Math.floor(Math.random()*9)-4;}while(e===0||(s.point&&e===s.point[2]));var x=[-2,-1,1,2,3,-3][Math.floor(Math.random()*6)];if(Math.abs(x)===3&&e>1)x=x/3*2;s.point=[x,x*x+e,e];}
+  st.e=0;updateTerm();
+}
+function r5(){
+  liftMode(false,'Hier fährst du nicht mit dem Regler: Du gibst e selbst ein, dann fährt der Fahrstuhl dorthin.');
+  var s=st.s5;
+  if((s.mode==='ziel'&&s.target===null)||(s.mode==='punkt'&&!s.point))newTask5();
+  var body;
+  if(s.mode==='ziel'){
+    body='<p>Welcher Term gehört zur <b style="color:var(--target)">rot gestrichelten</b> Parabel? Lies ab und trage e ein.</p>'+
+      '<p class="row" style="font-size:22px;font-weight:700">y = x² + <input class="num" id="e5" inputmode="decimal" aria-label="Wert für e" style="font-size:20px;width:4.2em"></p>'+
+      '<p class="muted">Tipp: Bei „y = x² − 3“ ist e = −3.</p>';
+  } else {
+    var P=s.point;
+    body='<p>Für welches e geht die Parabel y = x² + e durch <b style="color:var(--target)">P('+fmt(P[0])+' | '+fmt(P[1])+')</b>?</p>'+
+      '<p><b>1.</b> Setze die Koordinaten von P ein:</p>'+
+      '<p class="row" style="font-size:20px"><input class="num" id="py" inputmode="decimal" aria-label="y-Wert von P"> = ( <input class="num" id="px" inputmode="decimal" aria-label="x-Wert von P"> )² + e</p>'+
+      '<p><b>2.</b> Rechne aus:</p>'+
+      '<p class="row" style="font-size:20px"><input class="num" id="py2" inputmode="decimal" aria-label="linke Seite"> = <input class="num" id="sq" inputmode="decimal" aria-label="Quadrat"> + e</p>'+
+      '<p class="row" style="font-size:20px;font-weight:700">e = <input class="num" id="e5" inputmode="decimal" aria-label="Wert für e"></p>';
+  }
+  $('task').innerHTML=
+   '<div><p class="eyebrow">Station 5 · Training</p><h2>'+(s.mode==='ziel'?'Graph → Term':'Punkt-Mission')+'</h2></div>'+
+   '<div class="seg" id="seg5"><button type="button" data-m="ziel"'+(s.mode==='ziel'?' class="sel"':'')+'>Graph → Term</button><button type="button" data-m="punkt"'+(s.mode==='punkt'?' class="sel"':'')+'>Punkt-Mission</button></div>'+
+   body+
+   '<div class="row"><button class="btn pri" type="button" id="c5">Fahrstuhl starten</button><button class="btn sec" type="button" id="n5">Neue Aufgabe</button></div>'+
+   '<p class="fb" id="fb5"></p><p class="muted" id="hits5">Treffer: '+s.hits+'</p>';
+  Array.prototype.forEach.call(document.querySelectorAll('#seg5 button'),function(b){b.addEventListener('click',function(){s.mode=b.dataset.m;newTask5();r5();draw();});});
+  $('n5').addEventListener('click',function(){newTask5();r5();draw();});
+  $('c5').addEventListener('click',check5);
+  draw();
+}
+function check5(){
+  var s=st.s5,fb=$('fb5'),goal=s.mode==='ziel'?s.target:s.point[2];
+  if(s.mode==='punkt'){
+    var P=s.point,py=$('py'),px=$('px'),py2=$('py2'),sq=$('sq');
+    var a=parse(py.value),b=parse(px.value),c=parse(py2.value),d=parse(sq.value);
+    if([a,b,c,d].some(isNaN)){fb.className='fb bad';fb.textContent='Fülle zuerst die Rechnung aus (Schritt 1 und 2).';return;}
+    py.className='num '+(a===P[1]?'ok':'bad');px.className='num '+(b===P[0]?'ok':'bad');py2.className='num '+(c===P[1]?'ok':'bad');sq.className='num '+(d===P[0]*P[0]?'ok':'bad');
+    if(a!==P[1]||b!==P[0]){fb.className='fb bad';fb.textContent='Schritt 1: Der x-Wert von P kommt in die Klammer, der y-Wert nach links.';return;}
+    if(d!==P[0]*P[0]){fb.className='fb bad';fb.textContent='Schritt 2: Rechne ('+fmt(P[0])+')² noch einmal nach – minus mal minus ist plus!';return;}
+  }
+  var v=parse($('e5').value);
+  if(isNaN(v)){fb.className='fb bad';fb.textContent='Trage einen Wert für e ein.';return;}
+  if(v<-6||v>12){fb.className='fb bad';fb.textContent='So weit fährt unser Fahrstuhl nicht. Prüfe deine Rechnung.';return;}
+  $('c5').disabled=true;fb.className='fb';fb.textContent='Der Fahrstuhl fährt …';
+  animE(v,function(){
+    $('c5').disabled=false;
+    if(v===goal){if(!s.solved){s.hits++;s.solved=true;}$('e5').className='num ok';
+      var keep=s.mode==='ziel'?'Treffer! Die Parabel ist '+termTxt(goal)+'.':'Richtig! '+fmt(s.point[1])+' = '+fmt(s.point[0]*s.point[0])+' + ('+fmt(goal)+') ✓ Die Parabel geht durch P.';
+      fb.className='fb ok';fb.textContent=keep;$('hits5').textContent='Treffer: '+s.hits;}
+    else{$('e5').className='num bad';fb.className='fb bad';
+      fb.textContent=s.mode==='ziel'?(v<goal?'Zu tief – schau, wo der rote Scheitelpunkt liegt.':'Zu hoch – schau, wo der rote Scheitelpunkt liegt.')
+        :'Die Parabel verfehlt P. Was musst du zu '+fmt(s.point[0]*s.point[0])+' addieren, um '+fmt(s.point[1])+' zu bekommen?';}
+  });
+}
+
+/* ---------- Gesamt ---------- */
+function render(){renderRoute();[r1,r2,r3,r4,r5][st.station]();updateTerm();draw();}
+
+$('e').addEventListener('input',function(){setE(parseFloat(this.value));});
+$('up').addEventListener('click',function(){setE(st.e+.5);});
+$('down').addEventListener('click',function(){setE(st.e-.5);});
+$('tNorm').addEventListener('change',function(){st.norm=this.checked;draw();});
+var armed=false;
+$('reset').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='Wirklich alles löschen?';var b=this;setTimeout(function(){armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.removeItem(KEY);}catch(e){}location.reload();
+});
+cv.addEventListener('contextmenu',function(ev){ev.preventDefault();});
+window.addEventListener('resize',resize);
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener&&window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+
+load();if(!unlocked(st.station))st.station=0;
+render();resize();setE(0);
+
+/* ---------- Ergebnisse abgeben (jederzeit) ---------- */
+(function(){
+  var APP='Parabel-Fahrstuhl';
+  var AKEY=(typeof KEY!=='undefined'?KEY:APP)+'-abgabe';
+  function lget(){try{return JSON.parse(localStorage.getItem(AKEY)||'{}')||{};}catch(e){return {};}}
+  function lset(o){try{localStorage.setItem(AKEY,JSON.stringify(o));}catch(e){}}
+  var A=lget();if(!A.t0){A.t0=Date.now();lset(A);}
+  function e(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+  
+  function abgText(A){
+    var d=new Date(),L=[];
+    var title=(document.querySelector('.brand b')||{}).textContent||APP;
+    var subt=(document.querySelector('.brand span')||{}).textContent||'';
+    L.push(title.toUpperCase()+(subt?' · '+subt:''));
+    L.push('Name: '+A.name+'    Klasse: '+(A.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+    var n=0;STATIONS.forEach(function(x,i){if(st.done[i])n++;});
+    L.push('Geschafft: '+n+' von '+STATIONS.length+' Stationen');
+    L.push('');
+    var LAB={hits:'richtig gelöst',tip:'Tipps benutzt',tips:'Tipps benutzt',tries:'Versuche',solved:'gelöst',begr:'Begründung',refl:'Begründung',text:'Text',guess:'Vermutung'};
+    function fmt(v){if(v===true)return 'ja';if(v===false)return 'nein';if(Array.isArray(v)){if(v.every(function(z){return typeof z==='boolean';}))return v.filter(Boolean).length+' von '+v.length;return v.map(fmt).join(', ');}if(v&&typeof v==='object')return null;return String(v);}
+    function details(o,pre,out){if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){var v=o[k];
+      if(LAB[k]==null)return;var f=fmt(v);if(f==null||f===''||f==='null'||f==='undefined')return;
+      if(typeof v==='string'&&v.length>0)out.push(pre+LAB[k]+': '+v.trim());else out.push(pre+LAB[k]+': '+f);});}
+    STATIONS.forEach(function(x,i){
+      var mark=st.done[i]?'✓ geschafft':(i===st.station?'→ bearbeitet gerade':'–');
+      L.push('Station '+(i+1)+' · '+x.name+(x.pro?' (Profi)':'')+':  '+mark);
+      var out=[];if(st.done[i]||i===st.station)details(st[x.key],'   ',out);out.forEach(function(z){L.push(z);});
+    });
+    var extra=[];['begr','refl','guess'].forEach(function(k){if(st[k]!=null&&st[k]!==''){var f=fmt(st[k]);if(f)extra.push('   '+LAB[k]+': '+f);}});
+    if(extra.length){L.push('');L.push('Weitere Angaben:');L=L.concat(extra);}
+    L.push('');
+    L.push('Zeit seit dem ersten Öffnen der App: '+Math.round((Date.now()-A.t0)/60000)+' min');
+    var raw='';try{raw=localStorage.getItem(KEY)||'';}catch(err){}
+    L.push('');L.push('Die folgende Zeile ist für die Auswertung. Bitte nicht verändern.');
+    L.push('#DATEN '+raw);
+    return L.join('\n');
+  }
+
+  var ov=document.createElement('div');ov.className='abg-ov';ov.hidden=true;
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="abgH">'+
+    '<h2 id="abgH">Ergebnisse abgeben</h2>'+
+    '<ol><li>Trage deinen <b>Namen</b> und deine <b>Klasse</b> ein.</li>'+
+    '<li>Tippe auf <b>„Datei herunterladen“</b>. Auf dem iPad fragt Safari nach: Tippe auf <b>„Laden“</b>. Die Datei liegt dann in der App <b>Dateien</b> im Ordner <b>Downloads</b>.</li>'+
+    '<li>Öffne <b>IServ → Aufgaben → „'+e(APP)+'“</b>, lade die Datei hoch (aus <b>Dateien → Downloads</b>) und tippe auf <b>Abgeben</b>.</li></ol>'+
+    '<p class="muted">Du kannst auch abgeben, wenn du noch nicht fertig bist. Im Text steht, wie weit du gekommen bist.</p>'+
+    '<div class="abg-row"><label for="abgName">Name</label><input class="abg-in" id="abgName" autocomplete="off" style="width:12em">'+
+    '<label for="abgKl">Klasse</label><input class="abg-in" id="abgKl" autocomplete="off" style="width:5em"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="abgDl">Datei herunterladen</button>'+
+    '<button class="abg-close" type="button" id="abgClose">Schließen</button></div>'+
+    '<p class="muted" style="font-size:14px">Klappt das Herunterladen nicht? Dann <button type="button" id="abgCopy" style="background:none;border:none;padding:0;color:var(--blue);text-decoration:underline;font:inherit;cursor:pointer">kopiere den Text</button> und frag deine Lehrkraft.</p>'+
+    '<p class="abg-fb" id="abgFb"></p>'+
+    '<textarea class="abg-txt" id="abgTxt" rows="10" readonly hidden></textarea></div>';
+  document.body.appendChild(ov);
+  var $n=ov.querySelector('#abgName'),$k=ov.querySelector('#abgKl'),$t=ov.querySelector('#abgTxt'),$f=ov.querySelector('#abgFb');
+  function msg(ok,t){$f.className='abg-fb '+(ok?'ok':'bad');$f.textContent=t;}
+  function open(){A=lget();$n.value=A.name||'';$k.value=A.klasse||'';$t.hidden=true;msg(true,'');ov.hidden=false;setTimeout(function(){($n.value?ov.querySelector('#abgDl'):$n).focus();},30);}
+  function close(){ov.hidden=true;}
+  function upd(){A.name=$n.value.trim();A.klasse=$k.value.trim();lset(A);}
+  $n.addEventListener('input',upd);$k.addEventListener('input',upd);
+  ov.querySelector('#abgClose').addEventListener('click',close);
+  ov.addEventListener('click',function(ev){if(ev.target===ov)close();});
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&!ov.hidden)close();});
+  ov.querySelector('#abgCopy').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A);$t.value=txt;
+    function sel(){$t.hidden=false;$t.focus();$t.select();msg(true,'Der Text ist markiert. Tippe lange darauf und wähle „Kopieren“.');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Text kopiert.');},sel);}catch(err){sel();}
+  });
+  function dateiname(){return (APP+'_'+(A.name||'Name')+'_'+(A.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'')+'.txt';}
+  ov.querySelector('#abgDl').addEventListener('click',function(){
+    upd();if(!A.name){msg(false,'Trage zuerst deinen Namen ein.');$n.focus();return;}
+    var txt=abgText(A).replace(/\r?\n/g,'\r\n'),name=dateiname();
+    try{var bl=new Blob(['\ufeff'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(bl),a=document.createElement('a');
+      a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},10000);
+      msg(true,'Die Datei „'+name+'“ wird heruntergeladen. Lade sie jetzt in IServ bei der Aufgabe „'+APP+'“ hoch.');}
+    catch(err){msg(false,'Herunterladen klappt hier nicht. Kopiere stattdessen den Text.');}
+  });
+  document.getElementById('abgBtn').addEventListener('click',open);
+})();
+})();
+</script>
+</body>
+</html>
