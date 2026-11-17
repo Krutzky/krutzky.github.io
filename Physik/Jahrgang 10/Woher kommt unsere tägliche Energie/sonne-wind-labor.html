@@ -196,12 +196,14 @@ table.mt tr{cursor:pointer}
 .xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
 .stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
 .stand b{font-family:var(--f-display)}
+.tipcard{border-left:4px solid var(--accent);}
+.task-step{font-weight:700}
 </style>
 </head>
 <body>
 <header>
   <div class="hwrap">
-    <div class="brand"><b>Sonne-Wind-Labor</b><span>Wie gewinnen wir Energie aus Sonne und Wind?</span></div>
+    <div class="brand"><b>Sonne-Wind-Labor</b><span>Sonne oder Wind – was lohnt sich wo?</span></div>
     <nav class="route" id="route" aria-label="Stationen"></nav>
     <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
     <button class="reset" id="reset" type="button">Neu starten</button>
@@ -226,21 +228,35 @@ table.mt tr{cursor:pointer}
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id);};
-var APP={title:'Sonne-Wind-Labor',file:'Sonne-Wind-Labor',klasse:'10',lesson:'Wie gewinnen wir Energie aus Sonne und Wind?',welcome:'Willkommen im Sonne-Wind-Labor!',intro:'Heute untersuchst du, wie viel Energie Solarmodul und Windrad liefern und wovon das abhängt.'};
-var KEY='sonne-wind-labor-v2',RKEY='sonne-wind-labor-resets';
+var APP={title:'Sonne-Wind-Labor',file:'Sonne-Wind-Labor',klasse:'10',proAfter:3,lesson:'Sonne oder Wind – was lohnt sich wo?',welcome:'Willkommen im Sonne-Wind-Labor!',intro:'Heute findet ihr heraus, ob an eurem Standort ein Solarmodul oder ein Windrad mehr Energie liefert.'};
+var KEY='sonne-wind-labor-v3',RKEY='sonne-wind-labor-resets';
 var STATIONS=[
-  {key:'s1',name:'Solarmodul',scene:'solar'},
-  {key:'s2',name:'Leistung messen',scene:'solar'},
-  {key:'s3',name:'Windkraft',scene:'wind'},
-  {key:'s4',name:'Vergleich',scene:'compare'},
-  {key:'s5',name:'Merksatz',scene:'solar'},
-  {key:'s6',name:'Profi-Zusatz',pro:true,scene:'solar'}
+  {key:'s1',name:'Standort',scene:'site'},
+  {key:'s2',name:'Aufbauen',scene:'site'},
+  {key:'s3',name:'Messen',scene:'site'},
+  {key:'s4',name:'Jahresenergie',scene:'site'},
+  {key:'s6',name:'Profi-Zusatz',pro:true,scene:'site'}
 ];
-var st={station:0,done:[false,false,false,false,false,false],guess:null,light:100,load:true,wind:6,plant:'solar',
-  c:{},m:{},meas:{},sort:{},sortOk:false,gaps:{},gapsOk:false,res:{},tries:{},help:{},tips:{},t0:null};
-function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,c:st.c,m:st.m,meas:st.meas,sort:st.sort,sortOk:st.sortOk,gaps:st.gaps,gapsOk:st.gapsOk,res:st.res,tries:st.tries,help:st.help,tips:st.tips,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
-function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;['station','guess','c','m','meas','sort','sortOk','gaps','gapsOk','res','tries','help','tips','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
-  if(x.done){st.done=x.done;while(st.done.length<6)st.done.push(false);}}catch(e){}}
+var HOURS_YEAR=8760,PRICE=0.35;
+var GROUPS={
+  A:{name:'Nordseeküste',ort:'Husum an der Nordsee',v:6.5,h:950,land:'sea',col:'#1C66C0'},
+  B:{name:'Velbert',ort:'Velbert, unsere Schule',v:3.2,h:900,land:'town',col:'#B05A12'},
+  C:{name:'Sauerland',ort:'Kahler Asten im Sauerland (840 m hoch)',v:5.5,h:850,land:'hills',col:'#2E7D4F'},
+  D:{name:'Freiburg',ort:'Freiburg im Breisgau (Süden)',v:2.5,h:1100,land:'south',col:'#6B3FB0'}
+};
+var GKEYS=['A','B','C','D'];
+var st={station:0,done:[false,false,false,false,false],grp:null,guess:null,dev:'w',load:true,wind:4,tips:{},early:{},
+  s1:{ok:false},
+  s2:{slot1:null,slot2:null,circOk:false,last:null,lastOk:false},
+  s3:{rows:{s:{U:'',I:'',P:''},w:{U:'',I:'',P:''}},ok:false},
+  s4:{es:'',esOk:false,ew:'',ewOk:false,cmp:null,cmpOk:false,sent:'',warned:false,ok:false},
+  s6:{r3:{U:'',I:'',P:''},r6:{U:'',I:'',P:''},mOk:false,fac:'',facOk:false,ks:'',ksOk:false,kw:'',kwOk:false,tow:null,towOk:false},
+  res:{},tries:{},help:{},t0:null};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,grp:st.grp,guess:st.guess,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s6:st.s6,res:st.res,tries:st.tries,help:st.help,tips:st.tips,early:st.early,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
+  ['station','grp','guess','res','tries','help','tips','early','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
+  if(x.done){st.done=x.done;while(st.done.length<5)st.done.push(false);}
+  ['s1','s2','s3','s4','s6'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});}catch(e){}}
 /* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
 function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
 function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
@@ -265,7 +281,15 @@ function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.m
   $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
 
 /* Stationen-Weg */
-function unlocked(i){return i===0||st.done[i-1];}
+function unlocked(i){return i===0||st.done[i-1]||(!!STATIONS[i].pro&&APP.proAfter!=null&&!!st.done[APP.proAfter]);}
+/* Tipp-Karten: erst selbst probieren, dann gestuft helfen */
+function tipHTML(key,tips){st.tips=st.tips||{};var n=st.tips[key]||0,h=tips.slice(0,n).map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+':</b> '+t+'</p>';}).join('');
+  if(n<tips.length)h+='<div class="row"><button class="btn tip sm" type="button" data-tip="'+key+'">'+(n?'Nächste Tipp-Karte':'Tipp-Karte')+' ('+(n+1)+' von '+tips.length+')</button></div><p class="fb" id="tw_'+key+'"></p>';
+  return '<div class="tips">'+h+'</div>';}
+function bindTips(rr){Array.prototype.forEach.call(document.querySelectorAll('[data-tip]'),function(b){b.addEventListener('click',function(){var key=b.dataset.tip,t=st.tries[key],n=st.tips[key]||0;
+  if(!n&&!(t&&t.n>0)&&!b._warned){b._warned=true;var f=$('tw_'+key);if(f){f.className='fb bad';f.textContent='Probiert es zuerst noch einmal selbst! Die Tipp-Karte hilft, wenn ihr nach einem Versuch nicht weiterkommt.';}b.textContent='Tipp-Karte trotzdem zeigen';st.early=st.early||{};st.early[key]=true;save();return;}
+  st.tips[key]=n+1;save();rr();});});}
+function tipNudge(fb,key,ntips){var t=st.tries[key];if(fb&&t&&!t.ok&&t.n>=2&&!(st.tips[key]>0)&&ntips)fb.textContent+=' Nutzt jetzt die Tipp-Karte.';}
 function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
     h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
   $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
@@ -383,228 +407,274 @@ function vctx(id){var c=$(id),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,
 
 
 /* ---------- Modelle ---------- */
-/* Solarmodul: 4 Zellen in Reihe, Lastwiderstand 6,8 Ohm (wie im Solar-Labor) */
+/* Solarmodul wie im Solar-Labor: volle Sonne, fester Lastwiderstand, Anzeige wie ein 400-W-Modul */
 var NVT=1.5*0.02585,ISC=0.30,I0=ISC/(Math.exp(0.56/NVT)-1),RL=6.8,RSH=20;
 function cellV(I,Iph){var lo=-30,hi=0.9;for(var k=0;k<46;k++){var V=(lo+hi)/2,Ic=Iph-I0*(Math.exp(V/NVT)-1)-V/RSH;if(Ic>I)lo=V;else hi=V;}return (lo+hi)/2;}
-function solar(pct,loadOn){var g=pct/100,Iph=[0,1,2,3].map(function(){return (0.012+g)*ISC;});
-  if(!loadOn){var V=0;Iph.forEach(function(p){V+=cellV(0,p);});return {U:V,I:0};}
-  var lo=0,hi=0.6;for(var k=0;k<46;k++){var I=(lo+hi)/2,V2=0;Iph.forEach(function(p){V2+=cellV(I,p);});if(V2-I*RL>0)lo=I;else hi=I;}var I2=(lo+hi)/2;return {U:I2*RL,I:I2};}
-/* Windkraftanlage (Modell): P ~ v³ ab 2 m/s, Nennleistung ab 10 m/s, Last 10 Ohm */
-function windP(v){if(v<2)return 0;var vv=Math.min(v,10);return 0.926e-3*vv*vv*vv;}/* W */
-function wind(v){var P=windP(v),U=Math.sqrt(P*10);return {U:U,I:U/10,P:P};}
-function disp(m){return {U:(Math.round(m.U*100)/100).toFixed(2).replace('.',','),I:fmt(m.I*1000,0)};}
+function solarRaw(loadOn){var Iph=1.012*ISC;if(!loadOn)return {U:4*cellV(0,Iph),I:0};var lo=0,hi=0.6;for(var k=0;k<46;k++){var I=(lo+hi)/2;if(4*cellV(I,Iph)-I*RL>0)lo=I;else hi=I;}var I2=(lo+hi)/2;return {U:I2*RL,I:I2};}
+function noiseF(key){var h=fnv(key);return [(parseInt(h.slice(0,4),16)/65535-0.5),(parseInt(h.slice(4),16)/65535-0.5)];}
+function solarM(loadOn){var m=solarRaw(loadOn),r=noiseF('{"h":1000,"a":0,"n":0,"s":0,"v":0}');return {U:m.U*20*(1+r[0]*0.012),I:m.I*40*(1+r[1]*0.016)};}
+/* Kleinwindrad: P = 0,93 W · (v in m/s)³, ab 2 m/s, Nennleistung bei 11 m/s; Last 2 Ohm */
+function windP(v){if(v<2)return 0;var vv=Math.min(v,11);return 0.93*vv*vv*vv;}
+function windM(v,loadOn){var P=windP(v),U=Math.sqrt(P*2),r=noiseF('wind'+fmt(v,1));if(!loadOn)return {U:U*1.6*(1+r[0]*0.01),I:0};return {U:U*(1+r[0]*0.012),I:U/2*(1+r[1]*0.016)};}
+function devM(dev,v,loadOn){return dev==='s'?solarM(loadOn):windM(v,loadOn);}
+function G(){return GROUPS[st.grp]||GROUPS.B;}
+function pOf(r){return num(r.P);}
 
 /* ---------- Zeichnen ---------- */
 var rot=0,lastT=0;
-function draw(){if(!W)return;var sc=STATIONS[st.station].scene;$('views').hidden=sc==='compare';ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
-  if(sc==='solar')drawSolar();else if(sc==='wind')drawWind();else drawCompare();}
-function meter(x,y,w,h,label,val,unit,blue){rrect(ctx,x,y,w,h,10);ctx.fillStyle='#111111';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=3;ctx.stroke();
+function draw(){if(!W)return;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);drawSite();}
+function drawSite(){var g=G(),topH=H*0.56,ink=col('ink'),v=st.wind;
+  var gr=ctx.createLinearGradient(0,0,0,topH);gr.addColorStop(0,'#BFD9F2');gr.addColorStop(1,'#EEF5FB');ctx.fillStyle=gr;ctx.fillRect(0,0,W,topH);
+  /* Sonne */
+  var sx=W*0.09,sy=topH*0.18;ctx.fillStyle='#F5B82E';ctx.beginPath();ctx.arc(sx,sy,17,0,Math.PI*2);ctx.fill();
+  for(var k=0;k<10;k++){var an=k*Math.PI/5;line(sx+Math.cos(an)*22,sy+Math.sin(an)*22,sx+Math.cos(an)*29,sy+Math.sin(an)*29,'#F5B82E',3);}
+  /* Landschaft */
+  var gy=topH*0.80;
+  if(g.land==='sea'){ctx.fillStyle='#5B8FD9';ctx.fillRect(W*0.55,gy-6,W*0.45,topH-gy+6);ctx.fillStyle='#E9D9A6';ctx.beginPath();ctx.moveTo(0,gy);ctx.quadraticCurveTo(W*0.3,gy-22,W*0.6,gy);ctx.lineTo(W*0.6,topH);ctx.lineTo(0,topH);ctx.fill();}
+  else if(g.land==='hills'){ctx.fillStyle='#7FA866';ctx.beginPath();ctx.moveTo(0,topH);ctx.lineTo(0,gy);ctx.lineTo(W*0.25,gy-topH*0.30);ctx.lineTo(W*0.55,gy-topH*0.10);ctx.lineTo(W*0.78,gy-topH*0.36);ctx.lineTo(W,gy-topH*0.05);ctx.lineTo(W,topH);ctx.fill();}
+  else if(g.land==='south'){ctx.fillStyle='#A9C77D';ctx.beginPath();ctx.moveTo(0,topH);ctx.lineTo(0,gy-8);ctx.quadraticCurveTo(W*0.5,gy-topH*0.22,W,gy-4);ctx.lineTo(W,topH);ctx.fill();ctx.strokeStyle='#6E8F45';ctx.lineWidth=2;for(var x=W*0.05;x<W;x+=W*0.05){ctx.beginPath();ctx.moveTo(x,topH-4);ctx.lineTo(x+8,gy-6);ctx.stroke();}}
+  else{ctx.fillStyle='#9DB88A';ctx.fillRect(0,gy,W,topH-gy);[[0.30,0.26],[0.40,0.20],[0.50,0.30],[0.86,0.24],[0.94,0.18]].forEach(function(b){ctx.fillStyle='#C9B8A3';ctx.fillRect(W*b[0],gy-topH*b[1],W*0.07,topH*b[1]);ctx.fillStyle='#A0522D';ctx.beginPath();ctx.moveTo(W*b[0]-4,gy-topH*b[1]);ctx.lineTo(W*(b[0]+0.035),gy-topH*b[1]-14);ctx.lineTo(W*(b[0]+0.07)+4,gy-topH*b[1]);ctx.fill();});}
+  if(g.land!=='hills'&&g.land!=='south'&&g.land!=='sea'){}
+  /* Wind */
+  var off=(Date.now()/1000*v*30)%(W*0.5);ctx.save();ctx.globalAlpha=Math.min(1,0.15+v/9);
+  for(var r=0;r<3;r++){var y=topH*(0.22+r*0.15);for(var xx=-W*0.5+off+r*40;xx<W*0.95;xx+=W*0.25){line(xx,y,xx+30+v*4,y,'#5B8FD9',2);ctx.fillStyle='#5B8FD9';ctx.beginPath();ctx.moveTo(xx+34+v*4,y);ctx.lineTo(xx+26+v*4,y-5);ctx.lineTo(xx+26+v*4,y+5);ctx.closePath();ctx.fill();}}ctx.restore();
+  /* Haus mit Solarmodul */
+  var hx=W*0.12,hy=gy,hw=W*0.16,hh=topH*0.22;ctx.fillStyle='#E7DCCB';ctx.fillRect(hx,hy-hh,hw,hh);ctx.fillStyle='#8C5A3C';ctx.beginPath();ctx.moveTo(hx-6,hy-hh);ctx.lineTo(hx+hw/2,hy-hh-topH*0.16);ctx.lineTo(hx+hw+6,hy-hh);ctx.closePath();ctx.fill();
+  ctx.save();ctx.translate(hx+hw*0.55,hy-hh-topH*0.08);ctx.rotate(Math.atan2(topH*0.16,hw/2+6));ctx.fillStyle='#1E3A6E';ctx.fillRect(-hw*0.22,-10,hw*0.40,12);ctx.restore();
+  if(st.dev==='s'&&st.station>0){ctx.strokeStyle='#E8892B';ctx.lineWidth=3;ctx.strokeRect(hx-10,hy-hh-topH*0.20,hw+20,hh+topH*0.20+4);}
+  tag('Solarmodul',hx+hw/2,hy+12,ink);
+  /* Windrad */
+  var tx=W*0.70,hubY=topH*0.22;ctx.fillStyle='#D8DDE6';ctx.beginPath();ctx.moveTo(tx-5,hubY);ctx.lineTo(tx+5,hubY);ctx.lineTo(tx+9,gy);ctx.lineTo(tx-9,gy);ctx.closePath();ctx.fill();
+  var Lb=Math.min(topH*0.20,W*0.11);for(var b=0;b<3;b++){var a=rot+b*2*Math.PI/3;ctx.save();ctx.translate(tx,hubY);ctx.rotate(a);ctx.fillStyle='#F4F6FA';ctx.strokeStyle='#9AA3B5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-4,0);ctx.lineTo(0,-Lb);ctx.lineTo(5,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
+  ctx.fillStyle='#9AA3B5';ctx.beginPath();ctx.arc(tx,hubY,5,0,Math.PI*2);ctx.fill();
+  if(st.dev==='w'&&st.station>0){ctx.strokeStyle='#E8892B';ctx.lineWidth=3;ctx.strokeRect(tx-Lb-8,hubY-Lb-8,2*Lb+16,gy-hubY+Lb+12);}
+  tag('Windrad',tx,gy+12,ink);
+  tag((st.grp?'Standort '+st.grp+': ':'')+g.name,W-8,14,g.col,'right');
+  tag(st.station===0?'Wind im Jahresmittel: '+fmt(g.v,1)+' m/s':'Wind eingestellt: '+fmt(v,1)+' m/s',W-8,40,'#1C66C0','right');
+  drawCircuit(topH);renderViews();}
+function meter(x,y,w,h,label,val,unit){rrect(ctx,x,y,w,h,10);ctx.fillStyle='#111111';ctx.fill();ctx.strokeStyle='#333';ctx.lineWidth=3;ctx.stroke();
   ctx.fillStyle='#9a9a9a';ctx.font=font(10,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(label,x+w/2,y+5);
-  ctx.fillStyle=blue?'#9FD0FF':'#FFC94D';ctx.font='bold '+Math.round(h*0.40)+'px ui-monospace,Menlo,Consolas,monospace';ctx.textBaseline='middle';ctx.fillText(val+' '+unit,x+w/2,y+h*0.62);}
-function circuit(y0,h,m,loadOn,label){var ink=col('ink'),soft=col('ink-soft');
-  ctx.font=font(12,true);ctx.fillStyle=soft;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Schaltung',10,y0-6);
-  var x1=W*0.08,x2=W*0.46,ya=y0+h*0.25,yb=y0+h*0.85;ctx.strokeStyle=ink;ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(x1,ya);ctx.lineTo(x2,ya);ctx.lineTo(x2,(ya+yb)/2-22);ctx.moveTo(x2,(ya+yb)/2+22);ctx.lineTo(x2,yb);ctx.lineTo(x1,yb);ctx.lineTo(x1,ya);ctx.stroke();
-  ctx.fillStyle=col('surface');ctx.fillRect(x1-22,(ya+yb)/2-16,44,32);ctx.strokeRect(x1-22,(ya+yb)/2-16,44,32);ctx.fillStyle=ink;ctx.font=font(10,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,x1,(ya+yb)/2);
-  /* Schalter + Last */
-  if(loadOn){ctx.fillStyle=col('surface');ctx.fillRect(x2-9,(ya+yb)/2-22,18,44);ctx.strokeRect(x2-9,(ya+yb)/2-22,18,44);}
-  else{ctx.beginPath();ctx.moveTo(x2,(ya+yb)/2-22);ctx.lineTo(x2+18,(ya+yb)/2+6);ctx.stroke();}
-  ctx.fillStyle=loadOn?ink:'#C8423D';ctx.font=font(11,true);ctx.textAlign='left';ctx.textAlign='right';ctx.fillText(loadOn?'Last':'getrennt',x2-14,(ya+yb)/2+2);
-  function circ(cx,cy,t){ctx.fillStyle=col('surface');ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=ink;ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,cx,cy+1);}
-  circ((x1+x2)/2,ya,'A');var xr=x2+Math.max(34,W*0.05);ctx.beginPath();ctx.moveTo(x2,ya);ctx.lineTo(xr,ya);ctx.lineTo(xr,yb);ctx.lineTo(x2,yb);ctx.stroke();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(x2,ya,3.5,0,Math.PI*2);ctx.arc(x2,yb,3.5,0,Math.PI*2);ctx.fill();circ(xr,(ya+yb)/2,'V');
-  var mx=W*0.58,mw=Math.min(170,(W-mx-26)/2),mh=Math.min(h*0.75,70),d=disp(m);
-  meter(mx,y0+h*0.1,mw,mh,'SPANNUNG U',d.U,'V');meter(mx+mw+12,y0+h*0.1,mw,mh,'STROMSTÄRKE I',d.I,'mA',true);}
-function drawSolar(){var L=st.light/100,topH=H*0.56,ink=col('ink');
-  var g=ctx.createLinearGradient(0,0,0,topH);g.addColorStop(0,'rgb('+Math.round(70+120*L)+','+Math.round(110+110*L)+','+Math.round(160+80*L)+')');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,topH);
-  var sx=W*0.16,sy=topH*0.28;ctx.globalAlpha=0.35+0.65*L;ctx.fillStyle='#F5B82E';ctx.beginPath();ctx.arc(sx,sy,24,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
-  /* Wolken */
-  var cl=1-L;if(cl>0.02){ctx.fillStyle='rgba(140,148,166,'+(0.25+0.6*cl)+')';[[0.22,0.22,1],[0.34,0.18,0.8],[0.28,0.32,0.9]].forEach(function(c){ctx.beginPath();ctx.ellipse(W*c[0],topH*c[1],60*c[2]*(0.6+cl),26*c[2]*(0.6+cl),0,0,Math.PI*2);ctx.fill();});}
-  /* Modul */
-  var mx=W*0.56,my=topH*0.30,mw=W*0.32,mh=topH*0.42;ctx.save();ctx.translate(mx,my);ctx.transform(1,0,-0.25,1,0,0);ctx.fillStyle='#1E3A6E';ctx.fillRect(0,0,mw,mh);ctx.strokeStyle='#9CC3F0';ctx.lineWidth=1;
-  for(var i=1;i<4;i++){ctx.beginPath();ctx.moveTo(mw*i/4,0);ctx.lineTo(mw*i/4,mh);ctx.stroke();}ctx.beginPath();ctx.moveTo(0,mh/2);ctx.lineTo(mw,mh/2);ctx.stroke();ctx.restore();
-  line(mx+mw*0.3,my+mh,mx+mw*0.3,topH-8,'#5B6278',4);
-  /* Strahlen */
-  var n=Math.round(1+7*L);for(var k=0;k<n;k++){var t=k/(Math.max(1,n-1));line(sx+20,sy+10,mx+mw*(0.05+0.8*t)-mh*0.15,my+mh*(0.2+0.5*t),'#F5B82E',2,[8,6],0.4+0.5*L);}
-  tag('Licht: '+st.light+' %',sx,sy+44,'#B05A12');tag('Solarmodul',mx+mw*0.45,my-12,ink);
-  circuit(topH+18,H-topH-24,solar(st.light,st.load),st.load,'Modul');
-  renderSolarViews();}
-function drawWind(){var v=st.wind,topH=H*0.56,ink=col('ink');
-  var g=ctx.createLinearGradient(0,0,0,topH);g.addColorStop(0,'#BFD9F2');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,topH);ctx.fillStyle='#8DBF6A';ctx.fillRect(0,topH-12,W,12);
-  /* Windpfeile */
-  var off=(Date.now()/1000*v*30)%(W*0.5);ctx.save();ctx.globalAlpha=Math.min(1,0.2+v/10);for(var r=0;r<4;r++){var y=topH*(0.18+r*0.17);for(var x=-W*0.5+off+r*40;x<W*0.45;x+=W*0.25){line(x,y,x+40+v*3,y,'#5B8FD9',2);ctx.fillStyle='#5B8FD9';ctx.beginPath();ctx.moveTo(x+44+v*3,y);ctx.lineTo(x+36+v*3,y-5);ctx.lineTo(x+36+v*3,y+5);ctx.closePath();ctx.fill();}}ctx.restore();
-  tag('Wind: '+fmt(v,0)+' m/s',W*0.2,topH*0.9,'#1C66C0');
-  /* Turm, Gondel, Rotor */
-  var tx=W*0.66,hubY=topH*0.30;ctx.fillStyle='#D8DDE6';ctx.beginPath();ctx.moveTo(tx-7,hubY);ctx.lineTo(tx+7,hubY);ctx.lineTo(tx+12,topH-12);ctx.lineTo(tx-12,topH-12);ctx.closePath();ctx.fill();
-  rrect(ctx,tx-6,hubY-12,58,24,6);ctx.fillStyle='#C9CFDA';ctx.fill();ctx.fillStyle='#6B3FB0';ctx.font=font(10,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Generator',tx+24,hubY+22);
-  var Lb=Math.min(topH*0.26,W*0.15);for(var b=0;b<3;b++){var a=rot+b*2*Math.PI/3;ctx.save();ctx.translate(tx-6,hubY);ctx.rotate(a);ctx.fillStyle='#F4F6FA';ctx.strokeStyle='#9AA3B5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-4,0);ctx.lineTo(0,-Lb);ctx.lineTo(5,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-  ctx.fillStyle='#9AA3B5';ctx.beginPath();ctx.arc(tx-6,hubY,6,0,Math.PI*2);ctx.fill();
-  tag('Rotor',tx-6-Lb*0.9,hubY-Lb*0.55,ink);
-  circuit(topH+18,H-topH-24,wind(v),true,'Gen.');
-  renderWindViews();}
-var CMP={solar:{n:'Solarmodul',c:['Licht (Strahlungsenergie)','elektrische Energie'],x:'kein Generator, keine bewegten Teile',col:'#E8B923'},
-  wind:{n:'Windkraftanlage',c:['Wind (Bewegungsenergie)','Rotor','Generator','elektrische Energie'],x:'Generator, kein Brennstoff',col:'#2E8B57'},
-  kohle:{n:'Kohlekraftwerk',c:['Kohle (chemische Energie)','Kessel (thermisch)','Turbine','Generator','elektrische Energie'],x:'Generator, Brennstoff, viel Abwärme und CO₂',col:'#7A5230'}};
-function drawCompare(){var ink=col('ink'),soft=col('ink-soft'),keys=['solar','wind','kohle'];
-  ctx.font=font(15,true);ctx.fillStyle=ink;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Drei Wege zur elektrischen Energie',12,10);
-  var top=42,bh=(H-top-10)/3-10;keys.forEach(function(k,i){var p=CMP[k],y=top+i*(bh+10),sel=st.plant===k;
-    rrect(ctx,8,y,W-16,bh,12);ctx.fillStyle=sel?'#FDEBD8':col('surface-2');ctx.fill();if(sel){ctx.strokeStyle='#E8892B';ctx.lineWidth=2.5;ctx.stroke();}
-    ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(34,y+bh/2,14,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle=ink;ctx.font=font(14,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(p.n,58,y+8);
-    var n=p.c.length,x0=58,avail=W-80,bw=Math.min(150,avail/n-22),gap=(avail-bw*n)/Math.max(1,n-1),cy=y+bh*0.40;
-    p.c.forEach(function(t,j){var x=x0+j*(bw+gap);rrect(ctx,x,cy,bw,bh*0.32,8);ctx.fillStyle=col('surface');ctx.fill();ctx.strokeStyle=col('line');ctx.lineWidth=1.5;ctx.stroke();
-      ctx.fillStyle=ink;ctx.font=font(W<600?9:11,true);ctx.textAlign='center';ctx.textBaseline='middle';wrapC(t,x+bw/2,cy+bh*0.16,bw-8);
-      if(j<n-1){var ax=x+bw+3,bx=x+bw+gap-3;line(ax,cy+bh*0.16,bx,cy+bh*0.16,'#E8892B',3);}});
-    ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(p.x,58,y+bh-6);});}
-function wrapC(t,x,y,maxW){var w=t.split(' '),lines=[],l='';w.forEach(function(s){var tt=l?l+' '+s:s;if(ctx.measureText(tt).width>maxW&&l){lines.push(l);l=s;}else l=tt;});if(l)lines.push(l);var lh=13;lines.forEach(function(s,i){ctx.fillText(s,x,y+(i-(lines.length-1)/2)*lh);});}
-function flowView(id,title,inLab,outLab,eta,lossLab){var A=vctx(id),y=A.x,w=A.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var x0=w*0.06,x1=w*0.38,x2=w*0.94,top=w*0.14,hT=w*0.56,hU=hT*eta/100,fs=Math.round(w/21);
-  y.fillStyle='#F5D42A';y.fillRect(x0,top,x1-x0,hT);y.fillStyle='#6B3FB0';y.fillRect(x1,top,x2-x1,Math.max(2,hU));
-  y.fillStyle='#F2A39F';y.beginPath();y.moveTo(x1,top+hU);y.lineTo(x1+(x2-x1)*0.25,top+hU);y.quadraticCurveTo(x1+(x2-x1)*0.45,top+hU,x1+(x2-x1)*0.5,top+hT+w*0.1);y.lineTo(x1+(x2-x1)*0.5-(hT-hU)*0.5,top+hT+w*0.1);y.quadraticCurveTo(x1+(x2-x1)*0.1,top+hT,x1,top+hT);y.closePath();y.fill();
-  y.fillStyle='#1A1F36';y.font='bold '+fs+'px '+ff();y.textAlign='center';y.textBaseline='middle';y.fillText(inLab,(x0+x1)/2,top+hT/2-fs*0.6);y.fillText('100 %',(x0+x1)/2,top+hT/2+fs*0.6);
-  y.fillText('elektrisch ca. '+eta+' %',(x1+x2)/2+w*0.06,top-fs*0.8);y.font=fs+'px '+ff();y.fillText(lossLab+' '+(100-eta)+' %',w/2,top+hT+w*0.17);}
-function measGraph(id,rows,xlab,xfmt){var B=vctx(id),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var F=ff(),L=w*0.18,R=w*0.94,T=w*0.08,Bt=w*0.78;
-  var pts=rows.filter(function(r){return r.P!=null;}),mx=Math.max.apply(null,[1].concat(pts.map(function(r){return r.P;})));mx=Math.ceil(mx/100)*100||100;
-  y.strokeStyle='#E3E8F0';y.lineWidth=1;y.fillStyle='#4E5677';y.font=Math.round(w/22)+'px '+F;y.textAlign='right';y.textBaseline='middle';
-  for(var i=0;i<=4;i++){var v=mx*i/4,yy=Bt-(Bt-T)*i/4;y.beginPath();y.moveTo(L,yy);y.lineTo(R,yy);y.stroke();y.fillText(fmt(v,0),L-4,yy);}
-  y.save();y.translate(w*0.04,(T+Bt)/2);y.rotate(-Math.PI/2);y.textAlign='center';y.fillText('P in mW',0,0);y.restore();
-  y.textAlign='center';y.textBaseline='top';rows.forEach(function(r,i){var x=L+(i+0.5)*(R-L)/rows.length;y.fillStyle='#4E5677';y.fillText(xfmt(r.x),x,Bt+w*0.02);
-    if(r.P!=null){var hh=(Bt-T)*r.P/mx;y.fillStyle='#E8892B';y.fillRect(x-w*0.06,Bt-hh,w*0.12,hh);y.fillStyle='#1A1F36';y.font='bold '+Math.round(w/22)+'px '+F;y.textBaseline='bottom';y.fillText(fmt(r.P,0),x,Bt-hh-2);y.textBaseline='top';y.font=Math.round(w/22)+'px '+F;}});
-  y.fillText(xlab,(L+R)/2,Bt+w*0.11);if(!pts.length){y.textBaseline='middle';y.fillText('Noch keine Messwerte',(L+R)/2,T+(Bt-T)*0.3);}}
-function renderSolarViews(){$('capA').innerHTML='<b>Energieflussdiagramm</b> Solarmodul';$('capB').innerHTML='<b>Eure Messung</b> (Station 2)';
-  flowView('cvA','Solarmodul','Licht','elektrisch',20,'Wärme');
-  measGraph('cvB',MROWS.map(function(r){var m=st.meas[r.id]||{},P=num(m.P);return {x:r.lab,P:m.ok?P:null};}),'Messung bei 100 % Licht',function(v){return v;});}
-function renderWindViews(){$('capA').innerHTML='<b>Energieflussdiagramm</b> Windkraftanlage';$('capB').innerHTML='<b>Leistung und Windgeschwindigkeit</b> (Modell)';
-  flowView('cvA','Wind','Wind','elektrisch',45,'Wärme / Verwirbelung');
-  measGraph('cvB',[3,6,9].map(function(v){return {x:v,P:windP(v)*1000};}),'Wind in m/s',function(v){return v+' m/s';});}
-
-function loop(t){var sc=STATIONS[st.station].scene;if(sc==='wind'){var dt=lastT?Math.min(0.05,(t-lastT)/1000):0;rot+=dt*st.wind*0.6;draw();}lastT=t;requestAnimationFrame(loop);}
+  ctx.fillStyle=label.charAt(0)==='S'?'#9FD0FF':'#FFC94D';ctx.font='bold '+Math.round(h*0.40)+'px ui-monospace,Menlo,Consolas,monospace';ctx.textBaseline='middle';ctx.fillText(val+' '+unit,x+w/2,y+h*0.62);}
+function drawCircuit(topH){var y0=topH+12,h=H-topH-20,soft=col('ink-soft'),ink=col('ink');
+  ctx.font=font(12,true);ctx.fillStyle=soft;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Schaltung',10,topH+6);
+  var x1=W*0.08,x2=W*0.48,ya=y0+h*0.30,yb=y0+h*0.85;ctx.strokeStyle=ink;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(x1,ya);ctx.lineTo(x2,ya);ctx.lineTo(x2,(ya+yb)/2-20);ctx.moveTo(x2,(ya+yb)/2+20);ctx.lineTo(x2,yb);ctx.lineTo(x1,yb);ctx.lineTo(x1,ya);ctx.stroke();
+  ctx.fillStyle=col('surface');ctx.fillRect(x1-16,(ya+yb)/2-16,32,32);ctx.strokeRect(x1-16,(ya+yb)/2-16,32,32);
+  if(st.dev==='s'){ctx.fillStyle='#1E3A6E';ctx.fillRect(x1-10,(ya+yb)/2-10,20,20);}else{ctx.fillStyle=ink;ctx.font=font(14,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('G',x1,(ya+yb)/2+1);}
+  if(st.load){ctx.fillStyle=col('surface');ctx.fillRect(x2-9,(ya+yb)/2-20,18,40);ctx.strokeRect(x2-9,(ya+yb)/2-20,18,40);}
+  else{ctx.beginPath();ctx.moveTo(x2,(ya+yb)/2-20);ctx.lineTo(x2+18,(ya+yb)/2+6);ctx.stroke();}
+  ctx.fillStyle=st.load?soft:'#C8423D';ctx.font=font(11,true);ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(st.load?'Last':'getrennt',x2-14,(ya+yb)/2);
+  function circ(cx,cy,t){ctx.fillStyle=col('surface');ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fill();ctx.strokeStyle=ink;ctx.stroke();ctx.fillStyle=ink;ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,cx,cy+1);}
+  var bld=st.station===1&&!st.s2.circOk,sl1=bld?(st.s2.slot1||'?'):'A',sl2=bld?(st.s2.slot2||'?'):'V';
+  circ((x1+x2)/2,ya,sl1);var xr=x2+Math.max(34,W*0.05);ctx.strokeStyle=ink;ctx.beginPath();ctx.moveTo(x2,ya);ctx.lineTo(xr,ya);ctx.lineTo(xr,yb);ctx.lineTo(x2,yb);ctx.stroke();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(x2,ya,3.5,0,Math.PI*2);ctx.arc(x2,yb,3.5,0,Math.PI*2);ctx.fill();circ(xr,(ya+yb)/2,sl2);
+  if(bld){ctx.fillStyle='#E8892B';ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('①',(x1+x2)/2,ya-16);ctx.fillText('②',xr,(ya+yb)/2-16);}
+  var on=st.s2.circOk||st.station>1,m=on?devM(st.dev,st.wind,st.load):null,mx=W*0.58,mw=Math.min(170,(W-mx-26)/2),mh=Math.min(h*0.70,70);
+  meter(mx,y0+h*0.08,mw,mh,'SPANNUNG U',m?fmt(m.U,1):'–,–','V');meter(mx+mw+12,y0+h*0.08,mw,mh,'STROMSTÄRKE I',m?fmt(m.I,2):'–,––','A');
+  ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(m?'Gemessen wird: '+(st.dev==='s'?'Solarmodul (volle Sonne)':'Windrad bei '+fmt(st.wind,1)+' m/s'):'Erst die Schaltung richtig bauen',mx,y0+h*0.08+mh+6);}
+function renderViews(){var g=G();
+  $('capA').innerHTML='<b>Steckbrief</b> eures Standorts';$('capB').innerHTML='<b>Energie im Jahr</b> · eure Rechnung';
+  var A=vctx('cvA'),x=A.x,w=A.w,F=ff();x.fillStyle='#FFFFFF';x.fillRect(0,0,w,w);
+  if(!st.grp){x.fillStyle='#4E5677';x.font=Math.round(w/16)+'px '+F;x.textAlign='center';x.textBaseline='middle';x.fillText('Wählt in Station 1',w/2,w*0.42);x.fillText('euren Standort.',w/2,w*0.54);}
+  else{x.fillStyle=g.col;x.fillRect(0,0,w,w*0.2);x.fillStyle='#FFFFFF';x.font='bold '+Math.round(w/12)+'px '+F;x.textAlign='left';x.textBaseline='middle';x.fillText(st.grp+' · '+g.name,w*0.06,w*0.1);
+    var L=[['Ort',g.ort],['Wind im Jahresmittel',fmt(g.v,1)+' m/s'],['Volle-Sonne-Stunden','ca. '+g.h+' h pro Jahr'],['Stunden im Jahr','8760 h']];
+    L.forEach(function(r,i){var y=w*0.30+i*w*0.17;x.fillStyle='#4E5677';x.font=Math.round(w/20)+'px '+F;x.fillText(r[0],w*0.06,y);x.fillStyle='#1A1F36';x.font='bold '+Math.round(w/(r[1].length>22?22:16))+'px '+F;x.fillText(r[1],w*0.06,y+w*0.07);});}
+  var B=vctx('cvB'),y=B.x,v=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,v,v);
+  var es=st.s4.esOk?num(st.s4.es):null,ew=st.s4.ewOk?num(st.s4.ew):null,mx=Math.max(100,es||0,ew||0),Lf=v*0.18,Rt=v*0.94,T=v*0.10,Bt=v*0.78;mx=Math.ceil(mx/500)*500;
+  y.strokeStyle='#E3E8F0';y.lineWidth=1;y.fillStyle='#4E5677';y.font=Math.round(v/22)+'px '+F;y.textAlign='right';y.textBaseline='middle';
+  for(var i=0;i<=4;i++){var val=mx*i/4,yy=Bt-(Bt-T)*i/4;y.beginPath();y.moveTo(Lf,yy);y.lineTo(Rt,yy);y.stroke();y.fillText(fmt(val,0),Lf-4,yy);}
+  y.save();y.translate(v*0.04,(T+Bt)/2);y.rotate(-Math.PI/2);y.textAlign='center';y.fillText('E in kWh pro Jahr',0,0);y.restore();
+  [['Solarmodul',es,'#F5B82E'],['Windrad',ew,'#5B8FD9']].forEach(function(b,i){var cx=Lf+(i+0.5)*(Rt-Lf)/2;y.fillStyle='#4E5677';y.textAlign='center';y.textBaseline='top';y.font=Math.round(v/20)+'px '+F;y.fillText(b[0],cx,Bt+v*0.03);
+    if(b[1]!=null){var hh=(Bt-T)*b[1]/mx;y.fillStyle=b[2];y.fillRect(cx-v*0.12,Bt-hh,v*0.24,hh);y.fillStyle='#1A1F36';y.font='bold '+Math.round(v/18)+'px '+F;y.textBaseline='bottom';y.fillText(fmt(b[1],0)+' kWh',cx,Bt-hh-3);}});
+  if(es==null&&ew==null){y.fillStyle='#4E5677';y.font=Math.round(v/20)+'px '+F;y.textAlign='center';y.textBaseline='middle';y.fillText('Noch keine Rechnung',(Lf+Rt)/2,T+(Bt-T)*0.4);}}
+function loop(t){var dt=lastT?Math.min(0.05,(t-lastT)/1000):0;rot+=dt*st.wind*0.6;lastT=t;if(W)draw();requestAnimationFrame(loop);}
 
 /* ---------- Steuerpult ---------- */
-function renderCtl(){var sc=STATIONS[st.station].scene,h='';
-  if(sc==='solar'){var forced=STATIONS[st.station].key==='s2';h=(forced?'<div class="ctlrow"><span>LICHT</span><b>100 %</b></div>':slider('Li','LICHT',st.light+' %',0,100,5,st.light,'0 %','100 %','g'))+
-      '<div class="ctlrow"><span>LAST (WIDERSTAND)</span>'+segHTML('sL',[['1','angeschlossen'],['0','getrennt']],st.load?'1':'0')+'</div>'+(forced?'<p class="muted">In Station 2 bleibt das Licht bei 100 %. Für die Leistung zählt die Messung mit Last.</p>':'');}
-  else if(sc==='wind')h=slider('Wi','WINDGESCHWINDIGKEIT',st.wind+' m/s',0,12,1,st.wind,'0 m/s','12 m/s','g')+'<p class="muted">Ab 10 m/s regelt die Anlage ab: mehr Leistung gibt es nicht.</p>';
-  else h='<div class="ctlrow"><span>HERVORHEBEN</span>'+segHTML('sP',[['solar','Solarmodul'],['wind','Windkraft'],['kohle','Kohle']],st.plant)+'</div>';
+function renderCtl(){var h='';
+  if(st.station===0){h='<p class="muted">Wählt in Station 1 euren Standort. Ab Station 2 könnt ihr hier messen.</p>';}
+  else{h='<div class="ctlrow"><span>MESSGERÄTE AM</span>'+segHTML('sD',[['s','Solarmodul'],['w','Windrad']],st.dev)+'</div>'+
+    '<div class="ctlrow"><span>LAST</span>'+segHTML('sL',[['1','angeschlossen'],['0','getrennt']],st.load?'1':'0')+'</div>'+
+    (st.dev==='w'?slider('Wi','WINDGESCHWINDIGKEIT',fmt(st.wind,1)+' m/s',0,12,0.1,st.wind,'0 m/s','12 m/s','g'):'<div class="note">Das Solarmodul messt ihr bei <b>voller Sonne</b> (1000 W/m²). So vergleichen alle Gruppen dasselbe Modul.</div>');}
   $('ctl').innerHTML=h;
-  if($('LiS'))bindSlider('Li',function(){return st.light;},function(v){st.light=v;$('dispLi').textContent=v+' %';},5,0,100);
-  if($('WiS'))bindSlider('Wi',function(){return st.wind;},function(v){st.wind=v;$('dispWi').textContent=v+' m/s';},1,0,12);
-  bindSeg('sL',function(v){st.load=v==='1';draw();});bindSeg('sP',function(v){st.plant=v;draw();});}
+  bindSeg('sD',function(v){st.dev=v;renderCtl();draw();if(st.station===2&&$('fair3'))$('fair3').innerHTML=hint3();});
+  bindSeg('sL',function(v){st.load=v==='1';draw();if(st.station===2&&$('fair3'))$('fair3').innerHTML=hint3();});
+  if($('WiS'))bindSlider('Wi',function(){return st.wind;},function(v){st.wind=Math.round(v*10)/10;$('dispWi').textContent=fmt(st.wind,1)+' m/s';if(st.station===2&&$('fair3'))$('fair3').innerHTML=hint3();},0.1,0,12);}
 
-/* ---------- Aufgabenbausteine ---------- */
-function calcHTML(C){var s=st.c[C.id]||{},ok=!!s.ok,nt=st.tips[C.id]||0;
-  return '<div class="q"><p>'+C.q+'</p><div class="row"><input class="num'+(ok?' ok':'')+'" id="in_'+C.id+'" inputmode="decimal" value="'+esc(s.v||'')+'"'+(ok?' disabled':'')+'><span>'+C.unit+'</span>'+
-    (ok?'':'<button class="btn pri" type="button" id="ck_'+C.id+'">Prüfen</button>'+(C.tips&&nt<C.tips.length?'<button class="btn tip" type="button" id="tp_'+C.id+'">Tipp '+(nt+1)+'</button>':''))+'</div>'+
-    (C.tips?C.tips.slice(0,nt).map(function(t,i){return '<p class="hint"><b>Tipp '+(i+1)+':</b> '+t+'</p>';}).join(''):'')+'<p class="fb" id="fb_'+C.id+'"></p></div>';}
-function calcBind(C,rr){var s=st.c[C.id]||(st.c[C.id]={});if(s.ok){showFb(C.id,true,C.sol);return;}
-  $('in_'+C.id).addEventListener('input',function(){s.v=this.value;save();});
-  var tp=$('tp_'+C.id);if(tp)tp.addEventListener('click',function(){st.tips[C.id]=(st.tips[C.id]||0)+1;save();rr();});
-  $('ck_'+C.id).addEventListener('click',function(){var v=num(s.v),fb=$('fb_'+C.id);if(isNaN(v)){fb.className='fb bad';fb.textContent='Gib eine Zahl ein (Komma ist erlaubt).';return;}
-    var ok=Math.abs(v-C.ans)<=C.tol;tryInc(C.id,ok,s.v);if(ok){s.ok=true;save();rr();return;}
-    var m=null;(C.errs||[]).forEach(function(e){if(!m&&Math.abs(v-e[0])<=e[1])m=e[2];});fb.className='fb bad';fb.textContent=m||'Noch nicht. Prüfe Formel und Einheiten.'+(C.tips&&(st.tips[C.id]||0)<C.tips.length?' Ein Tipp hilft dir weiter.':'');
-    showHelp(fb,C.id,function(){s.v=fmt(C.ans,3);s.ok=true;save();rr();});});}
-function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+(i+1)+' · '+STATIONS[i].name)+'</p><h2>'+t+'</h2></div>';}
-function Cq(def,rr){return {html:function(){return calcHTML(def);},bind:function(){calcBind(def,rr);},ok:function(){return !!(st.c[def.id]&&st.c[def.id].ok);}};}
-function Mq(id,Q,rr){return {html:function(){return mcHTML(id,Q.q,Q.o,st.m[id],Q.a);},bind:function(){mcBind(id,Q,st.m,id,id,rr);},ok:function(){return !!st.m[id+'Ok'];}};}
-function stationRender(i,title,intro,items,doneMsg,pre,afterAll){
-  var html=(pre||'')+head(i,title)+(intro?'<p>'+intro+'</p>':''),binds=[];
-  for(var k=0;k<items.length;k++){var it=items[k];html+=it.html();binds.push(it.bind);if(!it.ok())break;}
-  var all=items.every(function(it){return it.ok();});if(all&&!STATIONS[i].pro)finish(i);
-  html+=(all&&afterAll?afterAll():'')+(all&&doneMsg?'<p class="win">'+doneMsg+'</p>':'')+'<div class="row">'+nextBtn(i)+'</div>';
-  $('task').innerHTML=html;binds.forEach(function(b){b();});bindGuess();bindCTA();bindNext();}
+/* ---------- Aufgaben ---------- */
+function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+(i+1)+' · '+STATIONS[i].name)+(st.grp&&!STATIONS[i].pro&&i>0?' · Standort '+st.grp+': '+G().name:'')+'</p><h2>'+t+'</h2></div>';}
+var TIPS={
+  s2circ:['Die Stromstärke misst man <b>im</b> Stromkreis. Der Strom muss durch das Messgerät hindurchfließen.','Die Spannung misst man <b>zwischen zwei Punkten</b>. Das Messgerät liegt neben der Last, also parallel.'],
+  s3:['Stellt im Steuerpult ein, an welchem Gerät ihr messt. Beim Windrad: eure Windgeschwindigkeit aus dem Steckbrief. Die Last muss angeschlossen sein.','P = U · I. U in V und I in A ergibt P in W. Beispiel: 20 V · 10 A = 200 W.'],
+  s4s:['Energie = Leistung · Zeit. E = P · t.','Beispiel: 400 W · 1000 h = 400 000 Wh = 400 kWh. Teilt Wh durch 1000, dann habt ihr kWh.'],
+  s4w:['Das Windrad läuft das ganze Jahr. Ein Jahr hat 8760 Stunden.','Beispiel: 100 W · 8760 h = 876 000 Wh = 876 kWh.'],
+  s4sent:['Satzanfang: „An unserem Standort empfehlen wir …, weil …“','Nennt beide Zahlen: „Das Solarmodul liefert … kWh, das Windrad … kWh im Jahr.“']
+};
+function vglBox(){return '<div class="merk"><h3>So werden alle Ergebnisse vergleichbar</h3><ol style="margin:0;padding-left:1.2em"><li>Alle Gruppen nutzen <b>dasselbe Solarmodul</b> und <b>dasselbe Windrad</b>.</li><li>Nur der <b>Standort</b> ist verschieden: anderer Wind, andere Sonnenstunden.</li><li>Alle rechnen die Energie für <b>ein ganzes Jahr</b> aus.</li></ol></div>';}
 
-/* Vermutung */
-var GUESS=[{k:'A',t:'Die Spannung sinkt auch auf 30 %.'},{k:'B',t:'Die Spannung sinkt <b>kaum</b>.'},{k:'C',t:'Die Spannung <b>steigt</b>.'}];
-function guessBox(){return '<div class="guess stack"><p class="eyebrow pro">Bevor du startest</p><p>Ein Solarmodul bekommt nur noch <b>30 %</b> des Lichts. Es ist kein Gerät angeschlossen. Was passiert mit der Spannung?</p><div class="choice" id="gs">'+GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+'</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. Gleich prüft ihr sie.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';}
-function bindGuess(){Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();render();});});}
+/* Station 1: Standort und Vermutung */
+var Q1G=[{k:'s',t:'Das <b>Solarmodul</b> liefert mehr.'},{k:'w',t:'Das <b>Windrad</b> liefert mehr.'},{k:'g',t:'Beide liefern <b>etwa gleich viel</b>.'}];
+function r1(){var s=st.s1;
+  var fall='<p>Die Stadt Velbert und drei Partnerschulen wollen ihren Strom zum Teil selbst erzeugen. Zur Wahl stehen ein <b>Solarmodul</b> und ein kleines <b>Windrad</b>. Jede Gruppe prüft einen Standort.</p>';
+  var grp='<div class="q"><p><b>Euer Standort</b> (siehe Tafel):</p><div class="choice grid2" id="gg">'+GKEYS.map(function(k){var x=GROUPS[k];return '<button type="button" class="opt'+(st.grp===k?' sel':'')+'" data-k="'+k+'"'+(s.ok?' disabled':'')+'><b>'+k+' · '+x.name+'</b><br><span class="muted">'+x.ort+'</span></button>';}).join('')+'</div></div>';
+  var guess=st.grp?'<div class="guess stack"><p class="eyebrow pro">Eure Vermutung</p><p>Was liefert an eurem Standort <b>im Jahr mehr Energie</b>?</p><div class="choice" id="gs">'+
+    Q1G.map(function(o,i){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"'+(s.ok?' disabled':'')+'><span class="L">'+(i+1)+'</span><span>'+o.t+'</span></button>';}).join('')+'</div><p class="muted">Hier gibt es noch kein richtig oder falsch. Am Ende prüft ihr eure Vermutung.</p>'+
+    (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c1">Vermutung speichern</button></div><p class="fb" id="fb1"></p>')+'</div>':'';
+  $('task').innerHTML=head(0,'Sonne oder Wind – was lohnt sich wo?')+fall+grp+guess+(st.done[0]?'<p class="win"><b>Startklar!</b> Schaut euch unter dem Bild euren Steckbrief an. Jetzt baut ihr die Messung auf.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.grp=b.dataset.k;save();r1();draw();});});
+  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.guess=b.dataset.k;save();r1();});});
+  if($('c1'))$('c1').addEventListener('click',function(){if(!st.guess){var fb=$('fb1');fb.className='fb bad';fb.textContent='Wählt zuerst eure Vermutung.';return;}s.ok=true;finish(0);save();r1();});
+  bindNext();}
 
-/* Station 1 */
-var Q1a={q:'Welche Energieumwandlung findet im Solarmodul statt?',o:['Strahlungsenergie (Licht) → elektrische Energie, direkt und ohne Generator','Strahlungsenergie → thermische Energie → Bewegungsenergie → elektrische Energie','chemische Energie → elektrische Energie'],a:0,ok:'Richtig! Das Solarmodul braucht keinen Generator und keine bewegten Teile.',bad:['','Das wäre ein Kraftwerk mit Dampf und Turbine. Das Solarmodul arbeitet ohne bewegte Teile.','Im Solarmodul wird nichts verbrannt.']};
-var Q1b={q:'Trenne die Last (Steuerpult). Stelle das Licht auf <b>100 %</b> und dann auf <b>30 %</b>. Was passiert mit der Spannung?',o:['Sie sinkt nur wenig (von ca. 2,2 V auf ca. 2,0 V).','Sie sinkt auf 30 %.','Sie steigt.'],a:0,ok:'Genau! Ohne Last zeigt die Spannung kaum, wie viel Licht ankommt.',bad:['','Probiere es im Modell aus: Last trennen, Licht verändern, Spannung ablesen.','Probiere es im Modell aus: Last trennen, Licht verändern, Spannung ablesen.']};
-var Q1c={q:'Wie groß ist die Stromstärke, wenn die Last getrennt ist?',o:['0 mA: Der Stromkreis ist offen, es fließt kein Strom.','So groß wie mit Last.','Doppelt so groß.'],a:0,ok:'Richtig! Ohne Strom keine Leistung: P = U · 0 = 0. Deshalb messen wir immer mit angeschlossener Last.',bad:['','Lies das blaue Messgerät ab, während die Last getrennt ist.','Lies das blaue Messgerät ab, während die Last getrennt ist.']};
-function r1(){stationRender(0,'Wie arbeitet ein Solarmodul?','Verändere im Steuerpult das Licht und die Last. Beobachte die beiden Messgeräte.',[Mq('m1a',Q1a,r1),Mq('m1b',Q1b,r1),Mq('m1c',Q1c,r1)],'<b>Stark!</b> Merke: Die Leistung eines Solarmoduls misst man nur mit angeschlossener Last.',guessBox(),function(){return '<div class="merk"><h3>Eure Vermutung</h3><p>Ihr habt vermutet: <span class="k">'+(st.guess||'–')+'</span>. Richtig ist <span class="k">B</span>: Die Spannung sinkt kaum.</p></div>';});}
+/* Station 2: Aufbauen */
+var QLAST={q:'Warum muss beim Messen der Leistung eine <b>Last</b> angeschlossen sein?',o:['Ohne Last fließt kein Strom. Dann ist P = U · I = 0.','Ohne Last ist die Spannung zu klein.','Die Last schützt das Messgerät.'],a:0,
+  ok:'Genau! Ohne Last zeigt das Voltmeter zwar eine Spannung an, aber es fließt kein Strom und es wird keine Energie übertragen. Probiert es im Steuerpult aus.',bad:['','Trennt im Steuerpult die Last: Was zeigen die Messgeräte?','Trennt im Steuerpult die Last: Was passiert mit der Stromstärke?']};
+function slotSeg(id,v,dis){return '<span class="seg" data-slot="'+id+'">'+[['A','Amperemeter (A)'],['V','Voltmeter (V)']].map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(v===o[0]?'sel':'')+'"'+(dis?' disabled':'')+'>'+o[1]+'</button>';}).join('')+'</span>';}
+function r2(){var s=st.s2;
+  var circ='<div class="q"><p><span class="task-step">1. Schaltung bauen.</span> In der Schaltung sind zwei Plätze frei. Welches Messgerät gehört wohin?</p>'+
+    '<div class="ctlrow"><span>PLATZ ① OBEN, IM STROMKREIS</span>'+slotSeg('1',s.slot1,s.circOk)+'</div><div class="ctlrow"><span>PLATZ ② RECHTS, NEBEN DER LAST</span>'+slotSeg('2',s.slot2,s.circOk)+'</div>'+
+    (s.circOk?'':'<div class="row"><button class="btn pri" type="button" id="c2c">Schaltung prüfen</button></div>')+'<p class="fb" id="fb2c"></p>'+(s.circOk?'':tipHTML('s2circ',TIPS.s2circ))+'</div>';
+  var last=s.circOk?mcHTML('last',QLAST.q,QLAST.o,s.last,QLAST.a):'';
+  if(s.circOk&&s.lastOk)finish(1);
+  $('task').innerHTML=head(1,'Baut die Messung auf')+'<p>Ihr messt gleich am Solarmodul und am Windrad. Die Messgeräte könnt ihr im Steuerpult umstecken.</p>'+vglBox()+circ+last+(st.done[1]?'<p class="win"><b>Aufgebaut!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-slot]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(s.circOk)return;s['slot'+sg.dataset.slot]=b.dataset.v;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});draw();});});});
+  if($('c2c'))$('c2c').addEventListener('click',function(){var fb=$('fb2c'),ok=s.slot1==='A'&&s.slot2==='V';
+    if(!s.slot1||!s.slot2){fb.className='fb bad';fb.textContent='Setzt an beide Plätze ein Messgerät.';return;}
+    tryInc('s2circ',ok,s.slot1+s.slot2);if(ok){s.circOk=true;save();r2();draw();return;}
+    fb.className='fb bad';fb.textContent=s.slot1==='V'&&s.slot2==='A'?'Genau vertauscht. Ein Amperemeter neben der Last macht einen Kurzschluss, ein Voltmeter im Stromkreis lässt kaum Strom durch.':s.slot1==='V'?'Ein Voltmeter im Stromkreis lässt kaum Strom durch. Was gehört in den Stromkreis?':'Ein Amperemeter neben der Last macht einen Kurzschluss. Was gehört neben die Last?';
+    tipNudge(fb,'s2circ',1);showHelp(fb,'s2circ',function(){s.slot1='A';s.slot2='V';s.circOk=true;save();r2();draw();});});
+  if(s.circOk)helpMsg('fb2c','Richtig! Das Amperemeter liegt in Reihe, das Voltmeter parallel zur Last.');
+  if(s.circOk)mcBind('last',QLAST,s,'last','s2last',r2);
+  bindTips(r2);bindNext();}
 
-/* Station 2: Messtabelle */
-var MROWS=[{id:'l100',light:100,load:true,lab:'mit Last'},{id:'open',light:100,load:false,lab:'ohne Last'}];
-var C2={id:'c2',q:'Ein kleineres Modul liefert bei vollem Licht nur <b>95 mW</b>. Wie viel Prozent der Leistung eures Moduls (<b>475 mW</b>) sind das?',unit:'%',ans:20,tol:0.6,errs:[[0.2,0.01,'Fast! Gib das Ergebnis in Prozent an: mal 100 %.'],[500,10,'Du hast falsch herum geteilt. Teil : Ganzes, also 95 mW : 475 mW.'],[380,1,'Das ist die Differenz in mW. Gefragt ist der Anteil in Prozent.']],tips:['Anteil in % = Teil : Ganzes · 100 %.','95 mW : 475 mW = 0,2'],sol:'Richtig! 95 mW : 475 mW = 0,2 = 20 %. So vergleicht man Leistungen in Prozent.'};
-function r2(){var html=head(1,'Die Leistung des Solarmoduls messen')+'<p>Das Licht steht auf <b>100 %</b>. Miss einmal <b>mit</b> und einmal <b>ohne Last</b> (Steuerpult). Lies U und I ab und berechne <b>P = U · I</b>. Mit I in mA kommt P in mW heraus.</p>'+
-  '<div class="tw"><table class="mt"><thead><tr><th>Messung</th><th>U<small>in V</small></th><th>I<small>in mA</small></th><th>P = U · I<small>in mW</small></th><th></th></tr></thead><tbody>'+
-  MROWS.map(function(r){var m=st.meas[r.id]||{};return '<tr><td>'+r.lab+'</td><td><input class="num'+(m.ok?' ok':'')+'" data-mu="'+r.id+'" inputmode="decimal" value="'+esc(m.U||'')+'"'+(m.ok?' disabled':'')+'></td><td><input class="num'+(m.ok?' ok':'')+'" data-mi="'+r.id+'" inputmode="decimal" value="'+esc(m.I||'')+'"'+(m.ok?' disabled':'')+'></td><td><input class="num'+(m.ok?' ok':'')+'" data-mp="'+r.id+'" inputmode="decimal" value="'+esc(m.P||'')+'"'+(m.ok?' disabled':'')+'></td><td>'+(m.ok?'✓':'<button class="btn pri sm" type="button" data-rc="'+r.id+'">Prüfen</button>')+'</td></tr>';}).join('')+
-  '</tbody></table></div><p class="fb" id="fb2"></p>';
-  var allM=MROWS.every(function(r){return st.meas[r.id]&&st.meas[r.id].ok;});
-  var c2ok=!!(st.c.c2&&st.c.c2.ok);if(allM){html+=calcHTML(C2);if(c2ok){finish(1);html+='<p class="win"><b>Gemessen!</b> Ihr könnt die Leistung eines Solarmoduls bestimmen und vergleichen.</p>';}}
-  html+='<p class="hint"><b>Messen wie ein Profi:</b> Das Amperemeter ist in Reihe geschaltet, das Voltmeter parallel. Die Last bleibt angeschlossen.</p><div class="row">'+nextBtn(1)+'</div>';
-  $('task').innerHTML=html;
-  Array.prototype.forEach.call(document.querySelectorAll('[data-mu],[data-mi],[data-mp]'),function(inp){inp.addEventListener('input',function(){var id=inp.dataset.mu||inp.dataset.mi||inp.dataset.mp,m=st.meas[id]||(st.meas[id]={});if(inp.dataset.mu)m.U=inp.value;else if(inp.dataset.mi)m.I=inp.value;else m.P=inp.value;save();});});
-  Array.prototype.forEach.call(document.querySelectorAll('button[data-rc]'),function(b){b.addEventListener('click',function(){var r=MROWS.filter(function(x){return x.id===b.dataset.rc;})[0],m=st.meas[r.id]||(st.meas[r.id]={}),fb=$('fb2');
-    var mod=solar(r.light,r.load),U=num(m.U),I=num(m.I),P=num(m.P),key='s2'+r.id;
-    if(isNaN(U)||isNaN(I)||isNaN(P)){fb.className='fb bad';fb.textContent='Zeile „'+r.lab+'“: Trage U, I und P ein.';return;}
-    var okU=Math.abs(U-mod.U)<=0.04*mod.U+0.02,okI=Math.abs(I-mod.I*1000)<=0.04*mod.I*1000+2,okP=Math.abs(P-U*I)<=0.03*U*I+1;
-    tryInc(key,okU&&okI&&okP,[m.U,m.I,m.P].join('/'));
-    if(okU&&okI&&okP){m.ok=true;save();r2();draw();return;}
-    fb.className='fb bad';fb.textContent=!okU||!okI?('Zeile „'+r.lab+'“: Die Messwerte passen nicht. Ist die Last im Steuerpult '+(r.load?'angeschlossen':'getrennt')+'?'):(U*I>0&&Math.abs(P-U*I/1000)<0.05*U*I/1000+0.01?'Fast! Du hast in W gerechnet. Gib P in mW an.':'Prüfe die Rechnung: P = '+fmt(U,2)+' V · '+fmt(I,0)+' mA.');
-    showHelp(fb,key,function(){m.U=fmt(mod.U,2);m.I=fmt(mod.I*1000,0);m.P=fmt(num(m.U)*num(m.I),0);m.ok=true;save();r2();draw();});});});
-  if(allM)calcBind(C2,r2);bindNext();}
+/* Station 3: Messen */
+function hint3(){var g=G();if(!st.load)return '<p class="note">Die Last ist getrennt. Für die Leistung braucht ihr die Last.</p>';
+  if(st.dev==='w'&&Math.abs(st.wind-g.v)>0.05)return '<p class="note">Windrad: Stellt im Steuerpult eure Windgeschwindigkeit ein: <b>'+fmt(g.v,1)+' m/s</b>.</p>';
+  return '<p class="fb ok">Gemessen wird: '+(st.dev==='s'?'Solarmodul bei voller Sonne':'Windrad bei '+fmt(g.v,1)+' m/s')+'. Lest U und I ab.</p>';}
+function okRow(dev){var r=st.s3.rows[dev],m=devM(dev,G().v,true),U=num(r.U),I=num(r.I);return !isNaN(U)&&!isNaN(I)&&Math.abs(U-m.U)<=0.03*m.U+0.15&&Math.abs(I-m.I)<=0.03*m.I+0.06;}
+function okP(r){var U=num(r.U),I=num(r.I),P=num(r.P);return !isNaN(P)&&Math.abs(P-U*I)<=Math.max(1,0.03*U*I);}
+function r3(){var s=st.s3,g=G(),dis=s.ok?' disabled':'';
+  var row=function(dev,lab){var r=s.rows[dev];return '<tr><td style="text-align:left">'+lab+'</td><td><input class="num" data-u="'+dev+'" inputmode="decimal" value="'+esc(r.U)+'"'+dis+'></td><td><input class="num" data-i="'+dev+'" inputmode="decimal" value="'+esc(r.I)+'"'+dis+'></td><td><input class="num" data-p="'+dev+'" inputmode="decimal" value="'+esc(r.P)+'"'+dis+'></td></tr>';};
+  $('task').innerHTML=head(2,'Messt beide Geräte')+'<p>Wählt im Steuerpult das Gerät, lest U und I ab und berechnet <b>P = U · I</b> selbst. Übertragt alles auf euer Gruppen-AB.</p>'+(s.ok?'':'<div id="fair3">'+hint3()+'</div>')+
+    '<div class="tw"><table class="mt"><thead><tr><th>Gerät</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P = U · I<small>in W</small></th></tr></thead><tbody>'+row('s','Solarmodul (volle Sonne)')+row('w','Windrad ('+fmt(g.v,1)+' m/s)')+'</tbody></table></div>'+
+    (s.ok?'<p class="win"><b>Gemessen!</b> Jetzt rechnet ihr auf ein ganzes Jahr hoch.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Messwerte und Rechnung prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3',TIPS.s3))+'<div class="row">'+nextBtn(2)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-u],[data-i],[data-p]'),function(inp){inp.addEventListener('input',function(){var d=inp.dataset.u||inp.dataset.i||inp.dataset.p,r=s.rows[d];if(inp.dataset.u)r.U=inp.value;else if(inp.dataset.i)r.I=inp.value;else r.P=inp.value;save();});
+    inp.addEventListener('focus',function(){var d=inp.dataset.u||inp.dataset.i||inp.dataset.p;if(st.dev!==d){st.dev=d;renderCtl();draw();if($('fair3'))$('fair3').innerHTML=hint3();}});});
+  if($('c3'))$('c3').addEventListener('click',function(){var fb=$('fb3'),bad=[];
+    ['s','w'].forEach(function(d){var r=s.rows[d];if(!r.U||!r.I||!r.P)bad.push('miss');});
+    if(bad.length){fb.className='fb bad';fb.textContent='Es fehlen noch Werte.';return;}
+    var wm=['s','w'].filter(function(d){return !okRow(d);}),wp=['s','w'].filter(function(d){return okRow(d)&&!okP(s.rows[d]);}),ok=!wm.length&&!wp.length;tryInc('s3',ok,wm.join('')+'|'+wp.join(''));
+    if(ok){s.ok=true;finish(2);save();r3();return;}
+    var nm={s:'Solarmodul',w:'Windrad'},t=[];
+    if(wm.length)t.push('Die Messwerte beim '+wm.map(function(d){return nm[d];}).join(' und ')+' passen nicht. '+(wm.indexOf('w')>=0?'Ist beim Windrad eure Windgeschwindigkeit ('+fmt(g.v,1)+' m/s) eingestellt? ':'')+'Ist die Last angeschlossen?');
+    if(wp.length)t.push('P beim '+wp.map(function(d){return nm[d];}).join(' und ')+' stimmt nicht. Rechnet P = U · I.');
+    fb.className='fb bad';fb.textContent=t.join(' ');tipNudge(fb,'s3',1);
+    showHelp(fb,'s3',function(){['s','w'].forEach(function(d){var r=s.rows[d];if(!okRow(d)){var m=devM(d,g.v,true);r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;finish(2);save();r3();});});
+  bindTips(r3);bindNext();}
 
-/* Station 3: Wind */
-var Q3a={q:'Welche Energieumwandlung findet in der Windkraftanlage statt?',o:['Bewegungsenergie des Windes → Bewegungsenergie des Rotors → Generator → elektrische Energie','Wind → Wärme → Dampf → elektrische Energie','Strahlungsenergie → elektrische Energie'],a:0,ok:'Richtig! Wie im Kohlekraftwerk macht ein Generator den Strom, aber ohne Brennstoff.',bad:['','Dampf gibt es im Kohlekraftwerk, nicht im Windrad.','Das ist das Solarmodul.']};
-var C3b={id:'c3b',q:'Stelle <b>3 m/s</b> ein. Lies U und I ab und berechne P.',unit:'mW',ans:25,tol:2,errs:[[0.025,0.003,'Das ist in W. Gib P in mW an (I in mA).'],[50.5,1,'Du hast addiert. P = U · I.']],tips:['P = U · I. Mit I in mA kommt mW heraus.','Bei 3 m/s: U ≈ 0,50 V, I ≈ 50 mA.'],sol:'Richtig! P ≈ 0,50 V · 50 mA = 25 mW.'};
-var C3c={id:'c3c',q:'Stelle <b>6 m/s</b> ein. Berechne P.',unit:'mW',ans:200,tol:6,errs:[[0.2,0.01,'Das ist in W. Gib P in mW an.']],tips:['Lies U und I bei 6 m/s ab.','Bei 6 m/s: U ≈ 1,41 V, I ≈ 141 mA.'],sol:'Richtig! P ≈ 1,41 V · 141 mA ≈ 200 mW.'};
-var Q3d={q:'Der Wind weht <b>doppelt so schnell</b>. Die Leistung wird …',o:['etwa 8-mal so groß.','doppelt so groß.','gleich groß.'],a:0,ok:'Genau! 200 mW : 25 mW = 8. Doppelte Windgeschwindigkeit bringt viel mehr Leistung. Deshalb stehen Windparks dort, wo der Wind stark weht.',bad:['','Rechne nach: 200 mW : 25 mW = ?','Vergleiche eure beiden Ergebnisse.']};
-function r3(){stationRender(2,'Wie arbeitet eine Windkraftanlage?','Verändere im Steuerpult die Windgeschwindigkeit.',[Mq('m3a',Q3a,r3),Cq(C3b,r3),Cq(C3c,r3),Mq('m3d',Q3d,r3)],'<b>Klasse!</b> Bei Windstille liefert die Anlage keinen Strom.');}
+/* Station 4: Jahresenergie und Empfehlung */
+function eS(){return pOf(st.s3.rows.s)*G().h/1000;}
+function eW(){return pOf(st.s3.rows.w)*HOURS_YEAR/1000;}
+function cmpA(){var a=num(st.s4.es),b=num(st.s4.ew);if(Math.abs(a-b)<=0.15*Math.max(a,b))return 2;return a>b?0:1;}
+var MUSTER={A:'An der Nordseeküste empfehlen wir das Windrad, weil es dort etwa sechsmal so viel Energie im Jahr liefert wie das Solarmodul.',B:'In Velbert empfehlen wir das Solarmodul, weil es hier mehr Energie im Jahr liefert als das Windrad. Bei uns weht zu wenig Wind.',
+  C:'Im Sauerland empfehlen wir das Windrad, weil es auf dem Berg etwa viermal so viel Energie liefert wie das Solarmodul.',D:'In Freiburg empfehlen wir das Solarmodul, weil dort viel Sonne scheint und wenig Wind weht. Es liefert gut dreimal so viel Energie.'};
+function calcE(id,label,unitTxt,want,tips,rr){var s=st.s4,ok=s[id+'Ok'];
+  return '<div class="q"><p>'+label+'</p><div class="row"><input class="num'+(ok?' ok':'')+'" id="in_'+id+'" inputmode="decimal" value="'+esc(s[id])+'"'+(ok?' disabled':'')+'><span>'+unitTxt+'</span>'+(ok?'':'<button class="btn pri" type="button" id="ck_'+id+'">Prüfen</button>')+'</div><p class="fb" id="fb_'+id+'"></p>'+(ok?'':tipHTML('s4'+id.charAt(1),tips))+'</div>';}
+function bindE(id,want,rr){var s=st.s4;if(s[id+'Ok']){helpMsg('fb_'+id,'Richtig!');return;}
+  $('in_'+id).addEventListener('input',function(){s[id]=this.value;save();});
+  $('ck_'+id).addEventListener('click',function(){var v=num(s[id]),w=want(),fb=$('fb_'+id),ok=!isNaN(v)&&Math.abs(v-w)<=Math.max(2,0.02*w);tryInc('s4'+id.charAt(1),ok,s[id]);
+    if(ok){s[id+'Ok']=true;save();rr();draw();return;}
+    fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-w*1000)<=0.02*w*1000)?'Fast! Das Ergebnis ist in Wh. Teilt durch 1000, dann habt ihr kWh.':'Noch nicht. Rechnet E = P · t und teilt durch 1000.';
+    tipNudge(fb,'s4'+id.charAt(1),1);showHelp(fb,'s4'+id.charAt(1),function(){s[id]=fmt(w,0);s[id+'Ok']=true;save();rr();draw();});});}
+function r4(){var s=st.s4,g=G(),Ps=pOf(st.s3.rows.s),Pw=pOf(st.s3.rows.w);
+  var a=calcE('es','<b>Solarmodul:</b> E = P · t = '+fmt(Ps,0)+' W · '+g.h+' h = ? (Volle-Sonne-Stunden aus dem Steckbrief)','kWh pro Jahr',eS,TIPS.s4s,r4);
+  var b=s.esOk?calcE('ew','<b>Windrad:</b> E = P · t = '+fmt(Pw,0)+' W · 8760 h = ? (Das Windrad läuft das ganze Jahr.)','kWh pro Jahr',eW,TIPS.s4w,r4):'';
+  var cq={q:'An eurem Standort liefert im Jahr mehr Energie …',o:['das Solarmodul.','das Windrad.','beide etwa gleich viel.'],a:0,ok:'Stimmt, das zeigen eure Zahlen.',bad:'Vergleicht die beiden kWh-Werte noch einmal.'};
+  var c=s.ewOk?mcHTML('cmp',cq.q,cq.o,s.cmp,cmpA()):'';
+  var sent=s.cmpOk?'<div class="q"><p><b>Eure Empfehlung für den Standort</b> in ein bis zwei Sätzen.</p><textarea class="free" id="sent" rows="3" placeholder="An unserem Standort empfehlen wir …, weil …"'+(s.ok?' disabled':'')+'>'+esc(s.sent)+'</textarea>'+
+    (s.ok?'<div class="merk"><h3>Vergleicht mit dem Mustersatz</h3><p>'+MUSTER[st.grp]+'</p></div>':'<div class="row"><button class="btn pri" type="button" id="c4">Fertig</button></div><p class="fb" id="fb4"></p>'+tipHTML('s4sent',TIPS.s4sent))+'</div>':'';
+  var g0=st.guess?'<p class="muted">Eure Vermutung war: '+Q1G.filter(function(o){return o.k===st.guess;})[0].t.replace(/<[^>]+>/g,'')+'</p>':'';
+  var after=st.done[3]?'<p class="win"><b>Fertig!</b> Füllt jetzt Aufgabe 4 auf eurem Gruppen-AB aus. Damit stellt ihr euren Standort in der Besprechung vor.</p>'+saveCTA(true)+'<p class="muted">Noch Zeit bis zur Besprechung? Dann weiter mit dem Profi-Zusatz ★.</p><div class="row"><button class="btn sec" type="button" id="toPro">Zum Profi-Zusatz ★ →</button></div>':'';
+  $('task').innerHTML=head(3,'Wie viel Energie im Jahr?')+'<p>Rechnet die gemessene Leistung auf ein ganzes Jahr hoch: <b>E = P · t</b>. Teilt Wh durch 1000, dann habt ihr kWh.</p>'+a+b+c+(s.cmpOk?g0:'')+sent+after;
+  bindE('es',eS,r4);if(s.esOk)bindE('ew',eW,r4);
+  if(s.ewOk)mcBind('cmp',{q:cq.q,o:cq.o,a:cmpA(),ok:cq.ok,bad:['','Vergleicht die beiden kWh-Werte noch einmal.','Vergleicht die beiden kWh-Werte noch einmal.','Vergleicht die beiden kWh-Werte noch einmal.']},s,'cmp','s4cmp',r4);
+  if($('sent')&&!s.ok){$('sent').addEventListener('input',function(){s.sent=this.value;save();});
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),t=s.sent.trim(),words=t?t.split(/\s+/).length:0;
+      if(words<4){tryInc('s4sent',false,t);fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';tipNudge(fb,'s4sent',1);return;}
+      if(!/weil|denn|da |deshalb|darum/i.test(t)&&!s.warned){s.warned=true;save();tryInc('s4sent',false,t);fb.className='fb bad';fb.textContent='Gut! Mit einer Begründung („weil …“) wird es noch besser. Ergänzt sie oder tippt noch einmal auf „Fertig“.';return;}
+      tryInc('s4sent',true,t);s.ok=true;finish(3);save();r4();});}
+  if($('toPro'))$('toPro').addEventListener('click',function(){go(4);});
+  bindTips(r4);bindCTA();}
 
-/* Station 4: Vergleich */
-var OPT=['Solarmodul','Windkraft','Kohle'];
-var SORTQ=[{id:'v1',q:'wandelt Licht direkt in elektrische Energie um',a:0},{id:'v2',q:'liefert nachts keinen Strom',a:0},{id:'v3',q:'ein Rotor treibt einen Generator an',a:1},{id:'v4',q:'liefert bei Windstille keinen Strom',a:1},{id:'v5',q:'braucht einen Brennstoff, der verbrannt wird',a:2},{id:'v6',q:'stößt im Betrieb viel CO₂ aus',a:2}]
-  .map(function(x){return {id:x.id,q:x.q,o:OPT,a:x.a,w:'„'+x.q+'“ passt zu einem anderen Kraftwerk. Schau ins Modell.'};});
-var Q4b={q:'Was haben Windkraftanlage und Kohlekraftwerk <b>gemeinsam</b>?',o:['Beide nutzen einen Generator.','Beide verbrennen einen Brennstoff.','Beide sind regenerativ.'],a:0,ok:'Richtig! Das Solarmodul ist die Ausnahme: Es braucht keinen Generator.',bad:['','Nur im Kohlekraftwerk wird etwas verbrannt.','Nur die Windkraft ist regenerativ.']};
-var Q4c={q:'Warum gelten Sonne und Wind als <b>regenerativ</b>?',o:['Sie stehen immer wieder neu zur Verfügung und verbrauchen keine Vorräte.','Weil sie immer gleich viel Strom liefern.','Weil sie nichts kosten.'],a:0,ok:'Genau! Aber: Sie liefern nicht immer gleich viel, das hängt vom Wetter ab.',bad:['','Nein, nachts und bei Windstille liefern sie nichts.','Auch Solar- und Windanlagen kosten Geld. Worum geht es bei „regenerativ“?']};
-function r4(){var s=st;var srt={html:function(){return '<div class="stack"><p>Ordne jede Aussage zu.</p>'+segQHTML(SORTQ,s.sort,s.sortOk)+(s.sortOk?'':'<div class="row"><button class="btn pri" type="button" id="c4">Prüfen</button></div>')+'<p class="fb" id="fb4"></p></div>';},
-  bind:function(){bindSegQ(s.sort,function(){return s.sortOk;});if(!s.sortOk)$('c4').addEventListener('click',function(){if(checkSegQ(SORTQ,s.sort,'s4sort','fb4',r4)){s.sortOk=true;save();r4();}});else helpMsg('fb4','Alles richtig zugeordnet!');},ok:function(){return s.sortOk;}};
-  stationRender(3,'Sonne, Wind und Kohle im Vergleich','Im Modell siehst du die drei Energieketten. Im Steuerpult kannst du eine hervorheben.',[srt,Mq('m4b',Q4b,r4),Mq('m4c',Q4c,r4)],'<b>Super!</b> Ihr könnt regenerative und nicht erneuerbare Energiewandler unterscheiden.');}
+/* Profi-Zusatz */
+var QTOW={q:'Große Windräder stehen auf sehr hohen Türmen. Warum?',o:['Weiter oben weht der Wind stärker. Schon etwas mehr Wind bringt viel mehr Leistung.','Oben ist die Luft wärmer.','Damit die Flügel nicht den Boden berühren. Sonst bringt die Höhe nichts.'],a:0,ok:'Genau! Das könnt ihr in der Besprechung einbringen.',bad:['','Warme Luft spielt hier keine Rolle. Denkt an eure Messung bei 3 und 6 m/s.','Die Flügel sind ein Grund, aber nicht der wichtigste. Denkt an eure Messung bei 3 und 6 m/s.']};
+function r6(){var s=st.s6;
+  var dis=s.mOk?' disabled':'';
+  var row=function(k,v){var r=s[k];return '<tr><td>'+v+' m/s</td><td><input class="num" data-pu="'+k+'" inputmode="decimal" value="'+esc(r.U)+'"'+dis+'></td><td><input class="num" data-pi="'+k+'" inputmode="decimal" value="'+esc(r.I)+'"'+dis+'></td><td><input class="num" data-pp="'+k+'" inputmode="decimal" value="'+esc(r.P)+'"'+dis+'></td></tr>';};
+  var m='<div class="q"><p><span class="task-step">1. Doppelter Wind.</span> Messt das Windrad bei <b>3 m/s</b> und bei <b>6 m/s</b> (Steuerpult: Windrad, Last angeschlossen) und berechnet jeweils P.</p><div class="tw"><table class="mt"><thead><tr><th>Wind</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P<small>in W</small></th></tr></thead><tbody>'+row('r3',3)+row('r6',6)+'</tbody></table></div>'+
+    (s.mOk?'':'<div class="row"><button class="btn pri" type="button" id="c6m">Prüfen</button></div>')+'<p class="fb" id="fb6m"></p></div>';
+  var f=s.mOk?'<div class="q"><p>Der Wind ist doppelt so schnell. Wievielmal so groß ist die Leistung?</p><div class="row"><span>P(6 m/s) : P(3 m/s) =</span><input class="num'+(s.facOk?' ok':'')+'" id="fac" inputmode="decimal" value="'+esc(s.fac)+'"'+(s.facOk?' disabled':'')+'>'+(s.facOk?'':'<button class="btn pri" type="button" id="c6f">Prüfen</button>')+'</div><p class="fb" id="fb6f"></p></div>':'';
+  var tw=s.facOk?mcHTML('tow',QTOW.q,QTOW.o,s.tow,QTOW.a):'';
+  var k=s.towOk?'<div class="q"><p><span class="task-step">2. Was kostet es?</span> Das Solarmodul kostet <b>300 €</b>, das Windrad <b>3000 €</b>. Eine kWh spart <b>0,35 €</b>. Nach wie vielen Jahren hat sich das Gerät an eurem Standort bezahlt gemacht?</p>'+
+    '<div class="row"><span>Solarmodul:</span><input class="num'+(s.ksOk?' ok':'')+'" id="ks" inputmode="decimal" value="'+esc(s.ks)+'"'+(s.ksOk?' disabled':'')+'><span>Jahre</span></div><div class="row"><span>Windrad:</span><input class="num'+(s.kwOk?' ok':'')+'" id="kw" inputmode="decimal" value="'+esc(s.kw)+'"'+(s.kwOk?' disabled':'')+'><span>Jahre</span>'+(s.ksOk&&s.kwOk?'':'<button class="btn pri" type="button" id="c6k">Prüfen</button>')+'</div><p class="fb" id="fb6k"></p>'+(s.ksOk&&s.kwOk?'':tipHTML('s6k',['Ersparnis pro Jahr = Energie in kWh · 0,35 €.','Jahre = Preis : Ersparnis pro Jahr. Beispiel: 300 € : 100 € = 3 Jahre.']))+'</div>':'';
+  var done=s.ksOk&&s.kwOk;if(done)finish(4);
+  $('task').innerHTML=head(4,'Für Profis: Wissen für die Besprechung')+(st.s4.ewOk?'':'<p class="note">Rechnet zuerst in Station 4 eure Jahresenergie aus.</p>')+m+f+tw+k+(done?'<p class="win"><b>Profi!</b> Bringt euer Wissen in die Besprechung ein.</p>'+saveCTA(true):'');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pu],[data-pi],[data-pp]'),function(inp){inp.addEventListener('input',function(){var kk=inp.dataset.pu||inp.dataset.pi||inp.dataset.pp,r=s[kk];if(inp.dataset.pu)r.U=inp.value;else if(inp.dataset.pi)r.I=inp.value;else r.P=inp.value;save();});});
+  if($('c6m'))$('c6m').addEventListener('click',function(){var fb=$('fb6m'),bad=[['r3',3],['r6',6]].filter(function(x){var r=s[x[0]],mm=windM(x[1],true),U=num(r.U),I=num(r.I);return isNaN(U)||isNaN(I)||Math.abs(U-mm.U)>0.03*mm.U+0.15||Math.abs(I-mm.I)>0.03*mm.I+0.06||!okP(r);});
+    tryInc('s6m',!bad.length,bad.length);if(!bad.length){s.mOk=true;save();r6();return;}fb.className='fb bad';fb.textContent='Noch nicht passend bei '+bad.map(function(x){return x[1]+' m/s';}).join(' und ')+'. Stellt die Windgeschwindigkeit genau ein und rechnet P = U · I.';
+    showHelp(fb,'s6m',function(){[['r3',3],['r6',6]].forEach(function(x){var mm=windM(x[1],true);s[x[0]]={U:fmt(mm.U,1),I:fmt(mm.I,2),P:fmt(Math.round(mm.U*10)/10*Math.round(mm.I*100)/100,0)};});s.mOk=true;save();r6();});});
+  if($('fac'))$('fac').addEventListener('input',function(){s.fac=this.value;save();});
+  if($('c6f'))$('c6f').addEventListener('click',function(){var v=num(s.fac),w=num(s.r6.P)/num(s.r3.P),fb=$('fb6f'),ok=!isNaN(v)&&Math.abs(v-w)<=0.6;tryInc('s6f',ok,s.fac);
+    if(ok){s.facOk=true;save();r6();return;}fb.className='fb bad';fb.textContent=Math.abs(v-2)<0.3?'Nicht doppelt! Teilt die beiden Leistungen durch einander.':'Noch nicht. Rechnet P(6 m/s) : P(3 m/s).';showHelp(fb,'s6f',function(){s.fac=fmt(w,0);s.facOk=true;save();r6();});});
+  if(s.facOk)helpMsg('fb6f','Richtig! Doppelter Wind bringt etwa die achtfache Leistung.');
+  if(s.facOk)mcBind('tow',QTOW,s,'tow','s6tow',r6);
+  if($('ks'))$('ks').addEventListener('input',function(){s.ks=this.value;save();});if($('kw'))$('kw').addEventListener('input',function(){s.kw=this.value;save();});
+  if($('c6k'))$('c6k').addEventListener('click',function(){var fb=$('fb6k'),ws=300/(num(st.s4.es)*PRICE),ww=3000/(num(st.s4.ew)*PRICE),vs=num(s.ks),vw=num(s.kw);
+    s.ksOk=!isNaN(vs)&&Math.abs(vs-ws)<=Math.max(0.3,0.05*ws);s.kwOk=!isNaN(vw)&&Math.abs(vw-ww)<=Math.max(0.3,0.05*ww);tryInc('s6k',s.ksOk&&s.kwOk,s.ks+'/'+s.kw);save();
+    if(s.ksOk&&s.kwOk){r6();return;}fb.className='fb bad';fb.textContent=(s.ksOk?'Solarmodul stimmt. ':'')+(s.kwOk?'Windrad stimmt. ':'')+'Rechnet: Preis : (kWh · 0,35 €).';
+    tipNudge(fb,'s6k',1);showHelp(fb,'s6k',function(){s.ks=fmt(ws,1);s.kw=fmt(ww,1);s.ksOk=s.kwOk=true;save();r6();});});
+  bindTips(r6);bindCTA();}
 
-/* Station 5: Merksatz */
-var WORDS=['elektrische','Generator','P = U · I','Last','Leistung','regenerativ'];
-var GAPS=[{id:'g1',pre:'Ein Solarmodul wandelt Strahlungsenergie (Licht) direkt in',post:'Energie um.',a:0},{id:'g2',pre:'In einer Windkraftanlage treibt der Rotor einen',post:'an.',a:1},{id:'g3',pre:'Die Leistung bestimmt man aus Spannung und Stromstärke:',post:'.',a:2},{id:'g4',pre:'Man misst immer mit angeschlossener',post:', sonst fließt kein Strom.',a:3},{id:'g5',pre:'Bei schwächerem Wind sinkt die',post:'stark.',a:4},{id:'g6',pre:'Sonne und Wind sind',post:', liefern aber nicht immer gleich viel Strom.',a:5}];
-function r5(){var s=st,html=head(4,'Das nehmen wir mit');
-  if(!s.gapsOk)html+='<div class="q gap"><p><b>Lückentext:</b> Wähle das passende Wort.</p><ol>'+GAPS.map(function(g){var v=s.gaps[g.id];return '<li>'+g.pre+' <select class="sel" data-g="'+g.id+'"><option value="">…</option>'+WORDS.map(function(w,j){return '<option value="'+j+'"'+(v===j?' selected':'')+'>'+w+'</option>';}).join('')+'</select> '+g.post+'</li>';}).join('')+'</ol><div class="row"><button class="btn pri" type="button" id="c5">Prüfen</button></div><p class="fb" id="fb5"></p></div>';
-  else{html+='<div class="merk"><h3>Merksatz: Energie aus Sonne und Wind</h3><ol style="margin:0;padding-left:1.2em">'+GAPS.map(function(g){return '<li>'+g.pre+' <span class="k">'+WORDS[g.a]+'</span>'+(g.post.charAt(0)===','||g.post==='.'?'':' ')+g.post+'</li>';}).join('')+'</ol></div>'+saveCTA(true);finish(4);}
-  html+=(st.done[4]?'<p class="win"><b>Fertig!</b> Schnell gewesen? Probiert den Profi-Zusatz.</p>':'')+'<div class="row">'+nextBtn(4)+'</div>';$('task').innerHTML=html;
-  Array.prototype.forEach.call(document.querySelectorAll('[data-g]'),function(sl){sl.addEventListener('change',function(){s.gaps[sl.dataset.g]=sl.value===''?null:+sl.value;sl.className='sel';save();});});
-  if($('c5'))$('c5').addEventListener('click',function(){var fb=$('fb5'),miss=GAPS.filter(function(g){return s.gaps[g.id]==null;}).length;if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Wörter.';return;}
-    var wrong=GAPS.filter(function(g){return s.gaps[g.id]!==g.a;});tryInc('s5gaps',!wrong.length,wrong.map(function(g){return g.id;}).join(','));
-    GAPS.forEach(function(g){document.querySelector('[data-g="'+g.id+'"]').className='sel '+(s.gaps[g.id]===g.a?'ok':'bad');});
-    if(!wrong.length){s.gapsOk=true;save();r5();return;}fb.className='fb bad';fb.textContent=wrong.length+(wrong.length>1?' Lücken stimmen':' Lücke stimmt')+' noch nicht. Jedes Wort passt genau einmal.';
-    showHelp(fb,'s5gaps',function(){GAPS.forEach(function(g){s.gaps[g.id]=g.a;});save();r5();});});
-  bindCTA();bindNext();}
-
-/* Profi */
-var C6a={id:'c6a',q:'Auf ein Solarmodul (0,5 m²) fallen bei Sonnenschein <b>500 W</b> Lichtleistung. Es liefert <b>100 W</b> elektrische Leistung. Wie groß ist der Wirkungsgrad?',unit:'%',ans:20,tol:0.3,errs:[[0.2,0.01,'Fast! Gib den Wirkungsgrad in Prozent an.'],[500,1,'Du hast falsch herum geteilt. η = genutzte : zugeführte Leistung.']],tips:['η = genutzte Leistung : zugeführte Leistung · 100 %.','100 W : 500 W = ?'],sol:'Richtig! η = 100 W : 500 W = 0,2 = 20 %.'};
-var Q6b={q:'Wo bleiben die übrigen 80 % der Lichtenergie?',o:['Sie erwärmen das Modul und werden reflektiert, die Energie wird entwertet.','Sie werden im Modul gespeichert.','Sie verschwinden.'],a:0,ok:'Genau! Solarmodule werden in der Sonne warm. Warme Module arbeiten sogar etwas schlechter.',bad:['','Ein Solarmodul ist kein Speicher. Fass mal eins in der Sonne an.','Energie verschwindet nie.']};
-function r6(){stationRender(5,'Wirkungsgrad eines Solarmoduls',null,[Cq(C6a,r6),Mq('m6b',Q6b,r6)],'<b>Profi!</b> Gute Solarmodule erreichen heute etwa 20 bis 23 %.',null,function(){return saveCTA(true);});}
-
-/* ---------- Ergebnisse ---------- */
-var TL=[['m1a','Solarmodul · Energieumwandlung'],['m1b','Solarmodul · Spannung ohne Last'],['m1c','Solarmodul · Stromstärke ohne Last'],['s2l100','Messen · mit Last'],['s2open','Messen · ohne Last'],['c2','Messen · Anteil in Prozent'],['m3a','Windkraft · Energieumwandlung'],['c3b','Windkraft · P bei 3 m/s'],['c3c','Windkraft · P bei 6 m/s'],['m3d','Windkraft · doppelte Windgeschwindigkeit'],['s4sort','Vergleich · Zuordnen'],['m4b','Vergleich · Gemeinsamkeit'],['m4c','Vergleich · regenerativ'],['s5gaps','Merksatz · Lückentext'],['c6a','Profi · Wirkungsgrad'],['m6b','Profi · Energieentwertung']];
-function resText(){var r=st.res||{},d=new Date(),L=[];
-  L.push('SONNE-WIND-LABOR · Wie gewinnen wir Energie aus Sonne und Wind?');
+/* ---------- Ergebnisse als Text ---------- */
+var TL=[['s2circ','Aufbauen · Schaltung'],['s2last','Aufbauen · Warum mit Last'],['s3','Messen · Messwerte und P'],['s4s','Jahresenergie · Solarmodul'],['s4w','Jahresenergie · Windrad'],['s4cmp','Jahresenergie · Vergleich'],['s4sent','Empfehlung'],['s6m','Profi · doppelter Wind messen'],['s6f','Profi · Faktor'],['s6tow','Profi · hohe Türme'],['s6k','Profi · Kosten']];
+function resText(){var r=st.res||{},d=new Date(),L=[],g=st.grp?G():null,S=st.s3.rows;
+  L.push('SONNE-WIND-LABOR · Sonne oder Wind – was lohnt sich wo?');
   L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
+  L.push('Standort: '+(g?st.grp+' · '+g.name+' (Wind '+fmt(g.v,1)+' m/s, '+g.h+' Volle-Sonne-Stunden)':'keiner gewählt'));
   L.push(standLine());
-  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));L.push('');
-  L.push('MEINE VERMUTUNG: '+(st.guess||'keine gewählt')+(st.guess==='B'?'  → stimmt':'  → richtig ist B (Spannung sinkt kaum)'));L.push('');
-  L.push('MESSTABELLE SOLARMODUL');MROWS.forEach(function(x){var m=st.meas[x.id]||{};L.push('  '+x.lab+': U = '+(m.U||'–')+' V, I = '+(m.I||'–')+' mA, P = '+(m.P||'–')+' mW'+(m.ok?'  ✓':''));});L.push('  Anteil 95 mW von 475 mW: '+((st.c.c2||{}).v||'–')+' %'+((st.c.c2||{}).ok?'  ✓':''));L.push('');
-  L.push('WINDKRAFT');L.push('  P bei 3 m/s: '+((st.c.c3b||{}).v||'–')+' mW · P bei 6 m/s: '+((st.c.c3c||{}).v||'–')+' mW');L.push('');
-  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');var tt=triesLines(L,TL,'c6');
-  var tipsN=Object.keys(st.tips).reduce(function(a,k){return a+st.tips[k];},0);L.push('  Tipps insgesamt: '+tipsN);
-  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,guess:st.guess,meas:st.meas,tries:st.tries,tips:st.tips,help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
-  var json=JSON.stringify(data);L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');L.push('#DATEN '+json);L.push('#PRUEF '+fnv('SW-v1|'+json));
+  L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
+  L.push('');
+  L.push('VERMUTUNG: '+(st.guess?Q1G.filter(function(o){return o.k===st.guess;})[0].t.replace(/<[^>]+>/g,''):'keine'));
+  L.push('');
+  L.push('MESSUNG (U in V, I in A, P in W)');
+  L.push('  Solarmodul: U = '+(S.s.U||'–')+', I = '+(S.s.I||'–')+', P = '+(S.s.P||'–'));
+  L.push('  Windrad:    U = '+(S.w.U||'–')+', I = '+(S.w.I||'–')+', P = '+(S.w.P||'–')+(st.s3.ok?'  ✓':''));
+  L.push('');
+  L.push('JAHRESENERGIE');
+  L.push('  Solarmodul: '+(st.s4.es||'–')+' kWh'+(st.s4.esOk?'  ✓':''));L.push('  Windrad:    '+(st.s4.ew||'–')+' kWh'+(st.s4.ewOk?'  ✓':''));
+  L.push('  Empfehlung: '+((st.s4.sent||'').trim()||'(leer)'));
+  L.push('');
+  L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
+  var tt=triesLines(L,TL,'s6');
+  var tk=Object.keys(st.tips||{}),tn=tk.reduce(function(a,k){return a+st.tips[k];},0);
+  L.push('  Tipp-Karten genutzt: '+(tn?tn:'keine'));var ek=Object.keys(st.early||{});L.push('  Tipp-Karte vor dem ersten Versuch angetippt: '+(ek.length?ek.length+'-mal':'nein'));
+  L.push('');
+  L.push('PROFI-ZUSATZ ★');
+  L.push('  Doppelter Wind: P(3 m/s) = '+(st.s6.r3.P||'–')+' W, P(6 m/s) = '+(st.s6.r6.P||'–')+' W, Faktor '+(st.s6.fac||'–')+(st.s6.facOk?'  ✓':''));
+  L.push('  Amortisation: Solarmodul '+(st.s6.ks||'–')+' Jahre, Windrad '+(st.s6.kw||'–')+' Jahre'+(st.s6.ksOk&&st.s6.kwOk?'  ✓':''));
+  var data={v:3,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),grp:st.grp,done:st.done,guess:st.guess,rows:S,es:st.s4.es,ew:st.s4.ew,sent:st.s4.sent||'',tries:st.tries,tips:st.tips||{},early:st.early||{},help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var json=JSON.stringify(data);
+  L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
+  L.push('#DATEN '+json);L.push('#PRUEF '+fnv('SW-v3|'+json));
   return L.join('\r\n');}
 
+/* ---------- Gesamt ---------- */
 var lastSt=null;
-function render(){if(st.station!==lastSt){if(STATIONS[st.station].key==='s2'){st.load=true;st.light=100;}if(STATIONS[st.station].key==='s1'){st.light=100;}lastSt=st.station;}
-  renderRoute();renderCtl();[r1,r2,r3,r4,r5,r6][st.station]();resize();}
+function render(){if(st.station!==lastSt){if(st.station===2&&st.grp){st.load=true;}lastSt=st.station;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r6][st.station]();resize();}
 bindReset();initSave();
 window.addEventListener('resize',resize);
 if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
-load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;if(st.station>0&&!st.grp)st.station=0;
 render();remind();startDialog();requestAnimationFrame(loop);
 })();
 
