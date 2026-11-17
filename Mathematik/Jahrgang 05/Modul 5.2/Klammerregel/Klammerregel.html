@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Klammerregel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+html,body{margin:0}
+
+
+/* Layout: a single working column over squared exercise-book paper; the grid of Rechenkästchen is the hero. */
+:root{
+  --paper:#F7FAFD; --line:#D3E0EE; --surface:#FFFFFF; --ink:#1C2A4A; --muted:#55627F;
+  --carry:#D3263A; --ok:#17844F; --okbg:#E3F5EB; --badbg:#FCE6E9; --focus:#2B6CD8;
+  --orange:#E97A00; --pink:#CF0A6E; --purple:#6C3A98; --soft:#EEF3F9;
+  --f-head:"Fredoka","Andika","Trebuchet MS",sans-serif;
+  --f-body:"Andika","Segoe UI",system-ui,sans-serif;
+  --cell:clamp(38px,9.4vw,54px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:24px 24px;}
+.wrap{max-width:860px;margin:0 auto;padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
+h1{font-family:var(--f-head);font-weight:600;font-size:1.6rem;margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .pm{color:var(--carry)}
+h2{font-family:var(--f-head);font-weight:600;font-size:1.3rem;margin:0 0 8px}
+h3{font-family:var(--f-head);font-weight:500;font-size:1.1rem;margin:0 0 6px}
+.hright{display:flex;gap:8px;align-items:center}
+.stars{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars svg{width:20px;height:20px;fill:#F2B705}
+button{font:inherit;color:inherit;cursor:pointer}
+.langbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700}
+nav.tabs{display:flex;gap:6px;margin:14px 0 12px;overflow-x:auto}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:10px;font-family:var(--f-head);font-weight:500;font-size:1.02rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 0 var(--line)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lvl{border:2px solid var(--c);background:var(--surface);border-radius:12px;padding:8px 6px;text-align:center;font-family:var(--f-head);font-weight:500;line-height:1.2}
+.lvl small{display:block;font-family:var(--f-body);font-weight:400;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.lvl[aria-pressed="true"]{background:var(--c);color:#fff}
+.lvl[aria-pressed="true"] small{color:#fff}
+.lvl1{--c:var(--orange)} .lvl2{--c:var(--pink)} .lvl3{--c:var(--purple)}
+.taskhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;color:#fff;background:var(--c)}
+.instr{margin:4px 0 12px}
+.word{background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:1.05rem}
+.gridbox{overflow-x:auto;padding:6px 0 4px}
+.cgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-variant-numeric:tabular-nums;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*.6);font-weight:700;position:relative}
+.cell.lab{font-size:calc(var(--cell)*.32);color:var(--muted);font-weight:700}
+.cell.sign{color:var(--ink)}
+.cell.in{cursor:pointer;background:color-mix(in srgb,var(--surface) 70%,transparent);border-radius:6px;margin:3px;width:calc(var(--cell) - 6px);height:calc(var(--cell) - 6px);border:2px dashed var(--muted)}
+.cell.in.active{border:3px solid var(--focus);background:var(--surface)}
+.cell.carry{font-size:calc(var(--cell)*.42);color:var(--carry)}
+.cell.carry.in{border-color:var(--carry);border-width:1.5px;width:calc(var(--cell) - 18px);height:calc(var(--cell) - 18px);margin:9px}
+.cell.carry.in.active{border-width:3px}
+.cell.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.cell.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.cell.sol{color:var(--focus)}
+.cell.hl{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:4px}
+.rule{grid-column:1/-1;height:3px;background:var(--ink);border-radius:2px;margin:0 2px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px auto 0;max-width:520px}
+.keypad button{border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:52px;font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.keypad button.wide{grid-column:span 2;font-size:1rem}
+.keypad button:active{transform:translateY(1px)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-family:var(--f-head);font-weight:500;font-size:1.05rem;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:#FFF4CC;color:#5A4500;border-color:#E8CF6A}
+:root[data-theme="dark"] .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}}
+.choices{display:grid;gap:8px;margin:8px 0}
+.choice{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.choice.ok{border-color:var(--ok);background:var(--okbg)}
+.choice.bad{border-color:var(--carry);background:var(--badbg)}
+.msg{margin-top:12px;border-radius:12px;padding:10px 14px;font-weight:700}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--carry)}
+.msg.info{background:var(--soft);color:var(--ink);font-weight:400}
+.tipcard{margin-top:12px;border:2px solid #E8CF6A;background:#FFFBEA;color:#3D3000;border-radius:14px;padding:12px 14px}
+:root[data-theme="dark"] .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.tipcard b{font-family:var(--f-head);font-weight:600}
+.claimed{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.progress{color:var(--muted);font-size:.9rem;text-align:center;margin-top:10px;font-variant-numeric:tabular-nums}
+/* explanation */
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px}
+.term{background:var(--soft);border-radius:12px;padding:12px;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.term .eq{font-size:1.4rem;font-weight:700;margin:4px 0}
+.term .lbl{font-size:.85rem;color:var(--muted)}
+.player{display:grid;gap:12px}
+.steptext{background:var(--soft);border-radius:12px;padding:12px 14px;min-height:4.5em}
+.stepnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.stepnav .count{color:var(--muted);font-variant-numeric:tabular-nums;min-width:4em;text-align:center}
+.section{margin-bottom:16px}
+/* merkzettel */
+.merk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.merk ol{margin:0;padding-left:1.3em;display:grid;gap:4px}
+.err{display:grid;gap:10px}
+.erritem{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;background:var(--badbg);border-radius:12px;padding:10px 12px}
+.erritem .ex{font-variant-numeric:tabular-nums;font-weight:700}
+.erritem .ex s{color:var(--carry)}
+.gloss{width:100%;border-collapse:collapse;font-size:.95rem}
+.gloss td,.gloss th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+/* tip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.fcard{perspective:900px;min-height:190px;border:none;background:none;padding:0;text-align:left}
+.fin{position:relative;width:100%;height:100%;min-height:190px;transition:transform .45s;transform-style:preserve-3d}
+.fcard[aria-pressed="true"] .fin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.front{background:var(--surface)}
+.front .q{font-family:var(--f-head);font-weight:600;font-size:1.15rem}
+.front .hint{margin-top:auto;font-size:.82rem;color:var(--muted)}
+.back{background:#FFFBEA;color:#3D3000;transform:rotateY(180deg);border-color:#E8CF6A;font-size:.98rem;overflow:auto}
+:root[data-theme="dark"] .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex:none}
+/* partner work */
+.partner{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:12px}
+.partner .who{flex:1 1 260px;min-width:0}
+.partner .pbtns{display:flex;gap:6px;flex-wrap:wrap}
+.seg{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.9rem}
+.seg[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.names{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.names label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:2px;flex:1 1 140px}
+.names input{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.swap{margin-top:12px;border:2px solid var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface));border-radius:14px;padding:12px 14px}
+.swap p{margin:4px 0}
+/* diagnosis */
+.why{margin-top:12px;border:2px solid var(--carry);background:var(--badbg);border-radius:14px;padding:12px 14px}
+.why b.h{font-family:var(--f-head);font-weight:600;display:block;margin-bottom:4px}
+.why .cardref{margin-top:8px;background:var(--surface);border-radius:10px;padding:8px 10px;border:1px solid var(--line)}
+.linkbtn{border:none;background:none;color:var(--focus);font-weight:700;padding:4px 0;text-decoration:underline}
+.colhelp{text-align:center;color:var(--focus);margin:0 0 4px}
+/* experts */
+.xhead{margin-bottom:12px}
+.xhead p{margin:4px 0 0;color:var(--muted)}
+.numchip{display:inline-block;border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:0 6px;margin:0 1px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.5}
+.numchip[aria-pressed="true"]{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 18%,var(--surface))}
+.numchip.wrong{border-color:var(--carry);background:var(--badbg)}
+.colbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.colbtns button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:700}
+.colbtns button.bad{border-color:var(--carry);background:var(--badbg)}
+.colbtns button.ok{border-color:var(--ok);background:var(--okbg)}
+.cell.errcol{outline:3px solid var(--carry);outline-offset:-3px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){.fin{transition:none}}
+@media (max-width:520px){.erritem{grid-template-columns:1fr} .keypad{grid-template-columns:repeat(5,1fr)} .keypad button.wide{grid-column:span 5} .levels{gap:6px} .lvl{font-size:.92rem}}
+
+/* Klammerprofi additions */
+h1 .br{color:var(--focus)}
+.term{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;font-variant-numeric:tabular-nums;text-align:center;margin:8px 0 4px;line-height:1.3}
+.term .bk{color:var(--focus)}
+.term .hot{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:8px;padding:0 4px}
+.steps{display:grid;gap:6px;justify-content:center;margin:6px 0 4px}
+.sline{display:flex;align-items:center;gap:8px;font-size:clamp(1.3rem,5vw,1.9rem);font-weight:700;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.sline .eq{color:var(--muted);min-width:1em}
+.sline .bk{color:var(--focus)}
+.sline .done{color:var(--ok)}
+.ans{display:inline-flex;align-items:center;justify-content:center;min-width:3.2em;height:1.6em;padding:0 8px;border:2px dashed var(--muted);border-radius:8px;background:var(--surface);color:var(--ink)}
+.ans.active{border:3px solid var(--focus)}
+.ans.bad{border-style:solid;border-color:var(--carry);background:var(--badbg);color:var(--carry)}
+.ans.sol{color:var(--focus);border-style:solid}
+.stepnote{text-align:center;color:var(--muted);font-size:.95rem;margin:0}
+.tomlines{display:grid;gap:6px;justify-content:center;margin:8px 0}
+.tomline{display:flex;gap:10px;align-items:center;font-size:clamp(1.2rem,4.6vw,1.7rem);font-weight:700;font-variant-numeric:tabular-nums}
+.tomline .lab{font-size:.8rem;font-weight:700;color:var(--muted);min-width:4.5em}
+.tomline.mark{outline:3px solid var(--carry);outline-offset:4px;border-radius:6px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:8px 0}
+.pair .term{background:var(--soft);border-radius:12px;padding:10px;margin:0;font-size:clamp(1.3rem,5vw,1.9rem)}
+/* input intro */
+.introbox h3{margin:0 0 6px;font-family:var(--f-head);font-weight:600;font-size:1.2rem}
+.intro{display:grid;gap:14px}
+.dice{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.die{width:64px;height:64px;border-radius:14px;background:var(--surface);border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums}
+.die b{font-size:1.5rem;line-height:1}
+.die small{font-size:.7rem;color:var(--muted)}
+.introbox{background:var(--soft);border-radius:14px;padding:14px 16px}
+.introbox p{margin:6px 0}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox b{font-family:var(--f-head);font-weight:600}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots span.on{background:var(--ink)}
+.way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.15rem,4.4vw,1.6rem);font-weight:700;font-variant-numeric:tabular-nums}
+.way .eq{color:var(--muted)}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1 id="apptitle"></h1>
+    <div class="hright">
+      <div class="stars" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17.4l-6.1 3.4 1.4-6.7-5-4.6 6.8-.8z"/></svg><span id="starcount">0</span></div>
+      <button class="langbtn" id="langbtn" type="button"></button>
+    </div>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+const DEFAULT_LANG = "de";
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const MINUS = "−";
+/* ======================= texts ======================= */
+const T = {
+de: {
+  title: 'Klammerprofi <span class="br">( )</span>', other: "Türkçe",
+  tabs: ["Input", "Üben", "Experten", "Merkzettel", "Tippkarten"],
+  lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]],
+  solvedN: n => `${n} gelöst`,
+  modes: { calc: "Klammer zuerst rechnen", first: "Was rechnest du zuerst?", same: "Gleicher Wert?", smart: "Geschickt rechnen", set: "Klammern setzen", word: "Sachaufgabe", errpro: "Fehlersuche für Profis", wordpro: "Zahlen aus dem Text", setpro: "Klammer-Rätsel", nested: "Klammer in der Klammer" },
+  iCalc: "Rechne Schritt für Schritt. Tippe die Zahl für das leere Kästchen ein und drücke „Prüfen“.",
+  iFirst: "Was rechnest du bei diesem Term zuerst?",
+  iSame: "Haben beide Terme denselben Wert? Rechne beide aus.",
+  sameYes: "Gleicher Wert", sameNo: "Verschiedener Wert",
+  sameOk: (v1, v2) => `Richtig! Links: ${v1}, rechts: ${v2}.`,
+  sameBad: (v1, v2) => `Rechne noch einmal nach: Links ergibt ${v1}, rechts ${v2}.`,
+  iSmart: "Rechne geschickt: Welcher Term hat denselben Wert und ist leichter?",
+  iSet: (t) => `Wo muss die Klammer stehen, damit das Ergebnis ${t} ist?`,
+  iWord: "Lies die Aufgabe. Welcher Term passt?",
+  iWord2: "Richtig! Rechne jetzt Schritt für Schritt.",
+  noBr: "ohne Klammer",
+  check: "Prüfen", tip: "Tipp", next: "Nächste Aufgabe", show: "Lösung zeigen", del: "Löschen",
+  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Klammerprofi.", "Richtig! Weiter so."],
+  stepOk: "Richtig! Weiter mit dem nächsten Schritt.",
+  bad: "Noch nicht ganz. Prüfe diesen Schritt noch einmal.",
+  bad2: "Schau dir den Tipp an oder lass dir die Lösung zeigen.",
+  empty: "Gib zuerst eine Zahl ein.",
+  solShown: "Hier ist die Lösung. Vergleiche Schritt für Schritt und rechne dann die nächste Aufgabe.",
+  pickBad: "Das passt nicht. Denk an die Klammerregel: Was in der Klammer steht, rechnest du zuerst.",
+  answer: "Antwort",
+  tipGen: "Klammerregel: Was in der Klammer steht, rechnest du zuerst. Ohne Klammer rechnest du von links nach rechts.",
+  tipNext: sub => `Rechne jetzt: <b>${sub}</b>`,
+  tip3: "Tipp 3: Dieser Schritt wird dir vorgemacht. Rechne danach allein weiter.",
+  whyTitle: "Warum stimmt das nicht?",
+  dIgnored: "Du hast einfach von links nach rechts gerechnet. Die Klammer musst du aber zuerst ausrechnen!",
+  dInner: sub => `In der Klammer steht <b>${sub}</b>. Rechne nur diesen Teil und achte auf das Rechenzeichen.`,
+  dSign: "Achte auf das Rechenzeichen! Plus und Minus sind vertauscht.",
+  dOuter: sub => `Jetzt rechnest du <b>${sub}</b>. Rechne noch einmal genau.`,
+  cardBtn: n => `Tippkarte ${n} ansehen`,
+  pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pNames: "Namen", pA: "Partner A", pB: "Partner B",
+  pTurn: (a, b) => `<b>${a}</b> rechnet. <b>${b}</b> schaut zu, prüft mit und hilft beim Erklären.`,
+  pSwap: (a, b) => `Wechsel! Jetzt rechnet <b>${b}</b>. Vorher erklärt <b>${a}</b> kurz den Rechenweg.`,
+  pDiscuss: "Besprecht zusammen:",
+  pPrompts: ["Was habt ihr zuerst gerechnet? Warum?", "Wäre das Ergebnis ohne Klammer anders?", "Wo steht die Klammer und was gehört hinein?", "Erklärt die Klammerregel mit eigenen Worten.", "Kann man die Aufgabe auch geschickter rechnen?", "Lest den Term laut mit Fachbegriffen vor."],
+  xTitle: "Expertenaufgaben",
+  xIntro: "Schwierige Aufgaben für Profis: Fehler finden, Zahlen aus Texten herauslesen, Klammer-Rätsel und Klammern in Klammern.",
+  xSolved: n => `${n} Expertenaufgaben gelöst`,
+  iErr1: "Tom hat diesen Term ausgerechnet und einen Fehler gemacht. In welcher Zeile steckt der erste Fehler?",
+  line: n => `Zeile ${n}`,
+  errLineBad: "In dieser Zeile stimmt es noch. Rechne selbst nach und vergleiche.",
+  errLineOk: n => `Richtig! Der Fehler steckt in Zeile ${n}.`,
+  iErr2: "Was hat Tom falsch gemacht?",
+  reasons: { ignored: "Er hat die Klammer nicht zuerst gerechnet.", inner: "Er hat sich in der Klammer verrechnet.", outer: "Er hat sich im letzten Schritt verrechnet." },
+  reasonBad: "Das passt nicht. Vergleiche Toms Zeile genau mit deiner eigenen Rechnung.",
+  iErr3: "Gut erkannt! Rechne den Term jetzt richtig.",
+  tom: "Tom",
+  iWp1: "Lies genau. Tippe alle Zahlen an, die du zum Rechnen brauchst. Achtung: Nicht jede Zahl ist wichtig!",
+  checkNums: "Zahlen prüfen",
+  numsMissing: "Dir fehlt noch eine wichtige Zahl. Lies die Frage noch einmal.",
+  numsExtra: x => `Die Zahl ${x} brauchst du nicht. Sie hilft nicht bei der Frage.`,
+  numsOk: "Richtig! Das sind die wichtigen Zahlen.",
+  iNested: "Hier steht eine Klammer in einer Klammer. Rechne immer die innerste Klammer zuerst.",
+  words: {
+    w1: (a, b, c) => [`Lea hat ${a} € gespart. Sie kauft ein Buch für ${b} € und ein Spiel für ${c} €. Wie viel Geld hat sie danach noch?`, r => `Lea hat noch ${r} €.`],
+    w2: (a, b, c) => [`In Jahrgang 5 sind ${a} Kinder, in Jahrgang 6 sind ${b} Kinder. ${c} Kinder fahren nicht mit zum Ausflug. Wie viele Kinder fahren mit?`, r => `${r} Kinder fahren mit zum Ausflug.`],
+    w3: (a, b, c) => [`Ein Bus fährt mit ${a} Fahrgästen los. An der ersten Haltestelle steigen ${b} Fahrgäste aus und ${c} Fahrgäste ein. Wie viele Fahrgäste sind jetzt im Bus?`, r => `Jetzt sind ${r} Fahrgäste im Bus.`],
+    w4: (a, b, c, d) => [`Beim Spiel „Schaffst du 70?“ hat Ali in drei Runden ${b}, ${c} und ${d} Punkte. Wie viele Punkte fehlen ihm noch bis 70?`, r => `Ali fehlen noch ${r} Punkte.`]
+  },
+  wp: {
+    x1: (a, b, c) => [`Emre hat ⟦${fmt(a)}⟧ € gespart. Im Elektromarkt kauft er ⟦2⟧ Controller für zusammen ⟦${fmt(b)}⟧ € und ein Spiel für ⟦${fmt(c)}⟧ €. Wie viel Geld hat er danach noch?`, r => `Emre hat noch ${fmt(r)} €.`],
+    x2: (a, b, c) => [`Ein Zug mit ⟦8⟧ Wagen fährt um ⟦14⟧ Uhr mit ⟦${fmt(a)}⟧ Fahrgästen los. In Köln steigen ⟦${fmt(b)}⟧ Fahrgäste aus und ⟦${fmt(c)}⟧ Fahrgäste ein. Wie viele Fahrgäste sind jetzt im Zug?`, r => `Jetzt sind ${fmt(r)} Fahrgäste im Zug.`],
+    x3: (a, b, c) => [`Das Stadion hat ⟦${fmt(a)}⟧ Plätze. Zum Spiel am ⟦3⟧. Mai kommen ⟦${fmt(b)}⟧ Fans der Heimmannschaft und ⟦${fmt(c)}⟧ Gästefans. Wie viele Plätze bleiben frei?`, r => `Es bleiben ${fmt(r)} Plätze frei.`]
+  },
+  /* input */
+  inTitle: "Die Klammerregel",
+  inNext: "Weiter", inBack: "Zurück", inGo: "Jetzt üben",
+  in1h: "Das Würfelspiel „Schaffst du 70?“",
+  in1: "Mia spielt „Schaffst du 70?“. In drei Runden würfelt sie diese Punkte:",
+  rnd: n => `Runde ${n}`,
+  in1q: "Wie viele Punkte fehlen Mia noch bis 70?",
+  in2h: "Weg 1: Von links nach rechts",
+  in2: "Mia zieht die Punkte nacheinander ab. Ohne Klammer rechnest du immer von links nach rechts.",
+  in3h: "Weg 2: Erst zusammenzählen",
+  in3: "Mia zählt zuerst alle Punkte zusammen. Das zeigt sie mit einer Klammer. Die Klammer rechnet sie zuerst.",
+  in4h: "Merke: Die Klammerregel",
+  in4a: "Was in der Klammer steht, rechnest du zuerst.",
+  in4b: "Ohne Klammer rechnest du von links nach rechts.",
+  in4c: "Mehrere Zahlen abziehen ist dasselbe wie ihre Summe abziehen:",
+  in5h: "Achtung: Die Klammer kann das Ergebnis ändern!",
+  in5: "Gleiche Zahlen, gleiche Rechenzeichen und trotzdem ein anderes Ergebnis:",
+  in6h: "Teste dich!",
+  in6: "Was rechnest du bei diesem Term zuerst?",
+  in6ok: "Richtig! Die Klammer kommt zuerst. Jetzt kannst du üben.",
+  in6bad: "Noch nicht. Schau, was in der Klammer steht.",
+  merkTitle: "Merkzettel",
+  merkRules: ["Was in der Klammer steht, rechnest du zuerst.", "Ohne Klammer rechnest du von links nach rechts.", "Gibt es eine Klammer in der Klammer, rechnest du die innerste zuerst.", "Schreibe jeden Schritt in eine neue Zeile mit = davor.", "Mehrere Zahlen abziehen: a − b − c = a − (b + c).", "Bei reinen Plus-Aufgaben darfst du Klammern setzen, wie du willst: (a + b) + c = a + (b + c)."],
+  errTitle: "Typische Fehler",
+  errs: [["Klammer nicht zuerst gerechnet", "50 − (20 + 10) = <s>40</s> → richtig 20"], ["Ohne Klammer von rechts gerechnet", "50 − 20 + 10 = <s>20</s> → richtig 40"], ["Klammer weggelassen", "50 − (20 + 10) ist nicht 50 − 20 + 10"], ["Rechenzeichen in der Klammer übersehen", "80 − (30 − 10) = <s>40</s> → richtig 60"]],
+  glossTitle: "Fachbegriffe",
+  gloss: [["Term", "Rechenausdruck, z. B. 70 − (6 + 12)"], ["Wert des Terms", "das Ergebnis, z. B. 52"], ["Klammer ( )", "zeigt, was zuerst gerechnet wird"], ["Summe / Differenz", "Plusaufgabe / Minusaufgabe"]],
+  cardsTitle: "Tippkarten", tapHint: "Tippe zum Umdrehen",
+  cards: [
+    ["Was ist eine Klammer?", "Eine Klammer ( ) zeigt dir, welcher Teil des Terms zusammengehört. Diesen Teil rechnest du zuerst."],
+    ["Was rechne ich zuerst?", "Immer das, was in der Klammer steht. Beispiel: 90 − (30 + 20). Zuerst 30 + 20 = 50, dann 90 − 50 = 40."],
+    ["Und ohne Klammer?", "Dann rechnest du von links nach rechts. Beispiel: 90 − 30 + 20 = 60 + 20 = 80."],
+    ["Wie schreibe ich die Schritte auf?", "Schreibe den Term ab. In die nächste Zeile kommt = und der Term mit dem Ergebnis der Klammer. So geht es weiter, bis nur noch eine Zahl übrig ist."],
+    ["Minus vor der Klammer?", "Pass auf: 80 − (30 + 10) ist nicht dasselbe wie 80 − 30 + 10. Rechne die Klammer zuerst: 80 − 40 = 40."],
+    ["Zwei Klammern?", "Rechne zuerst die linke, dann die rechte Klammer. Zum Schluss rechnest du mit den beiden Ergebnissen."],
+    ["Klammer in der Klammer?", "Rechne von innen nach außen: Erst die innerste Klammer, dann die äußere."],
+    ["Rechentrick", "Mehrere Zahlen abziehen? Zähle sie zuerst zusammen und ziehe die Summe ab: 70 − 6 − 12 − 20 = 70 − (6 + 12 + 20) = 70 − 38 = 32."]
+  ]
+},
+tr: {
+  title: 'Parantez Ustası <span class="br">( )</span>', other: "Deutsch",
+  tabs: ["Giriş", "Alıştırma", "Uzman", "Not kâğıdı", "İpucu kartları"],
+  lv: [["Seviye 1", "turuncu"], ["Seviye 2", "pembe"], ["Seviye 3", "mor"]],
+  solvedN: n => `${n} çözüldü`,
+  modes: { calc: "Önce parantez", first: "Önce neyi hesaplarsın?", same: "Değer aynı mı?", smart: "Akıllıca hesapla", set: "Parantez koy", word: "Problem", errpro: "Uzmanlar için hata arama", wordpro: "Metindeki sayılar", setpro: "Parantez bilmecesi", nested: "Parantez içinde parantez" },
+  iCalc: "Adım adım hesapla. Boş kutu için sayıyı yaz ve „Kontrol et“e bas.",
+  iFirst: "Bu ifadede önce neyi hesaplarsın?",
+  iSame: "İki ifadenin değeri aynı mı? İkisini de hesapla.",
+  sameYes: "Aynı değer", sameNo: "Farklı değer",
+  sameOk: (v1, v2) => `Doğru! Sol: ${v1}, sağ: ${v2}.`,
+  sameBad: (v1, v2) => `Tekrar hesapla: Sol ${v1}, sağ ${v2} çıkıyor.`,
+  iSmart: "Akıllıca hesapla: Hangi ifade aynı değere sahip ve daha kolay?",
+  iSet: (t) => `Sonucun ${t} olması için parantez nereye gelmeli?`,
+  iWord: "Soruyu oku. Hangi ifade uygun?",
+  iWord2: "Doğru! Şimdi adım adım hesapla.",
+  noBr: "parantezsiz",
+  check: "Kontrol et", tip: "İpucu", next: "Sonraki soru", show: "Çözümü göster", del: "Sil",
+  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir parantez ustasısın.", "Doğru! Böyle devam et."],
+  stepOk: "Doğru! Sonraki adıma geç.",
+  bad: "Henüz tam değil. Bu adımı bir daha kontrol et.",
+  bad2: "İpucuna bak ya da çözümü göster.",
+  empty: "Önce bir sayı yaz.",
+  solShown: "İşte çözüm. Adım adım karşılaştır, sonra sonraki soruya geç.",
+  pickBad: "Bu uymuyor. Parantez kuralını düşün: Parantezin içindekini önce hesaplarsın.",
+  answer: "Cevap",
+  tipGen: "Parantez kuralı: Parantezin içindekini önce hesaplarsın. Parantez yoksa soldan sağa hesaplarsın.",
+  tipNext: sub => `Şimdi şunu hesapla: <b>${sub}</b>`,
+  tip3: "3. ipucu: Bu adım sana gösteriliyor. Sonra tek başına devam et.",
+  whyTitle: "Neden yanlış?",
+  dIgnored: "Sadece soldan sağa hesaplamışsın. Ama parantezi önce hesaplaman gerekiyor!",
+  dInner: sub => `Parantezin içinde <b>${sub}</b> var. Sadece bu kısmı hesapla ve işlem işaretine dikkat et.`,
+  dSign: "İşlem işaretine dikkat et! Artı ve eksiyi karıştırmışsın.",
+  dOuter: sub => `Şimdi <b>${sub}</b> hesaplıyorsun. Tekrar dikkatlice hesapla.`,
+  cardBtn: n => `${n}. ipucu kartına bak`,
+  pTitle: "Eşli çalışma", pOn: "İki kişi", pOff: "Tek kişi", pNames: "İsimler", pA: "Partner A", pB: "Partner B",
+  pTurn: (a, b) => `<b>${a}</b> hesaplıyor. <b>${b}</b> izliyor, kontrol ediyor ve açıklamaya yardım ediyor.`,
+  pSwap: (a, b) => `Değişin! Şimdi <b>${b}</b> hesaplıyor. Önce <b>${a}</b> hesaplama yolunu kısaca anlatıyor.`,
+  pDiscuss: "Birlikte konuşun:",
+  pPrompts: ["Önce neyi hesapladınız? Neden?", "Parantez olmasaydı sonuç farklı olur muydu?", "Parantez nerede ve içinde ne var?", "Parantez kuralını kendi sözlerinizle açıklayın.", "Bu işlem daha akıllıca hesaplanabilir mi?", "İfadeyi terimlerle (Fachbegriffe) yüksek sesle okuyun."],
+  xTitle: "Uzman soruları",
+  xIntro: "Ustalar için zor sorular: hataları bul, metinden sayıları çıkar, parantez bilmeceleri ve parantez içinde parantez.",
+  xSolved: n => `${n} uzman sorusu çözüldü`,
+  iErr1: "Tom bu ifadeyi hesapladı ve bir hata yaptı. İlk hata hangi satırda?",
+  line: n => `${n}. satır`,
+  errLineBad: "Bu satır doğru. Kendin hesapla ve karşılaştır.",
+  errLineOk: n => `Doğru! Hata ${n}. satırda.`,
+  iErr2: "Tom neyi yanlış yaptı?",
+  reasons: { ignored: "Parantezi önce hesaplamamış.", inner: "Parantezin içinde yanlış hesaplamış.", outer: "Son adımda yanlış hesaplamış." },
+  reasonBad: "Bu uymuyor. Tom'un satırını kendi hesabınla dikkatlice karşılaştır.",
+  iErr3: "İyi buldun! Şimdi ifadeyi doğru hesapla.",
+  tom: "Tom",
+  iWp1: "Dikkatlice oku. Hesaplamak için gereken tüm sayılara dokun. Dikkat: Her sayı önemli değil!",
+  checkNums: "Sayıları kontrol et",
+  numsMissing: "Önemli bir sayı eksik. Soruyu tekrar oku.",
+  numsExtra: x => `${x} sayısına ihtiyacın yok. Soruyu cevaplamaya yardım etmiyor.`,
+  numsOk: "Doğru! Önemli sayılar bunlar.",
+  iNested: "Burada parantezin içinde bir parantez var. Her zaman en içteki parantezi önce hesapla.",
+  words: {
+    w1: (a, b, c) => [`Lea ${a} € biriktirdi. ${b} € değerinde bir kitap ve ${c} € değerinde bir oyun alıyor. Sonra ne kadar parası kalıyor?`, r => `Lea'nın ${r} € parası kalıyor.`],
+    w2: (a, b, c) => [`5. sınıflarda ${a}, 6. sınıflarda ${b} çocuk var. ${c} çocuk geziye katılmıyor. Geziye kaç çocuk katılıyor?`, r => `Geziye ${r} çocuk katılıyor.`],
+    w3: (a, b, c) => [`Bir otobüs ${a} yolcuyla yola çıkıyor. İlk durakta ${b} yolcu iniyor ve ${c} yolcu biniyor. Şimdi otobüste kaç yolcu var?`, r => `Şimdi otobüste ${r} yolcu var.`],
+    w4: (a, b, c, d) => [`„70'i yapabilir misin?“ oyununda Ali üç turda ${b}, ${c} ve ${d} puan alıyor. 70'e ulaşması için kaç puan eksik?`, r => `Ali'nin ${r} puanı eksik.`]
+  },
+  wp: {
+    x1: (a, b, c) => [`Emre ⟦${fmt(a)}⟧ € biriktirdi. Elektronik mağazasında toplam ⟦${fmt(b)}⟧ € tutan ⟦2⟧ kontrolcü ve ⟦${fmt(c)}⟧ € değerinde bir oyun alıyor. Sonra ne kadar parası kalıyor?`, r => `Emre'nin ${fmt(r)} € parası kalıyor.`],
+    x2: (a, b, c) => [`⟦8⟧ vagonlu bir tren saat ⟦14⟧'te ⟦${fmt(a)}⟧ yolcuyla yola çıkıyor. Köln'de ⟦${fmt(b)}⟧ yolcu iniyor ve ⟦${fmt(c)}⟧ yolcu biniyor. Şimdi trende kaç yolcu var?`, r => `Şimdi trende ${fmt(r)} yolcu var.`],
+    x3: (a, b, c) => [`Stadyumda ⟦${fmt(a)}⟧ koltuk var. ⟦3⟧ Mayıs'taki maça ev sahibi takımın ⟦${fmt(b)}⟧ taraftarı ve ⟦${fmt(c)}⟧ misafir taraftar geliyor. Kaç koltuk boş kalıyor?`, r => `${fmt(r)} koltuk boş kalıyor.`]
+  },
+  inTitle: "Parantez kuralı",
+  inNext: "İleri", inBack: "Geri", inGo: "Alıştırmaya başla",
+  in1h: "Zar oyunu „70'i yapabilir misin?“",
+  in1: "Mia „70'i yapabilir misin?“ oyununu oynuyor. Üç turda şu puanları alıyor:",
+  rnd: n => `${n}. tur`,
+  in1q: "Mia'nın 70'e ulaşması için kaç puan eksik?",
+  in2h: "1. yol: Soldan sağa",
+  in2: "Mia puanları sırayla çıkarıyor. Parantez yoksa her zaman soldan sağa hesaplarsın.",
+  in3h: "2. yol: Önce topla",
+  in3: "Mia önce bütün puanları topluyor. Bunu parantezle gösteriyor. Parantezi önce hesaplıyor.",
+  in4h: "Not al: Parantez kuralı (Klammerregel)",
+  in4a: "Parantezin içindekini önce hesaplarsın.",
+  in4b: "Parantez yoksa soldan sağa hesaplarsın.",
+  in4c: "Birkaç sayıyı çıkarmak, onların toplamını çıkarmakla aynıdır:",
+  in5h: "Dikkat: Parantez sonucu değiştirebilir!",
+  in5: "Aynı sayılar, aynı işlem işaretleri ama yine de farklı bir sonuç:",
+  in6h: "Kendini dene!",
+  in6: "Bu ifadede önce neyi hesaplarsın?",
+  in6ok: "Doğru! Önce parantez. Şimdi alıştırma yapabilirsin.",
+  in6bad: "Henüz değil. Parantezin içinde ne olduğuna bak.",
+  merkTitle: "Not kâğıdı",
+  merkRules: ["Parantezin içindekini önce hesaplarsın.", "Parantez yoksa soldan sağa hesaplarsın.", "Parantez içinde parantez varsa, en içtekini önce hesaplarsın.", "Her adımı başında = olan yeni bir satıra yaz.", "Birkaç sayıyı çıkarmak: a − b − c = a − (b + c).", "Sadece toplama varsa parantezi istediğin gibi koyabilirsin: (a + b) + c = a + (b + c)."],
+  errTitle: "Sık yapılan hatalar",
+  errs: [["Parantez önce hesaplanmamış", "50 − (20 + 10) = <s>40</s> → doğrusu 20"], ["Parantez yokken sağdan hesaplanmış", "50 − 20 + 10 = <s>20</s> → doğrusu 40"], ["Parantez atlanmış", "50 − (20 + 10), 50 − 20 + 10 ile aynı değil"], ["Parantez içindeki işaret gözden kaçmış", "80 − (30 − 10) = <s>40</s> → doğrusu 60"]],
+  glossTitle: "Terimler (Almanca – Türkçe)",
+  gloss: [["Term", "işlem ifadesi, ör. 70 − (6 + 12)"], ["Wert des Terms", "ifadenin değeri, ör. 52"], ["Klammer ( )", "parantez: önce neyin hesaplanacağını gösterir"], ["Summe / Differenz", "toplama / çıkarma işlemi"]],
+  cardsTitle: "İpucu kartları", tapHint: "Çevirmek için dokun",
+  cards: [
+    ["Parantez nedir?", "Parantez ( ), ifadenin hangi kısmının birlikte olduğunu gösterir. Bu kısmı önce hesaplarsın."],
+    ["Önce neyi hesaplarım?", "Her zaman parantezin içindekini. Örnek: 90 − (30 + 20). Önce 30 + 20 = 50, sonra 90 − 50 = 40."],
+    ["Peki parantez yoksa?", "O zaman soldan sağa hesaplarsın. Örnek: 90 − 30 + 20 = 60 + 20 = 80."],
+    ["Adımları nasıl yazarım?", "İfadeyi yaz. Sonraki satıra = ve parantezin sonucuyla ifadeyi yaz. Tek bir sayı kalana kadar böyle devam et."],
+    ["Parantezin önünde eksi mi var?", "Dikkat: 80 − (30 + 10), 80 − 30 + 10 ile aynı değil. Önce parantezi hesapla: 80 − 40 = 40."],
+    ["İki parantez mi var?", "Önce soldaki, sonra sağdaki parantezi hesapla. En sonda iki sonuçla işlem yap."],
+    ["Parantez içinde parantez mi?", "İçten dışa doğru hesapla: Önce en içteki parantez, sonra dıştaki."],
+    ["Hesap hilesi", "Birkaç sayı mı çıkarıyorsun? Önce onları topla ve toplamı çıkar: 70 − 6 − 12 − 20 = 70 − (6 + 12 + 20) = 70 − 38 = 32."]
+  ]
+}};
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) { } } };
+let lang = store.get("kp-lang", null) || DEFAULT_LANG;
+const L = () => T[lang];
+
+/* ======================= term engine ======================= */
+const N = v => ({ n: v });
+const O = (op, l, r, br) => ({ op, l, r, br: !!br });
+const isN = x => x.n !== undefined;
+function val(x) { if (isN(x)) return x.n; const a = val(x.l), b = val(x.r); return x.op === "+" ? a + b : a - b; }
+function tokens(x) { if (isN(x)) return [x.n]; return [...tokens(x.l), x.op, ...tokens(x.r)]; }
+function ltr(x) { const t = tokens(x); let v = t[0]; for (let i = 1; i < t.length; i += 2) v = t[i] === "+" ? v + t[i + 1] : v - t[i + 1]; return v; }
+function minOK(x) { if (isN(x)) return x.n >= 0; return minOK(x.l) && minOK(x.r) && val(x) >= 0; }
+function txt(x, top = true) { if (isN(x)) return x.hole ? "□" : fmt(x.n); const s = `${txt(x.l, false)} ${x.op === "+" ? "+" : MINUS} ${txt(x.r, false)}`; return x.br ? `(${s})` : s; }
+function html(x, opt = {}) {
+  if (isN(x)) { if (x.hole) return opt.hole || "□"; return fmt(x.n); }
+  const inner = `${html(x.l, opt)} ${x.op === "+" ? "+" : MINUS} ${html(x.r, opt)}`;
+  if (x.br) { const s = `<span class="bk">(</span>${inner}<span class="bk">)</span>`; return x === opt.hot ? `<span class="hot">${s}</span>` : s; }
+  return inner;
+}
+function findBr(x) { if (isN(x)) return null; return findBr(x.l) || findBr(x.r) || (x.br ? x : null); }
+function findLeaf(x) { if (isN(x)) return null; if (isN(x.l) && isN(x.r)) return x; return findLeaf(x.l) || findLeaf(x.r); }
+function subst(x, target, repl) { if (x === target) return repl; if (isN(x)) return { ...x, hole: false }; return { op: x.op, br: x.br, l: subst(x.l, target, repl), r: subst(x.r, target, repl) }; }
+function stepsOf(term) {
+  const out = []; let cur = term;
+  while (!isN(cur)) {
+    const b = findBr(cur); const target = b || findLeaf(cur);
+    const v = val(target); const subNode = { ...target, br: false };
+    const isBr = !!b;
+    const next = subst(cur, target, { n: v, hole: true });
+    out.push({ from: cur, target, sub: txt(subNode), subNode, value: v, after: next, isBr });
+    cur = { ...next };
+    cur = clearHoles(next);
+  }
+  return out;
+}
+function clearHoles(x) { if (isN(x)) return { n: x.n }; return { op: x.op, br: x.br, l: clearHoles(x.l), r: clearHoles(x.r) }; }
+
+/* ======================= generators ======================= */
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+function gen(fn, test, tries = 20000) { for (let i = 0; i < tries; i++) { const v = fn(); if (test(v)) return v } throw new Error("gen failed") }
+const round = (k) => rnd(1, k) * 5;
+function three(pat, a, b, c) {
+  switch (pat) {
+    case "a-(b+c)": return O("-", N(a), O("+", N(b), N(c), 1));
+    case "a-(b-c)": return O("-", N(a), O("-", N(b), N(c), 1));
+    case "(a+b)-c": return O("-", O("+", N(a), N(b), 1), N(c));
+    case "a+(b-c)": return O("+", N(a), O("-", N(b), N(c), 1));
+    case "(a-b)+c": return O("+", O("-", N(a), N(b), 1), N(c));
+    case "(a-b)-c": return O("-", O("-", N(a), N(b), 1), N(c));
+    case "a-b+c": return O("+", O("-", N(a), N(b)), N(c));
+    case "a-b-c": return O("-", O("-", N(a), N(b)), N(c));
+    case "a+(b+c)": return O("+", N(a), O("+", N(b), N(c), 1));
+    case "(a+b)+c": return O("+", O("+", N(a), N(b), 1), N(c));
+    case "a+b-c": return O("-", O("+", N(a), N(b)), N(c));
+  }
+}
+function calcTask(term) { return { mode: "calc", term, steps: stepsOf(term) } }
+function makeTask(level) {
+  const r = Math.random();
+  if (level === 4) return makeExpert();
+  if (level === 1) {
+    if (r < .3) return makeFirst();
+    const pat = pick(["a-(b+c)", "a-(b+c)", "a-(b-c)", "(a+b)-c", "a+(b-c)", "(a-b)+c"]);
+    return calcTask(gen(() => three(pat, rnd(4, 20) * 5, rnd(2, 12) * 5, rnd(1, 8) * 5), t => minOK(t) && val(t) <= 200 && (!pat.startsWith("a-") || ltr(t) !== val(t))));
+  }
+  if (level === 2) {
+    if (r < .35) {
+      const pat = pick(["two", "two2", "sum3"]);
+      let t;
+      if (pat === "two") t = gen(() => O("-", O("+", N(rnd(100, 600)), N(rnd(20, 300)), 1), O("+", N(rnd(10, 150)), N(rnd(10, 150)), 1)), minOK);
+      else if (pat === "two2") t = gen(() => O("+", O("-", N(rnd(200, 700)), N(rnd(20, 190)), 1), O("-", N(rnd(100, 400)), N(rnd(10, 90)), 1)), minOK);
+      else t = gen(() => O("-", N(rnd(300, 900)), O("+", O("+", N(rnd(20, 150)), N(rnd(20, 150))), N(rnd(20, 150)), 1)), minOK);
+      return calcTask(t);
+    }
+    if (r < .7) return makeSame();
+    return makeSmart();
+  }
+  if (r < .35) return makeSet();
+  if (r < .7) return makeWord();
+  const pat = pick(["a-(b+c)", "a-(b-c)", "a+(b-c)", "(a-b)+c"]);
+  return calcTask(gen(() => three(pat, rnd(300, 999), rnd(40, 300), rnd(10, 150)), t => minOK(t) && (!pat.startsWith("a-") || ltr(t) !== val(t))));
+}
+function makeFirst() {
+  const pat = pick(["a-(b+c)", "a-(b-c)", "(a+b)-c", "a+(b-c)"]);
+  const t = gen(() => three(pat, rnd(6, 20) * 5, rnd(2, 10) * 5, rnd(1, 6) * 5), x => { const a = tokens(x); return minOK(x) && new Set([a[0], a[2], a[4]]).size === 3 });
+  const b = findBr(t); const a = tokens(t);
+  const correct = txt({ ...b, br: false });
+  const wrong = [];
+  if (pat[0] === "(") wrong.push(`${fmt(a[2])} ${a[3] === "+" ? "+" : MINUS} ${fmt(a[4])}`);
+  else wrong.push(`${fmt(a[0])} ${a[1] === "+" ? "+" : MINUS} ${fmt(a[2])}`);
+  wrong.push(`${fmt(a[0])} ${a[1] === "+" ? "+" : MINUS} ${fmt(a[4])}`);
+  return { mode: "first", term: t, opts: shuffle([{ s: correct, ok: true }, ...wrong.filter(w => w !== correct).map(s => ({ s, ok: false }))]) };
+}
+function makeSame() {
+  const kind = pick(["eq1", "eq2", "ne1", "ne2"]);
+  const a = rnd(10, 40) * 5, b = rnd(3, 15) * 5, c = rnd(1, 8) * 5;
+  const pairs = { eq1: ["a-b-c", "a-(b+c)"], eq2: ["(a+b)+c", "a+(b+c)"], ne1: ["a-b+c", "a-(b+c)"], ne2: ["a-b-c", "a-(b-c)"] };
+  const [p1, p2] = pairs[kind]; const t1 = three(p1, a, b, c), t2 = three(p2, a, b, c);
+  if (!minOK(t1) || !minOK(t2)) return makeSame();
+  return { mode: "same", t1, t2, equal: val(t1) === val(t2) };
+}
+function makeSmart() {
+  const parts = gen(() => { const s = rnd(4, 9) * 10; const b = rnd(5, s - 15); const c = rnd(3, s - b - 2); return [s, b, c, s - b - c] }, p => p[1] > 0 && p[2] > 0 && p[3] > 0 && p[1] % 10 !== 0 && p[2] % 10 !== 0);
+  const a = rnd(12, 30) * 10;
+  const [s, b, c, d] = parts;
+  const orig = O("-", O("-", O("-", N(a), N(b)), N(c)), N(d));
+  const good = O("-", N(a), O("+", O("+", N(b), N(c)), N(d), 1));
+  const bad1 = O("+", O("-", N(a), N(b), 1), O("+", N(c), N(d), 1));
+  const bad2 = O("-", N(a), O("-", O("-", N(b), N(c)), N(d), 1));
+  const opts = shuffle([{ t: good, ok: true }, { t: bad1, ok: false }, { t: bad2, ok: false }].filter(o => o.ok || (minOK(o.t) || true)));
+  return { mode: "smart", orig, opts, good, phase: 1 };
+}
+function makeSet() {
+  const variant = pick(["mp", "mm"]);
+  const a = rnd(20, 60) * 5, b = rnd(4, 18) * 5, c = rnd(1, 9) * 5;
+  const opts = variant === "mp"
+    ? [["a-(b+c)", true], ["(a-b)+c", false], ["a-b+c", false]]
+    : [["a-(b-c)", true], ["(a-b)-c", false], ["a-b-c", false]];
+  const tt = three(opts[0][0], a, b, c);
+  if (!minOK(tt) || b <= c || a - b - c < 0) return makeSet();
+  const target = val(tt);
+  const base = variant === "mp" ? three("a-b+c", a, b, c) : three("a-b-c", a, b, c);
+  return { mode: "set", base, target, opts: shuffle(opts.map(([p, ok]) => ({ t: three(p, a, b, c), ok, plain: !p.includes("(") }))), phase: 1, a, b, c };
+}
+function makeWord() {
+  const w = pick(["w1", "w2", "w3", "w4"]); let v, good, bads;
+  if (w === "w1") { v = gen(() => [rnd(50, 150), rnd(10, 30), rnd(10, 35)], v => v[0] - v[1] - v[2] > 5); good = three("a-(b+c)", ...v); bads = [three("a-b+c", ...v), three("a+(b+c)", ...v)] }
+  if (w === "w2") { v = [rnd(90, 160), rnd(90, 160), rnd(10, 40)]; good = three("(a+b)-c", ...v); bads = [three("a+(b+c)", ...v), three("a-(b+c)", ...v)] }
+  if (w === "w3") { v = gen(() => [rnd(25, 60), rnd(5, 20), rnd(3, 20)], v => v[0] > v[1]); good = three("(a-b)+c", ...v); bads = [three("a-(b+c)", ...v), three("a+(b+c)", ...v)] }
+  if (w === "w4") { v = [70, rnd(4, 20), rnd(4, 20), rnd(4, 20)]; good = O("-", N(70), O("+", O("+", N(v[1]), N(v[2])), N(v[3]), 1)); bads = [O("+", O("+", O("-", N(70), N(v[1])), N(v[2])), N(v[3])), O("+", N(70), O("+", O("+", N(v[1]), N(v[2])), N(v[3]), 1))] }
+  if (!minOK(good)) return makeWord();
+  return { mode: "word", w, v, good, opts: shuffle([{ t: good, ok: true }, ...bads.map(t => ({ t, ok: false }))]), phase: 1 };
+}
+function makeExpert() { const r = Math.random(); return r < .3 ? makeErrPro() : r < .6 ? makeWordPro() : r < .8 ? makeSetPro() : makeNested() }
+function makeErrPro() {
+  const pat = pick(["a-(b+c)", "a-(b+c)", "a-(b-c)"]);
+  const t = gen(() => three(pat, rnd(120, 600), rnd(30, 200), rnd(10, 120)), x => minOK(x) && ltr(x) !== val(x) && ltr(x) >= 0);
+  const st = stepsOf(t); const type = pick(["ignored", "inner", "outer"]);
+  const a = tokens(t); let lines, first;
+  if (type === "ignored") {
+    const x1 = a[1] === "+" ? a[0] + a[2] : a[0] - a[2];
+    lines = [`${fmt(x1)} ${a[3] === "+" ? "+" : MINUS} ${fmt(a[4])}`, fmt(ltr(t))]; first = 0;
+  } else if (type === "inner") {
+    const wrongIn = st[0].value + pick([10, -10, 100]); const after = O(t.op, N(a[0]), N(wrongIn));
+    if (wrongIn < 0 || val(after) < 0) return makeErrPro();
+    lines = [txt(after), fmt(val(after))]; first = 0;
+  } else {
+    const right1 = txt(clearHoles(st[0].after)); const wrong = st[1].value + pick([10, -10, 1, -1]);
+    if (wrong < 0) return makeErrPro();
+    lines = [right1, fmt(wrong)]; first = 1;
+  }
+  return { mode: "errpro", term: t, steps: st, lines, first, errType: type, reasons: shuffle(["ignored", "inner", "outer"]), badLines: [], badReasons: [], phase: 1 };
+}
+function makeWordPro() {
+  const x = pick(["x1", "x2", "x3"]); let v, good, bads, dist;
+  if (x === "x1") { v = gen(() => [rnd(200, 500), rnd(40, 120), rnd(20, 90)], v => v[0] - v[1] - v[2] > 10); good = three("a-(b+c)", ...v); bads = [three("a-b+c", ...v), three("a+(b+c)", ...v)]; dist = ["2"] }
+  if (x === "x2") { v = gen(() => [rnd(250, 700), rnd(40, 200), rnd(20, 180)], v => v[0] > v[1]); good = three("(a-b)+c", ...v); bads = [three("a-(b+c)", ...v), three("a+(b-c)", ...v)]; dist = ["8", "14"] }
+  if (x === "x3") { v = gen(() => [rnd(30, 60) * 1000 + rnd(0, 999), rnd(15000, 25000), rnd(2000, 8000)], v => v[0] - v[1] - v[2] > 500); good = three("a-(b+c)", ...v); bads = [three("a-b+c", ...v), three("a+(b+c)", ...v)]; dist = ["3"] }
+  if (new Set(v).size !== 3) return makeWordPro();
+  return { mode: "wordpro", x, v, need: v.map(fmt), dist, good, opts: shuffle([{ t: good, ok: true }, ...bads.map(t => ({ t, ok: false }))]), sel: [], wrongSel: [], phase: 1 };
+}
+function makeSetPro() {
+  for (let k = 0; k < 300; k++) {
+    const a = rnd(40, 90) * 5, b = rnd(6, 20) * 5, c = rnd(2, 12) * 5, d = rnd(1, 8) * 5;
+    const base = O("-", O("+", O("-", N(a), N(b)), N(c)), N(d));
+    const cands = [
+      O("-", O("-", N(a), O("+", N(b), N(c), 1)), N(d)),
+      O("+", O("-", N(a), N(b)), O("-", N(c), N(d), 1)),
+      O("-", N(a), O("-", O("+", N(b), N(c)), N(d), 1)),
+      base
+    ];
+    if (!cands.every(minOK)) continue;
+    const vals = cands.map(val); const idx = rnd(0, 2);
+    if (vals.filter(v => v === vals[idx]).length !== 1) continue;
+    return { mode: "setpro", base, target: vals[idx], opts: shuffle(cands.map((t, i) => ({ t, ok: i === idx, plain: i === 3 }))), phase: 1 };
+  }
+  return makeSet();
+}
+function makeNested() {
+  const pat = pick(["a-(b-(c+d))", "(a+(b-c))-d", "a-((b+c)-d)"]);
+  const t = gen(() => {
+    const a = rnd(20, 80) * 5, b = rnd(8, 30) * 5, c = rnd(2, 10) * 5, d = rnd(1, 6) * 5;
+    if (pat === "a-(b-(c+d))") return O("-", N(a), O("-", N(b), O("+", N(c), N(d), 1), 1));
+    if (pat === "(a+(b-c))-d") return O("-", O("+", N(a), O("-", N(b), N(c), 1), 1), N(d));
+    return O("-", N(a), O("-", O("+", N(b), N(c), 1), N(d), 1));
+  }, minOK);
+  return { mode: "nested", term: t, steps: stepsOf(t) };
+}
+
+/* ======================= state ======================= */
+let stats = store.get("kp-stats", { stars: 0, solved: [0, 0, 0, 0] }); while (stats.solved.length < 4) stats.solved.push(0);
+let level = store.get("kp-level", 1);
+let partner = store.get("kp-partner", { on: true, a: "", b: "", turn: 0, showNames: false });
+let tab = 0, introStep = 0, introPick = null;
+let task = null, entry = "", stepIdx = 0, attempts = 0, tipLevel = 0, done = false, feedback = null, diag = null, showCard = false, badMark = false, revealed = false;
+function save() { store.set("kp-stats", stats); store.set("kp-level", level); store.set("kp-lang", lang) }
+function savePartner() { store.set("kp-partner", partner) }
+const curLevel = () => tab === 2 ? 4 : level;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pName = i => { const n = (i === 0 ? partner.a : partner.b) || ""; return n.trim() ? esc(n.trim()) : (i === 0 ? L().pA : L().pB) };
+function inSteps() { return ["calc", "nested"].includes(task.mode) || (["smart", "word", "wordpro", "set"].includes(task.mode) && task.phase === 2) || (task.mode === "errpro" && task.phase === 3) }
+function stepsList() { return task.steps }
+function newTask() {
+  task = makeTask(curLevel());
+  entry = ""; stepIdx = 0; attempts = 0; tipLevel = 0; done = false; feedback = null; diag = null; showCard = false; badMark = false; revealed = false;
+  task.promptIdx = rnd(0, 5);
+}
+function setSteps(term) { task.steps = stepsOf(term); task.term = term; stepIdx = 0; entry = ""; }
+const saved = {};
+function stash() { if (tab === 1 || tab === 2) saved[tab] = { task, entry, stepIdx, attempts, tipLevel, done, feedback, diag, showCard, badMark, revealed } }
+function unstash() { if (tab === 1 || tab === 2) { const s = saved[tab]; if (s) { ({ task, entry, stepIdx, attempts, tipLevel, done, feedback, diag, showCard, badMark, revealed } = s) } else newTask() } }
+
+/* ======================= render ======================= */
+function el(tag, cls, h) { const e = document.createElement(tag); if (cls) e.className = cls; if (h !== undefined) e.innerHTML = h; return e }
+const view = document.getElementById("view");
+function renderShell() {
+  document.documentElement.lang = lang;
+  document.getElementById("apptitle").innerHTML = L().title;
+  document.getElementById("langbtn").textContent = L().other;
+  document.getElementById("starcount").textContent = stats.stars;
+  const tabs = document.getElementById("tabs"); tabs.innerHTML = "";
+  L().tabs.forEach((name, i) => { const b = el("button", "", name); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", i === tab); b.onclick = () => goTab(i); tabs.appendChild(b) });
+}
+function goTab(i) { stash(); tab = i; unstash(); render(); window.scrollTo(0, 0) }
+function render() { renderShell(); view.innerHTML = "";[renderIntro, renderPractice, renderExpert, renderMerk, renderCards][tab]() }
+
+/* ---- input / intro ---- */
+const DICE = [6, 12, 20];
+function renderIntro() {
+  const p = el("section", "panel intro"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().inTitle));
+  const total = 6;
+  const dots = el("div", "dots"); for (let i = 0; i < total; i++) dots.appendChild(el("span", i === introStep ? "on" : "")); p.appendChild(dots);
+  const box = el("div", "introbox"); p.appendChild(box);
+  const way = (lines) => `<div class="way">${lines.map((l, i) => `<div>${i ? '<span class="eq">= </span>' : ""}${l}</div>`).join("")}</div>`;
+  const BK = s => `<span class="bk">(</span>${s}<span class="bk">)</span>`;
+  if (introStep === 0) {
+    box.innerHTML = `<h3>${L().in1h}</h3><p>${L().in1}</p>`;
+    const d = el("div", "dice"); DICE.forEach((v, i) => d.appendChild(el("div", "die", `<b>${v}</b><small>${L().rnd(i + 1)}</small>`))); box.appendChild(d);
+    box.appendChild(el("p", "", `<b>${L().in1q}</b>`));
+  }
+  if (introStep === 1) box.innerHTML = `<h3>${L().in2h}</h3><p>${L().in2}</p>` + way([`70 ${MINUS} 6 ${MINUS} 12 ${MINUS} 20`, `64 ${MINUS} 12 ${MINUS} 20`, `52 ${MINUS} 20`, `<span class="done">32</span>`]);
+  if (introStep === 2) box.innerHTML = `<h3>${L().in3h}</h3><p>${L().in3}</p>` + way([`70 ${MINUS} ${BK("6 + 12 + 20")}`, `70 ${MINUS} 38`, `<span class="done">32</span>`]);
+  if (introStep === 3) box.innerHTML = `<h3>${L().in4h}</h3><div class="rulebox"><p><b>1.</b> ${L().in4a}</p><p><b>2.</b> ${L().in4b}</p></div><p>${L().in4c}</p>` + way([`70 ${MINUS} 6 ${MINUS} 12 ${MINUS} 20 = 70 ${MINUS} ${BK("6 + 12 + 20")}`]);
+  if (introStep === 4) box.innerHTML = `<h3>${L().in5h}</h3><p>${L().in5}</p><div class="pair"><div class="term">50 ${MINUS} 20 + 10<br><span style="font-size:.7em;color:var(--muted)">= 30 + 10 = <b style="color:var(--ok)">40</b></span></div><div class="term">50 ${MINUS} ${BK("20 + 10")}<br><span style="font-size:.7em;color:var(--muted)">= 50 ${MINUS} 30 = <b style="color:var(--ok)">20</b></span></div></div>`;
+  if (introStep === 5) {
+    box.innerHTML = `<h3>${L().in6h}</h3><p>${L().in6}</p><p class="term">90 ${MINUS} ${BK("30 + 25")}</p>`;
+    const ch = el("div", "choices");
+    [["30 + 25", true], [`90 ${MINUS} 30`, false], [`90 ${MINUS} 25`, false]].forEach(([s, ok], i) => { const b = el("button", "choice", s); b.type = "button"; if (introPick === i) b.classList.add(ok ? "ok" : "bad"); b.onclick = () => { introPick = i; render() }; ch.appendChild(b) });
+    box.appendChild(ch);
+    if (introPick !== null) { const ok = introPick === 0; box.appendChild(el("div", "msg " + (ok ? "ok" : "bad"), ok ? L().in6ok : L().in6bad)) }
+  }
+  const nav = el("div", "stepnav");
+  const b1 = el("button", "btn", L().inBack); b1.type = "button"; b1.disabled = introStep === 0; b1.onclick = () => { introStep--; render() };
+  const b2 = el("button", "btn primary", introStep < total - 1 ? L().inNext : L().inGo); b2.type = "button"; b2.onclick = () => { if (introStep < total - 1) { introStep++; render() } else goTab(1) };
+  nav.append(b1, el("span", "count", `${introStep + 1} / ${total}`), b2); p.appendChild(nav);
+}
+
+/* ---- practice ---- */
+function renderPractice() {
+  const lv = el("div", "levels");
+  [1, 2, 3].forEach(n => { const b = el("button", `lvl lvl${n}`, `${L().lv[n - 1][0]}<small>${L().lv[n - 1][1]} · ${L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
+  view.appendChild(lv); renderTask();
+}
+function renderExpert() {
+  const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
+  h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
+}
+function renderPartner() {
+  const bar = el("div", "partner");
+  const who = el("div", "who", partner.on ? L().pTurn(pName(partner.turn), pName(1 - partner.turn)) : `<b>${L().pTitle}</b>`);
+  const btns = el("div", "pbtns");
+  const on = el("button", "seg", L().pOn); on.type = "button"; on.setAttribute("aria-pressed", !!partner.on); on.onclick = () => { partner.on = true; savePartner(); render() };
+  const off = el("button", "seg", L().pOff); off.type = "button"; off.setAttribute("aria-pressed", !partner.on); off.onclick = () => { partner.on = false; savePartner(); render() };
+  btns.append(on, off);
+  if (partner.on) { const nm = el("button", "seg", L().pNames); nm.type = "button"; nm.setAttribute("aria-pressed", !!partner.showNames); nm.onclick = () => { partner.showNames = !partner.showNames; savePartner(); render() }; btns.append(nm) }
+  bar.append(who, btns);
+  if (partner.on && partner.showNames) {
+    const box = el("div", "names");
+    [["a", "partnerA", L().pA], ["b", "partnerB", L().pB]].forEach(([k, id, lab]) => {
+      const l = el("label", "", lab); const inp = document.createElement("input"); inp.id = id; inp.type = "text"; inp.maxLength = 20; inp.value = partner[k] || ""; inp.placeholder = "Name"; inp.autocomplete = "off";
+      inp.oninput = () => { partner[k] = inp.value; savePartner(); who.innerHTML = L().pTurn(pName(partner.turn), pName(1 - partner.turn)) };
+      l.appendChild(inp); box.appendChild(l)
+    });
+    bar.appendChild(box);
+  }
+  return bar;
+}
+function stepsBlock(p) {
+  const st = task.steps;
+  p.appendChild(el("p", "term", html(task.term, { hot: !done && stepIdx < st.length && st[stepIdx].isBr ? st[stepIdx].target : null })));
+  const box = el("div", "steps");
+  for (let i = 0; i < st.length; i++) {
+    if (i > stepIdx && !done) break;
+    const s = st[i]; const line = el("div", "sline");
+    const showDone = done || i < stepIdx;
+    const holeHtml = showDone ? `<span class="done">${fmt(s.value)}</span>` : `<span class="ans active${badMark ? " bad" : ""}${revealed ? " sol" : ""}">${entry || "&nbsp;"}</span>`;
+    line.innerHTML = `<span class="eq">=</span>${html(s.after, { hole: holeHtml })}`;
+    box.appendChild(line);
+  }
+  p.appendChild(box);
+  if (!done && stepIdx < st.length) p.appendChild(el("p", "stepnote", st[stepIdx].isBr ? `( ) → ${st[stepIdx].sub}` : st[stepIdx].sub));
+  if (!done) {
+    const kp = el("div", "keypad");
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => typeDigit(String(d)); kp.appendChild(b) });
+    const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => typeDigit(""); kp.appendChild(del);
+    p.appendChild(kp);
+  }
+}
+function choiceList(p, opts, onPick, fmtFn) {
+  const ch = el("div", "choices");
+  opts.forEach((o, i) => { const b = el("button", "choice", fmtFn(o)); b.type = "button"; if (task.picked === i || (done && o.ok && task.picked != null)) b.classList.add(o.ok ? "ok" : "bad"); if (task.badPicks && task.badPicks.includes(i)) b.classList.add("bad"); b.disabled = done; b.onclick = () => onPick(i); ch.appendChild(b) });
+  p.appendChild(ch);
+}
+function renderTask() {
+  view.appendChild(renderPartner());
+  const lvl = curLevel(); const p = el("section", "panel"); view.appendChild(p);
+  const head = el("div", "taskhead");
+  const chip = el("span", "chip", lvl === 4 ? L().tabs[2] : L().lv[level - 1][0]); chip.style.setProperty("--c", lvl === 4 ? "var(--ink)" : `var(--${["orange", "pink", "purple"][level - 1]})`); if (lvl === 4) chip.style.color = "var(--paper)";
+  head.append(chip, el("h2", "", L().modes[task.mode])); head.lastChild.style.margin = "0"; p.appendChild(head);
+  const m = task.mode;
+  if (m === "calc" || m === "nested") { p.appendChild(el("p", "instr", m === "nested" ? L().iNested : L().iCalc)); stepsBlock(p) }
+  if (m === "first") {
+    p.appendChild(el("p", "instr", L().iFirst)); p.appendChild(el("p", "term", html(task.term)));
+    choiceList(p, task.opts, pickFirst, o => o.s);
+  }
+  if (m === "same") {
+    p.appendChild(el("p", "instr", L().iSame));
+    const pr = el("div", "pair"); pr.append(el("div", "term", html(task.t1)), el("div", "term", html(task.t2))); p.appendChild(pr);
+    if (!done) { const a = el("div", "actions"); [[L().sameYes, true], [L().sameNo, false]].forEach(([s, v]) => { const b = el("button", "btn", s); b.type = "button"; b.onclick = () => pickSame(v); a.appendChild(b) }); p.appendChild(a) }
+  }
+  if (m === "smart") {
+    if (task.phase === 1) { p.appendChild(el("p", "instr", L().iSmart)); p.appendChild(el("p", "term", html(task.orig))); choiceList(p, task.opts, pickSmart, o => html(o.t)) }
+    else { p.appendChild(el("p", "instr", L().iCalc)); stepsBlock(p) }
+  }
+  if (m === "set") {
+    if (task.phase === 1) { p.appendChild(el("p", "instr", L().iSet(fmt(task.target)))); p.appendChild(el("p", "term", html(task.base) + ` = ${fmt(task.target)}`)); choiceList(p, task.opts, pickSet, o => html(o.t) + (o.plain ? ` <small>(${L().noBr})</small>` : "")) }
+    else { p.appendChild(el("p", "instr", L().iCalc)); stepsBlock(p) }
+  }
+  if (m === "setpro") {
+    p.appendChild(el("p", "instr", L().iSet(fmt(task.target)))); p.appendChild(el("p", "term", html(task.base) + ` = ${fmt(task.target)}`));
+    choiceList(p, task.opts, pickSetPro, o => html(o.t) + (o.plain ? ` <small>(${L().noBr})</small>` : ""));
+  }
+  if (m === "word") {
+    const [text, ans] = L().words[task.w](...task.v); p.appendChild(el("p", "word", text));
+    if (task.phase === 1) { p.appendChild(el("p", "instr", L().iWord)); choiceList(p, task.opts, pickWord, o => html(o.t)) }
+    else { p.appendChild(el("p", "instr", L().iWord2)); stepsBlock(p); if (done) p.appendChild(el("p", "msg info", `<b>${L().answer}:</b> ${ans(fmt(val(task.good)))}`)) }
+  }
+  if (m === "wordpro") {
+    const [text, ans] = L().wp[task.x](...task.v); const w = el("p", "word");
+    text.split(/⟦([^⟧]+)⟧/).forEach((part, i) => {
+      if (i % 2 === 0) { w.appendChild(document.createTextNode(part)); return }
+      if (task.phase > 1) { const sp = el("b", "", part); if (task.need.includes(part)) sp.style.color = "var(--focus)"; w.appendChild(sp); return }
+      const b = el("button", "numchip", part); b.type = "button"; b.setAttribute("aria-pressed", task.sel.includes(part)); if (task.wrongSel.includes(part)) b.classList.add("wrong");
+      b.onclick = () => { const k = task.sel.indexOf(part); if (k >= 0) task.sel.splice(k, 1); else task.sel.push(part); task.wrongSel = []; render() }; w.appendChild(b);
+    });
+    p.appendChild(w);
+    if (task.phase === 1) { p.appendChild(el("p", "instr", L().iWp1)); const a = el("div", "actions"); const b = el("button", "btn primary", L().checkNums); b.type = "button"; b.onclick = checkNums; a.appendChild(b); p.appendChild(a) }
+    else if (task.phase === 1.5) { p.appendChild(el("p", "instr", L().iWord)); choiceList(p, task.opts, pickWordPro, o => html(o.t)) }
+    else { p.appendChild(el("p", "instr", L().iWord2)); stepsBlock(p); if (done) p.appendChild(el("p", "msg info", `<b>${L().answer}:</b> ${ans(val(task.good))}`)) }
+  }
+  if (m === "errpro") {
+    if (task.phase < 3) {
+      p.appendChild(el("p", "instr", task.phase === 1 ? L().iErr1 : L().iErr2));
+      p.appendChild(el("p", "term", html(task.term)));
+      const tl = el("div", "tomlines");
+      task.lines.forEach((l, i) => { const d = el("div", "tomline" + (task.phase === 2 && i === task.first ? " mark" : ""), `<span class="lab">${L().line(i + 1)}</span><span>= ${l}</span>`); tl.appendChild(d) });
+      p.appendChild(tl);
+      if (task.phase === 1) { const a = el("div", "colbtns"); task.lines.forEach((l, i) => { const b = el("button", task.badLines.includes(i) ? "bad" : "", L().line(i + 1)); b.type = "button"; b.onclick = () => pickLine(i); a.appendChild(b) }); p.appendChild(a) }
+      else { const ch = el("div", "choices"); task.reasons.forEach(r => { const b = el("button", "choice", L().reasons[r]); b.type = "button"; if (task.badReasons.includes(r)) b.classList.add("bad"); b.onclick = () => pickReason(r); ch.appendChild(b) }); p.appendChild(ch) }
+    } else { p.appendChild(el("p", "instr", L().iErr3)); stepsBlock(p) }
+  }
+  const act = el("div", "actions");
+  if (!done) {
+    const tb = el("button", "btn tip", L().tip + (tipLevel ? ` ${Math.min(tipLevel + 1, inSteps() ? 3 : 2)}` : "")); tb.type = "button"; tb.onclick = onTip; act.appendChild(tb);
+    if (inSteps()) { const cb = el("button", "btn primary", L().check); cb.type = "button"; cb.onclick = check; act.appendChild(cb) }
+    if (attempts >= 2 && inSteps()) { const sb = el("button", "btn", L().show); sb.type = "button"; sb.onclick = showSolution; act.appendChild(sb) }
+  } else {
+    const nb = el("button", "btn good", L().next); nb.type = "button"; nb.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; savePartner() } newTask(); render() }; act.appendChild(nb);
+  }
+  p.appendChild(act);
+  if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
+  if (diag && !done) {
+    const w = el("div", "why", `<b class="h">${L().whyTitle}</b>${diag.text}`);
+    const cb = el("button", "linkbtn", L().cardBtn(diag.card + 1)); cb.type = "button"; cb.onclick = () => { showCard = !showCard; render() }; w.appendChild(cb);
+    if (showCard) { const [q, a] = L().cards[diag.card]; w.appendChild(el("div", "cardref", `<b>${q}</b><br>${a}`)) }
+    p.appendChild(w);
+  }
+  if (tipLevel > 0 && !done) p.appendChild(el("div", "tipcard", tipText()));
+  if (done && partner.on) p.appendChild(el("div", "swap", `<p>${L().pSwap(pName(partner.turn), pName(1 - partner.turn))}</p><p><b>${L().pDiscuss}</b> ${L().pPrompts[task.promptIdx || 0]}</p>`));
+}
+
+/* ======================= interaction ======================= */
+function typeDigit(d) { if (done || !inSteps()) return; if (d === "") entry = entry.slice(0, -1); else if (entry.length < 6) entry += d; badMark = false; revealed = false; render() }
+document.addEventListener("keydown", e => {
+  if ((tab !== 1 && tab !== 2) || done || !task || !inSteps()) return;
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+  if (/^[0-9]$/.test(e.key)) { typeDigit(e.key); e.preventDefault() }
+  else if (e.key === "Backspace" || e.key === "Delete") { typeDigit(""); e.preventDefault() }
+  else if (e.key === "Enter" && !(e.target && e.target.tagName === "BUTTON")) { check(); e.preventDefault() }
+});
+function success(msg) { done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
+function check() {
+  if (done || !inSteps()) return;
+  if (entry === "") { feedback = { cls: "bad", text: L().empty }; render(); return }
+  const s = task.steps[stepIdx]; const v = Number(entry);
+  if (v === s.value) {
+    badMark = false; diag = null; revealed = false;
+    if (stepIdx === task.steps.length - 1) { stepIdx = task.steps.length; success(); return }
+    stepIdx++; entry = ""; tipLevel = Math.min(tipLevel, 1); feedback = { cls: "ok", text: L().stepOk }; render(); return;
+  }
+  attempts++; badMark = true; feedback = { cls: "bad", text: L().bad + (attempts >= 2 ? " " + L().bad2 : "") }; diag = diagnose(v, s); showCard = false; render();
+}
+function diagnose(v, s) {
+  const full = task.term;
+  if (stepIdx === task.steps.length - 1 && v === ltr(full) && ltr(full) !== val(full)) return { text: L().dIgnored, card: 1 };
+  if (stepIdx === 0 && findBr(full) && v === ltr({ ...full }) && ltr(full) !== val(full)) return { text: L().dIgnored, card: 1 };
+  if (s.isBr) {
+    const sn = s.subNode; if (!isN(sn) && isN(sn.l) && isN(sn.r)) { const sw = sn.op === "+" ? sn.l.n - sn.r.n : sn.l.n + sn.r.n; if (v === sw) return { text: L().dSign, card: 4 } }
+    return { text: L().dInner(s.sub), card: 1 };
+  }
+  return { text: L().dOuter(s.sub), card: 3 };
+}
+function showSolution() { done = true; diag = null; stepIdx = task.steps.length; feedback = { cls: "info", text: L().solShown }; render() }
+function onTip() {
+  const max = inSteps() ? 3 : 2;
+  if (tipLevel >= 3 && inSteps()) { reveal(); render(); return }
+  tipLevel = Math.min(tipLevel + 1, max); if (tipLevel === 3) reveal(); render();
+}
+function reveal() { const s = task.steps[stepIdx]; if (!s) return; entry = String(s.value); revealed = true; badMark = false; diag = null }
+function tipText() {
+  let s = `<b>${L().tip}:</b> ${L().tipGen}`;
+  const m = task.mode;
+  if (inSteps() && tipLevel > 1 && task.steps[stepIdx]) s += `<br><br>${L().tipNext(task.steps[stepIdx].sub)}`;
+  if (!inSteps() && tipLevel > 1) {
+    if (m === "first") s += `<br><br>${L().tipNext(task.opts.find(o => o.ok).s)}`;
+    if (m === "same") s += `<br><br>${txt(task.t1)} = ${fmt(val(task.t1))}`;
+    if (m === "errpro") s += `<br><br>${txt(task.term)} = ${txt(clearHoles(task.steps[0].after))} = ${fmt(val(task.term))}`;
+    if (m === "set" || m === "setpro") s += `<br><br>${task.opts.map(o => `${txt(o.t)} = ${fmt(val(o.t))}`).filter((x, i) => task.opts[i].ok || i < 1).slice(0, 1).join("")}`;
+  }
+  if (tipLevel > 2) s += `<br><br><b>${L().tip3}</b>`;
+  return s;
+}
+function pickFirst(i) { task.picked = i; if (task.opts[i].ok) success(); else { attempts++; feedback = { cls: "bad", text: L().pickBad }; render() } }
+function pickSame(v) { const v1 = fmt(val(task.t1)), v2 = fmt(val(task.t2)); if (v === task.equal) success(L().sameOk(v1, v2)); else { attempts++; done = true; feedback = { cls: "bad", text: L().sameBad(v1, v2) }; render() } }
+function pickSmart(i) { if (task.opts[i].ok) { task.phase = 2; setSteps(task.good); feedback = null; render() } else { attempts++; (task.badPicks = task.badPicks || []).push(i); feedback = { cls: "bad", text: L().pickBad }; render() } }
+function pickSet(i) { if (task.opts[i].ok) { task.phase = 2; setSteps(task.opts[i].t); feedback = null; render() } else { attempts++; (task.badPicks = task.badPicks || []).push(i); feedback = { cls: "bad", text: L().pickBad }; render() } }
+function pickSetPro(i) { if (task.opts[i].ok) { task.picked = i; success() } else { attempts++; (task.badPicks = task.badPicks || []).push(i); feedback = { cls: "bad", text: L().pickBad }; render() } }
+function pickWord(i) { if (task.opts[i].ok) { task.phase = 2; setSteps(task.good); feedback = null; render() } else { attempts++; (task.badPicks = task.badPicks || []).push(i); feedback = { cls: "bad", text: L().pickBad }; render() } }
+function pickWordPro(i) { if (task.opts[i].ok) { task.phase = 2; setSteps(task.good); feedback = null; task.badPicks = []; render() } else { attempts++; (task.badPicks = task.badPicks || []).push(i); feedback = { cls: "bad", text: L().pickBad }; render() } }
+function checkNums() {
+  const extra = task.sel.filter(x => !task.need.includes(x)); const missing = task.need.filter(x => !task.sel.includes(x));
+  if (extra.length) { attempts++; task.wrongSel = extra; feedback = { cls: "bad", text: L().numsExtra(extra[0]) } }
+  else if (missing.length) { attempts++; feedback = { cls: "bad", text: L().numsMissing } }
+  else { task.phase = 1.5; feedback = { cls: "ok", text: L().numsOk } }
+  render();
+}
+function pickLine(i) { if (i === task.first) { task.phase = 2; feedback = { cls: "ok", text: L().errLineOk(i + 1) } } else { attempts++; if (!task.badLines.includes(i)) task.badLines.push(i); feedback = { cls: "bad", text: L().errLineBad } } render() }
+function pickReason(r) { if (r === task.errType) { task.phase = 3; setSteps(task.term); feedback = null } else { attempts++; if (!task.badReasons.includes(r)) task.badReasons.push(r); feedback = { cls: "bad", text: L().reasonBad } } render() }
+
+/* ---- merk & cards ---- */
+function renderMerk() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().merkTitle));
+  const ol = el("ol"); L().merkRules.forEach(x => ol.appendChild(el("li", "", x))); const m = el("div", "rulebox"); m.appendChild(ol); p.appendChild(m);
+  const e = el("div", "section"); e.style.marginTop = "18px"; e.appendChild(el("h3", "", L().errTitle));
+  const list = el("div", "err"); L().errs.forEach(([t, x]) => list.appendChild(el("div", "erritem", `<span>${t}</span><span class="ex">${x}</span>`))); e.appendChild(list); p.appendChild(e);
+  const g = el("div", "section"); g.appendChild(el("h3", "", L().glossTitle));
+  const tbl = el("table", "gloss"); L().gloss.forEach(([a, b]) => tbl.appendChild(el("tr", "", `<td><b>${a}</b></td><td>${b}</td>`)));
+  const tw = el("div", ""); tw.style.overflowX = "auto"; tw.appendChild(tbl); g.appendChild(tw); p.appendChild(g);
+}
+function renderCards() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().cardsTitle));
+  const grid = el("div", "cards");
+  L().cards.forEach(([q, a], i) => {
+    const b = el("button", "fcard"); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<div class="fin"><div class="face front"><span class="num">${i + 1}</span><span class="q">${q}</span><span class="hint">${L().tapHint}</span></div><div class="face back">${a}</div></div>`;
+    b.onclick = () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    grid.appendChild(b);
+  });
+  p.appendChild(grid);
+}
+document.getElementById("langbtn").onclick = () => { lang = lang === "de" ? "tr" : "de"; save(); render() };
+render();
+
+</script>
+
+</body>
+</html>
