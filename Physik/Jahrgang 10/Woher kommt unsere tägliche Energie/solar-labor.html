@@ -196,6 +196,8 @@ table.mt tr{cursor:pointer}
 .xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
 .stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
 .stand b{font-family:var(--f-display)}
+.tipcard{border-left:4px solid var(--accent);}
+.task-step{font-weight:700}
 </style>
 </head>
 <body>
@@ -203,7 +205,7 @@ table.mt tr{cursor:pointer}
   <div class="hwrap">
     <div class="brand"><b>Solar-Labor</b><span>Warum liefert das Balkonkraftwerk so wenig?</span></div>
     <nav class="route" id="route" aria-label="Stationen"></nav>
-    <button class="reset t" id="teachBtn" type="button">Klassenergebnis</button><button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
     <button class="reset" id="reset" type="button">Neu starten</button>
   </div>
 </header>
@@ -220,55 +222,54 @@ table.mt tr{cursor:pointer}
     <section class="card stack" id="task"></section>
   </aside>
 </main>
-<div class="overlay" id="teach" hidden><section class="card"><div class="row" style="justify-content:space-between"><div><p class="eyebrow">Lehrkraft · Beamer</p><h2>Klassenergebnis: Welcher Faktor kostet Familie K. am meisten?</h2></div><button class="btn sec" type="button" id="tClose">Schließen</button></div>
-<canvas id="tCv" aria-label="Rangliste der Faktoren"></canvas>
-<p class="muted">Tragt den Prozentwert ein, den jede Gruppe für die Situation von Familie K. meldet. Die Werte bleiben auf diesem Gerät gespeichert.</p>
-<div class="tgrid" id="tIn"></div>
-<div class="row"><button class="btn tip" type="button" id="tModelBtn">Plan B: Beispielwerte aus dem Modell</button><button class="btn sec sm" type="button" id="tClear">Alle Werte löschen</button></div></section></div>
+
 <div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
 <script>
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id);};
-var APP={title:'Solar-Labor',file:'Solar-Labor',klasse:'10',lesson:'Warum liefert das Balkonkraftwerk so wenig?',welcome:'Willkommen im Solar-Labor!',intro:'Heute findet ihr heraus, welcher Faktor das Balkonkraftwerk von Familie K. am meisten ausbremst.'};
-var KEY='solar-labor-v1',RKEY='solar-labor-resets',TKEY='solar-labor-klasse-v1';
+var APP={title:'Solar-Labor',file:'Solar-Labor',klasse:'10',proAfter:3,lesson:'Warum liefert das Balkonkraftwerk so wenig?',welcome:'Willkommen im Solar-Labor!',intro:'Heute findet ihr heraus, welcher Faktor das Balkonkraftwerk von Familie K. am meisten ausbremst.'};
+var KEY='solar-labor-v5',RKEY='solar-labor-resets',TKEY='solar-labor-klasse-v1';
 var STATIONS=[
   {key:'s1',name:'Vorhersage',scene:'balcony'},
-  {key:'s2',name:'Planen',scene:'setup'},
+  {key:'s2',name:'Aufbauen',scene:'setup'},
   {key:'s3',name:'Messen',scene:'setup'},
   {key:'s4',name:'Auswerten',scene:'setup'},
-  {key:'s5',name:'Familie K.',scene:'balcony'},
   {key:'s6',name:'Profi-Zusatz',pro:true,scene:'setup'}
 ];
 /* Abschattungs-Muster: Anteil der abgedeckten Fläche je Zelle (4 Zellen in Reihe) */
-var SHADE=[[0,0,0,0],[.25,0,0,0],[.5,0,0,0],[1,0,0,0],[.25,.25,.25,.25]];
-var SHADE_LAB=['nichts abgedeckt','¼ einer Zelle (Ecke)','½ einer Zelle','1 ganze Zelle','Streifen über alle 4 Zellen'];
-var SHADE_SHORT=['0','¼ Zelle','½ Zelle','1 Zelle','Streifen'];
+function base(){return {h:1000,a:0,n:0,s:0,v:0};}
+var KU=20,KI=40;/* Anzeige wie ein echtes 400-W-Balkonmodul */
+var UNIT={s:'%',n:'g/m²',h:'W/m²',a:'°'};
 var GROUPS={
-  A:{rank:'Schatten',name:'Abschattung',lvl:'Basis',p:'s',unit:'',col:'#1A1F36',head:'Was ist abgedeckt?',fix:[0,1,2,3,4],famV:3,famLab:'1 ganze Zelle abgedeckt',
-     fam:'Mittags fällt der Schatten des Nachbarbalkons auf eine ganze Zelle.',task:'Deckt Teile des Moduls mit Pappe ab. Achtet darauf: Die Fläche beim Streifen ist genauso groß wie eine ganze Zelle.'},
-  B:{rank:'Staub',name:'Verschmutzung',lvl:'Basis',p:'n',unit:'Lagen',col:'#B05A12',head:'Lagen Transparentpapier',fix:[0,1,2,3,4],famV:1,famLab:'1 Lage Papier',
-     fam:'Auf dem Modul liegt eine dünne Staubschicht, etwa so viel wie 1 Lage Transparentpapier.',task:'Legt Lagen Transparentpapier flach auf das Modul. Das Papier spielt den Schmutz.'},
-  C:{rank:'Dunst (schwächeres Licht)',name:'Abstand zur Lampe',lvl:'Standard',p:'d',unit:'cm',col:'#1C66C0',head:'Abstand Lampe – Modul in cm',fix:[20,25,30,40,50],famV:25,famLab:'25 cm Abstand',
-     fam:'Es war leicht diesig. Das Sonnenlicht war so schwach wie eure Lampe in 25 cm statt 20 cm Abstand.',task:'Verschiebt die Lampe. Messt den Abstand immer von der Lampe bis zur Moduloberfläche.'},
-  D:{rank:'schräge Ausrichtung',name:'Einfallswinkel',lvl:'Experte',p:'a',unit:'°',col:'#6B3FB0',head:'Winkel in °',fix:null,famV:30,famLab:'30° schräg',
-     fam:'Das Modul steht 30° schräg zur Sonne.',task:'Dreht das Modul aus der Senkrechten zur Lampe heraus. Messt den Winkel mit dem Winkelmesser.'}
+  A:{rank:'Schatten',name:'Abschattung',lvl:'Basis',p:'s',col:'#1A1F36',head:'Schatten auf Zelle 1 (in % der Zellfläche)',famV:100,famLab:'eine ganze Zelle im Schatten',
+     fam:'Mittags liegt eine ganze Zelle im Schatten des Nachbarbalkons.',task:'Der Nachbarbalkon wirft Schatten auf das Modul. Ihr untersucht, wie die Schattenfläche auf einer Zelle die Leistung verändert.',
+     rule:{min:5,max:100,order:1,need:100,ext:null,unit:'%',ex:['25','50','100'],step:5,stepTxt:'Im Steuerpult geht der Schatten in 5-%-Schritten. Wählt Werte wie 25 %, 50 % oder 75 %.',txt:'Wählt 3 Schattenflächen auf Zelle 1 zwischen 5 % und 100 % (in 5-%-Schritten), aufsteigend. <b>100 %</b> (die ganze Zelle wie bei Familie K.) muss dabei sein. Die App ergänzt danach eine Vergleichsmessung: dieselbe Fläche, verteilt auf alle 4 Zellen.'}},
+  B:{rank:'Staub',name:'Verschmutzung',lvl:'Basis',p:'n',col:'#B05A12',head:'Staub auf dem Modul in g/m²',famV:2,famLab:'dünne Staubschicht (2 g/m²)',
+     fam:'Auf dem Modul liegt eine dünne Staubschicht von etwa 2 g/m².',task:'Auf dem Modul sammelt sich Staub. Ihr untersucht, wie die Staubmenge die Leistung verändert.',
+     rule:{min:0.5,max:15,order:1,need:2,ext:function(v){return v[2]>=6;},extTxt:'Nehmt auch eine dicke Staubschicht ab 6 g/m², damit ihr den Verlauf seht.',unit:'g/m²',ex:['2','5','10'],step:0.5,stepTxt:'Im Steuerpult geht der Staub in Schritten von 0,5 g/m². Wählt Werte wie 1, 2,5 oder 8 g/m².',txt:'Wählt 3 Staubmengen zwischen 0,5 und 15 g/m² (in Schritten von 0,5), aufsteigend. <b>2 g/m²</b> (Familie K.) muss dabei sein und eine Menge ab 6 g/m².'}},
+  C:{rank:'Dunst (schwächeres Licht)',name:'Dunst',lvl:'Standard',p:'h',col:'#1C66C0',head:'Sonnenlicht in W/m²',famV:700,famLab:'leichter Dunst (700 W/m²)',
+     fam:'Es ist leicht diesig. Statt 1000 W/m² kommen nur 700 W/m² Sonnenlicht an.',task:'Dunst und Wolken schwächen das Sonnenlicht. Ihr untersucht, wie die Stärke des Sonnenlichts die Leistung verändert.',
+     rule:{min:100,max:950,order:-1,need:700,ext:function(v){return v[2]<=400;},extTxt:'Nehmt auch schwaches Licht bis 400 W/m², damit ihr den Verlauf seht.',unit:'W/m²',ex:['700','500','300'],step:50,stepTxt:'Im Steuerpult geht das Sonnenlicht in 50er-Schritten. Wählt Werte wie 850, 600 oder 250 W/m².',txt:'Die Referenz ist klarer Himmel mit 1000 W/m². Wählt 3 schwächere Werte zwischen 100 und 950 W/m² (in 50er-Schritten), absteigend. <b>700 W/m²</b> (Familie K.) muss dabei sein und ein Wert bis 400 W/m².'}},
+  D:{rank:'schräge Ausrichtung',name:'Ausrichtung',lvl:'Experte',p:'a',col:'#6B3FB0',head:'Winkel zur Sonne in °',famV:30,famLab:'30° schräg',
+     fam:'Das Modul hängt 30° schräg zur Sonne am Geländer.',task:'Das Modul hängt am Geländer. Ihr untersucht, wie der Winkel zur Sonne die Leistung verändert.',
+     rule:{min:5,max:85,order:1,need:30,ext:function(v){return v[2]>=60;},extTxt:'Nehmt auch einen großen Winkel ab 60°, damit ihr den ganzen Verlauf seht.',unit:'°',ex:['30','50','70'],step:1,stepTxt:'Im Steuerpult geht der Winkel in ganzen Grad. Wählt Werte ohne Komma.',txt:'Die Referenz ist 0° (Modul direkt zur Sonne). Wählt 3 Winkel zwischen 5° und 85° (ganze Grad), aufsteigend. <b>30°</b> (Familie K.) muss dabei sein und ein Winkel ab 60°.'}}
 };
 var GKEYS=['A','B','C','D'];
-var st={station:0,done:[false,false,false,false,false,false],guess:null,grp:null,pred:50,model:false,showCauses:false,
-  set:{d:20,a:0,n:0,s:0},row:0,
+var st={station:0,done:[false,false,false,false,false],guess:null,grp:null,pred:50,model:true,tips:{},early:{},showCauses:false,
+  set:{h:1000,a:0,n:0,s:0,v:0},row:0,
   s1:{ok:false},
-  s2:{meas:null,measOk:false,pform:null,pformOk:false,konst:{},konstOk:false,steps:['','','','',''],stepsOk:false},
-  s3:{rows:[],refP:'',refOk:false,ok:false},
-  s4:{cmp:null,cmpOk:false,mc:null,mcOk:false,sent:'',ok:false},
-  s5:{first:null,firstOk:false,why:'',ok:false},
-  s6:{euro:'',euroOk:false,byp:null,bypOk:false,mpp:null,mppOk:false},
+  s2:{slot1:null,slot2:null,circOk:false,konst:{},konstOk:false,refOk:false,steps:['','',''],stepsOk:false},
+  s3:{rows:[],ok:false,famA:'',famOk:false},
+  s4:{cmp:null,cmpOk:false,mc:null,mcOk:false,sent:'',warned:false,ok:false},
+  s5:{first:null,firstOk:false,why:'',warned:false,ok:false},
+  s6:{oth:{},othOk:false,rank:null,rankOk:false,euro:'',euroOk:false,byp:null,bypOk:false,mpp:null,mppOk:false},
   res:{},tries:{},help:{},t0:null};
 
 /* ---------- Speicher ---------- */
-function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,grp:st.grp,pred:st.pred,model:st.model,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,res:st.res,tries:st.tries,help:st.help,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,grp:st.grp,pred:st.pred,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,res:st.res,tries:st.tries,help:st.help,tips:st.tips,early:st.early,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
-  ['station','guess','grp','pred','model','res','tries','help','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
+  ['station','guess','grp','pred','res','tries','help','tips','early','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
   if(x.done){st.done=x.done;while(st.done.length<6)st.done.push(false);}
   ['s1','s2','s3','s4','s5','s6'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});}catch(e){}}
 /* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
@@ -295,7 +296,15 @@ function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.m
   $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
 
 /* Stationen-Weg */
-function unlocked(i){return i===0||st.done[i-1];}
+function unlocked(i){return i===0||st.done[i-1]||(!!STATIONS[i].pro&&APP.proAfter!=null&&!!st.done[APP.proAfter]);}
+/* Tipp-Karten: erst selbst probieren, dann gestuft helfen */
+function tipHTML(key,tips){st.tips=st.tips||{};var n=st.tips[key]||0,h=tips.slice(0,n).map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+':</b> '+t+'</p>';}).join('');
+  if(n<tips.length)h+='<div class="row"><button class="btn tip sm" type="button" data-tip="'+key+'">'+(n?'Nächste Tipp-Karte':'Tipp-Karte')+' ('+(n+1)+' von '+tips.length+')</button></div><p class="fb" id="tw_'+key+'"></p>';
+  return '<div class="tips">'+h+'</div>';}
+function bindTips(rr){Array.prototype.forEach.call(document.querySelectorAll('[data-tip]'),function(b){b.addEventListener('click',function(){var key=b.dataset.tip,t=st.tries[key],n=st.tips[key]||0;
+  if(!n&&!(t&&t.n>0)&&!b._warned){b._warned=true;var f=$('tw_'+key);if(f){f.className='fb bad';f.textContent='Probiert es zuerst noch einmal selbst! Die Tipp-Karte hilft, wenn ihr nach einem Versuch nicht weiterkommt.';}b.textContent='Tipp-Karte trotzdem zeigen';st.early=st.early||{};st.early[key]=true;save();return;}
+  st.tips[key]=n+1;save();rr();});});}
+function tipNudge(fb,key,ntips){var t=st.tries[key];if(fb&&t&&!t.ok&&t.n>=2&&!(st.tips[key]>0)&&ntips)fb.textContent+=' Nutzt jetzt die Tipp-Karte.';}
 function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
     h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':(i+1)))+'</span>'+s.name+'</button>';});
   $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
@@ -414,30 +423,32 @@ function vctx(id){var c=$(id),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,
 
 /* ---------- Physik-Modell: 4 Zellen in Reihe, fester Lastwiderstand ---------- */
 var NVT=1.5*0.02585,ISC=0.30,I0=ISC/(Math.exp(0.56/NVT)-1),RL=6.8,RSH=20;
-function gains(s){var E=Math.pow(25/(s.d+5),2),c=Math.max(0,Math.cos(s.a*Math.PI/180))*(1-0.3*Math.pow(s.a/90,3)),T=Math.pow(0.72,s.n),sh=SHADE[s.s]||SHADE[0];
+function gains(s){var E=s.h/1000,c=Math.max(0,Math.cos(s.a*Math.PI/180))*(1-0.3*Math.pow(s.a/90,3)),T=Math.exp(-0.164*s.n),sh=s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0];
   return sh.map(function(f){return 0.012+E*c*T*(1-0.96*f);});}
 function cellV(I,Iph){var lo=-30,hi=0.9;for(var k=0;k<46;k++){var V=(lo+hi)/2,Ic=Iph-I0*(Math.exp(V/NVT)-1)-V/RSH;if(Ic>I)lo=V;else hi=V;}return (lo+hi)/2;}
 function solve(s){var g=gains(s),Iph=g.map(function(x){return x*ISC;}),lo=0,hi=Math.max.apply(null,Iph)*1.5+0.05;
   for(var k=0;k<46;k++){var I=(lo+hi)/2,V=0;Iph.forEach(function(p){V+=cellV(I,p);});if(V-I*RL>0)lo=I;else hi=I;}var I2=(lo+hi)/2;return {U:I2*RL,I:I2,P:I2*I2*RL};}
-var REF=solve({d:20,a:0,n:0,s:0});
+var REF=solve(base());
+function meas(s){var m=noisy(s);return {U:m.U*KU,I:m.I*KI};}
 function noisy(s){var h=fnv(JSON.stringify(s)),r1=(parseInt(h.slice(0,4),16)/65535-0.5),r2=(parseInt(h.slice(4),16)/65535-0.5);var m=solve(s);return {U:m.U*(1+r1*0.012),I:m.I*(1+r2*0.016)};}
-function modelPct(g,v){var s={d:20,a:0,n:0,s:0};s[GROUPS[g].p]=v;return solve(s).P/REF.P*100;}
+function modelPct(g,v){var s=base();s[GROUPS[g].p]=v;return solve(s).P/REF.P*100;}
 
 /* ---------- Messreihe der Gruppe ---------- */
 function G(){return GROUPS[st.grp]||GROUPS.A;}
-function rowVals(){var g=G();if(g.fix)return g.fix.slice();var a=[0];st.s2.steps.forEach(function(x){var v=num(x);if(!isNaN(v))a.push(v);});return a;}
-function rowLabel(v,i){var g=G();if(g.p==='s')return SHADE_LAB[v]+(i===0?' (Referenz)':'');if(g.p==='n')return v+(v===1?' Lage':' Lagen')+(i===0?' (Referenz)':'');return fmt(v,0)+(g.unit==='°'?'°':' '+g.unit)+(i===0?' (Referenz)':'');}
-function ensureRows(){var n=rowVals().length;while(st.s3.rows.length<n)st.s3.rows.push({U:'',I:''});if(st.s3.rows.length>n)st.s3.rows.length=n;}
-function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;var U=num(r.U),I=num(r.I);if(isNaN(U)||isNaN(I))return NaN;return U*I;}/* mW, weil I in mA */
+function rowVals(){var g=G(),a=[base()[g.p]];st.s2.steps.forEach(function(x){var v=num(x);if(!isNaN(v))a.push(v);});if(g.p==='s'&&a.length>1)a.push(-1);return a;}
+function valLabel(p,v){if(p==='s')return v===-1?'Fläche 1 Zelle, verteilt auf alle 4 Zellen':v===0?'kein Schatten':'Zelle 1 zu '+fmt(v,0)+' % im Schatten';if(p==='n')return v===0?'sauber (0 g/m²)':fmt(v,1)+' g/m² Staub';if(p==='h')return fmt(v,0)+' W/m²'+(v===1000?' (klarer Himmel)':'');return fmt(v,0)+'°';}
+function rowLabel(v,i){return valLabel(G().p,v)+(i===0?' (Referenz)':'');}
+function ensureRows(){var n=rowVals().length;while(st.s3.rows.length<n)st.s3.rows.push({U:'',I:'',P:''});if(st.s3.rows.length>n)st.s3.rows.length=n;}
+function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;return num(r.P);}/* von den SuS berechnet, W */
 function refP(){return rowP(0);}
 function pct(i){var p=rowP(i),r=refP();if(isNaN(p)||isNaN(r)||r<=0)return NaN;return p/r*100;}
 function famIndex(){var v=rowVals(),f=G().famV;return v.indexOf(f);}
 function famPct(){var i=famIndex();return i<0?NaN:pct(i);}
-function applyRow(i){var v=rowVals()[i];if(v==null)return;st.row=i;st.set={d:20,a:0,n:0,s:0};st.set[G().p]=v;}
 
 /* ---------- Zeichnen ---------- */
 function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
-  if(sc==='balcony')drawBalcony();else drawSetup();}
+  if(sc==='balcony')drawBalcony();else drawSetup();
+  if(st.station===2&&$('fair'))$('fair').innerHTML=fairInfo();}
 
 /* --- Balkon von Familie K. --- */
 function drawBalcony(){
@@ -489,32 +500,39 @@ function renderBalconyViews(){
 }
 function wrapText(c,t,x,y,maxW,lh){var words=t.split(' '),l='';words.forEach(function(wd){var test=l?l+' '+wd:wd;if(c.measureText(test).width>maxW&&l){c.fillText(l,x,y);y+=lh;l=wd;}else l=test;});if(l)c.fillText(l,x,y);}
 
-/* --- Versuchsaufbau (Draufsicht) + Schaltung --- */
+/* --- Versuchsaufbau: das Balkonmodul im Modell --- */
 function drawSetup(){
-  var s=st.set,topH=H*0.56,ink=col('ink'),soft=col('ink-soft');
-  ctx.fillStyle=col('surface-2');ctx.fillRect(0,0,W,topH);
-  ctx.font=font(12,true);ctx.fillStyle=soft;ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Versuchsaufbau von oben',10,8);
-  var cy=topH*0.55,lx=W*0.10,scale=Math.min((W*0.80)/62,9),mxp=lx+s.d*scale+18;
-  /* Licht-Kegel */
-  var a=s.a*Math.PI/180,half=topH*0.30;
-  ctx.fillStyle='rgba(255,214,102,.35)';ctx.beginPath();ctx.moveTo(lx+16,cy-10);ctx.lineTo(mxp,cy-half);ctx.lineTo(mxp,cy+half);ctx.lineTo(lx+16,cy+10);ctx.closePath();ctx.fill();
-  for(var k=-2;k<=2;k++)line(lx+20,cy+k*5,mxp-8,cy+k*half*0.42,'#F5B82E',1.5,[6,5],.8);
-  /* Lampe */
-  rrect(ctx,lx-26,cy-16,40,32,6);ctx.fillStyle='#3A3F55';ctx.fill();ctx.fillStyle='#FFE58A';ctx.fillRect(lx+10,cy-11,6,22);
-  ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Lampe',lx-6,cy+20);
-  /* Modul (gedreht) */
-  var len=half*1.7,dx=Math.sin(a)*len/2,dy=Math.cos(a)*len/2;
-  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#1E3A6E';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(mxp-dx,cy-dy);ctx.lineTo(mxp+dx,cy+dy);ctx.stroke();
-  if(s.n>0){ctx.strokeStyle='rgba(240,240,240,.95)';for(var p=1;p<=s.n;p++){ctx.lineWidth=2;ctx.beginPath();var o=7+p*3.2,ox=-Math.cos(a)*o,oy=Math.sin(a)*o;ctx.moveTo(mxp-dx+ox,cy-dy+oy);ctx.lineTo(mxp+dx+ox,cy+dy+oy);ctx.stroke();}}
-  ctx.restore();
-  if(SHADE[s.s]&&s.s>0){ctx.save();ctx.strokeStyle='#8B6B3E';ctx.lineWidth=5;var fr=s.s===4?1:s.s===3?0.25:s.s===2?0.125:0.0625;ctx.beginPath();ctx.moveTo(mxp-dx-Math.cos(a)*10,cy-dy+Math.sin(a)*10);ctx.lineTo(mxp-dx+2*dx*fr-Math.cos(a)*10,cy-dy+2*dy*fr+Math.sin(a)*10);ctx.stroke();ctx.restore();}
-  ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('Solarmodul',mxp+14,cy-dy-6);
-  /* Senkrechte und Winkel */
-  line(mxp,cy,mxp-Math.cos(a)*70,cy+Math.sin(a)*70,soft,1.5,[4,4],.9);line(mxp,cy,mxp-80,cy,'#F5B82E',1.5,null,.9);
-  if(s.a>0){ctx.save();ctx.strokeStyle='#6B3FB0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mxp,cy,40,Math.PI-0.0001,Math.PI-a,true);ctx.stroke();ctx.restore();tag(fmt(s.a,0)+'°',mxp-56,cy+(a>0?18:0)+8,'#6B3FB0');}
-  /* Maßpfeil Abstand */
-  var ay=topH-20;line(lx+16,ay,mxp,ay,'#1C66C0',2);line(lx+16,ay-6,lx+16,ay+6,'#1C66C0',2);line(mxp,ay-6,mxp,ay+6,'#1C66C0',2);tag(fmt(s.d,0)+' cm',(lx+16+mxp)/2,ay-1,'#1C66C0');
-  /* Schaltung */
+  var s=st.set,topH=H*0.56,ink=col('ink'),hz=s.h/1000,a=s.a*Math.PI/180,hl=s.h>=950?0:s.h>=600?1:s.h>=400?2:3;
+  /* Himmel mit Dunst */
+  var g=ctx.createLinearGradient(0,0,0,topH);g.addColorStop(0,'#BFD9F2');g.addColorStop(1,'#E8F1FA');ctx.fillStyle=g;ctx.fillRect(0,0,W,topH);
+  ctx.fillStyle='rgba(205,208,214,'+((1-hz)*0.85)+')';ctx.fillRect(0,0,W,topH);
+  /* Sonne */
+  var sx=W*0.90,sy=topH*0.17;ctx.save();ctx.globalAlpha=0.3+0.7*hz;ctx.fillStyle='#F5B82E';ctx.beginPath();ctx.arc(sx,sy,18,0,Math.PI*2);ctx.fill();
+  for(var k=0;k<10;k++){var an=k*Math.PI/5;line(sx+Math.cos(an)*24,sy+Math.sin(an)*24,sx+Math.cos(an)*32,sy+Math.sin(an)*32,'#F5B82E',3);}ctx.restore();
+  if(hl>=2){ctx.fillStyle='rgba(255,255,255,'+(hl===3?0.92:0.6)+')';[[0.83,0.14,34],[0.91,0.22,28],[0.97,0.13,24]].forEach(function(c){ctx.beginPath();ctx.ellipse(W*c[0],topH*c[1],c[2]*1.6,c[2]*0.7,0,0,Math.PI*2);ctx.fill();});}
+  /* Hauswand und Balkone */
+  var ww=W*0.70;ctx.fillStyle='#E7DCCB';ctx.fillRect(0,0,ww,topH);ctx.strokeStyle='#CDBFA8';ctx.lineWidth=1;for(var yy=16;yy<topH;yy+=20){ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(ww,yy);ctx.stroke();}
+  var nbY=topH*0.06;ctx.fillStyle='#9AA3B5';ctx.fillRect(0,nbY,ww*0.98,12);ctx.fillStyle='#6B7280';ctx.font=font(11,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Balkon der Nachbarn',8,nbY+14);
+  var by=topH*0.80;ctx.fillStyle='#B9C2D0';ctx.fillRect(0,topH-8,ww,8);line(0,by,ww,by,'#5B6278',4);for(var x=10;x<ww;x+=16)line(x,by,x,topH-8,'#5B6278',2);
+  /* Modul von vorne am Geländer (Breite zeigt die Schräge) */
+  var mwFull=ww*0.62,mw=mwFull*Math.max(0.16,Math.cos(a)),mh=topH*0.46,mx=ww*0.10+(mwFull-mw)/2,my=by-mh*0.86,cw=mw/4,sh=s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0];
+  for(var i=0;i<4;i++){ctx.fillStyle='#1E3A6E';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh);ctx.strokeStyle='#9CC3F0';ctx.lineWidth=1;for(var q=1;q<4;q++){ctx.beginPath();ctx.moveTo(mx+i*cw+1.5,my+mh*q/4);ctx.lineTo(mx+i*cw+cw-1.5,my+mh*q/4);ctx.stroke();}
+    if(s.n>0){ctx.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*s.n)+')';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh);}
+    var f=sh[i];if(f>0){ctx.fillStyle='rgba(10,14,30,.72)';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh*f);}}
+  if(s.n>0){ctx.fillStyle='rgba(150,120,80,.7)';for(var d2=0;d2<Math.round(18*s.n);d2++){var hx=fnv('st'+d2),px=parseInt(hx.slice(0,4),16)/65535*mw,py=parseInt(hx.slice(4),16)/65535*mh;ctx.beginPath();ctx.arc(mx+px,my+py,1.3,0,Math.PI*2);ctx.fill();}}
+  ctx.strokeStyle='#D1D5DB';ctx.lineWidth=3;ctx.strokeRect(mx,my,mw,mh);
+  if(s.s>0){ctx.fillStyle='rgba(10,14,30,.10)';ctx.beginPath();ctx.moveTo(ww*0.45,nbY+12);ctx.lineTo(ww*0.98,nbY+12);ctx.lineTo(mx+mw,my);ctx.lineTo(mx+mw*0.5,my);ctx.closePath();ctx.fill();}
+  tag('Balkonmodul · 4 Zellen in Reihe',ww*0.10+mwFull/2,my-12,ink);
+  /* Seitenansicht: Winkel zur Sonne */
+  var bx=W*0.72,bw=W*0.27,bty=topH*0.42,bh=topH*0.55;rrect(ctx,bx,bty,bw,bh,10);ctx.fillStyle='rgba(255,255,255,.92)';ctx.fill();ctx.strokeStyle=col('line');ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=col('ink-soft');ctx.font=font(11,true);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText('Von der Seite',bx+8,bty+6);
+  var cx=bx+bw*0.32,cy=bty+bh*0.58,L2=bh*0.32;
+  for(var r=-1;r<=1;r++)line(bx+bw-10,cy+r*L2*0.5,cx+8,cy+r*L2*0.5,'#F5B82E',2,[6,4]);
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#1E3A6E';ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(cx-Math.sin(a)*L2,cy-Math.cos(a)*L2);ctx.lineTo(cx+Math.sin(a)*L2,cy+Math.cos(a)*L2);ctx.stroke();ctx.restore();
+  line(cx,cy-L2,cx,cy+L2,col('ink-soft'),1.2,[3,3]);
+  if(s.a>0){ctx.save();ctx.strokeStyle='#6B3FB0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,L2*0.7,-Math.PI/2,-Math.PI/2-a,true);ctx.stroke();ctx.restore();}
+  tag(fmt(s.a,0)+'°',cx+bw*0.30,bty+bh*0.88,'#6B3FB0');
+  tag(['klarer Himmel','leichter Dunst','Dunst','Wolken'][hl]+' · '+fmt(s.h,0)+' W/m²',W-8,bty-14,'#1C66C0','right');
   drawCircuit(topH);
   renderSetupViews();
 }
@@ -529,21 +547,21 @@ function drawCircuit(topH){var y0=topH+12,h=H-topH-20,soft=col('ink-soft'),ink=c
   ctx.fillStyle=col('surface');ctx.fillRect(x1-14,(ya+yb)/2-16,28,32);ctx.strokeRect(x1-14,(ya+yb)/2-16,28,32);ctx.fillStyle='#1E3A6E';ctx.fillRect(x1-9,(ya+yb)/2-11,18,22);
   /* Amperemeter oben, Widerstand rechts, Voltmeter parallel unten */
   function circ(cx,cy,t){ctx.fillStyle=col('surface');ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=ink;ctx.font=font(13,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,cx,cy+1);}
-  circ((x1+x2)/2,ya,'A');ctx.fillStyle=col('surface');ctx.fillRect(x2-9,(ya+yb)/2-20,18,40);ctx.strokeRect(x2-9,(ya+yb)/2-20,18,40);
-  ctx.fillStyle=soft;ctx.font=font(11,true);ctx.textAlign='left';ctx.textAlign='right';ctx.fillText('Last',x2-14,(ya+yb)/2);var xr=x2+Math.max(34,W*0.05);ctx.beginPath();ctx.moveTo(x2,ya);ctx.lineTo(xr,ya);ctx.lineTo(xr,yb);ctx.lineTo(x2,yb);ctx.stroke();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(x2,ya,3.5,0,Math.PI*2);ctx.arc(x2,yb,3.5,0,Math.PI*2);ctx.fill();circ(xr,(ya+yb)/2,'V');
-  var m=st.model?noisy(st.set):null,mx=W*0.58,mw=Math.min(170,(W-mx-26)/2),mh=Math.min(h*0.70,70);
-  meter(mx,y0+h*0.08,mw,mh,'SPANNUNG U',m?fmt(m.U,2):'–,––','V');meter(mx+mw+12,y0+h*0.08,mw,mh,'STROMSTÄRKE I',m?fmt(m.I*1000,0):'–––','mA');
-  ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(st.model?'Modell-Messwerte (Plan B)':'Messwerte am echten Aufbau ablesen',mx,y0+h*0.08+mh+6);
+  var bld=st.station===1&&!st.s2.circOk,sl1=bld?(st.s2.slot1||'?'):'A',sl2=bld?(st.s2.slot2||'?'):'V';circ((x1+x2)/2,ya,sl1);if(bld){ctx.fillStyle='#E8892B';ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('①',(x1+x2)/2,ya-16);}ctx.fillStyle=col('surface');ctx.fillRect(x2-9,(ya+yb)/2-20,18,40);ctx.strokeRect(x2-9,(ya+yb)/2-20,18,40);
+  ctx.fillStyle=soft;ctx.font=font(11,true);ctx.textAlign='left';ctx.textAlign='right';ctx.fillText('Last',x2-14,(ya+yb)/2);var xr=x2+Math.max(34,W*0.05);ctx.beginPath();ctx.moveTo(x2,ya);ctx.lineTo(xr,ya);ctx.lineTo(xr,yb);ctx.lineTo(x2,yb);ctx.stroke();ctx.fillStyle=ink;ctx.beginPath();ctx.arc(x2,ya,3.5,0,Math.PI*2);ctx.arc(x2,yb,3.5,0,Math.PI*2);ctx.fill();circ(xr,(ya+yb)/2,sl2);if(bld){ctx.fillStyle='#E8892B';ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText('②',xr,(ya+yb)/2-16);}
+  var m=(st.s2.circOk||st.station>1)?meas(st.set):null,mx=W*0.58,mw=Math.min(170,(W-mx-26)/2),mh=Math.min(h*0.70,70);
+  meter(mx,y0+h*0.08,mw,mh,'SPANNUNG U',m?fmt(m.U,1):'–,–','V');meter(mx+mw+12,y0+h*0.08,mw,mh,'STROMSTÄRKE I',m?fmt(m.I,2):'–,––','A');
+  ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(m?'Messwerte im Modell ablesen':'Erst die Schaltung richtig bauen',mx,y0+h*0.08+mh+6);
 }
 function renderSetupViews(){
-  $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Lampe)';$('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · Leistung in % der Referenz':'<b>Eure Messreihe</b>';
+  $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Sonne)';$('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · Leistung in % der Referenz':'<b>Eure Messreihe</b>';
   var A=vctx('cvA'),x=A.x,w=A.w,s=st.set;x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
   var mw=w*0.84*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.44,mx=(w-mw)/2,my=w*0.24,cw=mw/4;
   for(var i=0;i<4;i++){x.fillStyle='#1E3A6E';x.fillRect(mx+i*cw+2,my,cw-4,mh);x.strokeStyle='#9CC3F0';x.lineWidth=Math.max(1,w/260);for(var g=1;g<4;g++){x.beginPath();x.moveTo(mx+i*cw+2,my+mh*g/4);x.lineTo(mx+i*cw+cw-2,my+mh*g/4);x.stroke();}
-    var f=(SHADE[s.s]||SHADE[0])[i];if(f>0){x.fillStyle='rgba(139,107,62,.95)';if(s.s===4)x.fillRect(mx+i*cw+2,my,cw-4,mh*f);else if(f===1)x.fillRect(mx+i*cw+2,my,cw-4,mh);else if(f===0.5)x.fillRect(mx+i*cw+2,my,cw-4,mh/2);else x.fillRect(mx+i*cw+2,my,(cw-4)/2,mh/2);}}
-  if(s.n>0){x.fillStyle='rgba(255,255,255,'+Math.min(0.85,0.22*s.n)+')';x.fillRect(mx-4,my-4,mw+8,mh+8);}
+    var f=(s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0])[i];if(f>0){x.fillStyle='rgba(10,14,30,.75)';x.fillRect(mx+i*cw+2,my,cw-4,mh*f);}}
+  if(s.n>0){x.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*s.n)+')';x.fillRect(mx,my,mw,mh);}
   x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();x.textAlign='center';x.textBaseline='top';
-  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(SHADE_LAB[s.s]+(s.n?' · '+s.n+' Lage'+(s.n>1?'n':''):''),w/2,w*0.08);
+  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(s.s?valLabel('s',s.v?-1:s.s).replace('Fläche 1 Zelle, verteilt','verteilt'):(s.n?valLabel('n',s.n):'Modul von vorne'),w/2,w*0.08);
   x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.88);
   drawGraph();
 }
@@ -552,36 +570,40 @@ function drawGraph(){var B=vctx('cvB'),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillR
   var g=G(),vals=rowVals(),L=w*0.16,R=w*0.95,T=w*0.08,Bt=w*0.78;function Y(p){return Bt-(Math.min(120,p)/110)*(Bt-T);}
   y.strokeStyle='#E3E8F0';y.lineWidth=1;y.fillStyle='#4E5677';y.font=Math.round(w/22)+'px '+F;y.textAlign='right';y.textBaseline='middle';
   [0,25,50,75,100].forEach(function(p){y.beginPath();y.moveTo(L,Y(p));y.lineTo(R,Y(p));y.stroke();y.fillText(p+' %',L-4,Y(p));});
-  var cat=g.p==='s'||g.p==='n',n=vals.length;
+  var cat=g.p==='s',n=vals.length;
   var xs=vals.map(function(v,i){if(cat)return L+(i+0.5)*(R-L)/n;var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);return L+(hi>lo?(v-lo)/(hi-lo):0)*(R-L)*0.9+(R-L)*0.05;});
   y.textAlign='center';y.textBaseline='top';y.fillStyle='#4E5677';
-  vals.forEach(function(v,i){var lab=g.p==='s'?['0','¼','½','1 Zelle','Streifen'][v]:fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
-  y.fillText(g.p==='s'?'abgedeckt':g.p==='n'?'Lagen Papier':g.p==='d'?'Abstand in cm':'Winkel in °',(L+R)/2,Bt+w*0.10);
+  vals.forEach(function(v,i){var lab=g.p==='s'?(v===-1?'verteilt':fmt(v,0)+' %'):g.p==='n'?fmt(v,1):fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
+  y.fillText(g.p==='s'?'Schatten auf Zelle 1':g.p==='n'?'Staub in g/m²':g.p==='h'?'Sonnenlicht in W/m²':'Winkel zur Sonne in °',(L+R)/2,Bt+w*0.10);
   /* Vorhersage */
   var fi=vals.indexOf(g.famV);if(fi>=0&&st.done[0]){y.strokeStyle='#6B3FB0';y.lineWidth=w/150;y.setLineDash([w/50,w/80]);y.beginPath();y.moveTo(xs[fi]-w*0.06,Y(st.pred));y.lineTo(xs[fi]+w*0.06,Y(st.pred));y.stroke();y.setLineDash([]);y.fillStyle='#6B3FB0';y.textAlign='center';y.textBaseline='bottom';y.fillText('Vorhersage',xs[fi],Y(st.pred)-3);}
-  var pts=vals.map(function(v,i){return isNaN(pct(i))?null:[xs[i],Y(pct(i)),pct(i)];});
+  var showP=true;var pts=vals.map(function(v,i){return (!showP||isNaN(pct(i)))?null:[xs[i],Y(pct(i)),pct(i)];});
   if(cat){pts.forEach(function(p,i){if(!p)return;var bw=(R-L)/n*0.55;y.fillStyle=(i===st.row&&st.station===2)?'#E8892B':g.col;y.fillRect(p[0]-bw/2,p[1],bw,Bt-p[1]);y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/20)+'px '+F;y.fillText(fmt(p[2],0)+' %',p[0],p[1]-2);y.font=Math.round(w/22)+'px '+F;});}
   else{y.strokeStyle=g.col;y.lineWidth=w/120;y.beginPath();var first=true;pts.forEach(function(p){if(!p)return;if(first){y.moveTo(p[0],p[1]);first=false;}else y.lineTo(p[0],p[1]);});y.stroke();
     pts.forEach(function(p,i){if(!p)return;y.fillStyle=(i===st.row&&st.station===2)?'#E8892B':g.col;y.beginPath();y.arc(p[0],p[1],w/55,0,Math.PI*2);y.fill();y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/22)+'px '+F;y.fillText(fmt(p[2],0),p[0],p[1]-w/40);y.font=Math.round(w/22)+'px '+F;});}
-  if(!pts.some(function(p){return p;})){y.fillStyle='#4E5677';y.textAlign='center';y.textBaseline='middle';y.fillText('Noch keine Messwerte',(L+R)/2,T+(Bt-T)*0.2);}
+  if(!pts.some(function(p){return p;})){y.fillStyle='#4E5677';y.textAlign='center';y.textBaseline='middle';y.fillText(showP?'Noch keine Messwerte':'Erscheint nach dem Anteil für Familie K.',(L+R)/2,T+(Bt-T)*0.2);}
 }
 
 /* ---------- Steuerpult ---------- */
+var REFLAB={s:'kein Schatten',n:'sauberes Modul (0 g/m²)',h:'klarer Himmel (1000 W/m²)',a:'Modul direkt zur Sonne (0°)'};
+function ctlFor(k){if(k==='a')return slider('W','WINKEL ZUR SONNE',st.set.a+'°',0,85,1,st.set.a,'0°','85°','g');
+  if(k==='n')return slider('N','STAUB AUF DEM MODUL',fmt(st.set.n,1)+' g/m²',0,15,0.5,st.set.n,'0','15 g/m²','g');
+  if(k==='h')return slider('H','SONNENLICHT',st.set.h+' W/m²',0,1000,50,st.set.h,'0','1000 W/m²','g');
+  return slider('S','SCHATTEN AUF ZELLE 1 (100 % = ganze Zelle)',st.set.s+' %'+(st.set.s===100?' · ganze Zelle':''),0,100,5,st.set.s,'0 %','100 %','g')+'<div class="ctlrow"><span>SCHATTEN LIEGT</span>'+segHTML('sgv',[[0,'nur auf Zelle 1'],[1,'verteilt auf alle 4']],st.set.v)+'</div>';}
 function renderCtl(){var sc=STATIONS[st.station].scene,h='',pro=STATIONS[st.station].key==='s6';
   if(sc==='balcony'){h='<label class="chk"><input type="checkbox" id="tCause"'+(st.showCauses||st.station===4?' checked':'')+(st.station===4?' disabled':'')+'> Auffälligkeiten am Balkon markieren</label><p class="muted">Schaut euch das Bild genau an: Was könnte die Leistung verringern?</p>';}
-  else{var p=st.grp?G().p:null,parts=[];
-    function sl(k){if(k==='d')return slider('D','ABSTAND',st.set.d+' cm',15,60,1,st.set.d,'15 cm','60 cm','g');if(k==='a')return slider('W','EINFALLSWINKEL',st.set.a+'°',0,85,1,st.set.a,'0°','85°','g');
-      if(k==='n')return slider('N','LAGEN PAPIER',String(st.set.n),0,4,1,st.set.n,'0','4','g');return '<div class="ctlrow"><span>ABGEDECKT</span>'+segHTML('sS',SHADE_SHORT.map(function(t,i){return [i,t];}),st.set.s)+'</div>';}
-    if(pro)parts=['s','n','d','a'];else if(p)parts=[p];
-    h=parts.map(sl).join('')+(parts.length?'':'<p class="muted">Wählt in Station 1 eure Gruppe.</p>')+
-      '<hr class="sep"><label class="chk"><input type="checkbox" id="tModel"'+(st.model?' checked':'')+'> Plan B: im Modell messen (nur wenn die Lehrkraft es sagt)</label>';}
+  else if(STATIONS[st.station].key==='s4'){h='<p class="muted">In dieser Station wird nicht gemessen. Schaut auf eure Tabelle und euren Graphen.</p>';}
+  else if(pro){h='<div class="row"><button class="btn sec" type="button" id="toRef">Alles auf Referenz zurücksetzen</button></div>'+['s','n','h','a'].map(ctlFor).join('')+'<p class="muted">Profi: Hier sind alle vier Faktoren frei. Stellt für eine Messung immer nur einen Faktor ein und setzt danach alles wieder auf die Referenz.</p>';}
+  else if(st.grp){var p=G().p;h=[p].concat(['s','n','h','a'].filter(function(k){return k!==p;})).map(ctlFor).join('')+'<p class="muted">Alle vier Regler lassen sich verstellen. Ihr entscheidet selbst, was ihr verändert und was gleich bleibt. Euer Faktor steht oben.</p>';}
+  else h='<p class="muted">Wählt in Station 1 eure Gruppe.</p>';
   $('ctl').innerHTML=h;
+  if($('toRef'))$('toRef').addEventListener('click',function(){st.set=base();save();renderCtl();draw();});
   if($('tCause'))$('tCause').addEventListener('change',function(){st.showCauses=this.checked;draw();});
-  if($('tModel'))$('tModel').addEventListener('change',function(){st.model=this.checked;save();draw();});
-  if($('DS'))bindSlider('D',function(){return st.set.d;},function(v){st.set.d=v;$('dispD').textContent=v+' cm';},1,15,60);
   if($('WS'))bindSlider('W',function(){return st.set.a;},function(v){st.set.a=v;$('dispW').textContent=v+'°';},1,0,85);
-  if($('NS'))bindSlider('N',function(){return st.set.n;},function(v){st.set.n=v;$('dispN').textContent=String(v);},1,0,4);
-  bindSeg('sS',function(v){st.set.s=+v;draw();});
+  if($('NS'))bindSlider('N',function(){return st.set.n;},function(v){st.set.n=Math.round(v*2)/2;$('dispN').textContent=fmt(st.set.n,1)+' g/m²';},0.5,0,15);
+  if($('HS'))bindSlider('H',function(){return st.set.h;},function(v){st.set.h=v;$('dispH').textContent=v+' W/m²';},50,0,1000);
+  if($('SS'))bindSlider('S',function(){return st.set.s;},function(v){st.set.s=v;$('dispS').textContent=v+' %'+(v===100?' · ganze Zelle':'');},5,0,100);
+  bindSeg('sgv',function(v){st.set.v=+v;draw();});
 }
 
 /* ---------- Aufgaben ---------- */
@@ -600,7 +622,7 @@ function r1(){var s=st.s1,g=st.grp?G():null;
     '<div class="lift"><div class="disp"><small>VORHERSAGE</small><span id="dispPr">'+st.pred+' %</span></div><div class="keys"><button class="key" id="Prm" type="button" aria-label="weniger">◀</button><button class="key" id="Prp" type="button" aria-label="mehr">▶</button></div></div>'+
     '<input type="range" id="PrS" min="0" max="100" step="5" value="'+st.pred+'" aria-label="Vorhersage in Prozent"'+(s.ok?' disabled':'')+'><div class="scale"><span>0 % (nichts mehr)</span><span>100 % (keine Änderung)</span></div>'+
     (s.ok?'<p class="fb ok">Vorhersage gespeichert: '+st.pred+' %</p>':'<div class="row"><button class="btn pri" type="button" id="c1">Vorhersage speichern</button></div><p class="fb" id="fb1"></p>')+'</div>':'';
-  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+guess+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt plant ihr eure Messung.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+guess+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt baut ihr euren Versuch auf.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
   Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){st.guess=b.dataset.k;save();r1();});});
   Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.grp=b.dataset.k;st.s3.rows=[];st.s2.stepsOk=false;save();r1();});});
   if($('PrS')&&!s.ok){var u=function(v){st.pred=Math.max(0,Math.min(100,v));$('PrS').value=st.pred;$('dispPr').textContent=st.pred+' %';save();};
@@ -609,155 +631,197 @@ function r1(){var s=st.s1,g=st.grp?G():null;
   bindNext();
 }
 
-/* Station 2: Planen */
-var QMEAS={q:'Was müsst ihr messen, um die Leistung zu bestimmen?',o:['Spannung U <b>und</b> Stromstärke I','nur die Spannung U','nur die Stromstärke I'],a:0,ok:'Genau! Für die Leistung braucht ihr beide Größen.',bad:['','Die Spannung allein reicht nicht: Bei schwachem Licht ändert sie sich kaum, die Stromstärke aber stark.','Mit der Stromstärke allein könnt ihr die Leistung nicht berechnen. Was fehlt?']};
-var QPF={q:'Mit welcher Formel berechnet ihr die elektrische Leistung?',o:['P = U · I','P = U + I','P = U : I'],a:0,ok:'Richtig! Leistung = Spannung mal Stromstärke. Mit I in mA kommt P in mW heraus.',bad:['','Schaut in euer Heft (Stunde 2): Die Größen werden nicht addiert.','Schaut in euer Heft (Stunde 2): Die Größen werden nicht geteilt.']};
-var KONST=[{id:'d',t:'Abstand Lampe – Modul'},{id:'a',t:'Winkel des Moduls'},{id:'s',t:'Abdeckung durch Pappe'},{id:'n',t:'Lagen Transparentpapier'},{id:'L',t:'dieselbe Lampe'},{id:'R',t:'derselbe Lastwiderstand'},{id:'I',t:'die Stromstärke I'}];
+/* Station 2: Aufbauen */
+var REFSET=base();
+function valSet(p,v){var x=base();if(p==='s'&&v===-1){x.s=100;x.v=1;}else x[p]=v;return x;}
+function rowSet(i){return valSet(G().p,rowVals()[i]);}
+function sameSet(a,b){return a.h===b.h&&a.a===b.a&&a.n===b.n&&a.s===b.s&&(a.s===0||a.v===b.v);}
+var FAMSET={s:100,v:0,n:2,h:700,a:30};
+var FNAME={s:'den Schatten',n:'den Staub',h:'das Sonnenlicht',a:'den Winkel'};
+var FDAT={s:'dem Schatten',n:'dem Staub',h:'dem Sonnenlicht',a:'dem Winkel'};
+function offKeys(set,p){return ['s','n','h','a'].filter(function(k){if(k===p)return false;if(k==='s'&&p!=='s')return set.s!==0;return set[k]!==REFSET[k];});}
+function vglBox(short){return '<div class="merk"><h3>So werden alle Ergebnisse vergleichbar</h3><ol style="margin:0;padding-left:1.2em"><li><b>Referenz</b> messen: beste Bedingungen. Ihre Leistung P<sub>Ref</sub> sind <b>100 %</b>.</li><li><b>Fairer Versuch:</b> Nur euer Faktor ändert sich, alles andere bleibt gleich. <b>Darauf achtet ihr selbst:</b> Im Steuerpult lassen sich alle Regler verstellen.</li><li><b>Anteil = P : P<sub>Ref</sub> · 100 %</b>. So kann man die Ergebnisse aller Gruppen vergleichen.</li></ol>'+(short?'':'<p class="muted" style="margin:6px 0 0">Tragt alles auch auf eurem Gruppen-AB ein.</p>')+'</div>';}
+function factorPhrase(p){return p==='s'?'den Schatten':p==='n'?'den Staub':p==='h'?'das Wetter (Dunst)':'den Winkel zur Sonne';}
+var TIPS={
+  s2circ:['Die Stromstärke misst man <b>im</b> Stromkreis. Der Strom muss durch das Messgerät hindurchfließen.','Die Spannung misst man <b>zwischen zwei Punkten</b>. Das Messgerät liegt neben der Last, also parallel.'],
+  s2konst:['Ihr verändert nur euren Faktor. Alles andere muss gleich bleiben.','Was ihr messt, ist euer Ergebnis. Es darf sich ändern.'],
+  s2ref:['Die Referenz ist der beste Fall für das Modul. Das gilt für alle vier Regler, nicht nur für euren.','Kein Schatten (0 %), sauberes Modul (0 g/m²), klarer Himmel (1000 W/m²), Modul direkt zur Sonne (0°).'],
+  s2steps:['Wählt Werte mit deutlichem Abstand zueinander, dann wird der Graph gut lesbar. Der Wert von Familie K. muss dabei sein.','Schaut auf die Bedingungen in der Aufgabe: Bereich, Reihenfolge, Pflichtwert.'],
+  s3meas:['Tippt eine Zeile an und stellt euren Faktor auf diesen Wert. Alle anderen Regler bleiben auf der Referenz. Lest U und I erst dann ab.','P = U · I. Nehmt U in V und I in A, dann kommt P in W heraus. Beispiel: 30 V · 10 A = 300 W.'],
+  s4expl:['Schaut auf das Bild „Modul von vorne“: Wie sind die vier Zellen verbunden?','In einer Reihenschaltung fließt durch alle Teile derselbe Strom. Was passiert, wenn ein Teil kaum Strom durchlässt?'],
+  s3fam:['Die Zeile von Familie K. ist in der Tabelle fett markiert.','In der letzten Spalte „Anteil“ steht, wie viel Prozent der Referenzleistung übrig bleiben.'],
+  s5why:['Schaut auf das Klassenergebnis an der Tafel (Aufgabe 3 im AB): Welcher Faktor lässt am wenigsten Leistung übrig?','Satzanfang: „Familie K. sollte zuerst …, weil …“']
+};
+function slotSeg(id,v,dis){return '<span class="seg" data-slot="'+id+'">'+[['A','Amperemeter (A)'],['V','Voltmeter (V)']].map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(v===o[0]?'sel':'')+'"'+(dis?' disabled':'')+'>'+o[1]+'</button>';}).join('')+'</span>';}
+var KONST=[{id:'s',t:'Schatten'},{id:'n',t:'Staub'},{id:'h',t:'Wetter (Dunst)'},{id:'a',t:'Winkel zur Sonne'},{id:'M',t:'dasselbe Modul'},{id:'R',t:'dieselbe Last und dieselben Messgeräte'},{id:'I',t:'die Stromstärke I'}];
 function konstAns(id){if(id==='I')return false;return id!==G().p;}
 function r2(){var s=st.s2,g=G();
-  var meas=mcHTML('meas',QMEAS.q,QMEAS.o,s.meas,QMEAS.a);
-  var pf=s.measOk?mcHTML('pf',QPF.q,QPF.o,s.pform,QPF.a):'';
-  var kon=s.pformOk?'<div class="q"><p><b>Fairer Versuch:</b> Ihr verändert nur <b>'+(g.p==='s'?'die Abdeckung':g.p==='n'?'die Lagen Papier':g.p==='d'?'den Abstand':'den Winkel')+'</b>. Was müsst ihr dabei <b>gleich lassen</b>? Kreuzt alles Passende an.</p>'+
+  var circ='<div class="q"><p><span class="task-step">1. Schaltung bauen.</span> Links in der Schaltung sind zwei Plätze frei. Welches Messgerät gehört wohin?</p>'+
+    '<div class="ctlrow"><span>PLATZ ① OBEN, IM STROMKREIS</span>'+slotSeg('1',s.slot1,s.circOk)+'</div><div class="ctlrow"><span>PLATZ ② RECHTS, NEBEN DER LAST</span>'+slotSeg('2',s.slot2,s.circOk)+'</div>'+
+    (s.circOk?'':'<div class="row"><button class="btn pri" type="button" id="c2c">Schaltung prüfen</button></div>')+'<p class="fb" id="fb2c"></p>'+(s.circOk?'':tipHTML('s2circ',TIPS.s2circ))+'</div>';
+  var kon=s.circOk?'<div class="q"><p><span class="task-step">2. Fairer Versuch.</span> Ihr verändert nur <b>'+factorPhrase(g.p)+'</b>. Was müsst ihr dabei <b>gleich lassen</b>? Kreuzt alles Passende an.</p>'+
     KONST.map(function(k){return '<label class="chk"><input type="checkbox" data-k="'+k.id+'"'+(s.konst[k.id]?' checked':'')+(s.konstOk?' disabled':'')+'> '+k.t+'</label>';}).join('')+
-    (s.konstOk?'':'<div class="row"><button class="btn pri" type="button" id="c2k">Prüfen</button></div>')+'<p class="fb" id="fb2k"></p></div>':'';
-  var steps='';
-  if(s.konstOk){if(g.fix){steps='<div class="q"><p><b>Eure Messreihe</b> ist vorgegeben:</p><ol style="margin:0;padding-left:1.2em">'+g.fix.map(function(v,i){return '<li>'+rowLabel(v,i)+'</li>';}).join('')+'</ol><p class="muted">'+g.task+'</p></div>';if(!s.stepsOk){s.stepsOk=true;save();}}
-    else{steps='<div class="q"><p><b>Plant eure Messreihe selbst.</b> Die Referenz ist 0°. Wählt 4 bis 5 weitere Winkel zwischen 5° und 85°, aufsteigend. <b>30°</b> muss dabei sein, denn so schräg steht das Modul von Familie K.</p><div class="row">'+
-      s.steps.map(function(v,i){return '<input class="num" data-st="'+i+'" inputmode="decimal" value="'+esc(v)+'" aria-label="Winkel '+(i+1)+'"'+(s.stepsOk?' disabled':'')+'><span>°</span>';}).join('')+'</div>'+
-      (s.stepsOk?'':'<div class="row"><button class="btn pri" type="button" id="c2s">Plan prüfen</button><button class="btn tip" type="button" id="t2s">Tipp anzeigen</button></div>')+'<p class="fb" id="fb2s"></p><p class="hint" id="h2s" hidden><b>Tipp:</b> Gleichmäßige Schritte machen den Graphen gut lesbar, zum Beispiel 15°, 30°, 45°, 60°, 75°.</p><p class="muted">'+g.task+'</p></div>';}}
-  if(s.stepsOk&&s.konstOk&&s.pformOk)finish(1);
-  $('task').innerHTML=head(1,'Wie messen wir fair?')+'<p>'+g.task+'</p>'+meas+pf+kon+steps+(st.done[1]?'<p class="win"><b>Plan steht!</b> Baut jetzt auf und messt.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
-  mcBind('meas',QMEAS,s,'meas','s2meas',r2);if(s.measOk)mcBind('pf',QPF,s,'pform','s2pf',r2);
-  Array.prototype.forEach.call(document.querySelectorAll('[data-k]'),function(c){if(c.type==='checkbox')c.addEventListener('change',function(){s.konst[c.dataset.k]=c.checked;save();});});
+    (s.konstOk?'':'<div class="row"><button class="btn pri" type="button" id="c2k">Prüfen</button></div>')+'<p class="fb" id="fb2k"></p>'+(s.konstOk?'':tipHTML('s2konst',TIPS.s2konst))+'</div>':'';
+  var ref=s.konstOk?'<div class="q"><p><span class="task-step">3. Referenz einstellen.</span> Im Steuerpult steht noch alles so wie bei Familie K. Stellt <b>alle Regler</b> auf die <b>Referenz</b>, also die besten Bedingungen für das Modul.</p>'+
+    (s.refOk?'<p class="fb ok">Die Referenz steht: kein Schatten, sauberes Modul, klarer Himmel, Modul direkt zur Sonne.</p>':'<div class="row"><button class="btn pri" type="button" id="c2r">Aufbau prüfen</button></div><p class="fb" id="fb2r"></p>'+tipHTML('s2ref',TIPS.s2ref))+'</div>':'';
+  var steps='',R=g.rule;
+  if(s.refOk)steps='<div class="q"><p><span class="task-step">4. Messreihe planen.</span> '+R.txt+'</p><div class="row">'+
+      s.steps.slice(0,3).map(function(v,i){return '<input class="num" data-st="'+i+'" inputmode="decimal" value="'+esc(v)+'" aria-label="Wert '+(i+1)+'"'+(s.stepsOk?' disabled':'')+'><span>'+R.unit+'</span>';}).join('')+'</div>'+
+      (s.stepsOk?'<p class="fb ok">Euer Plan steht. Zeile 1 ist die Referenz'+(g.p==='s'?', die letzte Zeile die Vergleichsmessung „verteilt“':'')+'.</p>':'<div class="row"><button class="btn pri" type="button" id="c2s">Plan prüfen</button></div><p class="fb" id="fb2s"></p>'+tipHTML('s2steps',TIPS.s2steps))+'</div>';
+  if(s.circOk&&s.konstOk&&s.refOk&&s.stepsOk)finish(1);
+  $('task').innerHTML=head(1,'Baut euren Versuch auf und plant die Messreihe')+'<p>'+g.task+'</p>'+vglBox()+circ+kon+ref+steps+(st.done[1]?'<p class="win"><b>Aufgebaut!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(1)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-slot]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(s.circOk)return;s['slot'+sg.dataset.slot]=b.dataset.v;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});draw();});});});
+  if($('c2c'))$('c2c').addEventListener('click',function(){var fb=$('fb2c'),ok=s.slot1==='A'&&s.slot2==='V';
+    if(!s.slot1||!s.slot2){fb.className='fb bad';fb.textContent='Setzt an beide Plätze ein Messgerät.';return;}
+    tryInc('s2circ',ok,(s.slot1||'-')+(s.slot2||'-'));if(ok){s.circOk=true;save();r2();draw();helpMsg('fb2c','Richtig! Das Amperemeter liegt in Reihe, das Voltmeter parallel zur Last. Jetzt zeigen die Messgeräte Werte.');return;}
+    fb.className='fb bad';fb.textContent=s.slot1==='V'&&s.slot2==='A'?'Genau vertauscht. Ein Amperemeter neben der Last macht einen Kurzschluss, ein Voltmeter im Stromkreis lässt kaum Strom durch.':s.slot1==='V'?'Ein Voltmeter im Stromkreis lässt kaum Strom durch. Was gehört in den Stromkreis?':'Ein Amperemeter neben der Last macht einen Kurzschluss. Was gehört neben die Last?';
+    tipNudge(fb,'s2circ',1);showHelp(fb,'s2circ',function(){s.slot1='A';s.slot2='V';s.circOk=true;save();r2();draw();});});
+  if(s.circOk&&!s.konstOk)helpMsg('fb2c','Richtig! Das Amperemeter liegt in Reihe, das Voltmeter parallel zur Last.');
+  Array.prototype.forEach.call(document.querySelectorAll('input[data-k]'),function(c){c.addEventListener('change',function(){s.konst[c.dataset.k]=c.checked;save();});});
   if($('c2k'))$('c2k').addEventListener('click',function(){var wrong=KONST.filter(function(k){return !!s.konst[k.id]!==konstAns(k.id);}),fb=$('fb2k');tryInc('s2konst',!wrong.length,wrong.map(function(k){return k.id;}).join(','));
-    if(!wrong.length){s.konstOk=true;save();r2();return;}var w0=wrong[0];fb.className='fb bad';
+    if(!wrong.length){s.konstOk=true;save();r2();helpMsg('fb2k','Richtig! Nur eine Größe verändern, alles andere gleich lassen. So wird der Versuch fair.');return;}var w0=wrong[0];fb.className='fb bad';
     fb.textContent=w0.id==='I'?'Die Stromstärke messt ihr. Sie darf sich ändern, sie ist euer Ergebnis.':w0.id===g.p?'„'+w0.t+'“ ist genau das, was ihr verändert.':'Noch nicht vollständig: Alles, was ihr nicht untersucht, muss gleich bleiben.';
-    showHelp(fb,'s2konst',function(){KONST.forEach(function(k){s.konst[k.id]=konstAns(k.id);});s.konstOk=true;save();r2();});});
-  if(s.konstOk&&!s.konst._shown){helpMsg('fb2k','Richtig! Nur eine Größe verändern, alles andere gleich lassen. So wird der Versuch fair.');}
+    tipNudge(fb,'s2konst',1);showHelp(fb,'s2konst',function(){KONST.forEach(function(k){s.konst[k.id]=konstAns(k.id);});s.konstOk=true;save();r2();});});
+  if(s.konstOk&&!s.refOk)helpMsg('fb2k','Richtig! Nur eine Größe verändern, alles andere gleich lassen. So wird der Versuch fair.');
+  if($('c2r'))$('c2r').addEventListener('click',function(){var fb=$('fb2r'),ok=sameSet(st.set,REFSET),off=['s','n','h','a'].filter(function(k){return k==='s'?st.set.s!==0:st.set[k]!==REFSET[k];});tryInc('s2ref',ok,off.join(','));
+    if(ok){s.refOk=true;save();r2();return;}fb.className='fb bad';var nt=(st.tries.s2ref||{}).n||0;fb.textContent=nt<2?'Noch nicht alle Bedingungen sind die besten. Geht jeden der vier Regler durch.':'Noch nicht optimal: '+off.map(function(k){return FNAME[k];}).join(', ')+'.';
+    tipNudge(fb,'s2ref',1);showHelp(fb,'s2ref',function(){st.set=base();s.refOk=true;save();r2();renderCtl();draw();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-st]'),function(inp){inp.addEventListener('input',function(){s.steps[+inp.dataset.st]=inp.value;save();});});
-  if($('t2s'))$('t2s').addEventListener('click',function(){$('h2s').hidden=false;});
-  if($('c2s'))$('c2s').addEventListener('click',function(){var v=s.steps.map(num).filter(function(x){return !isNaN(x);}),fb=$('fb2s'),err='';
-    if(v.length<4)err='Tragt mindestens 4 Winkel ein.';else if(v.some(function(x){return x<5||x>85;}))err='Alle Winkel müssen zwischen 5° und 85° liegen.';
-    else if(v.some(function(x,i){return i>0&&x<=v[i-1];}))err='Ordnet die Winkel aufsteigend und ohne Doppelte.';else if(v.indexOf(30)<0)err='30° fehlt noch. So schräg steht das Modul von Familie K.';
-    tryInc('s2steps',!err,v.join('/'));if(err){fb.className='fb bad';fb.textContent=err;showHelp(fb,'s2steps',function(){s.steps=['15','30','45','60','75'];s.stepsOk=true;save();r2();});return;}
-    s.steps=v.map(String);while(s.steps.length<5)s.steps.push('');s.stepsOk=true;st.s3.rows=[];save();r2();});
-  bindNext();
+  if($('c2s'))$('c2s').addEventListener('click',function(){var R=g.rule,v=s.steps.slice(0,3).map(num).filter(function(x){return !isNaN(x);}),fb=$('fb2s'),err='',U=R.unit;
+    if(v.length<3)err='Tragt 3 Werte ein.';else if(v.some(function(x){return x<R.min||x>R.max;}))err='Alle Werte müssen zwischen '+fmt(R.min,1)+(U==='°'?'° und ':' und ')+fmt(R.max,0)+(U==='°'?'°':' '+U)+' liegen.';
+    else if(v.some(function(x,i){return i>0&&(R.order>0?x<=v[i-1]:x>=v[i-1]);}))err='Ordnet die Werte '+(R.order>0?'aufsteigend':'absteigend')+' und ohne Doppelte.';
+    else if(v.some(function(x){var q=x/R.step;return Math.abs(q-Math.round(q))>1e-6;}))err=R.stepTxt;
+    else if(v.indexOf(R.need)<0)err=fmt(R.need,0)+(U==='°'?'°':' '+U)+' fehlt noch. Das ist der Wert von Familie K.';
+    else if(R.ext&&!R.ext(v))err=R.extTxt;
+    tryInc('s2steps',!err,v.join('/'));if(err){fb.className='fb bad';fb.textContent=err;tipNudge(fb,'s2steps',1);showHelp(fb,'s2steps',function(){s.steps=R.ex.slice();s.stepsOk=true;st.s3.rows=[];save();r2();});return;}
+    s.steps=v.map(String);s.stepsOk=true;st.s3.rows=[];save();r2();});
+  bindTips(r2);bindNext();
 }
 
 /* Station 3: Messen */
+function fairInfo(){var want=rowSet(st.row),v=rowVals()[st.row];
+  if(sameSet(st.set,want))return '<p class="note">Zeile '+(st.row+1)+' ('+rowLabel(v,st.row).replace(' (Referenz)','')+'): Euer Faktor steht richtig. Lest U und I ab.</p>';
+  if(st.set[G().p]===want[G().p]&&(G().p!=='s'||st.set.v===want.v))return '<p class="note">Zeile '+(st.row+1)+': Euer Faktor steht richtig. Ist der Versuch fair?</p>';
+  return '<p class="note">Zeile '+(st.row+1)+': Stellt euren Faktor im Steuerpult auf <b>'+rowLabel(v,st.row).replace(' (Referenz)','')+'</b>.</p>';}
+function measOk(set,U,I){var m=meas(set);U=num(U);I=num(I);return !isNaN(U)&&!isNaN(I)&&Math.abs(U-m.U)<=0.03*m.U+0.15&&Math.abs(I-m.I)<=0.03*m.I+0.06;}
+function rowOk(i){var r=st.s3.rows[i];return measOk(rowSet(i),r.U,r.I);}
+function pOk(i){var r=st.s3.rows[i],U=num(r.U),I=num(r.I),P=num(r.P);return !isNaN(P)&&!isNaN(U)&&!isNaN(I)&&Math.abs(P-U*I)<=Math.max(1,0.03*U*I);}
 function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
-  var rows=vals.map(function(v,i){var r=s.rows[i],p=rowP(i),q=pct(i),ref=i===0;
-    var pc=ref?(s.refOk?'<b>'+fmt(p,0)+'</b>':'<input class="num" id="refP" inputmode="decimal" value="'+esc(s.refP)+'" aria-label="Leistung der Referenz in mW">'):(isNaN(p)?'–':fmt(p,0));
-    var qc=ref?'100 %':(isNaN(q)||!s.refOk?'–':'<b>'+fmt(q,0)+' %</b>');
-    return '<tr class="'+(i===st.row?'cur':'')+'" data-row="'+i+'"><td style="text-align:left">'+rowLabel(v,i)+'</td><td><input class="num" data-u="'+i+'" inputmode="decimal" value="'+esc(r.U)+'" aria-label="Spannung"></td><td><input class="num" data-ii="'+i+'" inputmode="decimal" value="'+esc(r.I)+'" aria-label="Stromstärke"></td><td class="v">'+pc+'</td><td class="v">'+qc+'</td></tr>';}).join('');
-  var warn=vals.map(function(v,i){var q=pct(i);return i>0&&s.refOk&&q>105?'Zeile '+(i+1)+': mehr als die Referenz? Prüft, ob ihr aus Versehen noch etwas anderes verändert habt (Lampe, Abstand, Raumlicht).':'';}).filter(Boolean);
-  $('task').innerHTML=head(2,'Referenz und Messreihe')+
-    '<p><b>1.</b> Messt zuerst die <b>Referenz</b> unter besten Bedingungen: senkrecht zur Lampe, 20 cm Abstand, nichts abgedeckt. <b>2.</b> Berechnet P für die Referenz selbst. <b>3.</b> Messt dann Zeile für Zeile. Die App rechnet ab Zeile 2 für euch.</p>'+
-    '<p class="muted">Tippt eine Zeile an, dann zeigt das Modell links die passende Einstellung.</p>'+
-    '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in mA</small></th><th>P = U · I<small>in mW</small></th><th>Anteil<small>an P<sub>Ref</sub></small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    (s.refOk?'':'<div class="row"><button class="btn pri" type="button" id="c3r">Referenz-Leistung prüfen</button></div>')+'<p class="fb" id="fb3r"></p>'+
-    warn.map(function(t){return '<p class="note">'+t+'</p>';}).join('')+
-    (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c3">Messung abschließen</button></div>')+'<p class="fb" id="fb3"></p>'+
-    '<p class="hint"><b>Messtipps:</b> Lampe nur zum Messen einschalten und nicht anfassen, sie wird heiß. Immer mit angeschlossener Last messen. Kurz warten, bis der Wert ruhig ist.</p>'+
-    (st.done[2]?'<p class="win"><b>Gemessen!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
-  function upd(){save();var tb=document.querySelectorAll('[data-row]');vals.forEach(function(v,i){var tr=tb[i],p=rowP(i),q=pct(i);if(i>0){tr.children[3].innerHTML=isNaN(p)?'–':fmt(p,0);tr.children[4].innerHTML=isNaN(q)||!s.refOk?'–':'<b>'+fmt(q,0)+' %</b>';}else if(s.refOk){tr.children[3].innerHTML='<b>'+fmt(p,0)+'</b>';}});drawGraph();}
-  Array.prototype.forEach.call(document.querySelectorAll('[data-u],[data-ii]'),function(inp){inp.addEventListener('input',function(){var i=+(inp.dataset.u||inp.dataset.ii);if(inp.dataset.u!=null)s.rows[i].U=inp.value;else s.rows[i].I=inp.value;if(i===0&&s.refOk){s.refOk=false;save();r3();return;}upd();});
-    inp.addEventListener('focus',function(){var i=+(inp.dataset.u||inp.dataset.ii);if(st.row!==i){applyRow(i);Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(tr,j){tr.className=j===i?'cur':'';});renderCtl();draw();}});});
-  Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(tr){tr.addEventListener('click',function(){var i=+tr.dataset.row;if(st.row===i)return;applyRow(i);Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===i?'cur':'';});renderCtl();draw();});});
-  if($('refP'))$('refP').addEventListener('input',function(){s.refP=this.value;save();});
-  if($('c3r'))$('c3r').addEventListener('click',function(){var fb=$('fb3r'),U=num(s.rows[0].U),I=num(s.rows[0].I),P=num(s.refP);
-    if(isNaN(U)||isNaN(I)){fb.className='fb bad';fb.textContent='Tragt zuerst U und I der Referenz ein.';return;}
-    if(U<=0||U>15||I<=0||I>3000){fb.className='fb bad';fb.textContent='Prüft die Messwerte: Ist U in V und I in mA eingetragen?';return;}
-    var ok=!isNaN(P)&&Math.abs(P-U*I)<=Math.max(1,0.03*U*I);tryInc('s3ref',ok,s.refP);
-    if(ok){s.refOk=true;save();r3();helpMsg('fb3r','Richtig gerechnet! P_Ref = '+fmt(U*I,0)+' mW. Das sind ab jetzt 100 %.');return;}
-    fb.className='fb bad';fb.textContent=(!isNaN(P)&&Math.abs(P-U*I/1000)<0.03*U*I/1000+0.001)?'Fast! Ihr habt in W gerechnet. Gebt P in mW an (I steht in mA).':'Noch nicht. Rechnet P = U · I = '+fmt(U,2)+' V · '+fmt(I,0)+' mA.';
-    showHelp(fb,'s3ref',function(){s.refP=fmt(U*I,0);s.refOk=true;save();r3();});});
-  if($('c3'))$('c3').addEventListener('click',function(){var fb=$('fb3');if(!s.refOk){fb.className='fb bad';fb.textContent='Prüft zuerst die Referenz-Leistung.';return;}
-    var miss=vals.filter(function(v,i){return isNaN(rowP(i));}).length;if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch Messwerte in '+miss+(miss>1?' Zeilen.':' Zeile.');return;}
-    s.ok=true;finish(2);save();r3();});
-  bindNext();
+  var fi=famIndex(),dis=s.ok?' disabled':'';
+  var rows=vals.map(function(v,i){var r=s.rows[i],q=pct(i);
+    return '<tr class="'+(i===st.row?'cur':'')+'" data-row="'+i+'"><td style="text-align:left">'+rowLabel(v,i)+(i===fi?' <b>(Familie K.)</b>':'')+'</td><td><input class="num" data-u="'+i+'" inputmode="decimal" value="'+esc(r.U)+'" aria-label="Spannung"'+dis+'></td><td><input class="num" data-ii="'+i+'" inputmode="decimal" value="'+esc(r.I)+'" aria-label="Stromstärke"'+dis+'></td><td><input class="num" data-pp="'+i+'" inputmode="decimal" value="'+esc(r.P)+'" aria-label="Leistung"'+dis+'></td><td class="v">'+(i===0?'100 %':(s.ok&&!isNaN(q)?'<b>'+fmt(q,0)+' %</b>':'–'))+'</td></tr>';}).join('');
+  var fam=s.ok?'<div class="q"><p><b>Anteil für Familie K.</b> Wie viel Prozent der Referenzleistung bleiben bei „'+g.famLab+'“ übrig? Lest den Wert in der Tabelle ab und tragt ihn hier ein.</p><div class="row"><span>Bei Familie K. bleiben</span><input class="num'+(s.famOk?' ok':'')+'" id="famA" inputmode="decimal" value="'+esc(s.famA)+'"'+(s.famOk?' disabled':'')+'><span>% übrig.</span>'+(s.famOk?'':'<button class="btn pri" type="button" id="c3f">Prüfen</button>')+'</div><p class="fb" id="fb3f"></p>'+(s.famOk?'':tipHTML('s3fam',TIPS.s3fam))+'</div>':'';
+  $('task').innerHTML=head(2,'Messreihe aufnehmen und auswerten')+
+    '<p><b>1.</b> Tippt eine Zeile an und stellt euren Faktor auf den Wert dieser Zeile. Achtet auf einen fairen Versuch. <b>2.</b> Lest U und I ab. <b>3.</b> Berechnet für <b>jede Zeile</b> P = U · I. Übertragt alles auf euer Gruppen-AB.</p>'+vglBox(true)+
+    (s.ok?'':'<div id="fair">'+fairInfo()+'</div>')+
+    '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P = U · I<small>in W</small></th><th>Anteil<small>an P<sub>Ref</sub></small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (s.ok?'<p class="fb ok">Alle Messwerte und Rechnungen stimmen. Die App hat die Anteile in Prozent ergänzt.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Messwerte und Rechnungen prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3meas',TIPS.s3meas))+fam+
+    (st.done[2]?'<p class="win"><b>Gemessen und berechnet!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(2)+'</div>';
+  function mark(i){st.row=i;Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===i?'cur':'';});if($('fair'))$('fair').innerHTML=fairInfo();drawGraph();}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-u],[data-ii],[data-pp]'),function(inp){var i=+(inp.dataset.u||inp.dataset.ii||inp.dataset.pp);
+    inp.addEventListener('input',function(){var r=s.rows[i];if(inp.dataset.u!=null){r.U=inp.value;r.set=JSON.parse(JSON.stringify(st.set));}else if(inp.dataset.ii!=null){r.I=inp.value;r.set=JSON.parse(JSON.stringify(st.set));}else r.P=inp.value;save();});
+    inp.addEventListener('focus',function(){if(st.row!==i)mark(i);});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(tr){tr.addEventListener('click',function(){var i=+tr.dataset.row;if(st.row!==i)mark(i);});});
+  if($('c3'))$('c3').addEventListener('click',function(){var fb=$('fb3'),idx=vals.map(function(v,i){return i;});
+    var miss=idx.filter(function(i){var r=s.rows[i];return !r.U||!r.I||!r.P;}).length;if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch Werte in '+miss+(miss>1?' Zeilen.':' Zeile.');return;}
+    var uf=idx.filter(function(i){var r=s.rows[i];return r.set&&offKeys(r.set,g.p).length;});
+    if(uf.length){st.unfair=(st.unfair||0)+uf.length;var ks=[];uf.forEach(function(i){offKeys(s.rows[i].set,g.p).forEach(function(k){if(ks.indexOf(k)<0)ks.push(k);});});
+      uf.forEach(function(i){s.rows[i].U='';s.rows[i].I='';s.rows[i].P='';delete s.rows[i].set;});save();r3();var f2=$('fb3');f2.className='fb bad';
+      f2.innerHTML='<b>Kein fairer Versuch!</b> Beim Ablesen in Zeile '+uf.map(function(i){return i+1;}).join(', ')+' habt ihr außer '+FDAT[g.p]+' auch '+ks.map(function(k){return FNAME[k];}).join(' und ')+' verändert. Dann weiß man nicht, was die Leistung verringert hat. Stellt alles andere auf die Referenz und messt diese Zeilen neu.';return;}
+    var wm=idx.filter(function(i){return !rowOk(i);}),wp=idx.filter(function(i){return rowOk(i)&&!pOk(i);}),ok=!wm.length&&!wp.length;tryInc('s3meas',ok,wm.join(',')+'|'+wp.join(','));
+    if(ok){s.ok=true;save();r3();drawGraph();return;}
+    var t=[];if(wm.length)t.push('Messwerte in Zeile '+wm.map(function(i){return i+1;}).join(', ')+' passen nicht. Stellt euren Faktor genau auf den Wert dieser Zeile, prüft alle anderen Regler und lest neu ab.');
+    if(wp.length)t.push('P in Zeile '+wp.map(function(i){return i+1;}).join(', ')+' stimmt nicht. Rechnet P = U · I.');
+    fb.className='fb bad';fb.textContent=t.join(' ');tipNudge(fb,'s3meas',1);
+    showHelp(fb,'s3meas',function(){wm.concat(wp).forEach(function(i){var r=s.rows[i];if(!rowOk(i)){var m=meas(rowSet(i));r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;save();r3();drawGraph();});});
+  if($('famA'))$('famA').addEventListener('input',function(){s.famA=this.value;save();});
+  if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=!isNaN(v)&&Math.abs(v-f)<=1.5;tryInc('s3fam',ok,s.famA);
+    if(ok){s.famOk=true;finish(2);save();r3();resize();helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(f,0)+' % der Referenzleistung übrig.');return;}
+    fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-(100-f))<=1.5)?'Das ist der Verlust. Gefragt ist, wie viel übrig bleibt.':'Noch nicht. Schaut in der Tabelle in die Zeile „(Familie K.)“ und dort in die Spalte „Anteil“.';
+    tipNudge(fb,'s3fam',1);showHelp(fb,'s3fam',function(){s.famA=fmt(f,0);s.famOk=true;finish(2);save();r3();resize();});});
+  if(s.famOk)helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(famPct(),0)+' % der Referenzleistung übrig.');
+  bindTips(r3);bindNext();
 }
 
 /* Station 4: Auswerten */
 var MC4={
-  A:{q:'Eine ganze Zelle ist nur ¼ der Fläche. Trotzdem bricht die Leistung fast ganz ein. Warum?',o:['Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom, die abgedeckte Zelle bremst ihn für alle.','Die abgedeckte Zelle wird heiß und schaltet das Modul ab.','Das Messgerät misst im Schatten falsch.'],a:0,ok:'Genau! Wie bei einer Kette: Die schwächste Zelle bestimmt den Strom. Der Streifen nimmt jeder Zelle nur ein wenig Licht, deshalb sinkt die Leistung dort viel weniger.',bad:['','Das Modul schaltet nicht ab. Schaut auf die Schaltung: Wie sind die Zellen verbunden?','Das Messgerät misst richtig. Vergleicht „1 Zelle“ und „Streifen“: gleiche Fläche, ganz andere Leistung.']},
-  B:{q:'Was passiert mit jeder weiteren Lage Papier?',o:['Jede Lage lässt nur einen Teil des Lichts durch. Die Leistung sinkt jedes Mal um ungefähr denselben Anteil.','Ab der zweiten Lage ändert sich nichts mehr.','Jede Lage zieht genau gleich viele Milliwatt ab.'],a:0,ok:'Richtig! Darum lohnt sich schon das Putzen einer dünnen Staubschicht.',bad:['','Schaut auf euren Graphen: Sinkt die Leistung nach der zweiten Lage weiter?','Vergleicht die Abnahme von 0 auf 1 Lage mit der von 3 auf 4 Lagen. Ist sie gleich groß?']},
-  C:{q:'Der Abstand verdoppelt sich von 20 cm auf 40 cm. Die Leistung …',o:['sinkt auf deutlich weniger als die Hälfte.','sinkt genau auf die Hälfte.','bleibt fast gleich.'],a:0,ok:'Genau! Das Licht verteilt sich auf eine viel größere Fläche. Auf das Modul trifft deutlich weniger Licht.',bad:['','Schaut in eure Tabelle: Wie viel Prozent sind bei 40 cm übrig?','Schaut in eure Tabelle: Wie viel Prozent sind bei 40 cm übrig?']},
-  D:{q:'Wie hängt die Leistung vom Einfallswinkel ab?',o:['Bei kleinen Winkeln sinkt sie kaum, ab etwa 45° sinkt sie stark.','Sie sinkt mit jedem Grad gleich stark.','Sie ändert sich kaum.'],a:0,ok:'Richtig! Bei schrägem Licht trifft weniger Licht auf dieselbe Fläche, und ein Teil wird zurückgeworfen.',bad:['','Vergleicht den Verlust zwischen 0° und 15° mit dem zwischen 60° und 75°.','Schaut auf den größten Winkel in eurem Graphen.']}
+  A:{q:'Eine ganze Zelle ist nur ¼ der Fläche. Trotzdem bricht die Leistung fast ganz ein. Warum?',o:['Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom, die abgedeckte Zelle bremst ihn für alle.','Die abgedeckte Zelle wird heiß und schaltet das Modul ab.','Das Messgerät misst im Schatten falsch.'],a:0,ok:'Genau! Wie bei einer Kette: Die schwächste Zelle bestimmt den Strom. Der Streifen nimmt jeder Zelle nur ein wenig Licht, deshalb sinkt die Leistung dort viel weniger.',bad:['','Das Modul schaltet nicht ab. Schaut auf das Bild „Modul von vorne“: Wie sind die Zellen geschaltet?','Das Messgerät misst richtig. Vergleicht „1 Zelle“ und „Streifen“: gleiche Fläche, ganz andere Leistung.']},
+  B:{q:'Was passiert, wenn mehr Staub auf dem Modul liegt?',o:['Die Leistung sinkt mit jedem Gramm Staub weiter deutlich.','Ab der dünnen Schicht ändert sich nichts mehr.','Die Leistung steigt wieder an.'],a:0,ok:'Richtig! Staub schluckt Licht. Darum lohnt sich schon das Putzen einer dünnen Staubschicht.',bad:['','Schaut auf euren Graphen: Sinkt die Leistung bei dickerem Staub weiter?','Schaut auf euren Graphen: Wird die Leistung größer oder kleiner?']},
+  C:{q:'Bei leichtem Dunst kommen 700 W/m² statt 1000 W/m² an, also 70 % des Lichts. Wie viel Leistung bleibt übrig?',o:['Weniger als 70 %: Die Leistung sinkt stärker als das Licht.','Genau 70 %.','Mehr als 70 %.'],a:0,ok:'Genau! Bei weniger Licht sinken Stromstärke und Spannung. Darum sinkt die Leistung stärker als das Licht.',bad:['','Schaut in eure Tabelle: Wie viel Prozent sind bei leichtem Dunst übrig?','Schaut in eure Tabelle: Wie viel Prozent sind bei leichtem Dunst übrig?']},
+  D:{q:'Wie hängt die Leistung vom Einfallswinkel ab?',o:['Bei kleinen Winkeln sinkt sie kaum, bei großen Winkeln sinkt sie stark.','Sie sinkt mit jedem Grad gleich stark.','Sie ändert sich kaum.'],a:0,ok:'Richtig! Bei schrägem Licht trifft weniger Licht auf dieselbe Fläche, und ein Teil wird zurückgeworfen.',bad:['','Vergleicht den Verlust bei kleinen und bei großen Winkeln in eurem Graphen.','Schaut auf den größten Winkel in eurem Graphen.']}
 };
-var SATZ={A:'Je mehr Fläche einer einzelnen Zelle abgedeckt ist, desto …',B:'Je mehr Lagen auf dem Modul liegen, desto …',C:'Je größer der Abstand zur Lampe ist, desto …',D:'Je größer der Einfallswinkel ist, desto …'};
+var SATZ={A:'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto …',B:'Je mehr Staub auf dem Modul liegt, desto …',C:'Je weniger Sonnenlicht ankommt, desto …',D:'Je schräger das Sonnenlicht auf das Modul fällt, desto …'};
+function P0(i){var q=pct(i);return isNaN(q)?'…':fmt(q,0);}
+function muster(){var g=st.grp,G0=G(),v=rowVals(),fi=famIndex(),n=g==='A'?v.length-2:v.length-1;
+  if(g==='A')return 'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto kleiner ist die Leistung. Liegt eine ganze Zelle im Schatten, bleiben nur '+P0(fi)+' %. Verteilt sich dieselbe Schattenfläche auf alle 4 Zellen, bleiben '+P0(v.length-1)+' % der Referenzleistung.';
+  var start={B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je schräger das Sonnenlicht auf das Modul fällt'}[g];
+  return start+', desto kleiner ist die Leistung. Bei '+valLabel(G0.p,v[fi])+' sank sie auf '+P0(fi)+' %, bei '+valLabel(G0.p,v[n])+' auf '+P0(n)+' % der Referenzleistung.';}
 function cmpAns(){var f=famPct(),d=st.pred-f;return Math.abs(d)<=10?2:(d>0?0:1);}
 function r4(){var s=st.s4,g=G(),f=famPct();
-  var cmpQ={q:'Bei <b>'+g.famLab+'</b> habt ihr <b>'+(isNaN(f)?'–':fmt(f,0)+' %')+'</b> gemessen. Eure Vorhersage war <b>'+st.pred+' %</b>. Eure Vorhersage war also …',o:['zu hoch: Es bleibt weniger Leistung übrig als gedacht.','zu niedrig: Es bleibt mehr Leistung übrig als gedacht.','ungefähr richtig (höchstens 10 Prozentpunkte daneben).'],a:cmpAns(),ok:'Stimmt! Genau dafür messen Physiker: um Vermutungen zu prüfen.',bad:'Vergleicht die beiden Zahlen noch einmal.'};
+  var cmpQ={q:'Bei „<b>'+g.famLab+'</b>“ habt ihr <b>'+(isNaN(f)?'–':fmt(f,0)+' %')+'</b> gemessen. Eure Vorhersage war <b>'+st.pred+' %</b>. Eure Vorhersage war also …',o:['zu hoch: Es bleibt weniger Leistung übrig als gedacht.','zu niedrig: Es bleibt mehr Leistung übrig als gedacht.','ungefähr richtig (höchstens 10 Prozentpunkte daneben).'],a:cmpAns(),ok:'Stimmt! Genau dafür messen Physiker: um Vermutungen zu prüfen.',bad:'Vergleicht die beiden Zahlen noch einmal.'};
   var cmp=mcHTML('cmp',cmpQ.q,cmpQ.o,s.cmp,cmpQ.a);
   var mc=s.cmpOk?mcHTML('mc4',MC4[st.grp].q,MC4[st.grp].o,s.mc,MC4[st.grp].a):'';
-  var sent=s.mcOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Schreibt zwei Sätze mit euren Messwerten.</p><p class="muted">Satzbausteine: „'+SATZ[st.grp]+'“ · „Bei … sank die Leistung auf … % der Referenzleistung.“</p>'+
-    '<textarea class="free" id="sent" rows="3" placeholder="'+esc(SATZ[st.grp])+'">'+esc(s.sent)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn sec sm" type="button" id="ins">Satzanfang einfügen</button><button class="btn pri" type="button" id="c4">Fertig</button></div>')+'<p class="fb" id="fb4"></p></div>':'';
-  var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Meldet der Lehrkraft: <span class="k">Gruppe '+st.grp+' · '+g.name+' · bei '+g.famLab+': '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
-  $('task').innerHTML=head(3,'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten im Modell-Bereich.</p>'+cmp+mc+sent+report+(st.done[3]?'<p class="win"><b>Ausgewertet!</b> Gleich vergleicht die ganze Klasse.</p>':'')+'<div class="row">'+nextBtn(3)+'</div>';
+  var tipsSent=['Satzanfang: „'+SATZ[st.grp]+'“','Nennt einen Wert aus eurer Tabelle: „Bei … sank die Leistung auf … % der Referenzleistung.“'];
+  var sent=s.mcOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Schreibt ein bis zwei Sätze mit einem Messwert.</p>'+
+    '<textarea class="free" id="sent" rows="3" placeholder="'+esc(SATZ[st.grp])+'"'+(s.ok?' disabled':'')+'>'+esc(s.sent)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c4">Fertig</button></div>')+'<p class="fb" id="fb4"></p>'+
+    (s.ok?'<div class="merk"><h3>Vergleicht mit dem Mustersatz</h3><p>'+muster()+'</p></div>':tipHTML('s4sent',tipsSent))+'</div>':'';
+  var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Schreibt euren Ergebnissatz auf das Gruppen-AB. Meldet euren Wert in der Besprechung: <span class="k">Gruppe '+st.grp+' · '+g.name+' · Familie K. ('+g.famLab+'): '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
+  var expl='';if(st.grp==='A'&&s.ok){expl='<div class="q"><p><b>Nur Gruppe A: Eure Aufgabe in der Besprechung.</b> Nur ihr habt den Schatten gemessen. Erklärt der Klasse in eigenen Worten, warum eine einzige verschattete Zelle fast die ganze Leistung kostet.</p>'+
+    '<textarea class="free" id="expl" rows="3" placeholder="Die Zellen sind …"'+(s.explOk?' disabled':'')+'>'+esc(s.expl||'')+'</textarea>'+(s.explOk?'<div class="merk"><h3>Vergleicht mit dieser Erklärung</h3><p>Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom. Die verschattete Zelle lässt kaum Strom durch und bremst damit alle anderen, wie das schwächste Glied einer Kette.</p></div><p class="muted">Schreibt eure Erklärung auch auf das Gruppen-AB (Aufgabe 2).</p>':'<div class="row"><button class="btn pri" type="button" id="c4e">Fertig</button></div><p class="fb" id="fb4e"></p>'+tipHTML('s4expl',TIPS.s4expl))+'</div>';}
+  var after=st.done[3]&&(st.grp!=='A'||s.explOk)?'<p class="win"><b>Ausgewertet!</b> Füllt jetzt Aufgabe 2 auf eurem Gruppen-AB aus. Damit stellt ihr euer Ergebnis in der Besprechung vor.</p>'+saveCTA(true)+'<p class="muted">Noch Zeit bis zur Besprechung? Dann weiter mit dem Profi-Zusatz ★.</p><div class="row"><button class="btn sec" type="button" id="toPro">Zum Profi-Zusatz ★ →</button></div>':'';
+  $('task').innerHTML=head(3,'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten.</p>'+cmp+mc+sent+report+expl+after;
   mcBind('cmp',cmpQ,s,'cmp','s4cmp',r4);if(s.cmpOk)mcBind('mc4',MC4[st.grp],s,'mc','s4mc',r4);
-  if($('sent')){$('sent').addEventListener('input',function(){s.sent=this.value;save();});
-    if($('ins'))$('ins').addEventListener('click',function(){var t=$('sent');t.value=SATZ[st.grp].replace(' …','')+' '+(t.value||'');s.sent=t.value;save();t.focus();});
-    if($('c4'))$('c4').addEventListener('click',function(){var fb=$('fb4');if(s.sent.trim().length<40){fb.className='fb bad';fb.textContent='Schreibt zwei ganze Sätze und nennt einen Messwert in %.';return;}if(!/\d/.test(s.sent)){fb.className='fb bad';fb.textContent='Nennt mindestens einen Messwert (eine Zahl in %).';return;}s.ok=true;finish(3);save();r4();});}
-  bindNext();
+  if($('sent')&&!s.ok){$('sent').addEventListener('input',function(){s.sent=this.value;save();});
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),t=s.sent.trim(),words=t?t.split(/\s+/).length:0;
+      if(words<4){tryInc('s4sent',false,t);fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';tipNudge(fb,'s4sent',1);return;}
+      var miss=[];if(!/\d/.test(t))miss.push('einem Messwert in %');if(!/desto|je |sinkt|sank|kleiner|weniger|größer|abnimmt|nimmt/i.test(t))miss.push('der Angabe, wie sich die Leistung verändert');
+      if(miss.length&&!s.warned){s.warned=true;save();tryInc('s4sent',false,t);fb.className='fb bad';fb.textContent='Guter Anfang! Noch besser wird euer Satz mit '+miss.join(' und ')+'. Ergänzt ihn oder tippt noch einmal auf „Fertig“.';return;}
+      tryInc('s4sent',true,t);s.ok=true;finish(3);save();r4();});}
+  if($('expl')&&!s.explOk){$('expl').addEventListener('input',function(){s.expl=this.value;save();});
+    $('c4e').addEventListener('click',function(){var fb=$('fb4e'),t=(s.expl||'').trim(),words=t?t.split(/\s+/).length:0;
+      if(words<6){tryInc('s4expl',false,t);fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';tipNudge(fb,'s4expl',1);return;}
+      if(!/reihe|kette|strom|bremst|schwäch/i.test(t)&&!s.explWarned){s.explWarned=true;save();tryInc('s4expl',false,t);fb.className='fb bad';fb.textContent='Guter Anfang! Denkt noch an die Schaltung der Zellen: Was gilt für den Strom? Ergänzt oder tippt noch einmal auf „Fertig“.';return;}
+      tryInc('s4expl',true,t);s.explOk=true;save();r4();});}
+  if($('toPro'))$('toPro').addEventListener('click',function(){go(4);});
+  bindTips(r4);bindCTA();
 }
 
-/* Station 5: Familie K. */
-var Q5={q:'Was sollte Familie K. <b>zuerst</b> ändern?',o:['Das Modul so versetzen, dass kein Schatten mehr darauf fällt.','Das Modul putzen.','Auf einen Tag ohne Dunst warten.','Das Modul genauer zur Sonne ausrichten.'],a:0,
-  ok:'Genau! Der Schatten auf einer ganzen Zelle kostet am meisten Leistung, weil die Zellen in Reihe geschaltet sind. Den Dunst kann Familie K. gar nicht ändern.',bad:['','Putzen hilft, aber vergleicht im Klassenergebnis: Welcher Faktor lässt am wenigsten Leistung übrig?','Den Dunst kann Familie K. nicht ändern. Was kann sie selbst tun?','Ausrichten hilft ein wenig. Bei 30° bleibt aber noch viel Leistung übrig. Was kostet mehr?']};
-function r5(){var s=st.s5;
-  var q=mcHTML('q5',Q5.q,Q5.o,s.first,Q5.a);
-  var why=s.firstOk?'<div class="q"><p><b>Begründet eure Empfehlung</b> mit Messwerten aus eurer Gruppe oder aus dem Klassenergebnis.</p><textarea class="free" id="why5" rows="3" placeholder="Familie K. sollte zuerst …, weil …">'+esc(s.why)+'</textarea>'+(s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c5">Fertig</button></div>')+'<p class="fb" id="fb5"></p></div>':'';
-  var refl=s.ok?'<div class="merk"><h3>Eure Vermutung vom Anfang</h3><p>Ihr habt vermutet: <span class="k">'+(st.guess?guessName(st.guess):'keine')+'</span>. '+(st.guess==='A'?'Das passt zum Klassenergebnis!':'Das Klassenergebnis zeigt: Der Schatten kostet am meisten.')+'</p></div>':'';
-  $('task').innerHTML=head(4,'Diagnose für Familie K.')+'<p>Die Markierungen links zeigen die vier Ursachen. Nutzt das Klassenergebnis am Beamer.</p>'+q+why+refl+(s.ok?saveCTA(true):'')+(st.done[4]?'<p class="win"><b>Fall gelöst!</b> Schnell fertig? Probiert den Profi-Zusatz.</p>':'')+'<div class="row">'+nextBtn(4)+'</div>';
-  mcBind('q5',Q5,s,'first','s5first',r5);
-  if($('why5')){$('why5').addEventListener('input',function(){s.why=this.value;save();});if($('c5'))$('c5').addEventListener('click',function(){var fb=$('fb5');if(s.why.trim().length<30){fb.className='fb bad';fb.textContent='Schreibt einen ganzen Satz mit „weil“.';return;}s.ok=true;finish(4);save();r5();});}
-  bindCTA();bindNext();
-}
-
-/* Profi-Zusatz */
+/* Profi-Zusatz: Wissen für die Besprechung erweitern */
 var QBYP={q:'Echte Module haben <b>Bypass-Dioden</b>. Sie leiten den Strom an einer verschatteten Zellgruppe vorbei. Was bewirken sie?',o:['Bei Schatten auf einer Zelle fällt nur ein Teil der Leistung weg statt fast alles.','Das Modul liefert dann mehr als 100 %.','Das Modul liefert dann gar nichts mehr.'],a:0,ok:'Richtig! Die anderen Zellgruppen arbeiten weiter. Darum haben Balkonkraftwerke mehrere Bypass-Dioden.',bad:['','Mehr als die Referenz geht nicht, das Licht wird ja nicht mehr.','Das Gegenteil: Die Dioden retten einen Teil der Leistung.']};
-var QMPP={q:'Euer Modul hängt an einem festen Widerstand. Ein echtes Balkonkraftwerk hat einen Wechselrichter, der immer die bestmögliche Leistung einstellt. Die Verluste bei Familie K. sind deshalb …',o:['etwas kleiner als bei euch. Die Reihenfolge der Faktoren bleibt aber gleich.','viel größer als bei euch.','genau gleich groß wie bei euch.'],a:0,ok:'Genau! Das ist eine Fehlerquelle beim Übertragen vom Modellversuch auf die Wirklichkeit.',bad:['','Der Wechselrichter holt das Beste heraus, die Verluste werden also nicht größer.','Der Wechselrichter stellt sich immer neu ein, euer Widerstand nicht. Dann kann es nicht genau gleich sein.']};
-function r6(){var s=st.s6;
-  var euro='<div class="q"><p><b>Was kostet der Schatten?</b> Ohne Verluste liefert das Balkonkraftwerk etwa <b>700 kWh</b> im Jahr. Mit dem Schatten sind es nur <b>55 %</b> davon. Eine kWh kostet <b>0,35 €</b>. Wie viel Geld verliert Familie K. pro Jahr?</p><div class="row"><input class="num'+(s.euroOk?' ok':'')+'" id="eu" inputmode="decimal" value="'+esc(s.euro)+'"'+(s.euroOk?' disabled':'')+'><span>€ pro Jahr</span>'+(s.euroOk?'':'<button class="btn pri" type="button" id="c6e">Prüfen</button>')+'</div><p class="fb" id="fb6e"></p></div>';
-  var byp=mcHTML('byp',QBYP.q,QBYP.o,s.byp,QBYP.a),mpp=mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a);
-  $('task').innerHTML=head(5,'Für Profis')+'<p>Im Steuerpult könnt ihr jetzt alle vier Faktoren gleichzeitig einstellen. Probiert Kombinationen im Modell (Plan B einschalten).</p>'+euro+byp+mpp+(s.euroOk&&s.bypOk&&s.mppOk?saveCTA(true):'');
+var QMPP={q:'Euer Modul hängt an einem festen Widerstand. Ein echtes Balkonkraftwerk hat einen Wechselrichter, der immer die bestmögliche Leistung einstellt. Die Verluste bei Familie K. sind deshalb …',o:['etwas kleiner als bei euch. Die Reihenfolge der Faktoren bleibt aber gleich.','viel größer als bei euch.','genau gleich groß wie bei euch.'],a:0,ok:'Genau! Das ist eine Grenze unseres Modellversuchs beim Übertragen auf die Wirklichkeit.',bad:['','Der Wechselrichter holt das Beste heraus, die Verluste werden also nicht größer.','Der Wechselrichter stellt sich immer neu ein, euer Widerstand nicht. Dann kann es nicht genau gleich sein.']};
+var EURO_OK='Richtig! 45 % von 700 kWh = 315 kWh. 315 kWh · 0,35 € = 110,25 € pro Jahr.';
+function othKeys(){return GKEYS.filter(function(k){return k!==st.grp;});}
+function famSet(k){return valSet(GROUPS[k].p,GROUPS[k].famV);}
+function othPct(k){var o=st.s6.oth[k]||{},U=num(o.U),I=num(o.I),r=refP();if(isNaN(U)||isNaN(I)||isNaN(r)||r<=0)return NaN;return U*I/r*100;}
+var SETHINT={s:'Schatten 100 %, nur auf Zelle 1',n:'Staub 2 g/m²',h:'Sonnenlicht 700 W/m²',a:'Winkel 30°'};
+function r6(){var s=st.s6,ks=othKeys();
+  var tab='<div class="q"><p><span class="task-step">1. Die anderen Faktoren.</span> Messt die Situation von Familie K. auch für die drei anderen Faktoren. Stellt im Steuerpult immer <b>nur diesen einen</b> Faktor ein, alles andere bleibt Referenz. Wie, steht unter jeder Zeile. Vor der nächsten Zeile: „Alles auf Referenz zurücksetzen“. Die App rechnet den Anteil.</p>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>Einstellung</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>Anteil<small>an P<sub>Ref</sub></small></th></tr></thead><tbody>'+
+    ks.map(function(k){var o=s.oth[k]||{},q=othPct(k);return '<tr><td style="text-align:left">'+GROUPS[k].famLab+'<br><small class="muted">Einstellen: '+SETHINT[GROUPS[k].p]+'</small></td><td><input class="num" data-ou="'+k+'" inputmode="decimal" value="'+esc(o.U||'')+'"'+(s.othOk?' disabled':'')+'></td><td><input class="num" data-oi="'+k+'" inputmode="decimal" value="'+esc(o.I||'')+'"'+(s.othOk?' disabled':'')+'></td><td class="v" data-oq="'+k+'">'+(isNaN(q)?'–':'<b>'+fmt(q,0)+' %</b>')+'</td></tr>';}).join('')+'</tbody></table></div>'+
+    (s.othOk?'':'<div class="row"><button class="btn pri" type="button" id="c6o">Prüfen</button></div>')+'<p class="fb" id="fb6o"></p></div>';
+  var rank=s.othOk?'<div class="merk"><h3>Für die Besprechung</h3><p>Vergleicht diese Werte mit eurem eigenen Ergebnis. Was fällt euch auf? Merkt es euch für die Besprechung, verraten wird hier nichts.</p></div>':'';
+  var byp=s.othOk?mcHTML('byp',QBYP.q,QBYP.o,s.byp,QBYP.a):'';
+  var euro=s.bypOk?'<div class="q"><p><b>Was kostet der Schatten?</b> Ohne Verluste liefert das Balkonkraftwerk etwa <b>700 kWh</b> im Jahr. Der Schatten liegt nur einen Teil des Tages auf dem Modul. Übers Jahr bleiben deshalb nur <b>55 %</b> davon. Eine kWh kostet <b>0,35 €</b>. Wie viel Geld verliert Familie K. pro Jahr?</p><div class="row"><input class="num'+(s.euroOk?' ok':'')+'" id="eu" inputmode="decimal" value="'+esc(s.euro)+'"'+(s.euroOk?' disabled':'')+'><span>€ pro Jahr</span>'+(s.euroOk?'':'<button class="btn pri" type="button" id="c6e">Prüfen</button>')+'</div><p class="fb" id="fb6e"></p>'+(s.euroOk?'':tipHTML('s6euro',['Verlust = 100 % − 55 % = 45 %.','Erst 45 % von 700 kWh berechnen, dann mal 0,35 €.']))+'</div>':'';
+  var mpp=s.euroOk?mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a):'';
+  $('task').innerHTML=head(4,'Für Profis: Wissen für die Besprechung')+(st.s3.ok?'':'<p class="note">Messt zuerst in Station 3 eure Messreihe.</p>')+tab+rank+byp+euro+mpp+(s.mppOk?'<p class="win"><b>Profi!</b> Bringt euer Wissen in die Besprechung ein.</p>'+saveCTA(true):'');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ou],[data-oi]'),function(inp){inp.addEventListener('input',function(){var k=inp.dataset.ou||inp.dataset.oi,o=s.oth[k]||(s.oth[k]={});if(inp.dataset.ou)o.U=inp.value;else o.I=inp.value;save();var q=othPct(k);document.querySelector('[data-oq="'+k+'"]').innerHTML=isNaN(q)?'–':'<b>'+fmt(q,0)+' %</b>';});});
+  if($('c6o'))$('c6o').addEventListener('click',function(){var fb=$('fb6o');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst in Station 3 eure Messreihe.';return;}
+    var wrong=ks.filter(function(k){var o=s.oth[k]||{};return !measOk(famSet(k),o.U,o.I);});
+    tryInc('s6oth',!wrong.length,wrong.join(','));if(!wrong.length){s.othOk=true;save();r6();return;}
+    fb.className='fb bad';fb.textContent='Noch nicht passend: '+wrong.map(function(k){return GROUPS[k].famLab;}).join(', ')+'. Stellt nur diesen Faktor ein, alles andere wie bei der Referenz.';
+    showHelp(fb,'s6oth',function(){wrong.forEach(function(k){var m=meas(famSet(k));s.oth[k]={U:fmt(m.U,1),I:fmt(m.I,2)};});s.othOk=true;save();r6();});});
+  if(s.othOk)mcBind('byp',QBYP,s,'byp','s6byp',r6);
   if($('eu'))$('eu').addEventListener('input',function(){s.euro=this.value;save();});
   if($('c6e'))$('c6e').addEventListener('click',function(){var v=num(s.euro),fb=$('fb6e'),ok=Math.abs(v-110.25)<=2;tryInc('s6euro',ok,s.euro);
-    if(ok){s.euroOk=true;save();r6();helpMsg('fb6e','Richtig! 45 % von 700 kWh = 315 kWh. 315 kWh · 0,35 € = 110,25 € pro Jahr.');return;}
-    fb.className='fb bad';fb.textContent=Math.abs(v-134.75)<=2?'Das ist der Wert für die Energie, die noch ankommt. Gefragt ist der Verlust (45 %).':'Tipp: Verlust = 100 % − 55 % = 45 %. Rechnet erst die kWh, dann mal 0,35 €.';
-    showHelp(fb,'s6euro',function(){s.euro='110,25';s.euroOk=true;save();r6();});});
-  if(s.euroOk)helpMsg('fb6e','Richtig! 45 % von 700 kWh = 315 kWh. 315 kWh · 0,35 € = 110,25 € pro Jahr.');
-  mcBind('byp',QBYP,s,'byp','s6byp',r6);mcBind('mpp',QMPP,s,'mpp','s6mpp',r6);bindCTA();
+    if(ok){s.euroOk=true;save();r6();helpMsg('fb6e',EURO_OK);return;}
+    fb.className='fb bad';fb.textContent=Math.abs(v-134.75)<=2?'Das ist der Wert für die Energie, die noch ankommt. Gefragt ist der Verlust.':'Noch nicht. Rechnet erst die verlorenen kWh, dann die Kosten.';
+    tipNudge(fb,'s6euro',1);showHelp(fb,'s6euro',function(){s.euro='110,25';s.euroOk=true;save();r6();});});
+  if(s.euroOk)helpMsg('fb6e',EURO_OK);if(s.euroOk)mcBind('mpp',QMPP,s,'mpp','s6mpp',r6);
+  if(s.mppOk)finish(4);bindTips(r6);bindCTA();
 }
 
-/* ---------- Lehrkraft: Klassenergebnis ---------- */
-var TG=['A1','A2','B1','B2','C1','C2','D1','D2'];
-function tLoad(){try{return JSON.parse(localStorage.getItem(TKEY)||'{}')||{};}catch(e){return {};}}
-function tSave(o){try{localStorage.setItem(TKEY,JSON.stringify(o));}catch(e){}}
-function openTeach(){var o=tLoad(),box=$('teach');box.hidden=false;
-  $('tIn').innerHTML=TG.map(function(k){var g=GROUPS[k.charAt(0)];return '<label class="ctlrow"><span>GRUPPE '+k+' · '+g.name.toUpperCase()+' · '+g.famLab.toUpperCase()+'</span><span class="row"><input class="num" data-t="'+k+'" inputmode="decimal" value="'+esc(o[k]||'')+'"> %</span></label>';}).join('');
-  Array.prototype.forEach.call(document.querySelectorAll('[data-t]'),function(i){i.addEventListener('input',function(){var x=tLoad();x[i.dataset.t]=i.value;tSave(x);drawTeach();});});
-  drawTeach();}
-function teachRows(){var o=tLoad();return GKEYS.map(function(k){var v=[o[k+'1'],o[k+'2']].map(num).filter(function(x){return !isNaN(x);});return {k:k,g:GROUPS[k],v:v.length?v.reduce(function(a,b){return a+b;},0)/v.length:NaN,n:v.length};});}
-function drawTeach(){var c=$('tCv'),w=c.getBoundingClientRect().width||700,h=Math.round(Math.min(420,w*0.52)),dpr=window.devicePixelRatio||1;c.style.height=h+'px';c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
-  var x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);x.fillStyle=col('surface');x.fillRect(0,0,w,h);
-  var rows=teachRows().filter(function(r){return !isNaN(r.v);}).sort(function(a,b){return a.v-b.v;}),F=ff();
-  x.fillStyle=col('ink');x.font='600 18px '+F;x.textAlign='left';x.textBaseline='top';x.fillText('So viel Leistung bleibt in der Situation von Familie K. übrig',12,8);
-  if(!rows.length){x.fillStyle=col('ink-soft');x.font='16px '+F;x.fillText('Tragt die Werte der Gruppen ein.',12,44);return;}
-  var L=Math.min(260,w*0.34),R=w-70,top=48,bh=Math.min(56,(h-top-24)/4-12);
-  rows.forEach(function(r,i){var y=top+i*(bh+14),bw=(R-L)*Math.min(100,r.v)/100;x.fillStyle=col('ink');x.font='bold 16px '+F;x.textAlign='right';x.textBaseline='middle';
-    x.fillText((i+1)+'. '+r.g.rank,L-12,y+bh/2-9);x.font='14px '+F;x.fillStyle=col('ink-soft');x.fillText(r.g.famLab,L-12,y+bh/2+11);
-    x.fillStyle=col('surface-2');x.fillRect(L,y,R-L,bh);x.fillStyle=r.g.col==='#1A1F36'?col('ink'):r.g.col;x.fillRect(L,y,Math.max(3,bw),bh);
-    x.fillStyle=col('ink');x.textAlign='left';x.font='bold 18px '+F;x.fillText(fmt(r.v,0)+' %',L+bw+8,y+bh/2);});
-  x.fillStyle=col('ink-soft');x.font='13px '+F;x.textAlign='left';x.textBaseline='bottom';x.fillText('Mittelwert der beiden Gruppen je Faktor · Platz 1 = größter Verlust',12,h-4);}
-function bindTeach(){$('teachBtn').addEventListener('click',openTeach);$('tClose').addEventListener('click',function(){$('teach').hidden=true;});
-  $('tModelBtn').addEventListener('click',function(){var o={};TG.forEach(function(k){var g=k.charAt(0);o[k]=fmt(modelPct(g,GROUPS[g].famV)+(k.charAt(1)==='2'?1.5:-1.5),0);});tSave(o);openTeach();});
-  $('tClear').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich leeren?';setTimeout(function(){b._armed=false;b.textContent='Alle Werte löschen';},3000);return;}tSave({});openTeach();});
-  window.addEventListener('resize',function(){if(!$('teach').hidden)drawTeach();});}
-
 /* ---------- Ergebnisse als Text ---------- */
-var TL=[['s2meas','Planen · Was messen?'],['s2pf','Planen · Formel'],['s2konst','Planen · Konstanten'],['s2steps','Planen · eigene Winkel (Gruppe D)'],['s3ref','Messen · P der Referenz berechnet'],['s4cmp','Auswerten · Vorhersage verglichen'],['s4mc','Auswerten · Deutung'],['s5first','Familie K. · Empfehlung'],['s6euro','Profi · Kosten'],['s6byp','Profi · Bypass-Dioden'],['s6mpp','Profi · Wechselrichter']];
+var TL=[['s2circ','Aufbauen · Schaltung'],['s2konst','Aufbauen · fairer Versuch'],['s2ref','Aufbauen · Referenz einstellen'],['s2steps','Aufbauen · Messreihe geplant'],['s3meas','Messen · Messwerte und P-Rechnungen'],['s3fam','Messen · Anteil Familie K. berechnet'],['s4cmp','Auswerten · Vorhersage verglichen'],['s4mc','Auswerten · Deutung'],['s4sent','Auswerten · Ergebnissatz'],['s6oth','Profi · andere Faktoren gemessen'],['s6byp','Profi · Bypass-Dioden'],['s6euro','Profi · Kosten'],['s6mpp','Profi · Wechselrichter']];
 function resText(){
   var r=st.res||{},d=new Date(),L=[],g=st.grp?G():null;
   L.push('SOLAR-LABOR · Warum liefert das Balkonkraftwerk so wenig?');
@@ -766,27 +830,29 @@ function resText(){
   L.push(standLine());
   L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
   L.push('');
-  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt')+(st.guess==='A'?'  → passt':'  → laut Klassenergebnis meist A (Schatten)'));
+  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt'));
   L.push('VORHERSAGE: bei '+(g?g.famLab:'–')+' bleiben '+st.pred+' %');
   L.push('');
-  L.push('MESSREIHE'+(st.model?' (im Modell gemessen, Plan B)':''));
-  if(g){rowVals().forEach(function(v,i){var row=st.s3.rows[i]||{},p=rowP(i),q=pct(i);L.push('  '+rowLabel(v,i)+': U = '+(row.U||'–')+' V, I = '+(row.I||'–')+' mA, P = '+(isNaN(p)?'–':fmt(p,0)+' mW')+', Anteil = '+(isNaN(q)?'–':fmt(q,0)+' %'));});
-    L.push('  P der Referenz selbst berechnet: '+(st.s3.refP||'–')+' mW'+(st.s3.refOk?'  ✓':''));L.push('  Wert für Familie K. ('+g.famLab+'): '+(isNaN(famPct())?'–':fmt(famPct(),0)+' %'));}
+  L.push('MESSREIHE (U in V, I in A, P in W)');
+  if(g){rowVals().forEach(function(v,i){var row=st.s3.rows[i]||{},p=rowP(i),q=pct(i);L.push('  '+rowLabel(v,i)+': U = '+(row.U||'–')+' V, I = '+(row.I||'–')+' A, P = '+(row.P||'–')+' W'+', Anteil = '+(isNaN(q)?'–':fmt(q,0)+' %'));});
+    if(st.grp==='A')L.push('  Erklärung Schatten (für die Besprechung): '+(st.s4.expl||'–'));L.push('  Unfaire Messungen (andere Regler mit verändert, von der App erkannt): '+(st.unfair||0));L.push('  Messwerte und P-Rechnungen geprüft: '+(st.s3.ok?'ja':'nein')+' · Anteil Familie K. selbst berechnet: '+(st.s3.famA||'–')+' %'+(st.s3.famOk?'  ✓':''));L.push('  Wert für Familie K. ('+g.famLab+'): '+(isNaN(famPct())?'–':fmt(famPct(),0)+' %'));}
   L.push('');
   L.push('AUSWERTUNG');
   L.push('  Ergebnissatz: '+((st.s4.sent||'').trim()||'(leer)'));
   if(st.grp)L.push('  '+strip(MC4[st.grp].q)+' → '+segAns(MC4[st.grp],st.s4.mc));
   L.push('');
-  L.push('FAMILIE K.');
-  L.push('  Empfehlung: '+segAns(Q5,st.s5.first));L.push('  Begründung: '+((st.s5.why||'').trim()||'(leer)'));
-  L.push('');
   L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
   var tt=triesLines(L,TL,'s6');
+  var tk=Object.keys(st.tips||{}),tn=tk.reduce(function(a,k){return a+st.tips[k];},0);
+  L.push('  Tipp-Karten genutzt: '+(tn?tn+' ('+tk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return (x?x[1]:k)+': '+st.tips[k];}).join('; ')+')':'keine'));
+  var ek=Object.keys(st.early||{});L.push('  Tipp-Karte vor dem ersten Versuch angetippt: '+(ek.length?ek.length+'-mal':'nein'));
   L.push('');
   L.push('PROFI-ZUSATZ ★');
+  L.push('  Andere Faktoren: '+(st.grp?othKeys().map(function(k){var q=othPct(k);return GROUPS[k].famLab+' '+(isNaN(q)?'–':fmt(q,0)+' %');}).join(' · '):'–')+(st.s6.othOk?'  ✓':''));
+  L.push('  Bypass-Dioden: '+(st.s6.byp==null?'(nicht bearbeitet)':segAns(QBYP,st.s6.byp)));
   L.push('  Kosten des Schattens: '+(st.s6.euro?st.s6.euro+' €'+(st.s6.euroOk?'  ✓':'  ✗'):'(nicht bearbeitet)'));
-  L.push('  Bypass-Dioden: '+(st.s6.byp==null?'(nicht bearbeitet)':segAns(QBYP,st.s6.byp)));L.push('  Wechselrichter: '+(st.s6.mpp==null?'(nicht bearbeitet)':segAns(QMPP,st.s6.mpp)));
-  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),grp:st.grp,model:st.model,done:st.done,guess:st.guess,pred:st.pred,rows:st.s3.rows,vals:st.grp?rowVals():[],refP:st.s3.refP,fam:isNaN(famPct())?null:Math.round(famPct()),sent:st.s4.sent||'',why:st.s5.why||'',tries:st.tries,help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  L.push('  Wechselrichter: '+(st.s6.mpp==null?'(nicht bearbeitet)':segAns(QMPP,st.s6.mpp)));
+  var data={v:2,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),grp:st.grp,done:st.done,guess:st.guess,pred:st.pred,rows:st.s3.rows,vals:st.grp?rowVals():[],famA:st.s3.famA,fam:isNaN(famPct())?null:Math.round(famPct()),sent:st.s4.sent||'',tries:st.tries,tips:st.tips||{},early:st.early||{},unfair:st.unfair||0,help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
   var json=JSON.stringify(data);
   L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
   L.push('#DATEN '+json);L.push('#PRUEF '+fnv('SL-v1|'+json));
@@ -795,9 +861,59 @@ function resText(){
 
 /* ---------- Gesamt ---------- */
 var lastSt=null;
-function render(){if(st.station!==lastSt){if(STATIONS[st.station].scene==='setup'&&st.grp&&st.station!==5){ensureRows();applyRow(Math.min(st.row,rowVals().length-1));}if(st.station===5)st.set={d:20,a:0,n:0,s:0};lastSt=st.station;}
-  renderRoute();renderCtl();[r1,r2,r3,r4,r5,r6][st.station]();resize();}
-bindReset();initSave();bindTeach();
+
+/* Taschenrechner: erscheint in Stationen, in denen gerechnet wird */
+var CALC={on:false,open:false,expr:'',last:null,target:null};
+(function(){var css=document.createElement('style');css.textContent=
+ '#calcBtn{position:fixed;right:18px;bottom:18px;z-index:60;display:none;align-items:center;gap:8px;background:#1C66C0;color:#fff;border:0;border-radius:999px;padding:12px 18px;font:600 16px/1 inherit;box-shadow:0 6px 18px rgba(0,0,0,.25);cursor:pointer}'+
+ '#calcBtn.show{display:flex}#calcBtn .ic{font-size:20px;line-height:1}#calcBtn.pulse{animation:cpul 1s ease 2}@keyframes cpul{50%{transform:scale(1.12)}}'+
+ '#calcBox{position:fixed;left:18px;bottom:18px;z-index:61;width:272px;background:#fff;border:2px solid #1C66C0;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.3);padding:12px;display:none;font-family:inherit}'+
+ '#calcBox.show{display:block}#calcBox .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:700;color:#1C66C0}'+
+ '#calcBox .cx{border:0;background:#eef2f8;border-radius:8px;width:34px;height:34px;font-size:20px;cursor:pointer}'+
+ '#calcDisp{background:#0f1b2d;color:#9fd0ff;border-radius:10px;padding:8px 10px;text-align:right;min-height:58px;font-family:ui-monospace,Menlo,monospace}'+
+ '#calcDisp .e{font-size:14px;color:#c9d6e8;min-height:18px;word-break:break-all}#calcDisp .r{font-size:26px;font-weight:700}'+
+ '#calcKeys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}'+
+ '#calcKeys button{height:48px;border:0;border-radius:10px;background:#eef2f8;font:600 20px/1 inherit;cursor:pointer;color:#14213d}'+
+ '#calcKeys button.op{background:#dbe7f7;color:#1C66C0}#calcKeys button.eq{background:#1C66C0;color:#fff}#calcKeys button.cl{background:#fde3e3;color:#b42318}'+
+ '#calcIns{margin-top:8px;width:100%;height:42px;border:0;border-radius:10px;background:#2E7D4F;color:#fff;font:600 15px/1 inherit;cursor:pointer}#calcIns:disabled{background:#c9d2dc;cursor:default}'+
+ '#calcBox .chint{font-size:12px;color:#5b6b82;margin-top:6px;text-align:center}';
+ document.head.appendChild(css);
+ var b=document.createElement('button');b.id='calcBtn';b.type='button';b.innerHTML='<span class="ic">÷×</span>Taschenrechner';document.body.appendChild(b);
+ var k=['C','⌫','(',')','7','8','9','÷','4','5','6','×','1','2','3','−','0',',','=','+'];
+ var box=document.createElement('div');box.id='calcBox';box.setAttribute('role','dialog');box.setAttribute('aria-label','Taschenrechner');
+ box.innerHTML='<div class="ch"><span>Taschenrechner</span><button class="cx" type="button" id="calcX" aria-label="Schließen">×</button></div><div id="calcDisp"><div class="e" id="calcE"></div><div class="r" id="calcR">0</div></div><div id="calcKeys">'+
+  k.map(function(x){var c=/[÷×−+]/.test(x)?'op':(x==='='?'eq':(x==='C'||x==='⌫'?'cl':''));return '<button type="button" class="'+c+'" data-k="'+x+'">'+x+'</button>';}).join('')+'</div><button type="button" id="calcIns" disabled>Ergebnis ins Feld eintragen</button><div class="chint" id="calcHint">Tippt erst in ein Feld, dann rechnen.</div>';
+ document.body.appendChild(box);
+ function fmtR(v){if(!isFinite(v))return 'Fehler';var r=Math.round(v*100)/100;return String(r).replace('.',',');}
+ function evalE(e){var t=e.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/,/g,'.');var toks=t.match(/\d+\.?\d*|\.\d+|[-+*/()]/g);if(!toks)return NaN;
+  var out=[],ops=[],pr={'+':1,'-':1,'*':2,'/':2},prev=null;
+  toks.forEach(function(x){if(/[\d.]/.test(x[0]))out.push(parseFloat(x));else if(x==='(')ops.push(x);else if(x===')'){while(ops.length&&ops[ops.length-1]!=='(')out.push(ops.pop());ops.pop();}
+   else{if(x==='-'&&(prev===null||/[-+*/(]/.test(prev)))out.push(0);while(ops.length&&ops[ops.length-1]!=='('&&pr[ops[ops.length-1]]>=pr[x])out.push(ops.pop());ops.push(x);}prev=x;});
+  while(ops.length)out.push(ops.pop());var stck=[];
+  for(var i=0;i<out.length;i++){var x=out[i];if(typeof x==='number')stck.push(x);else{var bb=stck.pop(),aa=stck.pop();if(aa===undefined||bb===undefined)return NaN;stck.push(x==='+'?aa+bb:x==='-'?aa-bb:x==='*'?aa*bb:aa/bb);}}
+  return stck.length===1?stck[0]:NaN;}
+ function show(){var E=document.getElementById('calcE'),R=document.getElementById('calcR');E.textContent=CALC.expr;R.textContent=CALC.last===null?(CALC.expr?'':'0'):fmtR(CALC.last);
+  var ins=document.getElementById('calcIns');ins.disabled=!(CALC.target&&document.body.contains(CALC.target)&&!CALC.target.disabled&&CALC.last!==null&&isFinite(CALC.last));
+  document.getElementById('calcHint').textContent=CALC.target&&document.body.contains(CALC.target)?'Das Ergebnis kommt in das zuletzt angetippte Feld.':'Tippt erst in ein Feld, dann rechnen.';}
+ box.addEventListener('click',function(ev){var x=ev.target.dataset&&ev.target.dataset.k;if(!x)return;
+  if(x==='C'){CALC.expr='';CALC.last=null;}else if(x==='⌫'){CALC.expr=CALC.expr.slice(0,-1);CALC.last=null;}
+  else if(x==='='){var v=evalE(CALC.expr);CALC.last=v;if(isFinite(v)){CALC.expr=fmtR(v);}}
+  else{if(CALC.last!==null&&/[\d,(]/.test(x))CALC.expr='';CALC.last=null;CALC.expr+=x;}
+  show();});
+ document.getElementById('calcIns').addEventListener('click',function(){var t=CALC.target;if(!t||CALC.last===null||!isFinite(CALC.last))return;t.value=fmtR(CALC.last);t.dispatchEvent(new Event('input',{bubbles:true}));t.classList.add('calcfill');show();});
+ b.addEventListener('click',function(){CALC.open=true;box.classList.add('show');b.classList.remove('show');show();});
+ document.getElementById('calcX').addEventListener('click',function(){CALC.open=false;box.classList.remove('show');if(CALC.on)b.classList.add('show');});
+ document.addEventListener('focusin',function(ev){var t=ev.target;if(t&&t.tagName==='INPUT'&&t.classList.contains('num')&&!box.contains(t)){CALC.target=t;if(CALC.on&&!CALC.open){b.classList.remove('pulse');void b.offsetWidth;b.classList.add('pulse');}if(CALC.open)show();}});
+})();
+function calcShow(on){CALC.on=on;var b=document.getElementById('calcBtn'),box=document.getElementById('calcBox');if(!b)return;
+  if(on){if(!CALC.open)b.classList.add('show');}else{b.classList.remove('show');box.classList.remove('show');CALC.open=false;}}
+function render(){if(st.station!==lastSt){var k=STATIONS[st.station].key;
+    if(k==='s2'&&st.grp&&!st.s2.refOk){st.set=JSON.parse(JSON.stringify(FAMSET));}
+    else if(k==='s3'&&st.grp){ensureRows();}
+    else if(k==='s4'||k==='s6')st.set=base();
+    lastSt=st.station;}
+  renderRoute();renderCtl();[r1,r2,r3,r4,r6][st.station]();resize();calcShow(['s3','s6'].indexOf(STATIONS[st.station].key)>=0);}
+bindReset();initSave();
 window.addEventListener('resize',resize);
 if(window.matchMedia){var mq=window.matchMedia('(prefers-color-scheme: dark)');if(mq.addEventListener)mq.addEventListener('change',draw);}
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
