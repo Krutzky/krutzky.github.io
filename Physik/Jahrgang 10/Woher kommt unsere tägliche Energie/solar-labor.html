@@ -700,18 +700,18 @@ function bubbleInfo(i){var s=st.s3,g=G(),p=g.p,want=rowSet(i),r=s.rows[i]||{},v=
   var off=offKeys(st.set,p);
   if(off.length)return {c:0,t:'<b>Achtung:</b> '+off.map(function(k){return FWORD[k];}).join(' und ')+' steht nicht auf dem besten Wert. Stellt nur euren eigenen Regler um, sonst ist der Versuch nicht fair.'};
   var mu=meas(want),U=num(r.U),I=num(r.I),P=num(r.P);
-  if(r.U&&(isNaN(U)||Math.abs(U-mu.U)>0.03*mu.U+0.15))return {c:1,t:'<b>Die Spannung passt nicht.</b> Schaut noch einmal auf das Messgerät „Spannung U“ und verbessert die Zahl. Achtet auf das Komma.<span class="mini">Spannung U zeigt jetzt: <b>'+fmt(m.U,1)+' V</b></span>'};
-  if(r.I&&(isNaN(I)||Math.abs(I-mu.I)>0.03*mu.I+0.06))return {c:2,t:'<b>Die Stromstärke passt nicht.</b> Schaut noch einmal auf das Messgerät „Stromstärke I“ und verbessert die Zahl. Achtet auf das Komma.<span class="mini">Stromstärke I zeigt jetzt: <b>'+fmt(m.I,2)+' A</b></span>'};
-  if(r.P&&!isNaN(U)&&!isNaN(I)&&(isNaN(P)||Math.abs(P-U*I)>Math.max(1,0.03*U*I)))return {c:3,t:'<b>P stimmt noch nicht.</b> Rechnet noch einmal P = U · I = '+esc(r.U)+' · '+esc(r.I)+'. Der Taschenrechner hilft (unten rechts).'};
+  if(r.U&&!uOk(U,mu.U))return {c:1,t:'<b>Die Spannung passt nicht.</b> Schaut noch einmal auf das Messgerät „Spannung U“ und verbessert die Zahl. Achtet auf das Komma.<span class="mini">Spannung U zeigt jetzt: <b>'+fmt(m.U,1)+' V</b></span>'};
+  if(r.I&&!iOk(I,mu.I))return {c:2,t:'<b>Die Stromstärke passt nicht.</b> Schaut noch einmal auf das Messgerät „Stromstärke I“ und verbessert die Zahl. Achtet auf das Komma.<span class="mini">Stromstärke I zeigt jetzt: <b>'+fmt(m.I,2)+' A</b></span>'};
+  if(r.P&&!isNaN(U)&&!isNaN(I)&&!prOk(P,U,I))return {c:3,t:'<b>P stimmt noch nicht.</b> Rechnet noch einmal P = U · I = '+esc(r.U)+' · '+esc(r.I)+'. Der Taschenrechner hilft (unten rechts).'};
   if(!r.U)return {c:1,t:(i===0?'<b>Das ist die Referenz:</b> beste Bedingungen, alle Regler auf dem besten Wert. Ihr müsst nichts verstellen.<br>':'')+'<b>Spannung U ablesen:</b> Schaut im Bild auf das schwarze Messgerät <b>„Spannung U“</b>. Tippt die Zahl hier ein.<span class="mini">Spannung U zeigt jetzt: <b>'+fmt(m.U,1)+' V</b></span>'};
   if(!r.I)return {c:2,t:'<b>Stromstärke I ablesen:</b> Schaut im Bild auf das schwarze Messgerät <b>„Stromstärke I“</b>. Tippt die Zahl hier ein.<span class="mini">Stromstärke I zeigt jetzt: <b>'+fmt(m.I,2)+' A</b></span>'};
   if(!r.P)return {c:3,t:'<b>Jetzt rechnet ihr:</b> P = U · I mit euren Werten. Tippt das Ergebnis hier ein. Der Taschenrechner hilft (unten rechts).'};
   return {c:-1,t:'<b>Zeile fertig!</b> '+(rowVals().some(function(x,j){return !rowDone(j);})?'Weiter mit der nächsten Zeile.':'Alle Zeilen sind ausgefüllt. Tippt unten auf „Messwerte und Rechnungen prüfen“.')};}
 function rowProblem(i){var r=st.s3.rows[i]||{},p=G().p,m=meas(rowSet(i)),U=num(r.U),I=num(r.I),P=num(r.P);
   if((r.U||r.I)&&offKeys(st.set,p).length)return true;
-  if(r.U&&(isNaN(U)||Math.abs(U-m.U)>0.03*m.U+0.15))return true;
-  if(r.I&&(isNaN(I)||Math.abs(I-m.I)>0.03*m.I+0.06))return true;
-  if(r.P&&!isNaN(U)&&!isNaN(I)&&(isNaN(P)||Math.abs(P-U*I)>Math.max(1,0.03*U*I)))return true;
+  if(r.U&&!uOk(U,m.U))return true;
+  if(r.I&&!iOk(I,m.I))return true;
+  if(r.P&&!isNaN(U)&&!isNaN(I)&&!prOk(P,U,I))return true;
   return !!(st.s3.flag&&st.s3.flag[i]);}
 function bubbleMode(i){var b=bubbleInfo(i);
   return (i===0&&b.c>=0&&b.c<=2)?'auto':'';}
@@ -728,9 +728,14 @@ function fairInfo(){var want=rowSet(st.row),v=rowVals()[st.row];
   if(sameSet(st.set,want))return '<p class="note">Zeile '+(st.row+1)+' ('+rowLabel(v,st.row).replace(' (Referenz)','')+'): Euer Faktor steht richtig. Lest U und I ab.</p>';
   if(st.set[G().p]===want[G().p]&&(G().p!=='s'||st.set.v===want.v))return '<p class="note">Zeile '+(st.row+1)+': Euer Faktor steht richtig. Ist der Versuch fair?</p>';
   return '<p class="note">Zeile '+(st.row+1)+': Stellt euren Faktor im Steuerpult auf <b>'+rowLabel(v,st.row).replace(' (Referenz)','')+'</b>.</p>';}
-function measOk(set,U,I){var m=meas(set);U=num(U);I=num(I);return !isNaN(U)&&!isNaN(I)&&Math.abs(U-m.U)<=0.03*m.U+0.15&&Math.abs(I-m.I)<=0.03*m.I+0.06;}
+/* Prüfung genau wie die Anzeige: U mit 1 Nachkommastelle; I mit 2 oder richtig gerundet mit 1 Nachkommastelle */
+function near(a,b){return Math.abs(a-b)<1e-6;}
+function uOk(U,mU){return !isNaN(U)&&near(U,Math.round(mU*10)/10);}
+function iOk(I,mI){if(isNaN(I))return false;var d2=Math.round(mI*100)/100,d1=Math.round(d2*10)/10;return near(I,d2)||near(I,d1);}
+function prOk(P,U,I){return !isNaN(P)&&Math.abs(P-U*I)<=0.55;}
+function measOk(set,U,I){var m=meas(set);return uOk(num(U),m.U)&&iOk(num(I),m.I);}
 function rowOk(i){var r=st.s3.rows[i];return measOk(rowSet(i),r.U,r.I);}
-function pOk(i){var r=st.s3.rows[i],U=num(r.U),I=num(r.I),P=num(r.P);return !isNaN(P)&&!isNaN(U)&&!isNaN(I)&&Math.abs(P-U*I)<=Math.max(1,0.03*U*I);}
+function pOk(i){var r=st.s3.rows[i],U=num(r.U),I=num(r.I),P=num(r.P);return !isNaN(U)&&!isNaN(I)&&prOk(P,U,I);}
 function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
   var fi=famIndex(),dis=s.ok?' disabled':'';
   var rows=vals.map(function(v,i){var r=s.rows[i],q=pct(i);
@@ -759,7 +764,7 @@ function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
     fb.className='fb bad';fb.textContent=t.join(' ')+' Die Tipp-Karten unten helfen euch.';tipNudge(fb,'s3meas',1);st.row=wm.concat(wp)[0];save();Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===st.row?'cur':(rowDone(j)?'done':'');});updBubble();
     showHelp(fb,'s3meas',function(){wm.concat(wp).forEach(function(i){var r=s.rows[i];if(!rowOk(i)){var m=meas(rowSet(i));r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;save();r3();drawGraph();});});
   if($('famA'))$('famA').addEventListener('input',function(){s.famA=this.value;save();});
-  if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=!isNaN(v)&&Math.abs(v-f)<=1.5;tryInc('s3fam',ok,s.famA);
+  if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=!isNaN(v)&&Math.abs(v-f)<=0.55;tryInc('s3fam',ok,s.famA);
     if(ok){s.famOk=true;finish(SI('s3'));save();r3();resize();helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(f,0)+' % der Referenzleistung übrig.');return;}
     fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-(100-f))<=1.5)?'Das ist der Verlust. Gefragt ist, wie viel übrig bleibt.':'Noch nicht. Schaut in der Tabelle in die Zeile „(Familie K.)“ und dort in die Spalte „Anteil“.';
     tipNudge(fb,'s3fam',1);showHelp(fb,'s3fam',function(){s.famA=fmt(f,0);s.famOk=true;finish(SI('s3'));save();r3();resize();});});
@@ -803,7 +808,7 @@ function r4(){var s=st.s4,g=G(),f=famPct();
   $('task').innerHTML=head(SI('s4'),'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten.</p>'+cmp+mc+sent+report+expl+after;
   mcBind('cmp',cmpQ,s,'cmp','s4tr',r4);if(s.cmpOk)mcBind('mc4',MC4[st.grp],s,'mc','s4mc',r4);
   if($('c4')&&!s.ok){['dir','sch','str','brm'].forEach(function(k){$('s_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});$('snum').addEventListener('input',function(){s.snum=this.value;if(s.badF)s.badF.num=false;this.className='num';save();});
-    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};['dir','sch','str','brm'].forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(isNaN(v)||Math.abs(v-f)>1.5)bad.num=true;
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};['dir','sch','str','brm'].forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(isNaN(v)||Math.abs(v-f)>0.55)bad.num=true;
       var ok=!Object.keys(bad).length;tryInc('s4sent',ok,[s.dir,s.snum,s.sch,s.str,s.brm].join('/'));
       var compose=function(){return SATZ0+', desto '+txt('dir')+' ist die Leistung. Bei Familie K. ('+g.famLab+') bleiben '+s.snum+' % der Referenzleistung übrig. Die vier Zellen im Modul sind '+txt('sch')+'. Durch alle Zellen fließt deshalb '+txt('str')+'. Liefert eine Zelle weniger, '+txt('brm')+'.';};
       if(ok){s.badF={};s.sent=compose();s.ok=true;if(st.grp!=='A')finish(SI('s4'));save();r4();return;}
@@ -841,7 +846,7 @@ function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   if($('c5')){['cmp','can'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
     $('t_pw').addEventListener('input',function(){s.pw=this.value;if(s.badF)s.badF.pw=false;this.className='num';save();});
     $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}
-      var v=num(s.pw),bad={};if(isNaN(v)||Math.abs(v-P)>Math.max(2,0.03*P))bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;
+      var v=num(s.pw),bad={};if(isNaN(v)||Math.abs(v-P)>0.55)bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;
       var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can].join('/'));
       if(ok){s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
       s.badF=bad;save();['cmp','can'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
