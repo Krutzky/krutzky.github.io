@@ -203,7 +203,7 @@ table.mt tr{cursor:pointer}
 <body>
 <header>
   <div class="hwrap">
-    <div class="brand"><b>Solar-Labor</b><span>Warum liefert das Balkonkraftwerk so wenig?</span></div>
+    <div class="brand"><b>Solar-Labor</b><span>Warum liefert das Balkonkraftwerk so wenig elektrische Leistung?</span></div>
     <nav class="route" id="route" aria-label="Stationen"></nav>
     <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
     <button class="reset" id="reset" type="button">Neu starten</button>
@@ -228,7 +228,7 @@ table.mt tr{cursor:pointer}
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id);};
-var APP={mcLock:true,title:'Solar-Labor',file:'Solar-Labor',klasse:'10',proAfter:3,lesson:'Warum liefert das Balkonkraftwerk so wenig?',welcome:'Willkommen im Solar-Labor!',intro:'Heute findet ihr heraus, warum das Balkonkraftwerk von Familie K. so wenig Strom liefert.'};
+var APP={mcLock:true,title:'Solar-Labor',file:'Solar-Labor',klasse:'10',proAfter:3,lesson:'Warum liefert das Balkonkraftwerk so wenig elektrische Leistung?',welcome:'Willkommen im Solar-Labor!',intro:'Heute findet ihr heraus, warum das Balkonkraftwerk von Familie K. so wenig elektrische Leistung liefert.'};
 var KEY='solar-labor-v7',RKEY='solar-labor-resets',TKEY='solar-labor-klasse-v1';
 var STATIONS=[
   {key:'s1',name:'Vorhersage',scene:'balcony'},
@@ -255,8 +255,8 @@ var GROUPS={
   C:{rank:'Dunst (schwächeres Licht)',name:'Dunst',lvl:'Standard',p:'h',col:'#1C66C0',head:'Sonnenlicht in W/m²',famV:700,famLab:'leichter Dunst (700 W/m²)',
      fam:'Es ist leicht diesig. Statt 1000 W/m² kommen nur 700 W/m² Sonnenlicht an.',task:'Dunst und Wolken schwächen das Sonnenlicht. Ihr untersucht, wie die Stärke des Sonnenlichts die Leistung verändert.',
      rule:{min:100,max:950,order:-1,need:700,ext:function(v){return v[2]<=400;},extTxt:'Nehmt auch schwaches Licht bis 400 W/m², damit ihr den Verlauf seht.',unit:'W/m²',ex:['700','500','300'],step:50,stepTxt:'Im Steuerpult geht das Sonnenlicht in 50er-Schritten. Wählt Werte wie 850, 600 oder 250 W/m².',txt:'Die Referenz ist klarer Himmel mit 1000 W/m². Wählt 3 schwächere Werte zwischen 100 und 950 W/m² (in 50er-Schritten), absteigend. <b>700 W/m²</b> (Familie K.) muss dabei sein und ein Wert bis 400 W/m².'}},
-  D:{rank:'schräge Ausrichtung',name:'Ausrichtung',lvl:'Experte',p:'a',col:'#6B3FB0',head:'Winkel zur Sonne in °',famV:30,famLab:'30° schräg',
-     fam:'Das Modul hängt 30° schräg zur Sonne am Geländer.',task:'Das Modul hängt am Geländer. Ihr untersucht, wie der Winkel zur Sonne die Leistung verändert.',
+  D:{rank:'Ausrichtung zur Sonne (Winkel)',name:'Ausrichtung',lvl:'Experte',p:'a',col:'#6B3FB0',head:'Winkel zur Sonne in °',famV:30,famLab:'Winkel von 30° zur Sonne',
+     fam:'Das Modul steht in einem Winkel von 30° zur Sonne.',task:'Das Modul hängt am Geländer. Ihr untersucht, wie der Winkel zur Sonne die Leistung verändert.',
      rule:{min:5,max:85,order:1,need:30,ext:function(v){return v[2]>=60;},extTxt:'Nehmt auch einen großen Winkel ab 60°, damit ihr den ganzen Verlauf seht.',unit:'°',ex:['30','50','70'],step:1,stepTxt:'Im Steuerpult geht der Winkel in ganzen Grad. Wählt Werte ohne Komma.',txt:'Die Referenz ist 0° (Modul direkt zur Sonne). Wählt 3 Winkel zwischen 5° und 85° (ganze Grad), aufsteigend. <b>30°</b> (Familie K.) muss dabei sein und ein Winkel ab 60°.'}}
 };
 var GKEYS=['A','B','C','D'];
@@ -515,10 +515,10 @@ function drawBalcony(){
   var px2=W*0.70,py2=H*0.30,pw=Math.min(150,W*0.24),ph=pw*1.5;rrect(ctx,px2,py2,pw,ph,14);ctx.fillStyle='#1A1F36';ctx.fill();rrect(ctx,px2+7,py2+14,pw-14,ph-28,8);ctx.fillStyle='#FFFFFF';ctx.fill();
   ctx.fillStyle='#4E5677';ctx.font=font(11,true);ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('Mein Balkonkraftwerk',px2+pw/2,py2+22);
   var pn=famNow();ctx.fillStyle=pn>FAMW?'#2E7D4F':'#C8423D';ctx.font=font(Math.round(pw/4.2),true);ctx.fillText(pn+' W',px2+pw/2,py2+ph*0.30);
-  ctx.fillStyle='#4E5677';ctx.font=font(11);ctx.fillText('bei bester Sonne:',px2+pw/2,py2+ph*0.52);ctx.fillText('ca. 380 W',px2+pw/2,py2+ph*0.60);ctx.fillText(pn>FAMW?'nach euren Maßnahmen':'heute, 12:30 Uhr',px2+pw/2,py2+ph*0.72);
+  ctx.fillStyle='#4E5677';ctx.font=font(11);ctx.fillText('optimal möglich:',px2+pw/2,py2+ph*0.52);ctx.fillText('ca. 380 W',px2+pw/2,py2+ph*0.60);ctx.fillText(pn>FAMW?'nach euren Maßnahmen':'heute, 12:30 Uhr',px2+pw/2,py2+ph*0.72);
   /* Ursachen markieren */
   if(st.showCauses||SK()==='s5'||SK()==='s7'){var named=SK()==='s5'||SK()==='s7';
-    var M=[[mx+mw*0.83,my+mh*0.16,'1',named?'Schatten':''],[mx+mw*0.25,my+mh*0.65,'2',named?'Staub':''],[W*0.72,H*0.07,'3',named?'Dunst':''],[mx+mw+22,my+mh*0.62,'4',named?'30° schräg':'']];
+    var M=[[mx+mw*0.83,my+mh*0.16,'1',named?'Schatten':''],[mx+mw*0.25,my+mh*0.65,'2',named?'Staub':''],[W*0.72,H*0.07,'3',named?'Dunst':''],[mx+mw+22,my+mh*0.62,'4',named?'30°-Winkel':'']];
     M=M.filter(function(m){return !((m[2]==='1'&&F.v)||(m[2]==='2'&&F.p)||(m[2]==='4'&&F.a));});
     M.forEach(function(m){ctx.fillStyle='#E8892B';ctx.beginPath();ctx.arc(m[0],m[1],13,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1B1300';ctx.font=font(14,true);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(m[2],m[0],m[1]+1);if(m[3])tag(m[3],m[0],m[1]+26,'#1A1F36','center','#FFFFFF');});}
   renderBalconyViews();
@@ -527,9 +527,9 @@ function renderBalconyViews(){
   $('capA').innerHTML='<b>Datenblatt</b>';$('capB').innerHTML='<b>Was Familie K. beobachtet</b>';
   var A=vctx('cvA'),x=A.x,w=A.w;x.fillStyle='#FFFFFF';x.fillRect(0,0,w,w);x.fillStyle='#1A1F36';x.textAlign='left';x.textBaseline='top';
   var f=Math.round(w/15);x.font='bold '+f+'px '+ff();x.fillText('Balkonkraftwerk',w*0.08,w*0.08);x.font=Math.round(w/18)+'px '+ff();
-  [['Solarmodul','1 × 400 W'],['bei bester Sonne','ca. 380 W'],['Zellen im Modul','in Reihe geschaltet'],['Halterung','am Geländer, verschiebbar']].forEach(function(r,i){var yy=w*0.24+i*w*0.17;x.fillStyle='#4E5677';x.fillText(r[0],w*0.08,yy);x.fillStyle='#1A1F36';x.font='bold '+Math.round(w/16)+'px '+ff();x.fillText(r[1],w*0.08,yy+w*0.065);x.font=Math.round(w/18)+'px '+ff();});
+  [['Solarmodul','1 × 400 W'],['optimal möglich','ca. 380 W'],['Zellen im Modul','in Reihe geschaltet'],['Halterung','am Geländer, verschiebbar']].forEach(function(r,i){var yy=w*0.24+i*w*0.17;x.fillStyle='#4E5677';x.fillText(r[0],w*0.08,yy);x.fillStyle='#1A1F36';x.font='bold '+Math.round(w/16)+'px '+ff();x.fillText(r[1],w*0.08,yy+w*0.065);x.font=Math.round(w/18)+'px '+ff();});
   var B=vctx('cvB'),y=B.x,w2=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w2,w2);y.textAlign='left';y.textBaseline='top';var fs=Math.round(w2/19);y.font=fs+'px '+ff();
-  var L=[['1','Schatten vom Nachbarbalkon'],['2','dünne Staubschicht'],['3','leichter Dunst am Himmel'],['4','Modul hängt 30° schräg']];
+  var L=[['1','Schatten vom Nachbarbalkon'],['2','dünne Staubschicht'],['3','leichter Dunst am Himmel'],['4','Modul im 30°-Winkel zur Sonne']];
   L.forEach(function(r,i){var yy=w2*0.08+i*w2*0.22;y.fillStyle='#E8892B';y.beginPath();y.arc(w2*0.11,yy+fs*0.6,w2*0.055,0,Math.PI*2);y.fill();y.fillStyle='#1B1300';y.textAlign='center';y.font='bold '+fs+'px '+ff();y.fillText(r[0],w2*0.11,yy+fs*0.1);
     y.textAlign='left';y.fillStyle='#1A1F36';y.font=fs+'px '+ff();wrapText(y,r[1],w2*0.22,yy,w2*0.74,fs*1.25);});
 }
@@ -642,24 +642,24 @@ function renderCtl(){var sc=STATIONS[st.station].scene,h='',pro=STATIONS[st.stat
 }
 
 /* ---------- Aufgaben ---------- */
-var GUESS=[{k:'A',t:'der <b>Schatten</b> vom Nachbarbalkon'},{k:'B',t:'die dünne <b>Staubschicht</b>'},{k:'C',t:'der leichte <b>Dunst</b> (schwächeres Licht)'},{k:'D',t:'die <b>schräge</b> Ausrichtung (30°)'}];
-function guessName(k){return {A:'A (Schatten)',B:'B (Staub)',C:'C (Dunst)',D:'D (schräg)'}[k]||'';}
+var GUESS=[{k:'A',t:'der <b>Schatten</b> vom Nachbarbalkon'},{k:'B',t:'die dünne <b>Staubschicht</b>'},{k:'C',t:'der leichte <b>Dunst</b> (schwächeres Licht)'},{k:'D',t:'die <b>Ausrichtung</b> im Winkel von 30°'}];
+function guessName(k){return {A:'A (Schatten)',B:'B (Staub)',C:'C (Dunst)',D:'D (Ausrichtung)'}[k]||'';}
 function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+stNo(i)+' · '+STATIONS[i].name)+(st.grp&&!STATIONS[i].pro&&i>0&&STATIONS[i].key!=='s7'?' · Gruppe '+st.grp+': '+G().name:'')+'</p><h2>'+t+'</h2></div>';}
 
 /* Station 1: Vorhersage */
-var VTR={A:'mehr Fläche einer Zelle im Schatten liegt',B:'mehr Staub auf dem Modul liegt',C:'weniger Sonnenlicht ankommt (mehr Dunst)',D:'das Modul schräger zur Sonne steht'};
-var VNOM={A:'der Schatten',B:'der Staub',C:'der Dunst',D:'die schräge Ausrichtung'};
-var VDAT={A:'am Schatten vom Nachbarbalkon',B:'an der dünnen Staubschicht',C:'am leichten Dunst',D:'an der schrägen Ausrichtung (30°)'};
+var VTR={A:'mehr Fläche einer Zelle im Schatten liegt',B:'mehr Staub auf dem Modul liegt',C:'weniger Sonnenlicht ankommt (mehr Dunst)',D:'der Winkel zur Sonne größer wird'};
+var VNOM={A:'der Schatten',B:'der Staub',C:'der Dunst',D:'die Ausrichtung'};
+var VDAT={A:'am Schatten vom Nachbarbalkon',B:'an der dünnen Staubschicht',C:'am leichten Dunst',D:'an der Ausrichtung im 30°-Winkel'};
 function vq1(k){return {q:'Was vermutet ihr: Wenn '+VTR[k]+', dann …',o:['wird die Leistung kleiner.','bleibt die Leistung gleich.','wird die Leistung größer.']};}
 function vq2(k){var n=VNOM[k],N=n.charAt(0).toUpperCase()+n.slice(1);return {q:'Das Balkonkraftwerk liefert gerade nur <b>'+FAMW+' W</b> statt etwa 380 W. Kann das '+VDAT[k]+' liegen?',o:['Ja, vor allem. '+N+' erklärt den größten Teil.','Nur zu einem kleinen Teil. '+N+' verringert die Leistung, aber viel weniger.','Nein. '+N+' ändert an der Leistung nichts.']};}
 function pvTxt(i,k){var q=i===1?vq1(k):vq2(k),v=i===1?st.pv.tr:st.pv.can;return v==null?'–':strip(q.o[v]);}
 function r1(){var s=st.s1,g=st.grp?G():null;
-  var fall='<p>Familie K. hat ein <b>Balkonkraftwerk</b> mit einem Solarmodul am Geländer. Bei bester Sonne liefert es etwa <b>380 W</b>. Heute Mittag scheint die Sonne, aber die App zeigt nur <b>'+FAMW+' W</b>.</p>';
+  var fall='<p>Familie K. hat ein <b>Balkonkraftwerk</b> mit einem Solarmodul am Geländer. Unter optimalen Bedingungen (volle Sonne, kein Schatten, sauber, direkt zur Sonne ausgerichtet) liefert es etwa <b>380 W</b>. Heute Mittag scheint die Sonne, aber die App zeigt nur <b>'+FAMW+' W</b>.</p>';
   var grp='<div class="q"><p><b>Eure Gruppe:</b> Welchen Faktor untersucht ihr?</p><div class="choice grid2" id="gg">'+GKEYS.map(function(k){var x=GROUPS[k];return '<button type="button" class="opt'+(st.grp===k?' sel':'')+'" data-k="'+k+'"'+(s.ok?' disabled':'')+'><b>'+k+' · '+x.name+'</b><br><span class="muted">'+x.rank+'</span></button>';}).join('')+'</div>'+(s.ok?'<p class="muted">Die Gruppe ist festgelegt.</p>':'')+'</div>';
   function opts(id,Q,v){return '<div class="q"><p><b>'+Q.q+'</b></p><div class="choice" id="'+id+'">'+Q.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?' sel':'')+'" data-j="'+j+'"'+(s.ok?' disabled':'')+'>'+o+'</button>';}).join('')+'</div></div>';}
   var pred=g?'<div class="merk"><h3>Eure Vorhersage für Gruppe '+st.grp+': '+g.name+'</h3><p style="margin:0">'+g.fam+' Gleich messt ihr nach, ob eure Vorhersage stimmt.</p></div>'+opts('pv1',vq1(st.grp),st.pv.tr)+opts('pv2',vq2(st.grp),st.pv.can)+
     (s.ok?'<p class="fb ok">Vorhersage gespeichert. Hier gibt es noch kein richtig oder falsch. Ihr prüft sie mit euren Messwerten.</p>':'<div class="row"><button class="btn pri" type="button" id="c1">Vorhersage speichern</button></div><p class="fb" id="fb1"></p>'):'';
-  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig elektrische Leistung?')+fall+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
   Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;if(st.grp!==b.dataset.k){st.pv={tr:null,can:null};}st.grp=b.dataset.k;st.s3.rows=[];save();r1();});});
   [['pv1','tr'],['pv2','can']].forEach(function(x){Array.prototype.forEach.call(document.querySelectorAll('#'+x[0]+' .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.pv[x[1]]=+b.dataset.j;save();r1();});});});
   if($('c1'))$('c1').addEventListener('click',function(){var fb=$('fb1');if(st.pv.tr==null||st.pv.can==null){fb.className='fb bad';fb.textContent='Beantwortet beide Fragen eurer Vorhersage.';return;}s.ok=true;finish(0);save();r1();});
@@ -777,13 +777,13 @@ var MC4={
   A:{q:'Eine ganze Zelle ist nur ¼ der Fläche. Trotzdem bricht die Leistung fast ganz ein. Warum?',o:['Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom, die abgedeckte Zelle bremst ihn für alle.','Die abgedeckte Zelle wird heiß und schaltet das Modul ab.','Das Messgerät misst im Schatten falsch.'],a:0,ok:'Genau! Wie bei einer Kette: Die schwächste Zelle bestimmt den Strom. Der Streifen nimmt jeder Zelle nur ein wenig Licht, deshalb sinkt die Leistung dort viel weniger.',bad:['','Das Modul schaltet nicht ab. Schaut auf das Bild „Modul von vorne“: Wie sind die Zellen geschaltet?','Das Messgerät misst richtig. Vergleicht „1 Zelle“ und „Streifen“: gleiche Fläche, ganz andere Leistung.']},
   B:{q:'Was passiert, wenn mehr Staub auf dem Modul liegt?',o:['Die Leistung sinkt mit jedem Gramm Staub weiter deutlich.','Ab der dünnen Schicht ändert sich nichts mehr.','Die Leistung steigt wieder an.'],a:0,ok:'Richtig! Staub schluckt Licht. Darum lohnt sich schon das Putzen einer dünnen Staubschicht.',bad:['','Schaut auf euren Graphen: Sinkt die Leistung bei dickerem Staub weiter?','Schaut auf euren Graphen: Wird die Leistung größer oder kleiner?']},
   C:{q:'Bei leichtem Dunst kommen 700 W/m² statt 1000 W/m² an, also 70 % des Lichts. Wie viel Leistung bleibt übrig?',o:['Weniger als 70 %: Die Leistung sinkt stärker als das Licht.','Genau 70 %.','Mehr als 70 %.'],a:0,ok:'Genau! Bei weniger Licht sinken Stromstärke und Spannung. Darum sinkt die Leistung stärker als das Licht.',bad:['','Schaut in eure Tabelle: Wie viel Prozent sind bei leichtem Dunst übrig?','Schaut in eure Tabelle: Wie viel Prozent sind bei leichtem Dunst übrig?']},
-  D:{q:'Wie hängt die Leistung vom Einfallswinkel ab?',o:['Bei kleinen Winkeln sinkt sie kaum, bei großen Winkeln sinkt sie stark.','Sie sinkt mit jedem Grad gleich stark.','Sie ändert sich kaum.'],a:0,ok:'Richtig! Bei schrägem Licht trifft weniger Licht auf dieselbe Fläche, und ein Teil wird zurückgeworfen.',bad:['','Vergleicht den Verlust bei kleinen und bei großen Winkeln in eurem Graphen.','Schaut auf den größten Winkel in eurem Graphen.']}
+  D:{q:'Wie hängt die Leistung vom Einfallswinkel ab?',o:['Bei kleinen Winkeln sinkt sie kaum, bei großen Winkeln sinkt sie stark.','Sie sinkt mit jedem Grad gleich stark.','Sie ändert sich kaum.'],a:0,ok:'Richtig! Fällt das Licht unter einem Winkel ein, trifft weniger Licht auf dieselbe Fläche, und ein Teil wird zurückgeworfen.',bad:['','Vergleicht den Verlust bei kleinen und bei großen Winkeln in eurem Graphen.','Schaut auf den größten Winkel in eurem Graphen.']}
 };
-var SATZ={A:'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto …',B:'Je mehr Staub auf dem Modul liegt, desto …',C:'Je weniger Sonnenlicht ankommt, desto …',D:'Je schräger das Sonnenlicht auf das Modul fällt, desto …'};
+var SATZ={A:'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto …',B:'Je mehr Staub auf dem Modul liegt, desto …',C:'Je weniger Sonnenlicht ankommt, desto …',D:'Je größer der Winkel zur Sonne ist, desto …'};
 function P0(i){var q=pct(i);return isNaN(q)?'…':fmt(q,0);}
 function muster(){var g=st.grp,G0=G(),v=rowVals(),fi=famIndex(),n=g==='A'?v.length-2:v.length-1;
   if(g==='A')return 'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto kleiner ist die Leistung. Liegt eine ganze Zelle im Schatten, bleiben nur '+P0(fi)+' %. Verteilt sich dieselbe Schattenfläche auf alle 4 Zellen, bleiben '+P0(v.length-1)+' % der Referenzleistung.';
-  var start={B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je schräger das Sonnenlicht auf das Modul fällt'}[g];
+  var start={B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je größer der Winkel zur Sonne ist'}[g];
   return start+', desto kleiner ist die Leistung. Bei '+valLabel(G0.p,v[fi])+' sank sie auf '+P0(fi)+' %, bei '+valLabel(G0.p,v[n])+' auf '+P0(n)+' % der Referenzleistung.';}
 function cmpAns(){var f=famPct(),d=st.pred-f;return Math.abs(d)<=10?2:(d>0?0:1);}
 function r4(){var s=st.s4,g=G(),f=famPct();
@@ -791,14 +791,14 @@ function r4(){var s=st.s4,g=G(),f=famPct();
   var cmp=mcHTML('cmp',cmpQ.q,cmpQ.o,s.cmp,cmpQ.a);
   var mc='',isA=st.grp==='A',KS=isA?['dir','sch','str','brm']:['dir'];
   var tipsSent=['Satzanfang: „'+SATZ[st.grp]+'“','Nennt einen Wert aus eurer Tabelle: „Bei … sank die Leistung auf … % der Referenzleistung.“'];
-  var SATZ0={A:'Je mehr Fläche einer Zelle im Schatten liegt',B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je schräger das Sonnenlicht auf das Modul fällt'}[st.grp];
+  var SATZ0={A:'Je mehr Fläche einer Zelle im Schatten liegt',B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je größer der Winkel zur Sonne ist'}[st.grp];
   var DD={dir:[['g','größer'],['k','kleiner'],['r','geringer'],['e','gleich']],sch:[['p','parallel geschaltet'],['r','in Reihe geschaltet'],['h','hintereinander geschaltet'],['n','gar nicht verbunden']],
       str:[['a','ein anderer Strom'],['d','derselbe Strom'],['k','gar kein Strom']],brm:[['a','bremst sie den Strom für das ganze Modul aus'],['s','bremst sie nur sich selbst aus'],['g','gleichen die anderen Zellen das aus'],['b','begrenzt sie den Strom im ganzen Modul']]};
   var OKV={dir:['k','r'],sch:['r','h'],str:['d'],brm:['a','b']};
   function dd(k){var bad=s.badF&&s.badF[k];return '<select id="s_'+k+'" class="'+(bad?'bad':'')+'"'+(s.ok?' disabled':'')+'><option value="">bitte wählen</option>'+DD[k].map(function(o){return '<option value="'+o[0]+'"'+(s[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
   function txt(k){var o=DD[k].filter(function(x){return x[0]===s[k];})[0];return o?o[1]:'…';}
   var sent=s.cmpOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Wählt in jeder Lücke aus. Manchmal passen mehrere Antworten.</p><p class="lsatz">'+SATZ0+', desto '+dd('dir')+' ist die Leistung. Bei Familie K. bleiben <input class="num'+(s.badF&&s.badF.num?' bad':'')+'" id="snum" inputmode="decimal" value="'+esc(s.snum||'')+'"'+(s.ok?' disabled':'')+'> % der Referenzleistung übrig.</p>'+
-    (isA?'<p><b>Nur Gruppe A: Warum bremst eine schwache Zelle das ganze Modul?</b> Das erklärt ihr in der Besprechung.</p><p class="lsatz">Die vier Zellen im Modul sind '+dd('sch')+'. Durch alle Zellen fließt deshalb '+dd('str')+'. Liefert eine Zelle weniger, '+dd('brm')+'.</p>':'')+
+    (isA?'<p><b>Nur Gruppe A: Warum bremst eine verschattete Zelle das ganze Modul?</b> Das erklärt ihr in der Besprechung. Schreibt die Erklärung danach in Aufgabe 2 auf das Gruppen-AB.</p><p class="lsatz">Die vier Zellen im Modul sind '+dd('sch')+'. Durch alle Zellen fließt deshalb '+dd('str')+'. Liefert eine Zelle weniger, '+dd('brm')+'.</p>':'')+
     (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c4">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb4"></p>'+(s.ok?'':tipHTML('s4sent',isA?['Erster Satz: Schaut auf euren Graphen. Die Zahl für Familie K. steht in der Tabelle in der Spalte „Anteil“.','Zweiter Teil: Schaut auf das Bild des Moduls. Die Zellen sind wie Glieder einer Kette verbunden. Was gilt dann für den Strom?']:['Schaut auf euren Graphen: Gehen die Punkte nach unten?','Die Zahl für Familie K. steht in der Tabelle in der Spalte „Anteil“ (fett markierte Zeile).']))+'</div>':'';
   var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Schreibt euren Ergebnissatz auf das Gruppen-AB (Aufgabe 2). Euer Wert für die Besprechung: <span class="k">Gruppe '+st.grp+' · '+g.name+' · Familie K.: '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
   var expl='';if(false){expl='<div class="q"><p><b>Nur Gruppe A: Eure Aufgabe in der Besprechung.</b> Nur ihr habt den Schatten gemessen. Erklärt der Klasse in eigenen Worten, warum die Leistung fast ganz einbricht, wenn nur eine Zelle im Schatten liegt.</p>'+
@@ -825,7 +825,7 @@ function r4(){var s=st.s4,g=G(),f=famPct();
 function unlocked(i){var k=STATIONS[i].key;if(i===0)return true;if(k==='s6'||k==='s7')return !!st.done[SI('s5')];return !!st.done[i-1];}
 
 /* Station 4: Schlussfolgerung */
-var DD5={chg:[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul gerade zur Sonne ausrichten'],['n','nein: das Wetter kann man nicht ändern']],cmp:[['m','viel mehr als'],['u','nur wenig mehr als'],['w','viel weniger als']],can:[['j','den größten Teil'],['n','nur einen kleinen Teil']]};
+var DD5={chg:[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul direkt zur Sonne ausrichten'],['n','nein: das Wetter kann man nicht ändern']],cmp:[['m','viel mehr als'],['u','nur wenig mehr als'],['w','viel weniger als']],can:[['j','den größten Teil'],['n','nur einen kleinen Teil']]};
 function s5ans(){var P=rowP(famIndex());if(isNaN(P))return {cmp:'',can:''};return P<=FAMW*2.5?{cmp:'u',can:'j'}:{cmp:'m',can:'n'};}
 var BEI={A:'Bei einer ganzen Zelle im Schatten',B:'Bei einer dünnen Staubschicht (2 g/m²)',C:'Bei leichtem Dunst (700 W/m²)',D:'Bei einem Winkel von 30° zur Sonne'};
 function s5sentence(){var g=G(),fi=famIndex(),P=rowP(fi),q=pct(fi),n=VNOM[st.grp],N=n.charAt(0).toUpperCase()+n.slice(1),a=s5ans();
@@ -834,7 +834,7 @@ function s5sentence(){var g=G(),fi=famIndex(),P=rowP(fi),q=pct(fi),n=VNOM[st.grp
     (a.can==='j'?'Das ist nur wenig mehr als die '+FAMW+' W von Familie K. '+N+' erklärt den größten Teil der geringen Leistung.':'Das ist viel mehr als '+FAMW+' W. '+N+' verringert die Leistung, erklärt aber nur einen kleinen Teil der geringen Leistung von Familie K.');}
 function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   function dd(k){var bad=s.badF&&s.badF[k];return '<select id="t_'+k+'" class="'+(bad?'bad':'')+'"'+(s.ok?' disabled':'')+'><option value="">bitte wählen</option>'+DD5[k].map(function(o){return '<option value="'+o[0]+'"'+(s[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
-  var intro='<p>Familie K. misst heute nur <b>'+FAMW+' W</b>. Bei bester Sonne wären es etwa 380 W. Am Balkon wirken alle vier Ursachen gleichzeitig. Jetzt prüft ihr mit euren Messwerten: Wie viel davon erklärt '+VNOM[st.grp]+'?</p>';
+  var intro='<p>Familie K. misst heute nur <b>'+FAMW+' W</b>. Unter optimalen Bedingungen wären es etwa 380 W. Am Balkon wirken alle vier Ursachen gleichzeitig. Jetzt prüft ihr mit euren Messwerten: Wie viel davon erklärt '+VNOM[st.grp]+'?</p>';
   var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt den Wert aus eurer Tabelle ein und wählt in jeder Lücke aus.</p><p class="lsatz">'+BEI[st.grp]+' (wie bei Familie K.) liefert unser Modul P = <input class="num'+(s.badF&&s.badF.pw?' bad':'')+'" id="t_pw" inputmode="decimal" value="'+esc(s.pw||'')+'"'+(s.ok?' disabled':'')+'> W. Das ist '+dd('cmp')+' '+FAMW+' W. Also erklärt '+VNOM[st.grp]+' '+dd('can')+' der geringen Leistung von Familie K.</p><p class="lsatz">Kann Familie K. das ändern? '+dd('chg')+'</p>'+
     (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c5">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb5"></p>'+(s.ok?'':tipHTML('s5',TIPS.s5))+'</div>';
   var hit=st.pv.can===(a.can==='j'?0:1);
@@ -864,11 +864,11 @@ function famSet(k){return valSet(GROUPS[k].p,GROUPS[k].famV);}
 function othPct(k){var o=st.s6.oth[k]||{},U=num(o.U),I=num(o.I),r=refP();if(isNaN(U)||isNaN(I)||isNaN(r)||r<=0)return NaN;return U*I/r*100;}
 var SETHINT={s:'Schatten 100 %, nur auf Zelle 1',n:'Staub 2 g/m²',h:'Sonnenlicht 700 W/m²',a:'Winkel 30°'};
 function r6(){var s=st.s6,ks=othKeys();
-  var tab='<div class="q"><p><span class="task-step">1. Die anderen Faktoren.</span> Messt die Situation von Familie K. auch für die drei anderen Faktoren. Stellt im Steuerpult immer <b>nur diesen einen</b> Faktor ein, alles andere bleibt Referenz. Wie, steht unter jeder Zeile. Vor der nächsten Zeile: „Alles auf Referenz zurücksetzen“. Die App rechnet den Anteil.</p>'+
+  var tab='<div class="q"><p><span class="task-step">1. Die anderen Faktoren.</span> Messt die Situation von Familie K. auch für die drei anderen Faktoren. Stellt im Steuerpult immer <b>nur diesen einen</b> Faktor ein, alles andere bleibt Referenz. Wie, steht unter jeder Zeile. Vor der nächsten Zeile: „Alles auf Referenz zurücksetzen“. Die App rechnet den Anteil. Tragt die Werte und eure Antworten auch auf dem Profi-Blatt ein.</p>'+
     '<div class="tw"><table class="mt"><thead><tr><th>Einstellung</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>Anteil<small>an P<sub>Ref</sub></small></th></tr></thead><tbody>'+
     ks.map(function(k){var o=s.oth[k]||{},q=othPct(k);return '<tr><td style="text-align:left">'+GROUPS[k].famLab+'<br><small class="muted">Einstellen: '+SETHINT[GROUPS[k].p]+'</small></td><td><input class="num" data-ou="'+k+'" inputmode="decimal" value="'+esc(o.U||'')+'"'+(s.othOk?' disabled':'')+'></td><td><input class="num" data-oi="'+k+'" inputmode="decimal" value="'+esc(o.I||'')+'"'+(s.othOk?' disabled':'')+'></td><td class="v" data-oq="'+k+'">'+(isNaN(q)?'–':'<b>'+fmt(q,0)+' %</b>')+'</td></tr>';}).join('')+'</tbody></table></div>'+
     (s.othOk?'':'<div class="row"><button class="btn pri" type="button" id="c6o">Prüfen</button></div>')+'<p class="fb" id="fb6o"></p></div>';
-  var rank=s.othOk?'<div class="merk"><h3>Für die Besprechung</h3><p>Vergleicht diese Werte mit eurem eigenen Ergebnis. Was fällt euch auf? Merkt es euch für die Besprechung, verraten wird hier nichts.</p></div>':'';
+  var rank=s.othOk?'<div class="merk"><h3>Für die Besprechung</h3><p>Vergleicht diese Werte mit eurem eigenen Ergebnis. Was fällt euch auf? Schreibt es auf das Profi-Blatt (Aufgabe 1). Verraten wird hier nichts.</p></div>':'';
   var byp=s.othOk?mcHTML('byp',QBYP.q,QBYP.o,s.byp,QBYP.a):'';
   var euro=s.bypOk?'<div class="q"><p><b>Was kostet der Schatten?</b> Ohne Verluste liefert das Balkonkraftwerk etwa <b>350 kWh</b> im Jahr. Der Schatten liegt nur einen Teil des Tages auf dem Modul. Übers Jahr bleiben deshalb nur <b>55 %</b> davon. Eine kWh kostet <b>0,35 €</b>. Wie viel Geld verliert Familie K. pro Jahr?</p><div class="row"><input class="num'+(s.euroOk?' ok':'')+'" id="eu" inputmode="decimal" value="'+esc(s.euro)+'"'+(s.euroOk?' disabled':'')+'><span>€ pro Jahr</span>'+(s.euroOk?'':'<button class="btn pri" type="button" id="c6e">Prüfen</button>')+'</div><p class="fb" id="fb6e"></p>'+(s.euroOk?'':tipHTML('s6euro',['Verlust = 100 % − 55 % = 45 %.','Erst 45 % von 350 kWh berechnen, dann mal 0,35 €.']))+'</div>':'';
   euro='';var mpp=s.bypOk?mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a):'';
@@ -890,14 +890,14 @@ function r6(){var s=st.s6,ks=othKeys();
 }
 
 /* Station 5: Ergebnisse sichern (nach dem Klassengespräch an der Tafel) */
-var FAMR={A:'Schatten (1 ganze Zelle)',B:'Staub (2 g/m²)',C:'Dunst (700 W/m²)',D:'schräg (30°)'};
+var FAMR={A:'Schatten (1 ganze Zelle)',B:'Staub (2 g/m²)',C:'Dunst (700 W/m²)',D:'Winkel 30°'};
 var RFS=[{g:'A',t:'Liegt eine ganze Zelle im Schatten, bleibt fast keine Leistung übrig.',a:'r'},
   {g:'A',t:'Schatten auf einer Zelle ist harmlos, weil er nur ein Viertel der Fläche abdeckt.',a:'f',fix:'Schatten auf einer Zelle ist sehr schlimm: Die Zellen sind in Reihe geschaltet, die verschattete Zelle bremst den Strom im ganzen Modul.'},
   {g:'B',t:'Schon eine dünne Staubschicht verringert die Leistung deutlich.',a:'r'},
   {g:'C',t:'Bei leichtem Dunst kommen 70 % des Lichts an. Dann bleiben auch genau 70 % der Leistung übrig.',a:'f',fix:'Bei 70 % Licht bleibt nur etwa die Hälfte der Leistung übrig (ca. 54 %). Die Leistung sinkt stärker als das Licht.'},
-  {g:'D',t:'Die schräge Ausrichtung verringert die Leistung bei Familie K. am wenigsten.',a:'r'},
+  {g:'D',t:'Der 30°-Winkel zur Sonne verringert die Leistung bei Familie K. am wenigsten.',a:'r'},
   {g:'',t:'Bei einem fairen Versuch verändert man nur eine Größe. Alle anderen bleiben gleich.',a:'r'}];
-var MSD={m1:[['a','der Schatten auf einer Zelle'],['b','der Staub'],['c','der Dunst'],['d','die schräge Ausrichtung']],
+var MSD={m1:[['a','der Schatten auf einer Zelle'],['b','der Staub'],['c','der Dunst'],['d','der 30°-Winkel zur Sonne']],
   m2:[['r','in Reihe geschaltet'],['p','parallel geschaltet']],
   m3:[['g','den Strom im ganzen Modul'],['s','nur sich selbst']]};
 var MSOK={m1:['a'],m2:['r'],m3:['g']};
@@ -906,8 +906,8 @@ function abBox(n,t){return '<div class="abbox"><b>✍ Jetzt aufs Gruppen-AB, Auf
 var AB3={a:'Wir haben immer nur <u>eine Größe</u> verändert. Alle anderen Größen blieben <u>gleich</u> (fairer Versuch). Die Leistung haben wir mit P = <u>U · I</u> berechnet.',
   c:'Am stärksten verringert <u>der Schatten auf einer Zelle</u> die Leistung. Die Zellen im Modul sind <u>in Reihe</u> geschaltet. Eine verschattete Zelle bremst deshalb <u>den Strom im ganzen Modul</u>.',
   d:'Zuerst <u>das Modul aus dem Schatten verschieben</u>, dann <u>putzen</u>, dann <u>ausrichten</u>. Gegen den <u>Dunst</u> kann Familie K. nichts tun.'};
-var RKN={A:'Schatten',B:'Staub',C:'Dunst',D:'Schräge'};
-var EMO=[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul gerade zur Sonne ausrichten'],['n','nein: kann sie nicht ändern']];
+var RKN={A:'Schatten',B:'Staub',C:'Dunst',D:'Ausrichtung'};
+var EMO=[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul direkt zur Sonne ausrichten'],['n','nein: kann sie nicht ändern']];
 var EMOK={A:'v',B:'p',C:'n',D:'a'};var MASS={v:'Modul verschieben',p:'Modul putzen',a:'Modul ausrichten'};
 var EMB={w:[['s','der Schatten die Leistung am stärksten verringert'],['e','Verschieben am wenigsten Arbeit macht'],['z','der Schatten nur eine Zelle trifft']],d:[['n','kann sie nichts tun'],['p','hilft Putzen'],['a','hilft Ausrichten']]};
 function s7model(k){if(k===st.grp&&!isNaN(famPct()))return famPct();return modelPct(k,GROUPS[k].famV);}
@@ -935,7 +935,7 @@ function r7(){var s=st.s7,own=st.grp;
   var rf='';if(s.rkOk){rf='<div class="q"><p><span class="task-step">3. Auf Richtigkeit prüfen.</span> Stimmen diese Aussagen? Entscheidet für jede Aussage: richtig oder falsch. Eure eigene Ursache ist markiert ★.</p>'+
     RFS.map(function(x,i){var bad=s.badF&&s.badF[i];return '<div class="rfrow'+(x.g===own?' mine':'')+'"><p>'+(x.g===own?'★ ':'')+x.t+'</p><select data-f7="'+i+'" class="'+(bad?'bad':'')+'"'+(s.rfOk?' disabled':'')+'><option value="">bitte wählen</option><option value="r"'+(s.rf[i]==='r'?' selected':'')+'>richtig</option><option value="f"'+(s.rf[i]==='f'?' selected':'')+'>falsch</option></select>'+
       (s.rfOk&&x.fix?'<p class="fix"><b>So stimmt es:</b> '+x.fix+'</p>':'')+'</div>';}).join('')+
-    (s.rfOk?'<p class="fb ok" style="display:block">Alles geprüft! Die falschen Aussagen sind jetzt verbessert.</p>':'<div class="row"><button class="btn pri" type="button" id="c7f">Einloggen und prüfen</button></div><p class="fb" id="fb7f"></p>'+tipHTML('s7rf',['Vergleicht jede Aussage mit eurer Tabelle aus Aufgabe 1.','Denkt an die Reihenschaltung der Zellen und an die Werte für Dunst (54 %) und Schräge (80 %).']))+'</div>';}
+    (s.rfOk?'<p class="fb ok" style="display:block">Alles geprüft! Die falschen Aussagen sind jetzt verbessert.</p>':'<div class="row"><button class="btn pri" type="button" id="c7f">Einloggen und prüfen</button></div><p class="fb" id="fb7f"></p>'+tipHTML('s7rf',['Vergleicht jede Aussage mit eurer Tabelle aus Aufgabe 1.','Denkt an die Reihenschaltung der Zellen und an die Werte für Dunst (54 %) und Ausrichtung (80 %).']))+'</div>';}
   /* 3 Festhalten */
   var ms='';if(s.rfOk){function dd(k){var bad=s.badM&&s.badM[k];return '<select data-m7="'+k+'" class="'+(bad?'bad':'')+'"'+(s.msOk?' disabled':'')+'><option value="">bitte wählen</option>'+MSD[k].map(function(o){return '<option value="'+o[0]+'"'+(s.ms[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
     ms='<div class="q"><p><span class="task-step">4. Festhalten.</span> Ergänzt den Merksatz. Er beantwortet die Leitfrage der Stunde.</p><p class="lsatz">Am stärksten verringert '+dd('m1')+' die Leistung. Die Zellen im Modul sind '+dd('m2')+'. Eine verschattete Zelle bremst deshalb '+dd('m3')+'.</p>'+
@@ -947,7 +947,7 @@ function r7(){var s=st.s7,own=st.grp;
       GKEYS.map(function(k){if(k===own&&st.s5.ok&&!s.em[k])s.em[k]=EMOK[k];return '<div class="ctlrow"><span>'+k+' · '+FAMR[k].toUpperCase()+(k===own?' ★ (habt ihr schon)':'')+'</span>'+sel('data-e7',k,EMO,s.em[k],B['e'+k],s.emOk||(k===own&&st.s5.ok))+'</div>';}).join('')+
       '<p><b>b) In welcher Reihenfolge sollte Familie K. vorgehen?</b></p>'+[1,2,3].map(function(n){return '<div class="ctlrow"><span>SCHRITT '+n+'</span>'+sel('data-o7',n,[['v',MASS.v],['p',MASS.p],['a',MASS.a]],s.eo[n],B['o'+n],s.emOk)+'</div>';}).join('')+
       '<p><b>c) Begründet.</b></p><p class="lsatz">Familie K. sollte zuerst das Modul verschieben, weil '+sel('data-b7','w',EMB.w,s.eb.w,B.bw,s.emOk)+'. Gegen den Dunst '+sel('data-b7','d',EMB.d,s.eb.d,B.bd,s.emOk)+'.</p>'+
-      (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>'+abBox('d',AB3.d):'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen die Schräge Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Rangfolge aus Schritt 2).']))+'</div>';
+      (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>'+abBox('d',AB3.d):'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen den Winkel hilft Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Rangfolge aus Schritt 2).']))+'</div>';
     if(s.emOk){var F=s.fix||{};em+='<div class="q"><p><b>Ausprobieren: Was bringen die Maßnahmen?</b> Tippt die Maßnahmen an und schaut auf das Handy im Bild.</p><div class="row" style="flex-wrap:wrap;gap:8px">'+
       ['v','p','a'].map(function(k){return '<button type="button" class="btn '+(F[k]?'pri':'sec')+'" data-x7="'+k+'">'+(F[k]?'✓ ':'')+MASS[k]+'</button>';}).join('')+'</div><p class="lsatz">Das Balkonkraftwerk liefert jetzt <b>'+famNow()+' W</b> statt '+FAMW+' W.'+(F.v&&F.p&&F.a?' Mehr geht heute nicht: Gegen den Dunst kann Familie K. nichts tun.':'')+'</p></div>';}}
   var fin='';if(s.emOk){fin=s.abOk?'<p class="win"><b>Gesichert!</b> Auf eurem AB steht jetzt in Aufgabe 3 die Antwort auf die Leitfrage: wie wir vorgegangen sind, welche Ursache am stärksten wirkt, warum, und was Familie K. tun sollte.</p>'+saveCTA(true):
@@ -1007,7 +1007,7 @@ function r7(){var s=st.s7,own=st.grp;
 var TL=[['s3meas','Messen · Messwerte und P-Rechnungen'],['s4tr','Auswerten · Messwerte mit Vorhersage verglichen'],['s4sent','Auswerten · Ergebnissatz'],['s5','Schlussfolgerung'],['s7fv','Sichern · fairer Versuch'],['s7rank','Sichern · Reihenfolge'],['s7rf','Sichern · richtig/falsch'],['s7ms','Sichern · Merksatz'],['s7em','Sichern · Empfehlung Familie K.'],['s6oth','Profi · andere Faktoren gemessen'],['s6byp','Profi · Bypass-Dioden'],['s6mpp','Profi · Wechselrichter']];
 function resText(){
   var r=st.res||{},d=new Date(),L=[],g=st.grp?G():null;
-  L.push('SOLAR-LABOR · Warum liefert das Balkonkraftwerk so wenig?');
+  L.push('SOLAR-LABOR · Warum liefert das Balkonkraftwerk so wenig elektrische Leistung?');
   L.push('Name: '+(r.name||'')+'    Klasse: '+(r.klasse||'')+'    Datum: '+d.toLocaleDateString('de-DE')+', '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}));
   L.push('Gruppe: '+(g?st.grp+' · '+g.name:'keine gewählt'));
   L.push(standLine());
