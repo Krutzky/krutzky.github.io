@@ -448,7 +448,8 @@ function modelPct(g,v){var s=base();s[GROUPS[g].p]=v;return solve(s).P/REF.P*100
 /* ---------- Messreihe der Gruppe ---------- */
 function G(){return GROUPS[st.grp]||GROUPS.A;}
 function rowVals(){var g=G(),a=[base()[g.p]];g.rule.ex.forEach(function(x){var v=num(x);if(!isNaN(v))a.push(v);});if(g.p==='s'&&a.length>1)a.push(-1);return a;}
-function valLabel(p,v){if(p==='s')return v===-1?'Fläche 1 Zelle, verteilt auf alle 4 Zellen':v===0?'kein Schatten':'Zelle 1 zu '+fmt(v,0)+' % im Schatten';if(p==='n')return v===0?'sauber (0 g/m²)':fmt(v,1)+' g/m² Staub';if(p==='h')return fmt(v,0)+' W/m²'+(v===1000?' (klarer Himmel)':'');return fmt(v,0)+'°';}
+function valLabel(p,v){if(p==='s')return v===-1?'4 Zellen je ein Stück dunkel (zusammen so viel wie 1 Zelle)':v===0?'kein Schatten':v===100?'1 Zelle ganz dunkel':'Zelle 1 zu '+fmt(v,0)+' % im Schatten';if(p==='n')return v===0?'sauber (0 g/m²)':fmt(v,1)+' g/m² Staub';if(p==='h')return fmt(v,0)+' W/m²'+(v===1000?' (klarer Himmel)':'');return fmt(v,0)+'°';}
+function modIco(all){var c='';for(var k=0;k<4;k++){var x=4+k*15;c+='<rect x="'+x+'" y="4" width="13" height="14" fill="#6E96E1"/>';if(all)c+='<rect x="'+x+'" y="14.5" width="13" height="3.5" fill="#0A0A0A"/>';else if(k===0)c+='<rect x="'+x+'" y="4" width="13" height="14" fill="#0A0A0A"/>';}return '<svg width="96" height="33" viewBox="0 0 64 22" style="vertical-align:middle;margin-top:3px" aria-hidden="true"><rect x="1" y="1" width="62" height="20" rx="2" fill="#C9CED6" stroke="#6B7280"/>'+c+'</svg>';}
 function rowLabel(v,i){return valLabel(G().p,v)+(i===0?' (Referenz)':'');}
 function ensureRows(){var n=rowVals().length;while(st.s3.rows.length<n)st.s3.rows.push({U:'',I:'',P:''});if(st.s3.rows.length>n)st.s3.rows.length=n;}
 function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;return num(r.P);}/* von den SuS berechnet, W */
@@ -596,7 +597,7 @@ function renderSetupViews(){
     var f=(s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0])[i];if(f>0){x.fillStyle='rgba(10,14,30,.75)';x.fillRect(mx+i*cw+2,my,cw-4,mh*f);}}
   if(s.n>0){x.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*s.n)+')';x.fillRect(mx,my,mw,mh);}
   x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();x.textAlign='center';x.textBaseline='top';
-  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(s.s?valLabel('s',s.v?-1:s.s).replace('Fläche 1 Zelle, verteilt','verteilt'):(s.n?valLabel('n',s.n):'Modul von vorne'),w/2,w*0.08);
+  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(s.s?(s.v?'4 Zellen je ein Stück dunkel':valLabel('s',s.s)):(s.n?valLabel('n',s.n):'Modul von vorne'),w/2,w*0.08);
   x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.88);
   drawGraph();
 }
@@ -739,11 +740,11 @@ function pOk(i){var r=st.s3.rows[i],U=num(r.U),I=num(r.I),P=num(r.P);return !isN
 function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
   var fi=famIndex(),dis=s.ok?' disabled':'';
   var rows=vals.map(function(v,i){var r=s.rows[i],q=pct(i);
-    return '<tr class="'+(i===st.row?'cur':(rowDone(i)?'done':''))+'" data-row="'+i+'"><td style="text-align:left">'+rowLabel(v,i)+(i===fi?' <b>(Familie K.)</b>':'')+'</td><td><input class="num" data-u="'+i+'" inputmode="decimal" value="'+esc(r.U)+'" aria-label="Spannung"'+dis+'></td><td><input class="num" data-ii="'+i+'" inputmode="decimal" value="'+esc(r.I)+'" aria-label="Stromstärke"'+dis+'></td><td><input class="num" data-pp="'+i+'" inputmode="decimal" value="'+esc(r.P)+'" aria-label="Leistung"'+dis+'></td><td class="v">'+(i===0?'100 %':(s.ok&&!isNaN(q)?'<b>'+fmt(q,0)+' %</b>':'–'))+'</td></tr>';}).join('');
+    return '<tr class="'+(i===st.row?'cur':(rowDone(i)?'done':''))+'" data-row="'+i+'"><td style="text-align:left">'+rowLabel(v,i)+(i===fi?' <b>(Familie K.)</b>':'')+(G().p==='s'&&(v===100||v===-1)?'<br>'+modIco(v===-1):'')+'</td><td><input class="num" data-u="'+i+'" inputmode="decimal" value="'+esc(r.U)+'" aria-label="Spannung"'+dis+'></td><td><input class="num" data-ii="'+i+'" inputmode="decimal" value="'+esc(r.I)+'" aria-label="Stromstärke"'+dis+'></td><td><input class="num" data-pp="'+i+'" inputmode="decimal" value="'+esc(r.P)+'" aria-label="Leistung"'+dis+'></td><td class="v">'+(i===0?'100 %':(s.ok&&!isNaN(q)?'<b>'+fmt(q,0)+' %</b>':'–'))+'</td></tr>';}).join('');
   var fam=s.ok?'<div class="q"><p><b>Anteil für Familie K.</b> Wie viel Prozent der Referenzleistung bleiben bei „'+g.famLab+'“ übrig? Lest den Wert in der Tabelle ab und tragt ihn hier ein.</p><div class="row"><span>Bei Familie K. bleiben</span><input class="num'+(s.famOk?' ok':'')+'" id="famA" inputmode="decimal" value="'+esc(s.famA)+'"'+(s.famOk?' disabled':'')+'><span>% übrig.</span>'+(s.famOk?'':'<button class="btn pri" type="button" id="c3f">Prüfen</button>')+'</div><p class="fb" id="fb3f"></p>'+(s.famOk?'':tipHTML('s3fam',TIPS.s3fam))+'</div>':'';
   $('task').innerHTML=head(SI('s3'),'Messreihe aufnehmen')+
     '<p>'+g.task+'</p><p>Messt <b>Zeile für Zeile</b>: euren Regler einstellen, U und I an den Messgeräten ablesen, P = U · I rechnen. Die erste Zeile ist die <b>Referenz</b> (beste Bedingungen, 100 %). Verstellt danach <b>nur euren eigenen Regler</b>, alle anderen bleiben auf dem besten Wert. Übertragt alles auf euer Gruppen-AB (Aufgabe 1).</p>'+
-    '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P = U · I<small>in W</small></th><th>Anteil<small>Referenz = 100 %</small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P = U · I<small>in W</small></th><th>Anteil<small>Referenz = 100 %</small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(st.grp==='A'?'<p><b>Gleich viel Schatten – warum ist die Leistung so verschieden?</b> Vergleicht die letzten beiden Zeilen.</p>':'')+
     (s.ok?'<p class="fb ok">Alle Messwerte und Rechnungen stimmen. Die App hat die Anteile in Prozent ergänzt. Tragt sie auf dem Gruppen-AB ein.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Messwerte und Rechnungen prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3meas',TIPS.s3meas))+
     (st.done[SI('s3')]?'<p class="win"><b>Gemessen und berechnet!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(SI('s3'))+'</div>';
   function mark(i){st.row=i;Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===i?'cur':(rowDone(j)?'done':'');});updBubble();drawGraph();}
@@ -782,7 +783,7 @@ var MC4={
 var SATZ={A:'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto …',B:'Je mehr Staub auf dem Modul liegt, desto …',C:'Je weniger Sonnenlicht ankommt, desto …',D:'Je größer der Winkel zur Sonne ist, desto …'};
 function P0(i){var q=pct(i);return isNaN(q)?'…':fmt(q,0);}
 function muster(){var g=st.grp,G0=G(),v=rowVals(),fi=famIndex(),n=g==='A'?v.length-2:v.length-1;
-  if(g==='A')return 'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto kleiner ist die Leistung. Liegt eine ganze Zelle im Schatten, bleiben nur '+P0(fi)+' %. Verteilt sich dieselbe Schattenfläche auf alle 4 Zellen, bleiben '+P0(v.length-1)+' % der Referenzleistung.';
+  if(g==='A')return 'Je mehr Fläche einer einzelnen Zelle im Schatten liegt, desto kleiner ist die Leistung. Liegt eine ganze Zelle im Schatten, bleiben nur '+P0(fi)+' %. Sind alle 4 Zellen je ein Stück dunkel (zusammen gleich viel Schatten), bleiben '+P0(v.length-1)+' % der Referenzleistung.';
   var start={B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je größer der Winkel zur Sonne ist'}[g];
   return start+', desto kleiner ist die Leistung. Bei '+valLabel(G0.p,v[fi])+' sank sie auf '+P0(fi)+' %, bei '+valLabel(G0.p,v[n])+' auf '+P0(n)+' % der Referenzleistung.';}
 function cmpAns(){var f=famPct(),d=st.pred-f;return Math.abs(d)<=10?2:(d>0?0:1);}
