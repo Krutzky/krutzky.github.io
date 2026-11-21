@@ -744,7 +744,7 @@ function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
   $('task').innerHTML=head(SI('s3'),'Messreihe aufnehmen')+
     '<p>'+g.task+'</p><p>Messt <b>Zeile für Zeile</b>: euren Regler einstellen, U und I an den Messgeräten ablesen, P = U · I rechnen. Die erste Zeile ist die <b>Referenz</b> (beste Bedingungen, 100 %). Verstellt danach <b>nur euren eigenen Regler</b>, alle anderen bleiben auf dem besten Wert. Übertragt alles auf euer Gruppen-AB (Aufgabe 1).</p>'+
     '<div class="tw"><table class="mt"><thead><tr><th>'+g.head+'</th><th>U<small>in V</small></th><th>I<small>in A</small></th><th>P = U · I<small>in W</small></th><th>Anteil<small>Referenz = 100 %</small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    (s.ok?'<p class="fb ok">Alle Messwerte und Rechnungen stimmen. Die App hat die Anteile in Prozent ergänzt.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Messwerte und Rechnungen prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3meas',TIPS.s3meas))+fam+
+    (s.ok?'<p class="fb ok">Alle Messwerte und Rechnungen stimmen. Die App hat die Anteile in Prozent ergänzt. Tragt sie auf dem Gruppen-AB ein.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Messwerte und Rechnungen prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3meas',TIPS.s3meas))+
     (st.done[SI('s3')]?'<p class="win"><b>Gemessen und berechnet!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(SI('s3'))+'</div>';
   function mark(i){st.row=i;Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===i?'cur':(rowDone(j)?'done':'');});updBubble();drawGraph();}
   Array.prototype.forEach.call(document.querySelectorAll('[data-u],[data-ii],[data-pp]'),function(inp){var i=+(inp.dataset.u||inp.dataset.ii||inp.dataset.pp);
@@ -758,17 +758,16 @@ function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
       uf.forEach(function(i){s.rows[i].U='';s.rows[i].I='';s.rows[i].P='';delete s.rows[i].set;});save();r3();var f2=$('fb3');f2.className='fb bad';
       f2.innerHTML='<b>Kein fairer Versuch!</b> Beim Ablesen in Zeile '+uf.map(function(i){return i+1;}).join(', ')+' habt ihr außer '+FDAT[g.p]+' auch '+ks.map(function(k){return FNAME[k];}).join(' und ')+' verändert. Dann weiß man nicht, was die Leistung verringert hat. Stellt alles andere auf die Referenz und messt diese Zeilen neu.';return;}
     var wm=idx.filter(function(i){return !rowOk(i);}),wp=idx.filter(function(i){return rowOk(i)&&!pOk(i);}),ok=!wm.length&&!wp.length;tryInc('s3meas',ok,wm.join(',')+'|'+wp.join(','));
-    if(ok){s.ok=true;save();r3();drawGraph();return;}
+    if(ok){s.ok=true;finish(SI('s3'));save();r3();drawGraph();return;}
     var t=[];if(wm.length)t.push('Messwerte in Zeile '+wm.map(function(i){return i+1;}).join(', ')+' passen nicht. Stellt euren Faktor genau auf den Wert dieser Zeile, prüft alle anderen Regler und lest neu ab.');
     if(wp.length)t.push('P in Zeile '+wp.map(function(i){return i+1;}).join(', ')+' stimmt nicht. Rechnet P = U · I.');
     fb.className='fb bad';fb.textContent=t.join(' ')+' Die Tipp-Karten unten helfen euch.';tipNudge(fb,'s3meas',1);st.row=wm.concat(wp)[0];save();Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===st.row?'cur':(rowDone(j)?'done':'');});updBubble();
-    showHelp(fb,'s3meas',function(){wm.concat(wp).forEach(function(i){var r=s.rows[i];if(!rowOk(i)){var m=meas(rowSet(i));r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;save();r3();drawGraph();});});
+    showHelp(fb,'s3meas',function(){wm.concat(wp).forEach(function(i){var r=s.rows[i];if(!rowOk(i)){var m=meas(rowSet(i));r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;finish(SI('s3'));save();r3();drawGraph();});});
   if($('famA'))$('famA').addEventListener('input',function(){s.famA=this.value;save();});
   if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=!isNaN(v)&&Math.abs(v-f)<=0.55;tryInc('s3fam',ok,s.famA);
     if(ok){s.famOk=true;finish(SI('s3'));save();r3();resize();helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(f,0)+' % der Referenzleistung übrig.');return;}
     fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-(100-f))<=1.5)?'Das ist der Verlust. Gefragt ist, wie viel übrig bleibt.':'Noch nicht. Schaut in der Tabelle in die Zeile „(Familie K.)“ und dort in die Spalte „Anteil“.';
     tipNudge(fb,'s3fam',1);showHelp(fb,'s3fam',function(){s.famA=fmt(f,0);s.famOk=true;finish(SI('s3'));save();r3();resize();});});
-  if(s.famOk)helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(famPct(),0)+' % der Referenzleistung übrig.');
   if(!s.ok){if(rowDone(st.row)){var n0=-1;vals.forEach(function(x,j){if(n0<0&&!rowDone(j))n0=j;});if(n0>=0)st.row=n0;}updBubble();}
   bindTips(r3);bindNext();
 }
@@ -790,7 +789,7 @@ function cmpAns(){var f=famPct(),d=st.pred-f;return Math.abs(d)<=10?2:(d>0?0:1);
 function r4(){var s=st.s4,g=G(),f=famPct();
   var cmpQ={q:'Was zeigen alle eure Messwerte? Wenn '+VTR[st.grp]+', dann …',o:['wird die Leistung kleiner.','bleibt die Leistung gleich.','wird die Leistung größer.'],a:0,ok:'Richtig! Das zeigen alle Zeilen eurer Tabelle. '+(st.pv.tr===0?'Das passt zu eurer Vorhersage.':'Ihr hattet etwas anderes vorhergesagt. Gut, dass ihr gemessen habt!'),bad:['','Schaut auf euren Graphen: Bleiben die Punkte auf gleicher Höhe?','Schaut auf euren Graphen: Gehen die Punkte nach oben oder nach unten?']};
   var cmp=mcHTML('cmp',cmpQ.q,cmpQ.o,s.cmp,cmpQ.a);
-  var mc=s.cmpOk?mcHTML('mc4',MC4[st.grp].q,MC4[st.grp].o,s.mc,MC4[st.grp].a):'';
+  var mc='',isA=st.grp==='A',KS=isA?['dir','sch','str','brm']:['dir'];
   var tipsSent=['Satzanfang: „'+SATZ[st.grp]+'“','Nennt einen Wert aus eurer Tabelle: „Bei … sank die Leistung auf … % der Referenzleistung.“'];
   var SATZ0={A:'Je mehr Fläche einer Zelle im Schatten liegt',B:'Je mehr Staub auf dem Modul liegt',C:'Je weniger Sonnenlicht ankommt',D:'Je schräger das Sonnenlicht auf das Modul fällt'}[st.grp];
   var DD={dir:[['g','größer'],['k','kleiner'],['r','geringer'],['e','gleich']],sch:[['p','parallel geschaltet'],['r','in Reihe geschaltet'],['h','hintereinander geschaltet'],['n','gar nicht verbunden']],
@@ -798,23 +797,23 @@ function r4(){var s=st.s4,g=G(),f=famPct();
   var OKV={dir:['k','r'],sch:['r','h'],str:['d'],brm:['a','b']};
   function dd(k){var bad=s.badF&&s.badF[k];return '<select id="s_'+k+'" class="'+(bad?'bad':'')+'"'+(s.ok?' disabled':'')+'><option value="">bitte wählen</option>'+DD[k].map(function(o){return '<option value="'+o[0]+'"'+(s[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
   function txt(k){var o=DD[k].filter(function(x){return x[0]===s[k];})[0];return o?o[1]:'…';}
-  var sent=s.mcOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Wählt in jeder Lücke aus. Manchmal passen mehrere Antworten.</p><p class="lsatz">'+SATZ0+', desto '+dd('dir')+' ist die Leistung. Bei Familie K. ('+g.famLab+') bleiben <input class="num'+(s.badF&&s.badF.num?' bad':'')+'" id="snum" inputmode="decimal" value="'+esc(s.snum||'')+'"'+(s.ok?' disabled':'')+'> % der Referenzleistung übrig.</p>'+
-    '<p><b>Warum bremst eine schwache Zelle das ganze Modul?</b></p><p class="lsatz">Die vier Zellen im Modul sind '+dd('sch')+'. Durch alle Zellen fließt deshalb '+dd('str')+'. Liefert eine Zelle weniger, '+dd('brm')+'.</p>'+
-    (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c4">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb4"></p>'+(s.ok?'':tipHTML('s4sent',['Erster Satz: Schaut auf euren Graphen. Die Zahl für Familie K. steht in der Tabelle in der Spalte „Anteil“.','Zweiter Teil: Schaut auf das Bild des Moduls. Die Zellen sind wie Glieder einer Kette verbunden. Was gilt dann für den Strom?']))+'</div>':'';
-  var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Schreibt euren Ergebnissatz auf das Gruppen-AB (Aufgabe 2). Euer Wert für die Besprechung: <span class="k">Gruppe '+st.grp+' · '+g.name+' · Familie K. ('+g.famLab+'): '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
-  var expl='';if(st.grp==='A'&&s.ok){expl='<div class="q"><p><b>Nur Gruppe A: Eure Aufgabe in der Besprechung.</b> Nur ihr habt den Schatten gemessen. Erklärt der Klasse in eigenen Worten, warum die Leistung fast ganz einbricht, wenn nur eine Zelle im Schatten liegt.</p>'+
+  var sent=s.cmpOk?'<div class="q"><p><b>Euer Ergebnissatz:</b> Wählt in jeder Lücke aus. Manchmal passen mehrere Antworten.</p><p class="lsatz">'+SATZ0+', desto '+dd('dir')+' ist die Leistung. Bei Familie K. bleiben <input class="num'+(s.badF&&s.badF.num?' bad':'')+'" id="snum" inputmode="decimal" value="'+esc(s.snum||'')+'"'+(s.ok?' disabled':'')+'> % der Referenzleistung übrig.</p>'+
+    (isA?'<p><b>Nur Gruppe A: Warum bremst eine schwache Zelle das ganze Modul?</b> Das erklärt ihr in der Besprechung.</p><p class="lsatz">Die vier Zellen im Modul sind '+dd('sch')+'. Durch alle Zellen fließt deshalb '+dd('str')+'. Liefert eine Zelle weniger, '+dd('brm')+'.</p>':'')+
+    (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c4">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb4"></p>'+(s.ok?'':tipHTML('s4sent',isA?['Erster Satz: Schaut auf euren Graphen. Die Zahl für Familie K. steht in der Tabelle in der Spalte „Anteil“.','Zweiter Teil: Schaut auf das Bild des Moduls. Die Zellen sind wie Glieder einer Kette verbunden. Was gilt dann für den Strom?']:['Schaut auf euren Graphen: Gehen die Punkte nach unten?','Die Zahl für Familie K. steht in der Tabelle in der Spalte „Anteil“ (fett markierte Zeile).']))+'</div>':'';
+  var report=s.ok?'<div class="merk"><h3>Für das Klassenergebnis</h3><p>Schreibt euren Ergebnissatz auf das Gruppen-AB (Aufgabe 2). Euer Wert für die Besprechung: <span class="k">Gruppe '+st.grp+' · '+g.name+' · Familie K.: '+(isNaN(f)?'–':fmt(f,0)+' %')+'</span></p></div>':'';
+  var expl='';if(false){expl='<div class="q"><p><b>Nur Gruppe A: Eure Aufgabe in der Besprechung.</b> Nur ihr habt den Schatten gemessen. Erklärt der Klasse in eigenen Worten, warum die Leistung fast ganz einbricht, wenn nur eine Zelle im Schatten liegt.</p>'+
     '<textarea class="free" id="expl" rows="3" placeholder="Die Zellen sind …"'+(s.explOk?' disabled':'')+'>'+esc(s.expl||'')+'</textarea>'+(s.explOk?'<div class="merk"><h3>Vergleicht mit dieser Erklärung</h3><p>Die Zellen sind in Reihe geschaltet. Durch alle Zellen fließt derselbe Strom. Die verschattete Zelle lässt kaum Strom durch und bremst damit alle anderen, wie das schwächste Glied einer Kette.</p></div><p class="muted">Schreibt eure Erklärung auch auf das Gruppen-AB (Aufgabe 2).</p>':'<div class="row"><button class="btn pri" type="button" id="c4e">Fertig</button></div><p class="fb" id="fb4e"></p>'+tipHTML('s4expl',TIPS.s4expl))+'</div>';}
   var after=st.done[SI('s4')]?'<p class="win"><b>Ausgewertet!</b> Jetzt zieht ihr eure Schlussfolgerung für Familie K.</p><div class="row">'+nextBtn(SI('s4'))+'</div>':'';
   $('task').innerHTML=head(SI('s4'),'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten.</p>'+cmp+mc+sent+report+expl+after;
-  mcBind('cmp',cmpQ,s,'cmp','s4tr',r4);if(s.cmpOk)mcBind('mc4',MC4[st.grp],s,'mc','s4mc',r4);
-  if($('c4')&&!s.ok){['dir','sch','str','brm'].forEach(function(k){$('s_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});$('snum').addEventListener('input',function(){s.snum=this.value;if(s.badF)s.badF.num=false;this.className='num';save();});
-    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};['dir','sch','str','brm'].forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(isNaN(v)||Math.abs(v-f)>0.55)bad.num=true;
+  mcBind('cmp',cmpQ,s,'cmp','s4tr',r4);
+  if($('c4')&&!s.ok){KS.forEach(function(k){$('s_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});$('snum').addEventListener('input',function(){s.snum=this.value;if(s.badF)s.badF.num=false;this.className='num';save();});
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};KS.forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(isNaN(v)||Math.abs(v-f)>0.55)bad.num=true;
       var ok=!Object.keys(bad).length;tryInc('s4sent',ok,[s.dir,s.snum,s.sch,s.str,s.brm].join('/'));
-      var compose=function(){return SATZ0+', desto '+txt('dir')+' ist die Leistung. Bei Familie K. ('+g.famLab+') bleiben '+s.snum+' % der Referenzleistung übrig. Die vier Zellen im Modul sind '+txt('sch')+'. Durch alle Zellen fließt deshalb '+txt('str')+'. Liefert eine Zelle weniger, '+txt('brm')+'.';};
-      if(ok){s.badF={};s.sent=compose();s.ok=true;if(st.grp!=='A')finish(SI('s4'));save();r4();return;}
-      s.badF=bad;save();['dir','sch','str','brm'].forEach(function(k){$('s_'+k).className=bad[k]?'bad':'';});$('snum').className='num'+(bad.num?' bad':'');
+      var compose=function(){return SATZ0+', desto '+txt('dir')+' ist die Leistung. Bei Familie K. bleiben '+s.snum+' % der Referenzleistung übrig.'+(isA?' Die vier Zellen im Modul sind '+txt('sch')+'. Durch alle Zellen fließt deshalb '+txt('str')+'. Liefert eine Zelle weniger, '+txt('brm')+'.':'');};
+      if(ok){s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();return;}
+      s.badF=bad;save();KS.forEach(function(k){$('s_'+k).className=bad[k]?'bad':'';});$('snum').className='num'+(bad.num?' bad':'');
       var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt noch nicht.':n+' Lücken stimmen noch nicht.')+' Sie sind rot markiert.'+(bad.num&&!isNaN(v)&&Math.abs(v-(100-f))<=1.5?' Bei der Zahl habt ihr den Verlust eingetragen, gefragt ist, wie viel übrig bleibt.':'');
-      tipNudge(fb,'s4sent',1);showHelp(fb,'s4sent',function(){s.dir='k';s.snum=fmt(f,0);s.sch='r';s.str='d';s.brm='a';s.badF={};s.sent=compose();s.ok=true;if(st.grp!=='A')finish(SI('s4'));save();r4();});});}
+      tipNudge(fb,'s4sent',1);showHelp(fb,'s4sent',function(){s.dir='k';s.snum=fmt(f,0);s.sch='r';s.str='d';s.brm='a';s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();});});}
   if($('expl')&&!s.explOk){$('expl').addEventListener('input',function(){s.expl=this.value;save();});
     $('c4e').addEventListener('click',function(){var fb=$('fb4e'),t=(s.expl||'').trim(),words=t?t.split(/\s+/).length:0;
       if(words<6){tryInc('s4expl',false,t);fb.className='fb bad';fb.textContent='Schreibt mindestens einen ganzen Satz.';tipNudge(fb,'s4expl',1);return;}
@@ -826,7 +825,7 @@ function r4(){var s=st.s4,g=G(),f=famPct();
 function unlocked(i){var k=STATIONS[i].key;if(i===0)return true;if(k==='s6'||k==='s7')return !!st.done[SI('s5')];return !!st.done[i-1];}
 
 /* Station 4: Schlussfolgerung */
-var DD5={cmp:[['m','viel mehr als'],['u','nur wenig mehr als'],['w','viel weniger als']],can:[['j','den größten Teil'],['n','nur einen kleinen Teil']]};
+var DD5={chg:[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul gerade zur Sonne ausrichten'],['n','nein: das Wetter kann man nicht ändern']],cmp:[['m','viel mehr als'],['u','nur wenig mehr als'],['w','viel weniger als']],can:[['j','den größten Teil'],['n','nur einen kleinen Teil']]};
 function s5ans(){var P=rowP(famIndex());if(isNaN(P))return {cmp:'',can:''};return P<=FAMW*2.5?{cmp:'u',can:'j'}:{cmp:'m',can:'n'};}
 var BEI={A:'Bei einer ganzen Zelle im Schatten',B:'Bei einer dünnen Staubschicht (2 g/m²)',C:'Bei leichtem Dunst (700 W/m²)',D:'Bei einem Winkel von 30° zur Sonne'};
 function s5sentence(){var g=G(),fi=famIndex(),P=rowP(fi),q=pct(fi),n=VNOM[st.grp],N=n.charAt(0).toUpperCase()+n.slice(1),a=s5ans();
@@ -836,22 +835,22 @@ function s5sentence(){var g=G(),fi=famIndex(),P=rowP(fi),q=pct(fi),n=VNOM[st.grp
 function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   function dd(k){var bad=s.badF&&s.badF[k];return '<select id="t_'+k+'" class="'+(bad?'bad':'')+'"'+(s.ok?' disabled':'')+'><option value="">bitte wählen</option>'+DD5[k].map(function(o){return '<option value="'+o[0]+'"'+(s[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
   var intro='<p>Familie K. misst heute nur <b>'+FAMW+' W</b>. Bei bester Sonne wären es etwa 380 W. Am Balkon wirken alle vier Ursachen gleichzeitig. Jetzt prüft ihr mit euren Messwerten: Wie viel davon erklärt '+VNOM[st.grp]+'?</p>';
-  var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt den Wert aus eurer Tabelle ein und wählt in jeder Lücke aus.</p><p class="lsatz">'+BEI[st.grp]+' (wie bei Familie K.) liefert unser Modul P = <input class="num'+(s.badF&&s.badF.pw?' bad':'')+'" id="t_pw" inputmode="decimal" value="'+esc(s.pw||'')+'"'+(s.ok?' disabled':'')+'> W. Das ist '+dd('cmp')+' '+FAMW+' W. Also erklärt '+VNOM[st.grp]+' '+dd('can')+' der geringen Leistung von Familie K.</p>'+
+  var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt den Wert aus eurer Tabelle ein und wählt in jeder Lücke aus.</p><p class="lsatz">'+BEI[st.grp]+' (wie bei Familie K.) liefert unser Modul P = <input class="num'+(s.badF&&s.badF.pw?' bad':'')+'" id="t_pw" inputmode="decimal" value="'+esc(s.pw||'')+'"'+(s.ok?' disabled':'')+'> W. Das ist '+dd('cmp')+' '+FAMW+' W. Also erklärt '+VNOM[st.grp]+' '+dd('can')+' der geringen Leistung von Familie K.</p><p class="lsatz">Kann Familie K. das ändern? '+dd('chg')+'</p>'+
     (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c5">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb5"></p>'+(s.ok?'':tipHTML('s5',TIPS.s5))+'</div>';
   var hit=st.pv.can===(a.can==='j'?0:1);
   var vgl=s.ok?'<div class="q"><p><b>Und eure Vorhersage?</b> Ihr hattet gewählt: „'+pvTxt(2,st.grp)+'“</p><p class="fb '+(hit?'ok':'')+'" style="display:block">'+(hit?'Eure Vorhersage passt zu euren Messwerten.':'Eure Messwerte zeigen etwas anderes als eure Vorhersage. Das ist kein Fehler: Genau dafür messen wir.')+'</p></div>':'';
-  var box=s.ok?'<div class="merk"><h3>Für das Klassengespräch</h3><p><b>Schlussfolgerung Gruppe '+st.grp+' ('+g.name+'):</b> '+s5sentence()+'</p><p class="muted" style="margin:6px 0 0">Schreibt diese Schlussfolgerung auf euer Gruppen-AB (Aufgabe 2) und stellt sie im Klassengespräch vor.'+(a.can==='j'?' Erklärt dabei, warum eine einzige Zelle so viel ausmacht.':' Überlegt: Welche Ursache macht dann den größten Teil aus?')+'</p></div>':'';
+  var box=s.ok?'<div class="merk"><h3>Für das Klassengespräch</h3><p><b>Schlussfolgerung Gruppe '+st.grp+' ('+g.name+'):</b> '+s5sentence()+'</p><p><b>Kann Familie K. das ändern?</b> '+DD5.chg.filter(function(o){return o[0]===EMOK[st.grp];})[0][1]+'.</p><p class="muted" style="margin:6px 0 0">Schreibt diese Schlussfolgerung und die Antwort auf euer Gruppen-AB (Aufgabe 2) und stellt sie im Klassengespräch vor.'+(a.can==='j'?' Erklärt dabei, warum eine einzige Zelle so viel ausmacht.':' Überlegt: Welche Ursache macht dann den größten Teil aus?')+'</p></div>':'';
   var after=s.ok?'<p class="win"><b>Fertig!</b> Ihr seid bereit für das Klassengespräch.</p>'+saveCTA(true)+'<p class="muted">Nach dem Klassengespräch an der Tafel geht es mit <b>Station 5: Ergebnisse sichern</b> weiter. Noch Zeit bis dahin? Dann weiter mit dem Profi-Zusatz ★.</p><div class="row"><button class="btn sec" type="button" id="toPro">Zum Profi-Zusatz ★ →</button></div>':'';
   $('task').innerHTML=head(SI('s5'),'Erklärt '+VNOM[st.grp]+' die '+FAMW+' W?')+(st.s3.ok?'':'<p class="note">Messt zuerst in Station 2 eure Messreihe.</p>')+intro+q+vgl+box+after;
-  if($('c5')){['cmp','can'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
+  if($('c5')){['cmp','can','chg'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
     $('t_pw').addEventListener('input',function(){s.pw=this.value;if(s.badF)s.badF.pw=false;this.className='num';save();});
     $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}
-      var v=num(s.pw),bad={};if(isNaN(v)||Math.abs(v-P)>0.55)bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;
-      var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can].join('/'));
+      var v=num(s.pw),bad={};if(isNaN(v)||Math.abs(v-P)>0.55)bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;if(s.chg!==EMOK[st.grp])bad.chg=true;
+      var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can,s.chg].join('/'));
       if(ok){s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
-      s.badF=bad;save();['cmp','can'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
+      s.badF=bad;save();['cmp','can','chg'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
       var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt noch nicht.':n+' Lücken stimmen noch nicht.')+' Sie sind rot markiert.'+(bad.pw?' Die Leistung P steht in eurer Tabelle in der Zeile „(Familie K.)“.':'');
-      tipNudge(fb,'s5',1);showHelp(fb,'s5',function(){s.pw=fmt(P,0);s.cmp=a.cmp;s.can=a.can;s.badF={};s.ok=true;finish(SI('s5'));save();r5();});});}
+      tipNudge(fb,'s5',1);showHelp(fb,'s5',function(){s.pw=fmt(P,0);s.cmp=a.cmp;s.can=a.can;s.chg=EMOK[st.grp];s.badF={};s.ok=true;finish(SI('s5'));save();r5();});});}
   if($('toPro'))$('toPro').addEventListener('click',function(){go(SI('s6'));});
   bindTips(r5);bindCTA();
 }
@@ -872,7 +871,7 @@ function r6(){var s=st.s6,ks=othKeys();
   var rank=s.othOk?'<div class="merk"><h3>Für die Besprechung</h3><p>Vergleicht diese Werte mit eurem eigenen Ergebnis. Was fällt euch auf? Merkt es euch für die Besprechung, verraten wird hier nichts.</p></div>':'';
   var byp=s.othOk?mcHTML('byp',QBYP.q,QBYP.o,s.byp,QBYP.a):'';
   var euro=s.bypOk?'<div class="q"><p><b>Was kostet der Schatten?</b> Ohne Verluste liefert das Balkonkraftwerk etwa <b>350 kWh</b> im Jahr. Der Schatten liegt nur einen Teil des Tages auf dem Modul. Übers Jahr bleiben deshalb nur <b>55 %</b> davon. Eine kWh kostet <b>0,35 €</b>. Wie viel Geld verliert Familie K. pro Jahr?</p><div class="row"><input class="num'+(s.euroOk?' ok':'')+'" id="eu" inputmode="decimal" value="'+esc(s.euro)+'"'+(s.euroOk?' disabled':'')+'><span>€ pro Jahr</span>'+(s.euroOk?'':'<button class="btn pri" type="button" id="c6e">Prüfen</button>')+'</div><p class="fb" id="fb6e"></p>'+(s.euroOk?'':tipHTML('s6euro',['Verlust = 100 % − 55 % = 45 %.','Erst 45 % von 350 kWh berechnen, dann mal 0,35 €.']))+'</div>':'';
-  var mpp=s.euroOk?mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a):'';
+  euro='';var mpp=s.bypOk?mcHTML('mpp',QMPP.q,QMPP.o,s.mpp,QMPP.a):'';
   $('task').innerHTML=head(SI('s6'),'Für Profis: Wissen für die Besprechung')+(st.s3.ok?'':'<p class="note">Messt zuerst in Station 2 eure Messreihe.</p>')+tab+rank+byp+euro+mpp+(s.mppOk?'<p class="win"><b>Profi!</b> Bringt euer Wissen in die Besprechung ein.</p>'+saveCTA(true):'')+'<p class="muted">Nach dem Klassengespräch an der Tafel geht es mit <b>Station 5: Ergebnisse sichern</b> weiter.</p>';
   Array.prototype.forEach.call(document.querySelectorAll('[data-ou],[data-oi]'),function(inp){inp.addEventListener('input',function(){var k=inp.dataset.ou||inp.dataset.oi,o=s.oth[k]||(s.oth[k]={});if(inp.dataset.ou)o.U=inp.value;else o.I=inp.value;save();var q=othPct(k);document.querySelector('[data-oq="'+k+'"]').innerHTML=isNaN(q)?'–':'<b>'+fmt(q,0)+' %</b>';});});
   if($('c6o'))$('c6o').addEventListener('click',function(){var fb=$('fb6o');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst in Station 2 eure Messreihe.';return;}
@@ -886,7 +885,7 @@ function r6(){var s=st.s6,ks=othKeys();
     if(ok){s.euroOk=true;save();r6();helpMsg('fb6e',EURO_OK);return;}
     fb.className='fb bad';fb.textContent=Math.abs(v-67.38)<=1?'Das ist der Wert für die Energie, die noch ankommt. Gefragt ist der Verlust.':'Noch nicht. Rechnet erst die verlorenen kWh, dann die Kosten.';
     tipNudge(fb,'s6euro',1);showHelp(fb,'s6euro',function(){s.euro='55,13';s.euroOk=true;save();r6();});});
-  if(s.euroOk)helpMsg('fb6e',EURO_OK);if(s.euroOk)mcBind('mpp',QMPP,s,'mpp','s6mpp',r6);
+  if(s.bypOk)mcBind('mpp',QMPP,s,'mpp','s6mpp',r6);
   if(s.mppOk)finish(SI('s6'));bindTips(r6);bindCTA();
 }
 
@@ -900,10 +899,14 @@ var RFS=[{g:'A',t:'Liegt eine ganze Zelle im Schatten, bleibt fast keine Leistun
   {g:'',t:'Bei einem fairen Versuch verändert man nur eine Größe. Alle anderen bleiben gleich.',a:'r'}];
 var MSD={m1:[['a','der Schatten auf einer Zelle'],['b','der Staub'],['c','der Dunst'],['d','die schräge Ausrichtung']],
   m2:[['r','in Reihe geschaltet'],['p','parallel geschaltet']],
-  m3:[['g','den Strom im ganzen Modul'],['s','nur sich selbst']],
-  m4:[['d','deutlich, aber viel weniger als der Schatten'],['n','gar nicht'],['m','stärker als der Schatten']],
-  m5:[['d','die schräge Ausrichtung'],['b','der Staub'],['a','der Schatten']]};
-var MSOK={m1:['a'],m2:['r'],m3:['g'],m4:['d'],m5:['d']};
+  m3:[['g','den Strom im ganzen Modul'],['s','nur sich selbst']]};
+var MSOK={m1:['a'],m2:['r'],m3:['g']};
+var FVD={f1:[['e','eine Größe'],['z','zwei Größen'],['a','alle Größen']],f2:[['g','gleich'],['s','auf dem schlechtesten Wert']],f3:[['m','U · I'],['p','U + I'],['d','U : I']]};var FVOK={f1:'e',f2:'g',f3:'m'};
+function abBox(n,t){return '<div class="abbox"><b>✍ Jetzt aufs Gruppen-AB, Aufgabe 3'+n+':</b><p>'+t+'</p></div>';}
+var AB3={a:'Wir haben immer nur <u>eine Größe</u> verändert. Alle anderen Größen blieben <u>gleich</u> (fairer Versuch). Die Leistung haben wir mit P = <u>U · I</u> berechnet.',
+  c:'Am stärksten verringert <u>der Schatten auf einer Zelle</u> die Leistung. Die Zellen im Modul sind <u>in Reihe</u> geschaltet. Eine verschattete Zelle bremst deshalb <u>den Strom im ganzen Modul</u>.',
+  d:'Zuerst <u>das Modul aus dem Schatten verschieben</u>, dann <u>putzen</u>, dann <u>ausrichten</u>. Gegen den <u>Dunst</u> kann Familie K. nichts tun.'};
+var RKN={A:'Schatten',B:'Staub',C:'Dunst',D:'Schräge'};
 var EMO=[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul gerade zur Sonne ausrichten'],['n','nein: kann sie nicht ändern']];
 var EMOK={A:'v',B:'p',C:'n',D:'a'};var MASS={v:'Modul verschieben',p:'Modul putzen',a:'Modul ausrichten'};
 var EMB={w:[['s','der Schatten die Leistung am stärksten verringert'],['e','Verschieben am wenigsten Arbeit macht'],['z','der Schatten nur eine Zelle trifft']],d:[['n','kann sie nichts tun'],['p','hilft Putzen'],['a','hilft Ausrichten']]};
@@ -917,38 +920,39 @@ function r7(){var s=st.s7,own=st.grp;
     $('g7n').addEventListener('click',function(){s.no=true;save();r7();});
     $('g7y').addEventListener('click',function(){s.gate=true;s.tGate=Date.now();save();r7();window.scrollTo({top:0,behavior:'smooth'});});
     return;}
-  var intro='<p>Jetzt sichert ihr, was die ganze Klasse herausgefunden hat: <b>ordnen</b>, <b>auf Richtigkeit prüfen</b> und <b>festhalten</b>. Leitfrage: <b>Warum liefert das Balkonkraftwerk von Familie K. nur '+FAMW+' W?</b></p>';
+  var intro='<p>Jetzt sichert ihr, was die ganze Klasse herausgefunden hat. Nach jedem Schritt zeigt euch ein blauer Kasten ✍, was ihr in <b>Aufgabe 3</b> auf euer Gruppen-AB übertragt. Leitfrage: <b>Warum liefert das Balkonkraftwerk von Familie K. nur '+FAMW+' W?</b></p>';
   /* 1 Ordnen */
-  var tab='<div class="q"><p><span class="task-step">1. Ordnen.</span> Übertragt die Werte der Gruppen von der Tafel: Wie viel Prozent der Referenzleistung bleiben bei Familie K. übrig? Euer eigener Wert ist schon eingetragen.</p>'+
-    '<div class="tw"><table class="mt"><thead><tr><th>Gruppe · Ursache</th><th>übrig in %</th></tr></thead><tbody>'+GKEYS.map(function(k){var me=k===own,v=me?fmt(s7model(k),0):(s.tab[k]||'');
-      return '<tr'+(me?' class="cur"':'')+'><td style="text-align:left">'+k+' · '+FAMR[k]+(me?' <b>(eure Gruppe)</b>':'')+'</td><td><input class="num'+(s.badT&&s.badT[k]?' bad':'')+'" data-t7="'+k+'" inputmode="decimal" value="'+esc(v)+'"'+(me||s.tabOk?' disabled':'')+'></td></tr>';}).join('')+'</tbody></table></div>'+
-    (s.tabOk?'<p class="fb ok" style="display:block">Die Werte stimmen mit dem Klassenergebnis überein.</p>':'<div class="row"><button class="btn pri" type="button" id="c7t">Werte prüfen</button></div><p class="fb" id="fb7t"></p>'+tipHTML('s7tab',['Die Werte stehen an der Tafel im Klassenergebnis (Spalte „übrig in %“). Ihr habt sie auch auf dem Gruppen-AB in Aufgabe 3.','Gefragt ist, was übrig bleibt, nicht der Verlust. Beispiel: 80 % übrig heißt 20 % Verlust.']))+'</div>';
-  var rk='';if(s.tabOk){rk='<div class="q"><p><b>Bringt die Ursachen in eine Reihenfolge.</b> Platz 1 verringert die Leistung am stärksten.</p>'+[1,2,3,4].map(function(n){var bad=s.badR&&s.badR[n];return '<div class="ctlrow"><span>PLATZ '+n+(n===1?' (am stärksten)':n===4?' (am wenigsten)':'')+'</span><select data-r7="'+n+'" class="'+(bad?'bad':'')+'"'+(s.rkOk?' disabled':'')+'><option value="">bitte wählen</option>'+GKEYS.map(function(k){return '<option value="'+k+'"'+(s.rk[n]===k?' selected':'')+'>'+k+' · '+FAMR[k]+'</option>';}).join('')+'</select></div>';}).join('')+
-    (s.rkOk?'<p class="fb ok" style="display:block">Richtig geordnet! Je weniger übrig bleibt, desto stärker verringert die Ursache die Leistung.</p>':'<div class="row"><button class="btn pri" type="button" id="c7r">Einloggen und prüfen</button></div><p class="fb" id="fb7r"></p>'+tipHTML('s7rank',['Schaut auf die Spalte „übrig in %“: Der kleinste Wert kommt auf Platz 1.']))+'</div>';}
+  s.fv=s.fv||{};var fvd=function(k){var bad=s.badV&&s.badV[k];return '<select data-v7="'+k+'" class="'+(bad?'bad':'')+'"'+(s.fvOk?' disabled':'')+'><option value="">bitte wählen</option>'+FVD[k].map(function(o){return '<option value="'+o[0]+'"'+(s.fv[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';};
+  var fv='<div class="q"><p><span class="task-step">1. So sind wir vorgegangen.</span> Wie habt ihr gemessen, damit man die Ergebnisse aller Gruppen vergleichen kann?</p><p class="lsatz">Wir haben immer nur '+fvd('f1')+' verändert. Alle anderen Größen blieben '+fvd('f2')+' (fairer Versuch). Die Leistung haben wir mit P = '+fvd('f3')+' berechnet.</p>'+
+    (s.fvOk?abBox('a',AB3.a):'<div class="row"><button class="btn pri" type="button" id="c7v">Einloggen und prüfen</button></div><p class="fb" id="fb7v"></p>'+tipHTML('s7fv',['Denkt an die Meldung „Kein fairer Versuch“ in der App: Wann kam sie?','Die Formel für die Leistung habt ihr in jeder Zeile der Messtabelle benutzt.']))+'</div>';
+  if(!s.tabOk){s.tabOk=true;GKEYS.forEach(function(k){s.tab[k]=fmt(s7model(k),0);});save();}
+  var tab='<div class="q"><p><span class="task-step">2. Ordnen.</span> Das ist das Klassenergebnis von der Tafel: So viel Prozent der Referenzleistung bleiben bei Familie K. übrig.</p>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>Gruppe · Ursache</th><th>übrig in %</th></tr></thead><tbody>'+GKEYS.map(function(k){var me=k===own;
+      return '<tr'+(me?' class="cur"':'')+'><td style="text-align:left">'+k+' · '+FAMR[k]+(me?' <b>(eure Gruppe)</b>':'')+'</td><td class="v"><b>'+s.tab[k]+' %</b></td></tr>';}).join('')+'</tbody></table></div></div>';
+  if(!s.fvOk)tab='';var rk='';if(s.fvOk){rk='<div class="q"><p><b>Bringt die Ursachen in eine Reihenfolge.</b> Platz 1 verringert die Leistung am stärksten.</p>'+[1,2,3,4].map(function(n){var bad=s.badR&&s.badR[n];return '<div class="ctlrow"><span>PLATZ '+n+(n===1?' (am stärksten)':n===4?' (am wenigsten)':'')+'</span><select data-r7="'+n+'" class="'+(bad?'bad':'')+'"'+(s.rkOk?' disabled':'')+'><option value="">bitte wählen</option>'+GKEYS.map(function(k){return '<option value="'+k+'"'+(s.rk[n]===k?' selected':'')+'>'+k+' · '+FAMR[k]+'</option>';}).join('')+'</select></div>';}).join('')+
+    (s.rkOk?'<p class="fb ok" style="display:block">Richtig geordnet! Je weniger übrig bleibt, desto stärker verringert die Ursache die Leistung.</p>'+abBox('b',[1,2,3,4].map(function(n){var k=s.rk[n];return n+'. <u>'+RKN[k]+' ('+s.tab[k]+' %)</u>';}).join(' · ')):'<div class="row"><button class="btn pri" type="button" id="c7r">Einloggen und prüfen</button></div><p class="fb" id="fb7r"></p>'+tipHTML('s7rank',['Schaut auf die Spalte „übrig in %“: Der kleinste Wert kommt auf Platz 1.']))+'</div>';}
   /* 2 Richtigkeit prüfen */
-  var rf='';if(s.rkOk){rf='<div class="q"><p><span class="task-step">2. Auf Richtigkeit prüfen.</span> Stimmen diese Aussagen? Entscheidet für jede Aussage: richtig oder falsch. Eure eigene Ursache ist markiert ★.</p>'+
+  var rf='';if(s.rkOk){rf='<div class="q"><p><span class="task-step">3. Auf Richtigkeit prüfen.</span> Stimmen diese Aussagen? Entscheidet für jede Aussage: richtig oder falsch. Eure eigene Ursache ist markiert ★.</p>'+
     RFS.map(function(x,i){var bad=s.badF&&s.badF[i];return '<div class="rfrow'+(x.g===own?' mine':'')+'"><p>'+(x.g===own?'★ ':'')+x.t+'</p><select data-f7="'+i+'" class="'+(bad?'bad':'')+'"'+(s.rfOk?' disabled':'')+'><option value="">bitte wählen</option><option value="r"'+(s.rf[i]==='r'?' selected':'')+'>richtig</option><option value="f"'+(s.rf[i]==='f'?' selected':'')+'>falsch</option></select>'+
       (s.rfOk&&x.fix?'<p class="fix"><b>So stimmt es:</b> '+x.fix+'</p>':'')+'</div>';}).join('')+
     (s.rfOk?'<p class="fb ok" style="display:block">Alles geprüft! Die falschen Aussagen sind jetzt verbessert.</p>':'<div class="row"><button class="btn pri" type="button" id="c7f">Einloggen und prüfen</button></div><p class="fb" id="fb7f"></p>'+tipHTML('s7rf',['Vergleicht jede Aussage mit eurer Tabelle aus Aufgabe 1.','Denkt an die Reihenschaltung der Zellen und an die Werte für Dunst (54 %) und Schräge (80 %).']))+'</div>';}
   /* 3 Festhalten */
   var ms='';if(s.rfOk){function dd(k){var bad=s.badM&&s.badM[k];return '<select data-m7="'+k+'" class="'+(bad?'bad':'')+'"'+(s.msOk?' disabled':'')+'><option value="">bitte wählen</option>'+MSD[k].map(function(o){return '<option value="'+o[0]+'"'+(s.ms[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
-    ms='<div class="q"><p><span class="task-step">3. Festhalten.</span> Ergänzt den Merksatz. Er beantwortet die Leitfrage der Stunde.</p><p class="lsatz">Am stärksten verringert '+dd('m1')+' die Leistung. Die Zellen im Modul sind '+dd('m2')+'. Eine verschattete Zelle bremst deshalb '+dd('m3')+'. Staub und Dunst verringern die Leistung '+dd('m4')+'. Am wenigsten verringert '+dd('m5')+' die Leistung.</p>'+
-      (s.msOk?'':'<div class="row"><button class="btn pri" type="button" id="c7m">Einloggen und prüfen</button></div><p class="fb" id="fb7m"></p>'+tipHTML('s7ms',['Nutzt eure Reihenfolge aus Aufgabe 1: Platz 1 verringert am stärksten, Platz 4 am wenigsten.','Schaut auf die Werte in Aufgabe 1: Je weniger übrig bleibt, desto stärker verringert die Ursache die Leistung.']))+'</div>';}
+    ms='<div class="q"><p><span class="task-step">4. Festhalten.</span> Ergänzt den Merksatz. Er beantwortet die Leitfrage der Stunde.</p><p class="lsatz">Am stärksten verringert '+dd('m1')+' die Leistung. Die Zellen im Modul sind '+dd('m2')+'. Eine verschattete Zelle bremst deshalb '+dd('m3')+'.</p>'+
+      (s.msOk?abBox('c',AB3.c):'<div class="row"><button class="btn pri" type="button" id="c7m">Einloggen und prüfen</button></div><p class="fb" id="fb7m"></p>'+tipHTML('s7ms',['Platz 1 eurer Rangfolge verringert die Leistung am stärksten.','Denkt an Gruppe A: Wie sind die Zellen verbunden, und was passiert dann mit dem Strom?']))+'</div>';}
   var em='';if(s.msOk){s.em=s.em||{};s.eo=s.eo||{};s.eb=s.eb||{};
     var sel=function(attr,key,opts,val,bad,dis){return '<select '+attr+'="'+key+'" class="'+(bad?'bad':'')+'"'+(dis?' disabled':'')+'><option value="">bitte wählen</option>'+opts.map(function(o){return '<option value="'+o[0]+'"'+(val===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';};
     var B=s.badE||{};
-    em='<div class="q"><p><span class="task-step">4. Empfehlung für Familie K.</span> Am Balkon wirken alle vier Ursachen gleichzeitig. Deshalb zeigt das Handy nur '+FAMW+' W.</p><p><b>a) Kann Familie K. die Ursache selbst ändern? Wie?</b></p>'+
-      GKEYS.map(function(k){return '<div class="ctlrow"><span>'+k+' · '+FAMR[k].toUpperCase()+(k===own?' ★':'')+'</span>'+sel('data-e7',k,EMO,s.em[k],B['e'+k],s.emOk)+'</div>';}).join('')+
+    em='<div class="q"><p><span class="task-step">5. Empfehlung für Familie K.</span> Am Balkon wirken alle vier Ursachen gleichzeitig. Deshalb zeigt das Handy nur '+FAMW+' W.</p><p><b>a) Kann Familie K. die Ursache selbst ändern? Wie?</b></p>'+
+      GKEYS.map(function(k){if(k===own&&st.s5.ok&&!s.em[k])s.em[k]=EMOK[k];return '<div class="ctlrow"><span>'+k+' · '+FAMR[k].toUpperCase()+(k===own?' ★ (habt ihr schon)':'')+'</span>'+sel('data-e7',k,EMO,s.em[k],B['e'+k],s.emOk||(k===own&&st.s5.ok))+'</div>';}).join('')+
       '<p><b>b) In welcher Reihenfolge sollte Familie K. vorgehen?</b></p>'+[1,2,3].map(function(n){return '<div class="ctlrow"><span>SCHRITT '+n+'</span>'+sel('data-o7',n,[['v',MASS.v],['p',MASS.p],['a',MASS.a]],s.eo[n],B['o'+n],s.emOk)+'</div>';}).join('')+
       '<p><b>c) Begründet.</b></p><p class="lsatz">Familie K. sollte zuerst das Modul verschieben, weil '+sel('data-b7','w',EMB.w,s.eb.w,B.bw,s.emOk)+'. Gegen den Dunst '+sel('data-b7','d',EMB.d,s.eb.d,B.bd,s.emOk)+'.</p>'+
-      (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>':'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen die Schräge Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Reihenfolge aus Aufgabe 1).']))+'</div>';
+      (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>'+abBox('d',AB3.d):'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen die Schräge Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Rangfolge aus Schritt 2).']))+'</div>';
     if(s.emOk){var F=s.fix||{};em+='<div class="q"><p><b>Ausprobieren: Was bringen die Maßnahmen?</b> Tippt die Maßnahmen an und schaut auf das Handy im Bild.</p><div class="row" style="flex-wrap:wrap;gap:8px">'+
       ['v','p','a'].map(function(k){return '<button type="button" class="btn '+(F[k]?'pri':'sec')+'" data-x7="'+k+'">'+(F[k]?'✓ ':'')+MASS[k]+'</button>';}).join('')+'</div><p class="lsatz">Das Balkonkraftwerk liefert jetzt <b>'+famNow()+' W</b> statt '+FAMW+' W.'+(F.v&&F.p&&F.a?' Mehr geht heute nicht: Gegen den Dunst kann Familie K. nichts tun.':'')+'</p></div>';}}
-  var fin='';if(s.emOk){
-    fin='<div class="merk"><h3>Merksatz: Warum liefert das Balkonkraftwerk so wenig?</h3><p>Am stärksten verringert der <b>Schatten auf einer Zelle</b> die Leistung. Die Zellen im Modul sind <b>in Reihe geschaltet</b>. Eine verschattete Zelle bremst deshalb <b>den Strom im ganzen Modul</b>. Staub und Dunst verringern die Leistung deutlich, aber viel weniger als der Schatten. Am wenigsten verringert die schräge Ausrichtung die Leistung.</p><p><b>Empfehlung:</b> Familie K. sollte zuerst <b>das Modul aus dem Schatten verschieben</b>, dann das Modul putzen und es gerade zur Sonne ausrichten. Gegen den Dunst kann sie nichts tun.</p><p class="muted" style="margin:6px 0 0">Schreibt Merksatz und Empfehlung in euer Heft.</p></div>'+
-      '<div class="q"><p><b>Euer Beitrag zum Klassenergebnis (Gruppe '+own+'):</b> '+(st.s5.ok?s5sentence():'–')+'</p></div>'+
-      '<p class="win"><b>Gesichert!</b> Ihr habt die Leitfrage der Stunde beantwortet und wisst, was Familie K. tun sollte.</p>'+saveCTA(true);}
-  $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+intro+tab+rk+rf+ms+em+fin;
+  var fin='';if(s.emOk){fin=s.abOk?'<p class="win"><b>Gesichert!</b> Auf eurem AB steht jetzt in Aufgabe 3 die Antwort auf die Leitfrage: wie wir vorgegangen sind, welche Ursache am stärksten wirkt, warum, und was Familie K. tun sollte.</p>'+saveCTA(true):
+    '<div class="q"><p><b>Letzter Schritt:</b> Prüft, ob in Aufgabe 3 auf eurem AB alle Lücken a) bis d) ausgefüllt sind.</p><div class="row"><button class="btn pri" type="button" id="c7ab">Wir haben Aufgabe 3 vollständig übertragen</button></div></div>';}
+  $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+intro+fv+tab+rk+rf+ms+em+fin;
   Array.prototype.forEach.call(document.querySelectorAll('[data-t7]'),function(inp){inp.addEventListener('input',function(){s.tab[inp.dataset.t7]=inp.value;if(s.badT)s.badT[inp.dataset.t7]=false;inp.className='num';save();});});
   if($('c7t'))$('c7t').addEventListener('click',function(){var fb=$('fb7t'),bad={};GKEYS.forEach(function(k){if(k===own)return;var v=num(s.tab[k]);if(isNaN(v)||Math.abs(v-s7model(k))>4)bad[k]=true;});
     var ok=!Object.keys(bad).length;tryInc('s7tab',ok,GKEYS.map(function(k){return s.tab[k]||'-';}).join('/'));
@@ -986,15 +990,21 @@ function r7(){var s=st.s7,own=st.grp;
   if($('c7e'))$('c7e').addEventListener('click',function(){var fb=$('fb7e'),bad={};GKEYS.forEach(function(k){if(s.em[k]!==EMOK[k])bad['e'+k]=true;});['v','p','a'].forEach(function(k,i){if(s.eo[i+1]!==k)bad['o'+(i+1)]=true;});
     if(s.eb.w!=='s')bad.bw=true;if(s.eb.d!=='n')bad.bd=true;var ok=!Object.keys(bad).length;
     tryInc('s7em',ok,GKEYS.map(function(k){return s.em[k]||'-';}).join('')+'/'+[1,2,3].map(function(n){return s.eo[n]||'-';}).join('')+'/'+(s.eb.w||'-')+(s.eb.d||'-'));
-    if(ok){s.badE={};s.emOk=true;s.fix={};finish(SI('s7'));save();r7();draw();return;}
+    if(ok){s.badE={};s.emOk=true;s.fix={};save();r7();draw();return;}
     s.badE=bad;save();r7();var f2=$('fb7e'),n=Object.keys(bad).length;f2.className='fb bad';f2.textContent=(n===1?'Eine Auswahl stimmt':n+' Auswahlen stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(f2,'s7em',1);
-    showHelp(f2,'s7em',function(){GKEYS.forEach(function(k){s.em[k]=EMOK[k];});s.eo={1:'v',2:'p',3:'a'};s.eb={w:'s',d:'n'};s.badE={};s.emOk=true;s.fix={};finish(SI('s7'));save();r7();draw();});});
+    showHelp(f2,'s7em',function(){GKEYS.forEach(function(k){s.em[k]=EMOK[k];});s.eo={1:'v',2:'p',3:'a'};s.eb={w:'s',d:'n'};s.badE={};s.emOk=true;s.fix={};save();r7();draw();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-x7]'),function(b){b.addEventListener('click',function(){s.fix=s.fix||{};s.fix[b.dataset.x7]=!s.fix[b.dataset.x7];s.tried=true;save();r7();draw();});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-v7]'),function(e){e.addEventListener('change',function(){s.fv[e.dataset.v7]=e.value;e.className='';save();});});
+  if($('c7v'))$('c7v').addEventListener('click',function(){var bad={};Object.keys(FVOK).forEach(function(k){if(s.fv[k]!==FVOK[k])bad[k]=true;});var ok=!Object.keys(bad).length;
+    tryInc('s7fv',ok,['f1','f2','f3'].map(function(k){return s.fv[k]||'-';}).join(''));if(ok){s.badV={};s.fvOk=true;save();r7();return;}
+    s.badV=bad;save();r7();var fb=$('fb7v'),n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt':n+' Lücken stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(fb,'s7fv',1);
+    showHelp(fb,'s7fv',function(){s.fv={f1:'e',f2:'g',f3:'m'};s.badV={};s.fvOk=true;save();r7();});});
+  if($('c7ab'))$('c7ab').addEventListener('click',function(){s.abOk=true;finish(SI('s7'));save();r7();});
   bindTips(r7);bindCTA();
 }
 
 /* ---------- Ergebnisse als Text ---------- */
-var TL=[['s3meas','Messen · Messwerte und P-Rechnungen'],['s3fam','Messen · Anteil Familie K. abgelesen'],['s4tr','Auswerten · Messwerte mit Vorhersage verglichen'],['s4mc','Auswerten · Deutung'],['s4sent','Auswerten · Ergebnissatz'],['s4expl','Auswerten · Erklärung Schatten (A)'],['s5','Schlussfolgerung'],['s7tab','Sichern · Klassenwerte übertragen'],['s7rank','Sichern · Reihenfolge'],['s7rf','Sichern · richtig/falsch'],['s7ms','Sichern · Merksatz'],['s7em','Sichern · Empfehlung Familie K.'],['s6oth','Profi · andere Faktoren gemessen'],['s6byp','Profi · Bypass-Dioden'],['s6euro','Profi · Kosten'],['s6mpp','Profi · Wechselrichter']];
+var TL=[['s3meas','Messen · Messwerte und P-Rechnungen'],['s4tr','Auswerten · Messwerte mit Vorhersage verglichen'],['s4sent','Auswerten · Ergebnissatz'],['s5','Schlussfolgerung'],['s7fv','Sichern · fairer Versuch'],['s7rank','Sichern · Reihenfolge'],['s7rf','Sichern · richtig/falsch'],['s7ms','Sichern · Merksatz'],['s7em','Sichern · Empfehlung Familie K.'],['s6oth','Profi · andere Faktoren gemessen'],['s6byp','Profi · Bypass-Dioden'],['s6mpp','Profi · Wechselrichter']];
 function resText(){
   var r=st.res||{},d=new Date(),L=[],g=st.grp?G():null;
   L.push('SOLAR-LABOR · Warum liefert das Balkonkraftwerk so wenig?');
@@ -1007,11 +1017,10 @@ function resText(){
   L.push('');
   L.push('MESSREIHE (U in V, I in A, P in W)');
   if(g){rowVals().forEach(function(v,i){var row=st.s3.rows[i]||{},p=rowP(i),q=pct(i);L.push('  '+rowLabel(v,i)+': U = '+(row.U||'–')+' V, I = '+(row.I||'–')+' A, P = '+(row.P||'–')+' W'+', Anteil = '+(isNaN(q)?'–':fmt(q,0)+' %'));});
-    if(st.grp==='A')L.push('  Erklärung Schatten (für die Besprechung): '+(st.s4.expl||'–'));L.push('  Unfaire Messungen (andere Regler mit verändert, von der App erkannt): '+(st.unfair||0));L.push('  Messwerte und P-Rechnungen geprüft: '+(st.s3.ok?'ja':'nein')+' · Anteil Familie K. selbst berechnet: '+(st.s3.famA||'–')+' %'+(st.s3.famOk?'  ✓':''));L.push('  Wert für Familie K. ('+g.famLab+'): '+(isNaN(famPct())?'–':fmt(famPct(),0)+' %'));}
+    L.push('  Unfaire Messungen (andere Regler mit verändert, von der App erkannt): '+(st.unfair||0));L.push('  Messwerte und P-Rechnungen geprüft: '+(st.s3.ok?'ja':'nein')+'');L.push('  Wert für Familie K. ('+g.famLab+'): '+(isNaN(famPct())?'–':fmt(famPct(),0)+' %'));}
   L.push('');
   L.push('AUSWERTUNG');
   L.push('  Ergebnissatz: '+((st.s4.sent||'').trim()||'(leer)'));
-  if(st.grp)L.push('  '+strip(MC4[st.grp].q)+' → '+segAns(MC4[st.grp],st.s4.mc));
   L.push('');
   L.push('SCHLUSSFOLGERUNG');
   L.push('  '+(st.s5.ok?s5sentence():'(noch nicht fertig)')+(st.s5.pw?'  [eingetragen: P = '+st.s5.pw+' W]':''));
@@ -1024,12 +1033,11 @@ function resText(){
   L.push('');
   L.push('ERGEBNISSE SICHERN (nach der Tafel)');
   L.push('  Gestartet: '+(st.s7.gate?'ja':'nein')+' · Klassenwerte: '+GKEYS.map(function(k){return k+' '+(st.s7.tab[k]||'–')+' %';}).join(', ')+(st.s7.tabOk?' ✓':''));
-  L.push('  Reihenfolge: '+[1,2,3,4].map(function(n){return st.s7.rk[n]||'–';}).join(' > ')+(st.s7.rkOk?' ✓':'')+' · Richtig/falsch geprüft: '+(st.s7.rfOk?'✓':'–')+' · Merksatz: '+(st.s7.msOk?'✓':'–')+' · Empfehlung: '+(st.s7.emOk?'✓':'–')+(st.s7.tried?' (Maßnahmen ausprobiert)':''));
+  L.push('  Reihenfolge: '+[1,2,3,4].map(function(n){return st.s7.rk[n]||'–';}).join(' > ')+(st.s7.rkOk?' ✓':'')+' · Vorgehen: '+(st.s7.fvOk?'✓':'–')+' · Richtig/falsch geprüft: '+(st.s7.rfOk?'✓':'–')+' · Merksatz: '+(st.s7.msOk?'✓':'–')+' · Empfehlung: '+(st.s7.emOk?'✓':'–')+(st.s7.tried?' (Maßnahmen ausprobiert)':'')+' · Aufgabe 3 übertragen: '+(st.s7.abOk?'ja':'nein'));
   L.push('');
   L.push('PROFI-ZUSATZ ★');
   L.push('  Andere Faktoren: '+(st.grp?othKeys().map(function(k){var q=othPct(k);return GROUPS[k].famLab+' '+(isNaN(q)?'–':fmt(q,0)+' %');}).join(' · '):'–')+(st.s6.othOk?'  ✓':''));
   L.push('  Bypass-Dioden: '+(st.s6.byp==null?'(nicht bearbeitet)':segAns(QBYP,st.s6.byp)));
-  L.push('  Kosten des Schattens: '+(st.s6.euro?st.s6.euro+' €'+(st.s6.euroOk?'  ✓':'  ✗'):'(nicht bearbeitet)'));
   L.push('  Wechselrichter: '+(st.s6.mpp==null?'(nicht bearbeitet)':segAns(QMPP,st.s6.mpp)));
   var data={v:2,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),grp:st.grp,done:st.done,guess:st.guess,pv:st.pv,rows:st.s3.rows,vals:st.grp?rowVals():[],famA:st.s3.famA,fam:isNaN(famPct())?null:Math.round(famPct()),sent:st.s4.sent||'',concl:st.s5.ok?s5sentence():'',tries:st.tries,tips:st.tips||{},early:st.early||{},unfair:st.unfair||0,help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
   var json=JSON.stringify(data);
@@ -1050,6 +1058,7 @@ var lastSt=null;
  '.gate{border:3px solid #C8423D;background:#FDECEC;border-radius:16px;padding:18px;text-align:center;margin:12px 0}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:21px}.gate .gq{font-weight:700;font-size:17px}.gate .row{gap:10px;flex-wrap:wrap}'+
  '.rfrow{border:1px solid var(--line,#d6dbe6);border-radius:10px;padding:8px 10px;margin:8px 0}.rfrow.mine{border:2px solid #E8892B;background:#FFF7EE}.rfrow p{margin:0 0 6px}.rfrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px}.rfrow select.bad{border-color:#b42318;background:#fde3e3}.rfrow .fix{margin:6px 0 0;color:#1E6B3A}'+
  '.ctlrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;max-width:100%}.ctlrow select.bad{border-color:#b42318;background:#fde3e3}'+
+ '.abbox{border:2px dashed #1C66C0;background:#EEF4FC;border-radius:12px;padding:10px 12px;margin:10px 0 2px}.abbox b{color:#1C66C0}.abbox p{margin:6px 0 0;font-size:16px;line-height:1.5}.abbox u{text-decoration:none;border-bottom:2px solid #E8892B;font-weight:600}'+
  '.lsatz{font-size:17px;line-height:2}.lsatz select{font:inherit;font-size:16px;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;background:#fff}.lsatz input.num{width:4em}.lsatz select.bad,.lsatz input.bad{border-color:#b42318;background:#fde3e3}';document.head.appendChild(c);})();
 (function(){var cc=document.getElementById('ctlCard'),tk=document.getElementById('task');if(cc&&tk&&cc.parentNode===tk.parentNode)tk.parentNode.insertBefore(tk,cc);})();
 /* Taschenrechner: erscheint in Stationen, in denen gerechnet wird */
