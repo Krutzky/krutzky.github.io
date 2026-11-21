@@ -655,19 +655,14 @@ function vq2(k){var n=VNOM[k],N=n.charAt(0).toUpperCase()+n.slice(1);return {q:'
 function pvTxt(i,k){var q=i===1?vq1(k):vq2(k),v=i===1?st.pv.tr:st.pv.can;return v==null?'–':strip(q.o[v]);}
 function r1(){var s=st.s1,g=st.grp?G():null;
   var fall='<p>Familie K. hat ein <b>Balkonkraftwerk</b> mit einem Solarmodul am Geländer. Bei bester Sonne liefert es etwa <b>380 W</b>. Heute Mittag scheint die Sonne, aber die App zeigt nur <b>'+FAMW+' W</b>.</p>';
-  var guess='<div class="guess stack"><p class="eyebrow pro">Eure Vermutung</p><p>Was verringert die Leistung wohl am stärksten?</p><div class="choice" id="gs">'+
-    GUESS.map(function(o){return '<button type="button" class="opt gopt'+(st.guess===o.k?' sel':'')+'" data-k="'+o.k+'"'+(s.ok?' disabled':'')+'><span class="L">'+o.k+'</span><span>'+o.t+'</span></button>';}).join('')+
-    '</div><p class="muted">'+(st.guess?'Gespeichert: Vermutung '+st.guess+'. Am Ende der Stunde prüfen wir sie mit den Messwerten der ganzen Klasse.':'Hier gibt es noch kein richtig oder falsch.')+'</p></div>';
   var grp='<div class="q"><p><b>Eure Gruppe:</b> Welchen Faktor untersucht ihr?</p><div class="choice grid2" id="gg">'+GKEYS.map(function(k){var x=GROUPS[k];return '<button type="button" class="opt'+(st.grp===k?' sel':'')+'" data-k="'+k+'"'+(s.ok?' disabled':'')+'><b>'+k+' · '+x.name+'</b><br><span class="muted">'+x.rank+'</span></button>';}).join('')+'</div>'+(s.ok?'<p class="muted">Die Gruppe ist festgelegt.</p>':'')+'</div>';
   function opts(id,Q,v){return '<div class="q"><p><b>'+Q.q+'</b></p><div class="choice" id="'+id+'">'+Q.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?' sel':'')+'" data-j="'+j+'"'+(s.ok?' disabled':'')+'>'+o+'</button>';}).join('')+'</div></div>';}
   var pred=g?'<div class="merk"><h3>Eure Vorhersage für Gruppe '+st.grp+': '+g.name+'</h3><p style="margin:0">'+g.fam+' Gleich messt ihr nach, ob eure Vorhersage stimmt.</p></div>'+opts('pv1',vq1(st.grp),st.pv.tr)+opts('pv2',vq2(st.grp),st.pv.can)+
     (s.ok?'<p class="fb ok">Vorhersage gespeichert. Hier gibt es noch kein richtig oder falsch. Ihr prüft sie mit euren Messwerten.</p>':'<div class="row"><button class="btn pri" type="button" id="c1">Vorhersage speichern</button></div><p class="fb" id="fb1"></p>'):'';
-  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+guess+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
-  Array.prototype.forEach.call(document.querySelectorAll('#gs .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.guess=b.dataset.k;save();r1();});});
+  $('task').innerHTML=head(0,'Warum liefert das Balkonkraftwerk so wenig?')+fall+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt messt ihr.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
   Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;if(st.grp!==b.dataset.k){st.pv={tr:null,can:null};}st.grp=b.dataset.k;st.s3.rows=[];save();r1();});});
   [['pv1','tr'],['pv2','can']].forEach(function(x){Array.prototype.forEach.call(document.querySelectorAll('#'+x[0]+' .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.pv[x[1]]=+b.dataset.j;save();r1();});});});
-  if($('c1'))$('c1').addEventListener('click',function(){var fb=$('fb1');if(!st.guess){fb.className='fb bad';fb.textContent='Wählt oben zuerst eure Vermutung A, B, C oder D.';return;}
-    if(st.pv.tr==null||st.pv.can==null){fb.className='fb bad';fb.textContent='Beantwortet beide Fragen eurer Vorhersage.';return;}s.ok=true;finish(0);save();r1();});
+  if($('c1'))$('c1').addEventListener('click',function(){var fb=$('fb1');if(st.pv.tr==null||st.pv.can==null){fb.className='fb bad';fb.textContent='Beantwortet beide Fragen eurer Vorhersage.';return;}s.ok=true;finish(0);save();r1();});
   bindNext();
 }
 
@@ -944,9 +939,8 @@ function r7(){var s=st.s7,own=st.grp;
       (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>':'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen die Schräge Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Reihenfolge aus Aufgabe 1).']))+'</div>';
     if(s.emOk){var F=s.fix||{};em+='<div class="q"><p><b>Ausprobieren: Was bringen die Maßnahmen?</b> Tippt die Maßnahmen an und schaut auf das Handy im Bild.</p><div class="row" style="flex-wrap:wrap;gap:8px">'+
       ['v','p','a'].map(function(k){return '<button type="button" class="btn '+(F[k]?'pri':'sec')+'" data-x7="'+k+'">'+(F[k]?'✓ ':'')+MASS[k]+'</button>';}).join('')+'</div><p class="lsatz">Das Balkonkraftwerk liefert jetzt <b>'+famNow()+' W</b> statt '+FAMW+' W.'+(F.v&&F.p&&F.a?' Mehr geht heute nicht: Gegen den Dunst kann Familie K. nichts tun.':'')+'</p></div>';}}
-  var fin='';if(s.emOk){var gOk=st.guess==='A';
+  var fin='';if(s.emOk){
     fin='<div class="merk"><h3>Merksatz: Warum liefert das Balkonkraftwerk so wenig?</h3><p>Am stärksten verringert der <b>Schatten auf einer Zelle</b> die Leistung. Die Zellen im Modul sind <b>in Reihe geschaltet</b>. Eine verschattete Zelle bremst deshalb <b>den Strom im ganzen Modul</b>. Staub und Dunst verringern die Leistung deutlich, aber viel weniger als der Schatten. Am wenigsten verringert die schräge Ausrichtung die Leistung.</p><p><b>Empfehlung:</b> Familie K. sollte zuerst <b>das Modul aus dem Schatten verschieben</b>, dann das Modul putzen und es gerade zur Sonne ausrichten. Gegen den Dunst kann sie nichts tun.</p><p class="muted" style="margin:6px 0 0">Schreibt Merksatz und Empfehlung in euer Heft.</p></div>'+
-      '<div class="q"><p><b>Und eure Vermutung vom Anfang?</b> Ihr hattet vermutet: '+(st.guess?guessName(st.guess):'–')+'.</p><p class="fb '+(gOk?'ok':'')+'" style="display:block">'+(gOk?'Eure Vermutung hat sich bestätigt.':'Die Messwerte der Klasse zeigen etwas anderes: Der Schatten verringert die Leistung am stärksten. Gut, dass wir gemessen haben!')+'</p></div>'+
       '<div class="q"><p><b>Euer Beitrag zum Klassenergebnis (Gruppe '+own+'):</b> '+(st.s5.ok?s5sentence():'–')+'</p></div>'+
       '<p class="win"><b>Gesichert!</b> Ihr habt die Leitfrage der Stunde beantwortet und wisst, was Familie K. tun sollte.</p>'+saveCTA(true);}
   $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+intro+tab+rk+rf+ms+em+fin;
@@ -1004,7 +998,6 @@ function resText(){
   L.push(standLine());
   L.push('Geschafft: '+STATIONS.map(function(x,i){return x.name+(st.done[i]?' ✓':' –');}).join(' | '));
   L.push('');
-  L.push('MEINE VERMUTUNG: '+(st.guess?guessName(st.guess):'keine gewählt'));
   L.push('VORHERSAGE: '+(g?'„'+strip(vq1(st.grp).q)+' '+pvTxt(1,st.grp)+'“ · „Kann es '+VDAT[st.grp]+' liegen?“ → '+pvTxt(2,st.grp):'–'));
   L.push('');
   L.push('MESSREIHE (U in V, I in A, P in W)');
