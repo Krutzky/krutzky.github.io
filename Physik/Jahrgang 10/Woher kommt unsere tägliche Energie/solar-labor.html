@@ -917,13 +917,15 @@ var EMOK={A:'v',B:'p',C:'n',D:'a'};var MASS={v:'Modul verschieben',p:'Modul putz
 var EMB={w:[['s','der Schatten die Leistung am stärksten verringert'],['e','Verschieben am wenigsten Arbeit macht'],['z','der Schatten nur eine Zelle trifft']],d:[['n','kann sie nichts tun'],['p','hilft Putzen'],['a','hilft Ausrichten']]};
 function s7model(k){if(k===st.grp&&!isNaN(famPct()))return famPct();return modelPct(k,GROUPS[k].famV);}
 function r7(){var s=st.s7,own=st.grp;
-  if(!s.gate){
+  if(!s.gate){var code=s.code||'';
     $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+
-      '<div class="gate"><div class="gsig">✋</div><h3>Stopp! Erst die Tafel, dann diese Station.</h3><p>Hier haltet ihr das Ergebnis der <b>ganzen Klasse</b> fest. Dafür braucht ihr die Werte aller vier Gruppen von der Tafel.</p><p class="gq">Habt ihr die Ergebnisse aller Gruppen schon gemeinsam an der Tafel besprochen?</p>'+
-      '<div class="row" style="justify-content:center"><button class="btn sec" type="button" id="g7n">Nein, noch nicht</button><button class="btn pri" type="button" id="g7y">Ja, die Tafel ist fertig: Sicherung starten</button></div>'+
-      (s.no?'<p class="fb bad" style="display:block">Dann wartet bitte noch. Bearbeitet diese Station erst, wenn die Besprechung an der Tafel fertig ist und eure Lehrkraft das Startsignal gibt. Bis dahin: zuhören oder Profi-Zusatz ★.</p>':'')+'</div>';
-    $('g7n').addEventListener('click',function(){s.no=true;save();r7();});
-    $('g7y').addEventListener('click',function(){s.gate=true;s.tGate=Date.now();save();r7();window.scrollTo({top:0,behavior:'smooth'});});
+      '<div class="gate"><div class="gsig">✋</div><h3>Stopp! Erst die Tafel, dann diese Station.</h3><p>Hier haltet ihr das Ergebnis der <b>ganzen Klasse</b> fest. Dafür braucht ihr die Werte aller vier Gruppen von der Tafel.</p><p class="gq">Wartet auf das Startsignal eurer Lehrkraft. Wenn die Besprechung an der Tafel fertig ist, zeigt sie euch den <b>Startcode</b>. Gebt ihn hier ein.</p>'+
+      '<div class="codebox"><small>STARTCODE</small><span>'+(code+'___').slice(0,3).split('').join(' ')+'</span></div>'+
+      '<div class="codepad">'+['1','2','3','4','5','6','7','8','9','0'].map(function(x){return '<button type="button" data-cd="'+x+'">'+x+'</button>';}).join('')+'<button type="button" data-cd="del" aria-label="Löschen">⌫</button></div>'+
+      '<div class="row" style="justify-content:center"><button class="btn pri" type="button" id="g7go"'+(code.length<3?' disabled':'')+'>Sicherung starten</button></div>'+
+      (s.no?'<p class="fb bad" style="display:block">Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: zuhören oder Profi-Zusatz ★.</p>':'')+'</div>';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-cd]'),function(b){b.addEventListener('click',function(){var v=b.dataset.cd;if(v==='del')s.code=(s.code||'').slice(0,-1);else if((s.code||'').length<3)s.code=(s.code||'')+v;s.no=false;save();r7();});});
+    $('g7go').addEventListener('click',function(){if(s.code===START_CODE){s.gate=true;s.tGate=Date.now();s.code='';save();r7();window.scrollTo({top:0,behavior:'smooth'});}else{s.no=true;s.codeTries=(s.codeTries||0)+1;s.code='';save();r7();}});
     return;}
   var intro='<p>Jetzt sichert ihr, was die ganze Klasse herausgefunden hat. Nach jedem Schritt zeigt euch ein blauer Kasten ✍, was ihr in <b>Aufgabe 3</b> auf euer Gruppen-AB übertragt. Leitfrage: <b>Warum liefert das Balkonkraftwerk von Familie K. nur '+FAMW+' W?</b></p>';
   /* 1 Ordnen */
@@ -1037,7 +1039,7 @@ function resText(){
   var ek=Object.keys(st.early||{});L.push('  Tipp-Karte vor dem ersten Versuch angetippt: '+(ek.length?ek.length+'-mal':'nein'));
   L.push('');
   L.push('ERGEBNISSE SICHERN (nach der Tafel)');
-  L.push('  Gestartet: '+(st.s7.gate?'ja':'nein')+' · Klassenwerte: '+GKEYS.map(function(k){return k+' '+(st.s7.tab[k]||'–')+' %';}).join(', ')+(st.s7.tabOk?' ✓':''));
+  L.push('  Gestartet: '+(st.s7.gate?'ja':'nein')+(st.s7.codeTries?' (falscher Startcode: '+st.s7.codeTries+'×)':'')+' · Klassenwerte: '+GKEYS.map(function(k){return k+' '+(st.s7.tab[k]||'–')+' %';}).join(', ')+(st.s7.tabOk?' ✓':''));
   L.push('  Reihenfolge: '+[1,2,3,4].map(function(n){return st.s7.rk[n]||'–';}).join(' > ')+(st.s7.rkOk?' ✓':'')+' · Vorgehen: '+(st.s7.fvOk?'✓':'–')+' · Richtig/falsch geprüft: '+(st.s7.rfOk?'✓':'–')+' · Merksatz: '+(st.s7.msOk?'✓':'–')+' · Empfehlung: '+(st.s7.emOk?'✓':'–')+(st.s7.tried?' (Maßnahmen ausprobiert)':'')+' · Aufgabe 3 übertragen: '+(st.s7.abOk?'ja':'nein'));
   L.push('');
   L.push('PROFI-ZUSATZ ★');
@@ -1052,6 +1054,8 @@ function resText(){
 }
 
 /* ---------- Gesamt ---------- */
+/* Startcode: die Lehrkraft zeigt ihn nach der Besprechung an der Tafel */
+var START_CODE='462';
 var lastSt=null;
 
 (function(){var c=document.createElement('style');c.textContent='.bubble{position:relative;background:#FFF6D6;border:2px solid #E8A317;border-radius:14px;padding:10px 12px;margin:10px 0 4px;font-size:15px;line-height:1.35;text-align:left;color:#14213d}'+
@@ -1060,7 +1064,7 @@ var lastSt=null;
  'div.q > .bubble:before,div.q > .bubble:after{display:none}.bubble.done{background:#E3F4EA;border-color:#2E7D4F}.bubble.done:before{border-bottom-color:#2E7D4F}.bubble.done:after{border-bottom-color:#E3F4EA}'+
  '.bubble .mini{display:block;margin-top:6px;font-size:14px;color:#5b4a00}.bubble .bubx{position:absolute;top:4px;right:6px;border:0;background:transparent;font-size:20px;cursor:pointer;color:#7a5b00}'+
  '.helpbtn{margin:6px 0;border:2px dashed #E8A317;background:#FFF6D6;color:#5b4a00;border-radius:999px;padding:8px 14px;font:600 15px/1.2 inherit;cursor:pointer;animation:cpul 1s ease 2}table.mt tr.bub td{border:0;padding:0 2px 6px;background:transparent;cursor:default}'+
- '.gate{border:3px solid #C8423D;background:#FDECEC;border-radius:16px;padding:18px;text-align:center;margin:12px 0}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:21px}.gate .gq{font-weight:700;font-size:17px}.gate .row{gap:10px;flex-wrap:wrap}'+
+ '.codebox{display:inline-flex;flex-direction:column;align-items:center;background:#111;color:#FFC94D;border-radius:12px;padding:6px 22px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}.codebox small{font-size:11px;letter-spacing:2px;color:#9a9a9a}.codebox span{font-size:32px;letter-spacing:4px}.codepad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;max-width:420px;margin:12px auto}.codepad button{min-height:52px;border:2px solid #CBD3E1;background:#F3F5FA;border-radius:12px;font-size:22px;font-weight:700;color:#0B1442}.codepad button:active{background:#E8892B}.gate{border:3px solid #C8423D;background:#FDECEC;border-radius:16px;padding:18px;text-align:center;margin:12px 0}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:21px}.gate .gq{font-weight:700;font-size:17px}.gate .row{gap:10px;flex-wrap:wrap}'+
  '.rfrow{border:1px solid var(--line,#d6dbe6);border-radius:10px;padding:8px 10px;margin:8px 0}.rfrow.mine{border:2px solid #E8892B;background:#FFF7EE}.rfrow p{margin:0 0 6px}.rfrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px}.rfrow select.bad{border-color:#b42318;background:#fde3e3}.rfrow .fix{margin:6px 0 0;color:#1E6B3A}'+
  '.ctlrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;max-width:100%}.ctlrow select.bad{border-color:#b42318;background:#fde3e3}'+
  '.abbox{border:2px dashed #1C66C0;background:#EEF4FC;border-radius:12px;padding:10px 12px;margin:10px 0 2px}.abbox b{color:#1C66C0}.abbox p{margin:6px 0 0;font-size:16px;line-height:1.5}.abbox u{text-decoration:none;border-bottom:2px solid #E8892B;font-weight:600}'+
