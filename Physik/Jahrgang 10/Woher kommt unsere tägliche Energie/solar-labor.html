@@ -248,7 +248,7 @@ var UNIT={s:'%',n:'g/m²',h:'W/m²',a:'°'};
 var GROUPS={
   A:{rank:'Schatten',name:'Abschattung',lvl:'Basis',p:'s',col:'#1A1F36',head:'Schatten auf Zelle 1 (in % der Zellfläche)',famV:100,famLab:'eine ganze Zelle im Schatten',
      fam:'Mittags liegt eine ganze Zelle im Schatten des Nachbarbalkons.',task:'Der Nachbarbalkon wirft Schatten auf das Modul. Ihr untersucht, wie die Schattenfläche auf einer Zelle die Leistung verändert.',
-     rule:{min:5,max:100,order:1,need:100,ext:null,unit:'%',ex:['25','50','100'],step:5,stepTxt:'Im Steuerpult geht der Schatten in 5-%-Schritten. Wählt Werte wie 25 %, 50 % oder 75 %.',txt:'Wählt 3 Schattenflächen auf Zelle 1 zwischen 5 % und 100 % (in 5-%-Schritten), aufsteigend. <b>100 %</b> (die ganze Zelle wie bei Familie K.) muss dabei sein. Die App ergänzt danach eine Vergleichsmessung: dieselbe Fläche, verteilt auf alle 4 Zellen.'}},
+     rule:{min:5,max:100,order:1,need:100,ext:null,unit:'%',ex:['25','50','100'],step:5,stepTxt:'Im Steuerpult geht der Schatten in 5-%-Schritten. Wählt Werte wie 25 %, 50 % oder 75 %.',txt:'Wählt 3 Schattenflächen auf Zelle 1 zwischen 5 % und 100 % (in 5-%-Schritten), aufsteigend. <b>100 %</b> (die ganze Zelle wie bei Familie K.) muss dabei sein. Die App ergänzt danach eine Vergleichsmessung: gleich viel Schatten, aber ein Stück auf jeder der 4 Zellen.'}},
   B:{rank:'Staub',name:'Verschmutzung',lvl:'Basis',p:'n',col:'#B05A12',head:'Staub auf dem Modul in g/m²',famV:2,famLab:'dünne Staubschicht (2 g/m²)',
      fam:'Auf dem Modul liegt eine dünne Staubschicht von etwa 2 g/m².',task:'Auf dem Modul sammelt sich Staub. Ihr untersucht, wie die Staubmenge die Leistung verändert.',
      rule:{min:0.5,max:15,order:1,need:2,ext:function(v){return v[2]>=6;},extTxt:'Nehmt auch eine dicke Staubschicht ab 6 g/m², damit ihr den Verlauf seht.',unit:'g/m²',ex:['2','5','10'],step:0.5,stepTxt:'Im Steuerpult geht der Staub in Schritten von 0,5 g/m². Wählt Werte wie 1, 2,5 oder 8 g/m².',txt:'Wählt 3 Staubmengen zwischen 0,5 und 15 g/m² (in Schritten von 0,5), aufsteigend. <b>2 g/m²</b> (Familie K.) muss dabei sein und eine Menge ab 6 g/m².'}},
@@ -449,7 +449,12 @@ function modelPct(g,v){var s=base();s[GROUPS[g].p]=v;return solve(s).P/REF.P*100
 function G(){return GROUPS[st.grp]||GROUPS.A;}
 function rowVals(){var g=G(),a=[base()[g.p]];g.rule.ex.forEach(function(x){var v=num(x);if(!isNaN(v))a.push(v);});if(g.p==='s'&&a.length>1)a.push(-1);return a;}
 function valLabel(p,v){if(p==='s')return v===-1?'4 Zellen je ein Stück dunkel (zusammen so viel wie 1 Zelle)':v===0?'kein Schatten':v===100?'1 Zelle ganz dunkel':'Zelle 1 zu '+fmt(v,0)+' % im Schatten';if(p==='n')return v===0?'sauber (0 g/m²)':fmt(v,1)+' g/m² Staub';if(p==='h')return fmt(v,0)+' W/m²'+(v===1000?' (klarer Himmel)':'');return fmt(v,0)+'°';}
-function modIco(all){var c='';for(var k=0;k<4;k++){var x=4+k*15;c+='<rect x="'+x+'" y="4" width="13" height="14" fill="#6E96E1"/>';if(all)c+='<rect x="'+x+'" y="14.5" width="13" height="3.5" fill="#0A0A0A"/>';else if(k===0)c+='<rect x="'+x+'" y="4" width="13" height="14" fill="#0A0A0A"/>';}return '<svg width="96" height="33" viewBox="0 0 64 22" style="vertical-align:middle;margin-top:3px" aria-hidden="true"><rect x="1" y="1" width="62" height="20" rx="2" fill="#C9CED6" stroke="#6B7280"/>'+c+'</svg>';}
+function modIco(all){var c='',W=150,H=64,fr=4,ix=fr,iy=fr,iw=W-2*fr,ih=H-2*fr,cw=iw/4;
+  for(var k=0;k<4;k++){var x=ix+k*cw+1.5,w=cw-3,sh=all?ih*0.25:(k===0?ih:0);c+='<rect x="'+x+'" y="'+iy+'" width="'+w+'" height="'+ih+'" fill="#2F5DAA"/>';
+    for(var g=1;g<4;g++)c+='<line x1="'+x+'" y1="'+(iy+ih*g/4)+'" x2="'+(x+w)+'" y2="'+(iy+ih*g/4)+'" stroke="#BED7FA" stroke-opacity=".5" stroke-width="1"/>';
+    if(sh)c+='<rect x="'+x+'" y="'+(iy+ih-sh)+'" width="'+w+'" height="'+sh+'" fill="url(#hat)"/><rect x="'+(x+0.8)+'" y="'+(iy+ih-sh+0.8)+'" width="'+(w-1.6)+'" height="'+(sh-1.6)+'" fill="none" stroke="#F5B82E" stroke-width="1.6" stroke-dasharray="4 2.5"/>';
+    var ty=sh&&sh<ih?iy+(ih-sh)/2:iy+ih/2;c+='<text x="'+(x+w/2)+'" y="'+(ty+6)+'" text-anchor="middle" font-size="17" font-weight="700" fill="'+(sh>=ih?'#F5B82E':'#fff')+'">'+(k+1)+'</text>';}
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="display:block;margin-top:5px" role="img" aria-label="'+(all?'Jede Zelle ist ein Stück dunkel':'Zelle 1 ist ganz dunkel')+'"><defs><pattern id="hat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#08080F"/><line x1="0" y1="0" x2="0" y2="6" stroke="#fff" stroke-opacity=".2" stroke-width="2"/></pattern></defs><rect x=".5" y=".5" width="'+(W-1)+'" height="'+(H-1)+'" rx="3" fill="#AEB6C4" stroke="#6B7280"/>'+c+'</svg>';}
 function rowLabel(v,i){return valLabel(G().p,v)+(i===0?' (Referenz)':'');}
 function ensureRows(){var n=rowVals().length;while(st.s3.rows.length<n)st.s3.rows.push({U:'',I:'',P:''});if(st.s3.rows.length>n)st.s3.rows.length=n;}
 function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;return num(r.P);}/* von den SuS berechnet, W */
@@ -556,9 +561,7 @@ function drawSetup(){
   var by=topH*0.80;ctx.fillStyle='#B9C2D0';ctx.fillRect(0,topH-8,ww,8);line(0,by,ww,by,'#5B6278',4);for(var x=10;x<ww;x+=16)line(x,by,x,topH-8,'#5B6278',2);
   /* Modul von vorne am Geländer (Breite zeigt die Schräge) */
   var mwFull=ww*0.62,mw=mwFull*Math.max(0.16,Math.cos(a)),mh=topH*0.46,mx=ww*0.10+(mwFull-mw)/2,my=by-mh*0.86,cw=mw/4,sh=s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0];
-  for(var i=0;i<4;i++){ctx.fillStyle='#1E3A6E';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh);ctx.strokeStyle='#9CC3F0';ctx.lineWidth=1;for(var q=1;q<4;q++){ctx.beginPath();ctx.moveTo(mx+i*cw+1.5,my+mh*q/4);ctx.lineTo(mx+i*cw+cw-1.5,my+mh*q/4);ctx.stroke();}
-    if(s.n>0){ctx.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*s.n)+')';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh);}
-    var f=sh[i];if(f>0){ctx.fillStyle='rgba(10,14,30,.72)';ctx.fillRect(mx+i*cw+1.5,my,cw-3,mh*f);}}
+  paintPanel(ctx,mx,my,mw,mh,s.s/100,s.v,s.n,false);
   if(s.n>0){ctx.fillStyle='rgba(150,120,80,.7)';for(var d2=0;d2<Math.round(18*s.n);d2++){var hx=fnv('st'+d2),px=parseInt(hx.slice(0,4),16)/65535*mw,py=parseInt(hx.slice(4),16)/65535*mh;ctx.beginPath();ctx.arc(mx+px,my+py,1.3,0,Math.PI*2);ctx.fill();}}
   ctx.strokeStyle='#D1D5DB';ctx.lineWidth=3;ctx.strokeRect(mx,my,mw,mh);
   if(s.s>0){ctx.fillStyle='rgba(10,14,30,.10)';ctx.beginPath();ctx.moveTo(ww*0.45,nbY+12);ctx.lineTo(ww*0.98,nbY+12);ctx.lineTo(mx+mw,my);ctx.lineTo(mx+mw*0.5,my);ctx.closePath();ctx.fill();}
@@ -593,16 +596,31 @@ function drawCircuit(topH){var y0=topH+12,h=H-topH-20,soft=col('ink-soft'),ink=c
   meter(mx,y0+h*0.08,mw,mh,'SPANNUNG U',m?fmt(m.U,1):'–,–','V');meter(mx+mw+12,y0+h*0.08,mw,mh,'STROMSTÄRKE I',m?fmt(m.I,2):'–,––','A');
   ctx.fillStyle=soft;ctx.font=font(11);ctx.textAlign='left';ctx.textBaseline='top';ctx.fillText(m?'Messwerte im Modell ablesen':'Erst die Schaltung richtig bauen',mx,y0+h*0.08+mh+6);
 }
+
+/* Ganze Platte mit Schatten: mode 0 = Schatten auf Zelle 1 (Anteil f), mode 1 = je ein Streifen auf allen 4 Zellen (zusammen f Zellen) */
+function paintPanel(c,x,y,w,h,f,mode,dust,big){var fr=Math.max(3,w*0.02),ix=x+fr,iy=y+fr,iw=w-2*fr,ih=h-2*fr,cw=iw/4,gap=Math.max(2,w*0.012);
+  c.fillStyle='#AEB6C4';c.fillRect(x,y,w,h);c.strokeStyle='#6B7280';c.lineWidth=Math.max(1,w/300);c.strokeRect(x,y,w,h);
+  for(var i=0;i<4;i++){var cx=ix+i*cw+gap/2,cwi=cw-gap;c.fillStyle='#2F5DAA';c.fillRect(cx,iy,cwi,ih);
+    c.strokeStyle='rgba(190,215,250,.55)';c.lineWidth=Math.max(1,w/400);for(var g=1;g<4;g++){c.beginPath();c.moveTo(cx,iy+ih*g/4);c.lineTo(cx+cwi,iy+ih*g/4);c.stroke();c.beginPath();c.moveTo(cx+cwi*g/4,iy);c.lineTo(cx+cwi*g/4,iy+ih);c.stroke();}
+    if(dust>0){c.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*dust)+')';c.fillRect(cx,iy,cwi,ih);}
+    var sf=mode?f/4:(i===0?f:0);
+    if(sf>0){var sh=ih*Math.min(1,sf);var sy=iy+ih-sh;c.fillStyle='rgba(8,10,20,.88)';c.fillRect(cx,sy,cwi,sh);
+      c.save();c.beginPath();c.rect(cx,sy,cwi,sh);c.clip();c.strokeStyle='rgba(255,255,255,.18)';c.lineWidth=Math.max(1,w/250);for(var k=-ih;k<cwi+ih;k+=Math.max(6,w/40)){c.beginPath();c.moveTo(cx+k,sy);c.lineTo(cx+k-sh,sy+sh);c.stroke();}c.restore();
+      c.strokeStyle='#F5B82E';c.lineWidth=Math.max(1.5,w/160);c.setLineDash([Math.max(3,w/60),Math.max(2,w/90)]);c.strokeRect(cx+1,sy+1,cwi-2,sh-2);c.setLineDash([]);}
+    var lit=!(sf>=0.999);c.fillStyle=lit?'#FFFFFF':'#F5B82E';c.font='bold '+Math.round(Math.min(cwi*0.42,ih*(big?0.3:0.5)))+'px '+ff();c.textAlign='center';c.textBaseline='middle';
+    var ty=sf>0&&sf<0.999?iy+ih*(1-sf)/2:iy+ih/2;c.fillText(String(i+1),cx+cwi/2,ty);}}
 function renderSetupViews(){
   $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Sonne)';$('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · Leistung in % der Referenz':'<b>Eure Messreihe</b>';
   var A=vctx('cvA'),x=A.x,w=A.w,s=st.set;x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
-  var mw=w*0.84*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.44,mx=(w-mw)/2,my=w*0.24,cw=mw/4;
-  for(var i=0;i<4;i++){x.fillStyle='#1E3A6E';x.fillRect(mx+i*cw+2,my,cw-4,mh);x.strokeStyle='#9CC3F0';x.lineWidth=Math.max(1,w/260);for(var g=1;g<4;g++){x.beginPath();x.moveTo(mx+i*cw+2,my+mh*g/4);x.lineTo(mx+i*cw+cw-2,my+mh*g/4);x.stroke();}
-    var f=(s.v?[s.s/400,s.s/400,s.s/400,s.s/400]:[s.s/100,0,0,0])[i];if(f>0){x.fillStyle='rgba(10,14,30,.75)';x.fillRect(mx+i*cw+2,my,cw-4,mh*f);}}
-  if(s.n>0){x.fillStyle='rgba(205,185,145,'+Math.min(0.75,0.05*s.n)+')';x.fillRect(mx,my,mw,mh);}
-  x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();x.textAlign='center';x.textBaseline='top';
-  x.fillText('Zelle 1   Zelle 2   Zelle 3   Zelle 4',w/2,my+mh+w*0.05);x.fillText(s.s?(s.v?'4 Zellen je ein Stück dunkel':valLabel('s',s.s)):(s.n?valLabel('n',s.n):'Modul von vorne'),w/2,w*0.08);
-  x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.88);
+  var mw=w*0.9*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.46,mx=(w-mw)/2,my=w*0.2;
+  paintPanel(x,mx,my,mw,mh,s.s/100,s.v,s.n,true);
+  var L1,L2;if(s.s>0&&!s.v){L1=s.s===100?'Zelle 1 ist ganz dunkel.':'Zelle 1 ist zu '+fmt(s.s,0)+' % dunkel.';L2='Zelle 2, 3 und 4 sind hell.';}
+  else if(s.s>0){L1='Jede Zelle ist ein Stück dunkel.';L2=s.s===100?'Zusammen so viel wie 1 Zelle.':'Zusammen '+fmt(s.s,0)+' % von 1 Zelle.';}
+  else{L1=s.n?valLabel('n',s.n):'Kein Schatten auf dem Modul.';L2='';}
+  x.fillStyle='#0B1442';x.font='bold '+Math.round(w/18)+'px '+ff();x.textAlign='center';x.textBaseline='top';x.fillText(L1,w/2,w*0.05);
+  x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();if(L2)x.fillText(L2,w/2,my+mh+w*0.04);
+  if(s.s>0){x.fillStyle='#08080F';x.fillRect(w*0.2,w*0.83,w*0.05,w*0.05);x.fillStyle='#4E5677';x.textAlign='left';x.fillText('= Schatten',w*0.27,w*0.825);}
+  x.textAlign='center';x.font=Math.round(w/20)+'px '+ff();x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.92);
   drawGraph();
 }
 function drawGraph(){var B=vctx('cvB'),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var F=ff();
@@ -613,7 +631,7 @@ function drawGraph(){var B=vctx('cvB'),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillR
   var cat=g.p==='s',n=vals.length;
   var xs=vals.map(function(v,i){if(cat)return L+(i+0.5)*(R-L)/n;var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);return L+(hi>lo?(v-lo)/(hi-lo):0)*(R-L)*0.9+(R-L)*0.05;});
   y.textAlign='center';y.textBaseline='top';y.fillStyle='#4E5677';
-  vals.forEach(function(v,i){var lab=g.p==='s'?(v===-1?'verteilt':fmt(v,0)+' %'):g.p==='n'?fmt(v,1):fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
+  vals.forEach(function(v,i){var lab=g.p==='s'?(v===-1?'alle 4':fmt(v,0)+' %'):g.p==='n'?fmt(v,1):fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
   y.fillText(g.p==='s'?'Schatten auf Zelle 1':g.p==='n'?'Staub in g/m²':g.p==='h'?'Sonnenlicht in W/m²':'Einfallswinkel in °',(L+R)/2,Bt+w*0.10);
   /* Vorhersage */
   var fi=vals.indexOf(g.famV);if(false){y.strokeStyle='#6B3FB0';y.lineWidth=w/150;y.setLineDash([w/50,w/80]);y.beginPath();y.moveTo(xs[fi]-w*0.06,Y(st.pred));y.lineTo(xs[fi]+w*0.06,Y(st.pred));y.stroke();y.setLineDash([]);y.fillStyle='#6B3FB0';y.textAlign='center';y.textBaseline='bottom';y.fillText('Vorhersage',xs[fi],Y(st.pred)-3);}
@@ -629,7 +647,7 @@ var REFLAB={s:'kein Schatten',n:'sauberes Modul (0 g/m²)',h:'klarer Himmel (100
 function ctlFor(k){if(k==='a')return slider('W','EINFALLSWINKEL',st.set.a+'°',0,85,1,st.set.a,'0°','85°','g');
   if(k==='n')return slider('N','STAUB AUF DEM MODUL',fmt(st.set.n,1)+' g/m²',0,15,0.5,st.set.n,'0','15 g/m²','g');
   if(k==='h')return slider('H','SONNENLICHT',st.set.h+' W/m²',0,1000,50,st.set.h,'0','1000 W/m²','g');
-  return slider('S','SCHATTEN AUF ZELLE 1 (100 % = ganze Zelle)',st.set.s+' %'+(st.set.s===100?' · ganze Zelle':''),0,100,5,st.set.s,'0 %','100 %','g')+'<div class="ctlrow"><span>SCHATTEN LIEGT</span>'+segHTML('sgv',[[0,'nur auf Zelle 1'],[1,'verteilt auf alle 4']],st.set.v)+'</div>';}
+  return slider('S','SCHATTEN AUF ZELLE 1 (100 % = ganze Zelle)',st.set.s+' %'+(st.set.s===100?' · ganze Zelle':''),0,100,5,st.set.s,'0 %','100 %','g')+'<div class="ctlrow"><span>SCHATTEN LIEGT</span>'+segHTML('sgv',[[0,'nur auf Zelle 1'],[1,'ein Stück auf jeder Zelle']],st.set.v)+'</div>';}
 function renderCtl(){var sc=STATIONS[st.station].scene,h='',pro=STATIONS[st.station].key==='s6';
   if(sc==='balcony'){h=(SK()==='s5'||SK()==='s7')?'<p class="muted">Im Bild sind die vier möglichen Ursachen markiert. Hier wird nicht gemessen.</p>':'<label class="chk"><input type="checkbox" id="tCause"'+(st.showCauses?' checked':'')+'> Auffälligkeiten am Balkon markieren</label><p class="muted">Schaut euch das Bild genau an: Was könnte die Leistung verringern?</p>';}
   else if(STATIONS[st.station].key==='s4'){h='<p class="muted">In dieser Station wird nicht gemessen. Schaut auf eure Tabelle und euren Graphen.</p>';}
@@ -700,7 +718,7 @@ function rowDone(i){var r=st.s3.rows[i];return !!(r&&r.U&&r.I&&r.P);}
 function bubbleInfo(i){var s=st.s3,g=G(),p=g.p,want=rowSet(i),r=s.rows[i]||{},v=rowVals()[i],m=meas(st.set);
   var ownOk=st.set[p]===want[p]&&(p!=='s'||st.set.v===want.v||st.set.s===0);
   var lbl=rowLabel(v,i).replace(' (Referenz)','');
-  if(!ownOk){var how=v===-1?'Schatten auf <b>100 %</b> und darunter <b>„verteilt auf alle 4“</b>':'<b>'+FWORD[p]+'</b> auf <b>'+(p==='s'?v+' %':p==='n'?fmt(v,1)+' g/m²':p==='h'?v+' W/m²':v+'°')+'</b>'+(p==='s'&&st.set.v===1?' und <b>„nur auf Zelle 1“</b>':'');
+  if(!ownOk){var how=v===-1?'Schatten auf <b>100 %</b> und darunter <b>„ein Stück auf jeder Zelle“</b>':'<b>'+FWORD[p]+'</b> auf <b>'+(p==='s'?v+' %':p==='n'?fmt(v,1)+' g/m²':p==='h'?v+' W/m²':v+'°')+'</b>'+(p==='s'&&st.set.v===1?' und <b>„nur auf Zelle 1“</b>':'');
     return {c:0,t:'<b>Regler einstellen:</b> Stellt unten im Steuerpult '+how+'.'};}
   var off=offKeys(st.set,p);
   if(off.length)return {c:0,t:'<b>Achtung:</b> '+off.map(function(k){return FWORD[k];}).join(' und ')+' steht nicht auf dem besten Wert. Stellt nur euren eigenen Regler um, sonst ist der Versuch nicht fair.'};
