@@ -456,6 +456,10 @@ function rowP(i){var r=st.s3.rows[i];if(!r)return NaN;return num(r.P);}/* von de
 function refP(){return rowP(0);}
 function pct(i){var p=rowP(i),r=refP();if(isNaN(p)||isNaN(r)||r<=0)return NaN;return p/r*100;}
 function famIndex(){var v=rowVals(),f=G().famV;return v.indexOf(f);}
+function rowUI(i){var r=st.s3.rows[i]||{};return num(r.U)*num(r.I);}
+function closeTo(v,c,rel){return c.some(function(x){return !isNaN(x)&&x>0&&(Math.abs(v-x)<=0.55||Math.abs(v-x)<=rel*x);});}
+function pwOk(v,i){if(isNaN(v))return false;var m=meas(rowSet(i));return closeTo(v,[rowP(i),rowUI(i),m.U*m.I],0.03);}
+function pctOk(v,i){if(isNaN(v))return false;var a=rowUI(i),b=rowUI(0),m=meas(rowSet(i)),m0=meas(rowSet(0));return closeTo(v,[pct(i),a/b*100,(m.U*m.I)/(m0.U*m0.I)*100],0.03);}
 function famPct(){var i=famIndex();return i<0?NaN:pct(i);}
 
 /* ---------- Zeichnen ---------- */
@@ -765,7 +769,7 @@ function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
     fb.className='fb bad';fb.textContent=t.join(' ')+' Die Tipp-Karten unten helfen euch.';tipNudge(fb,'s3meas',1);st.row=wm.concat(wp)[0];save();Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===st.row?'cur':(rowDone(j)?'done':'');});updBubble();
     showHelp(fb,'s3meas',function(){wm.concat(wp).forEach(function(i){var r=s.rows[i];if(!rowOk(i)){var m=meas(rowSet(i));r.U=fmt(m.U,1);r.I=fmt(m.I,2);}r.P=fmt(num(r.U)*num(r.I),0);});s.ok=true;finish(SI('s3'));save();r3();drawGraph();});});
   if($('famA'))$('famA').addEventListener('input',function(){s.famA=this.value;save();});
-  if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=!isNaN(v)&&Math.abs(v-f)<=0.55;tryInc('s3fam',ok,s.famA);
+  if($('c3f'))$('c3f').addEventListener('click',function(){var fb=$('fb3f'),v=num(s.famA),f=famPct(),ok=pctOk(v,famIndex());tryInc('s3fam',ok,s.famA);
     if(ok){s.famOk=true;finish(SI('s3'));save();r3();resize();helpMsg('fb3f','Richtig! Bei „'+g.famLab+'“ bleiben nur '+fmt(f,0)+' % der Referenzleistung übrig.');return;}
     fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-(100-f))<=1.5)?'Das ist der Verlust. Gefragt ist, wie viel übrig bleibt.':'Noch nicht. Schaut in der Tabelle in die Zeile „(Familie K.)“ und dort in die Spalte „Anteil“.';
     tipNudge(fb,'s3fam',1);showHelp(fb,'s3fam',function(){s.famA=fmt(f,0);s.famOk=true;finish(SI('s3'));save();r3();resize();});});
@@ -808,7 +812,7 @@ function r4(){var s=st.s4,g=G(),f=famPct();
   $('task').innerHTML=head(SI('s4'),'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten.</p>'+cmp+mc+sent+report+expl+after;
   mcBind('cmp',cmpQ,s,'cmp','s4tr',r4);
   if($('c4')&&!s.ok){KS.forEach(function(k){$('s_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});$('snum').addEventListener('input',function(){s.snum=this.value;if(s.badF)s.badF.num=false;this.className='num';save();});
-    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};KS.forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(isNaN(v)||Math.abs(v-f)>0.55)bad.num=true;
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};KS.forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(!pctOk(v,famIndex()))bad.num=true;
       var ok=!Object.keys(bad).length;tryInc('s4sent',ok,[s.dir,s.snum,s.sch,s.str,s.brm].join('/'));
       var compose=function(){return SATZ0+', desto '+txt('dir')+' ist die Leistung. Bei Familie K. bleiben '+s.snum+' % der Referenzleistung übrig.'+(isA?' Die vier Zellen im Modul sind '+txt('sch')+'. Durch alle Zellen fließt deshalb '+txt('str')+'. Liefert eine Zelle weniger, '+txt('brm')+'.':'');};
       if(ok){s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();return;}
@@ -846,7 +850,7 @@ function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   if($('c5')){['cmp','can','chg'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
     $('t_pw').addEventListener('input',function(){s.pw=this.value;if(s.badF)s.badF.pw=false;this.className='num';save();});
     $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}
-      var v=num(s.pw),bad={};if(isNaN(v)||Math.abs(v-P)>0.55)bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;if(s.chg!==EMOK[st.grp])bad.chg=true;
+      var v=num(s.pw),bad={};if(!pwOk(v,fi))bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;if(s.chg!==EMOK[st.grp])bad.chg=true;
       var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can,s.chg].join('/'));
       if(ok){s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
       s.badF=bad;save();['cmp','can','chg'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
@@ -1060,7 +1064,7 @@ var lastSt=null;
  '.rfrow{border:1px solid var(--line,#d6dbe6);border-radius:10px;padding:8px 10px;margin:8px 0}.rfrow.mine{border:2px solid #E8892B;background:#FFF7EE}.rfrow p{margin:0 0 6px}.rfrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px}.rfrow select.bad{border-color:#b42318;background:#fde3e3}.rfrow .fix{margin:6px 0 0;color:#1E6B3A}'+
  '.ctlrow select{font:inherit;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;max-width:100%}.ctlrow select.bad{border-color:#b42318;background:#fde3e3}'+
  '.abbox{border:2px dashed #1C66C0;background:#EEF4FC;border-radius:12px;padding:10px 12px;margin:10px 0 2px}.abbox b{color:#1C66C0}.abbox p{margin:6px 0 0;font-size:16px;line-height:1.5}.abbox u{text-decoration:none;border-bottom:2px solid #E8892B;font-weight:600}'+
- 'select{font:inherit!important;font-size:17px!important;font-weight:600;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background:#fff!important;border:2px solid #1C66C0!important;border-radius:10px!important;padding:7px 34px 7px 12px!important;min-height:42px;line-height:1.3;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%231C66C0%27 stroke-width=%272.2%27 fill=%27none%27/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;max-width:100%}select option{font-size:17px;color:#1A1F36}select:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background-color:#E8F5E9!important;border-color:#2E7D32!important}select.bad{border-color:#b42318!important;background-color:#fde3e3!important}'+'.lsatz{font-size:17px;line-height:2}.lsatz select{font:inherit;font-size:16px;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;background:#fff}.lsatz input.num{width:4em}.lsatz select.bad,.lsatz input.bad{border-color:#b42318;background:#fde3e3}';document.head.appendChild(c);})();
+ 'select{font:inherit!important;font-size:17px!important;font-weight:600;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background:#fff!important;border:2px solid #1C66C0!important;border-radius:10px!important;padding:7px 34px 7px 12px!important;min-height:42px;line-height:1.3;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%231C66C0%27 stroke-width=%272.2%27 fill=%27none%27/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;max-width:100%}select option{font-size:17px;color:#1A1F36}input.num:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background:#E8F5E9!important;border-color:#2E7D32!important}select:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background-color:#E8F5E9!important;border-color:#2E7D32!important}select.bad{border-color:#b42318!important;background-color:#fde3e3!important}'+'.lsatz{font-size:17px;line-height:2}.lsatz select{font:inherit;font-size:16px;padding:4px 8px;border:2px solid #1C66C0;border-radius:8px;background:#fff}.lsatz input.num{width:4em}.lsatz select.bad,.lsatz input.bad{border-color:#b42318;background:#fde3e3}';document.head.appendChild(c);})();
 (function(){var cc=document.getElementById('ctlCard'),tk=document.getElementById('task');if(cc&&tk&&cc.parentNode===tk.parentNode)tk.parentNode.insertBefore(tk,cc);})();
 /* Taschenrechner: erscheint in Stationen, in denen gerechnet wird */
 var CALC={on:false,open:false,expr:'',last:null,target:null};
