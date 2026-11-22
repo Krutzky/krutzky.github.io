@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kraftwerks-Labor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+/* Layout wie „Linsen-Labor“: Kopfleiste mit Stationen-Weg · links optische Bank + Dia- und Schirm-Ansicht mit Lineal (fest) · rechts Steuerpult + Stationsaufgabe. */
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --surface-2:#F3F5FA; --ink:#0B1442; --ink-soft:#4E5677; --line:#CBD3E1;
+  --navy:#020C45; --navy-ink:#FFFFFF; --accent:#E8892B; --accent-ink:#1B1300; --blue:#1C66C0; --blue-soft:#DCE8F7; --on-blue:#FFFFFF;
+  --ok:#22865A; --ok-soft:#DDF2E7; --bad:#C8423D; --bad-soft:#F9E1DF; --pro:#6B3FB0; --pro-soft:#ECE4F8;
+  --grid:#E3E8F0; --axis:#4A5068; --rail:#5B6278; --lens:#9CC3F0; --lens-edge:#3A6AA8; --ray1:#E8892B; --ray2:#1C66C0; --red:#E8432E;
+  --room:#14161D; --display:#111111; --display-ink:#FFC94D;
+  --f-display:"Lexend","Segoe UI",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#060B26; --surface:#0E1640; --surface-2:#141D4F; --ink:#EEF1FA; --ink-soft:#A9B1D3; --line:#2B3672;
+  --navy:#020722; --navy-ink:#FFFFFF; --accent:#F3A04F; --accent-ink:#1B1300; --blue:#6FA8F0; --blue-soft:#1A2A63; --on-blue:#06102E;
+  --ok:#4CC48A; --ok-soft:#123A2C; --bad:#F07A73; --bad-soft:#40181C; --pro:#B89AF0; --pro-soft:#2A1E52;
+  --grid:#1E2858; --axis:#AEB6D8; --rail:#8792C2; --lens:#3D6FB0; --lens-edge:#9CC3F0; --ray1:#F3A04F; --ray2:#6FA8F0; --red:#F2604D;
+  --room:#05060A; --display:#000000; --display-ink:#FFC94D; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+header{background:var(--navy);color:var(--navy-ink);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hwrap{max-width:1360px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.brand{display:flex;flex-direction:column}
+.brand b{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:.2px}
+.brand span{font-size:13px;color:#8DB7EE}
+.route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.stop{display:flex;align-items:center;gap:8px;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px 5px 6px;font-size:14px;font-weight:700}
+.stop .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#24317A;font-size:13px}
+.stop.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stop.on .n{background:rgba(0,0,0,.18);color:var(--accent-ink)}
+.stop.done .n{background:var(--ok);color:#fff}
+.stop.pro{border-style:dashed;border-color:#8E74D6}
+.stop.pro.on{background:#B89AF0;border-color:#B89AF0;color:#1A0F33;border-style:solid}
+.stop:disabled{opacity:.45;cursor:not-allowed}
+.reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px}
+
+main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:900px){.plot{position:static}}
+canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.view{display:flex;flex-direction:column;gap:4px;min-width:0}
+.view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
+.view small{font-size:13px;color:var(--ink-soft);text-align:center}
+.view small b{color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:16px;min-width:0}
+h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0 0 4px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:17px;margin:0}
+.eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0 0 2px}
+.eyebrow.pro{color:var(--pro)}
+p{margin:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+.muted{color:var(--ink-soft);font-size:15px}
+
+/* Steuerpult */
+.ctl{display:flex;flex-direction:column;gap:6px}
+.lift{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:stretch}
+.disp{background:var(--display);color:var(--display-ink);font-family:var(--f-mono);border-radius:12px;padding:6px 10px;text-align:center;box-shadow:inset 0 0 0 3px #333;display:flex;flex-direction:column;justify-content:center}
+.disp small{font-size:11px;letter-spacing:2px;color:#9a9a9a}
+.disp span{font-size:28px;letter-spacing:1px;font-variant-numeric:tabular-nums}
+.disp.g{color:#9FD0FF}
+.keys{display:flex;gap:8px;align-items:center}
+.key{width:56px;height:52px;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);font-size:22px;font-weight:700}
+.key:active{background:var(--accent);color:var(--accent-ink)}
+input[type=range]{width:100%;accent-color:var(--accent);height:30px}
+input[type=range].gr{accent-color:var(--blue)}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.locked{font-size:15px;color:var(--ink-soft);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--blue)}
+.sep{border:0;border-top:1.5px dashed var(--line);margin:8px 0}
+
+.num{width:4.6em;text-align:center;border:2px solid var(--line);border-radius:8px;padding:5px 2px;background:var(--surface);font-variant-numeric:tabular-nums}
+.num.ok{border-color:var(--ok);background:var(--ok-soft)}
+.num.bad{border-color:var(--bad);background:var(--bad-soft)}
+.sel{font:inherit;border:2px solid var(--line);border-radius:8px;padding:4px 4px;background:var(--surface);max-width:100%}
+.sel.ok{border-color:var(--ok);background:var(--ok-soft)}
+.sel.bad{border-color:var(--bad);background:var(--bad-soft)}
+.btn{border:none;border-radius:999px;padding:10px 18px;font-weight:700;font-size:16px}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.sec{background:var(--surface);border:1.5px solid var(--line)}
+.btn.sm{padding:6px 12px;font-size:14px}
+.btn.tip{background:transparent;border:1.5px dashed var(--blue);color:var(--blue);padding:7px 14px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.choice{display:flex;flex-direction:column;gap:8px}
+.choice.grid2{display:grid;grid-template-columns:1fr 1fr}
+@media (max-width:440px){.choice.grid2{grid-template-columns:1fr}}
+.opt{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px}
+.opt b{font-family:var(--f-display)}
+.opt.sel{border-color:var(--blue);background:var(--blue-soft)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display);grid-row:1/3}
+.gopt span{font-size:15px}
+.seg{display:inline-flex;flex-wrap:wrap;border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{border:none;background:var(--surface);padding:7px 14px;font-weight:700}
+.seg button.sel{background:var(--blue);color:var(--on-blue)}
+.seg button.ok{background:var(--ok);color:#fff}
+.seg button.bad{background:var(--bad);color:#fff}
+.fb{font-weight:700;min-height:1.4em}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.note{border-left:4px solid var(--accent);background:var(--surface-2);padding:10px 12px;border-radius:0 10px 10px 0;font-size:15px}
+.hint{border:1.5px dashed var(--blue);background:var(--blue-soft);border-radius:10px;padding:10px 12px;font-size:15px}
+.win{border:2px solid var(--ok);background:var(--ok-soft);border-radius:12px;padding:12px}
+.guess{border:2px solid var(--pro);background:var(--pro-soft);border-radius:12px;padding:12px}
+.q{display:flex;flex-direction:column;gap:6px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px}
+.q p b{font-family:var(--f-display);font-weight:600}
+.gap ol{padding-left:1.2em;margin:0}
+.gap li{margin-bottom:10px}
+.dots{display:flex;gap:6px}
+.dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);display:block}
+.dots i.on{background:var(--ok);border-color:var(--ok)}
+.merk{border:2px solid var(--blue);border-radius:12px;padding:14px;background:var(--surface)}
+.merk h3{color:var(--blue);margin-bottom:6px}
+.merk .k{color:var(--blue);font-weight:700}
+textarea.free{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)}
+.bz{display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center}
+.badge{width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.tw{overflow-x:auto}
+table.mt{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.mt th,table.mt td{border:1.5px solid var(--line);padding:6px 6px;text-align:center}
+table.mt th{background:var(--surface-2);font-weight:700}
+table.mt th small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px}
+table.mt tr.cur td{background:var(--blue-soft)}
+table.mt tr.done td{background:var(--ok-soft)}
+table.mt tr.lock td{color:var(--ink-soft)}
+table.mt td.v b{font-size:16px}
+.chart{background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--ink-soft);padding:0 6px 4px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ctlrow{display:flex;flex-direction:column;gap:4px}
+.ctlrow > span{font-size:13px;color:var(--ink-soft);font-weight:700;letter-spacing:.5px}
+.seg.full{display:flex}
+.seg.full button{flex:1}
+.gopt{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center}
+.gopt .L{width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-family:var(--f-display)}
+.gopt span{font-size:15px}
+</style>
+<style>
+.overlay{position:fixed;inset:0;background:rgba(2,12,69,.6);overflow:auto;padding:24px max(16px,env(safe-area-inset-left,0px));z-index:20}
+.overlay .card{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+
+.view canvas{background:transparent}
+#tCv{width:100%;display:block;border-radius:10px}
+.opt:disabled{opacity:.6;cursor:not-allowed}
+table.mt td input.num{width:4.2em}
+table.mt tr{cursor:pointer}
+.reset.t{border-color:#E8892B;color:#FFD9B0}
+.abg-ov{position:fixed;inset:0;background:rgba(2,8,40,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;z-index:60}
+.abg-box{background:var(--surface);color:var(--ink);border-radius:16px;max-width:560px;width:100%;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.abg-box h2{margin:0}
+.abg-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.abg-in{border:2px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface);color:var(--ink);font:inherit}
+.abg-copy{background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:18px}
+.abg-fb{font-weight:700;min-height:1.4em}
+.abg-fb.ok{color:var(--ok)} .abg-fb.bad{color:var(--bad)}
+.savebtn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:6px 14px;font-size:14px}
+.savebtn.pulse{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,137,43,.7)}50%{box-shadow:0 0 0 8px rgba(232,137,43,0)}}
+.dlg{position:fixed;inset:0;background:rgba(2,12,69,.55);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) 16px 16px;z-index:50;overflow-y:auto}
+.dlgcard{max-width:640px;width:100%;margin-top:4vh}
+.dlghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dlghead h3{margin:0;font-family:var(--f-display);font-size:20px}
+.xbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1;color:var(--ink)}
+.stand{border-radius:12px;padding:10px 12px;background:var(--surface-2,var(--bg));font-size:15px}
+.stand b{font-family:var(--f-display)}
+.tipcard{border-left:4px solid var(--accent);}
+.task-step{font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div class="hwrap">
+    <div class="brand"><b>Kraftwerks-Labor</b><span>Woher kommt der Strom, wenn die Sonne nicht scheint?</span></div>
+    <nav class="route" id="route" aria-label="Stationen"></nav>
+    <button class="reset savebtn" id="saveOpen" type="button" aria-haspopup="dialog">Speichern</button>
+    <button class="reset" id="reset" type="button">Neu starten</button>
+  </div>
+</header>
+<main>
+  <section class="card plot" aria-label="Modell">
+    <canvas id="cv" aria-label="Modell"></canvas>
+    <div class="views" id="views">
+      <div class="view"><canvas id="cvA"></canvas><small id="capA"></small></div>
+      <div class="view"><canvas id="cvB"></canvas><small id="capB"></small></div>
+    </div>
+  </section>
+  <aside class="side">
+    <section class="card" id="ctlCard"><p class="eyebrow">Steuerpult</p><div id="ctl" class="ctl"></div></section>
+    <section class="card stack" id="task"></section>
+  </aside>
+</main>
+
+<div class="dlg" id="saveDlg" hidden role="dialog" aria-modal="true" aria-labelledby="saveTitle"><section class="card stack dlgcard" id="saveBody"></section></div>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var APP={mcLock:true,title:'Kraftwerks-Labor',file:'Kraftwerks-Labor',klasse:'10',proAfter:4,lesson:'Woher kommt der Strom, wenn die Sonne nicht scheint?',welcome:'Willkommen im Kraftwerks-Labor!',intro:'Heute findet ihr heraus, woher Familie K. abends die elektrische Energie bekommt und wie viel Energie ein Kraftwerk dabei nutzen kann.'};
+var KEY='kraftwerks-labor-v1',RKEY='kraftwerks-labor-resets';
+var STATIONS=[
+  {key:'s1',name:'Vorhersage',scene:'night'},
+  {key:'s2',name:'Energiekette',scene:'plant'},
+  {key:'s3',name:'Messen',scene:'plant'},
+  {key:'s4',name:'Auswerten',scene:'sankey'},
+  {key:'s5',name:'Schlussfolgerung',scene:'sankey'},
+  {key:'s6',name:'Profi-Zusatz',pro:true,scene:'sankey'},
+  {key:'s7',name:'Ergebnisse sichern',scene:'all'}
+];
+function SI(k){for(var i=0;i<STATIONS.length;i++)if(STATIONS[i].key===k)return i;return -1;}
+function SK(){return STATIONS[st.station]?STATIONS[st.station].key:'';}
+var FORMS={c:'chemische Energie',t:'thermische Energie',b:'Bewegungsenergie',l:'Lageenergie',e:'elektrische Energie'};
+var FCOL={c:'#6B4F2A',t:'#D9480F',b:'#1C66C0',l:'#2E7D4F',e:'#E8A317'};
+var WOHIN=[['w','als Wärme'],['l','im Wind']];
+/* Werte pro 100 kWh hineingesteckter Energie (gerundete Lehrbuchwerte) */
+var GROUPS={
+  A:{name:'Kohlekraftwerk',lvl:'Basis',src:'Kohle',fuel:'c',col:'#3D3D3D',
+     intro:'Im Kohlekraftwerk wird Kohle verbrannt. Mit der Hitze wird Wasser zu Dampf. Der Dampf treibt eine Turbine an, die Turbine dreht den Generator. Danach wird der Dampf im Kühlturm wieder zu Wasser.',
+     parts:[{n:'Kessel',i:'c',o:'t',out:88,lw:'w',ic:'boiler',hint:'Kohle verbrennt, Wasser wird zu heißem Dampf.'},
+            {n:'Turbine mit Kühlturm',i:'t',o:'b',out:41,lw:'w',ic:'turbine',hint:'Der Dampf dreht die Turbine und wird im Kühlturm abgekühlt.'},
+            {n:'Generator',i:'b',o:'e',out:40,lw:'w',ic:'gen',hint:'Der Generator wandelt die Drehung in elektrische Energie um.'}],
+     night:'j',most:1,im:'Im Kohlekraftwerk',von:'chemischer Energie (Kohle)',chain:'Im Kohlekraftwerk wird chemische Energie über thermische Energie und Bewegungsenergie in elektrische Energie umgewandelt.'},
+  B:{name:'Gaskraftwerk',lvl:'Basis',src:'Erdgas',fuel:'c',col:'#1C66C0',
+     intro:'Im Gaskraftwerk wird Erdgas verbrannt. Die heißen Gase treiben eine Gasturbine an. Mit der restlichen Hitze wird noch Dampf erzeugt, der eine Dampfturbine antreibt. Beide Turbinen drehen einen Generator.',
+     parts:[{n:'Brennkammer',i:'c',o:'t',out:95,lw:'w',ic:'flame',hint:'Erdgas verbrennt, es entstehen sehr heiße Gase.'},
+            {n:'Gas- und Dampfturbine',i:'t',o:'b',out:61,lw:'w',ic:'turbine',hint:'Heiße Gase und Dampf drehen die Turbinen.'},
+            {n:'Generator',i:'b',o:'e',out:60,lw:'w',ic:'gen',hint:'Der Generator wandelt die Drehung in elektrische Energie um.'}],
+     night:'j',most:1,im:'Im Gaskraftwerk',von:'chemischer Energie (Erdgas)',chain:'Im Gaskraftwerk wird chemische Energie über thermische Energie und Bewegungsenergie in elektrische Energie umgewandelt.'},
+  C:{name:'Windkraftanlage',lvl:'Standard',src:'Wind',fuel:'b',col:'#2E7D4F',
+     intro:'Der Wind dreht die Rotorblätter. Ein Getriebe macht aus der langsamen Drehung eine schnelle Drehung. Der Generator wandelt die Drehung in elektrische Energie um.',
+     parts:[{n:'Rotorblätter',i:'b',o:'b',out:45,lw:'l',ic:'rotor',hint:'Der Wind dreht die Rotorblätter. Danach strömt er langsamer weiter.'},
+            {n:'Getriebe',i:'b',o:'b',out:43,lw:'w',ic:'gear',hint:'Zahnräder machen die Drehung schneller. Dabei reiben sie.'},
+            {n:'Generator',i:'b',o:'e',out:42,lw:'w',ic:'gen',hint:'Der Generator wandelt die Drehung in elektrische Energie um.'}],
+     night:'w',most:0,im:'In der Windkraftanlage',von:'Bewegungsenergie des Windes',chain:'In der Windkraftanlage wird die Bewegungsenergie des Windes über die Drehung von Rotor, Getriebe und Generator in elektrische Energie umgewandelt.'},
+  D:{name:'Pumpspeicherkraftwerk',lvl:'Experte',src:'Überschuss vom Tag',fuel:'e',col:'#6B3FB0',
+     intro:'Tagsüber liefern die Solaranlagen mehr elektrische Energie, als gebraucht wird. Damit pumpt das Kraftwerk Wasser in einen Stausee auf einem Berg. Abends fließt das Wasser durch eine Turbine wieder nach unten. Die Turbine dreht einen Generator.',
+     parts:[{n:'Pumpe mit Motor',i:'e',o:'l',out:87,lw:'w',ic:'pump',hint:'Tagsüber: Die Pumpe bringt Wasser nach oben in den Stausee.'},
+            {n:'Turbine',i:'l',o:'b',out:77,lw:'w',ic:'turbine',hint:'Abends: Das Wasser fließt nach unten und dreht die Turbine.'},
+            {n:'Generator',i:'b',o:'e',out:75,lw:'w',ic:'gen',hint:'Der Generator wandelt die Drehung in elektrische Energie um.'}],
+     night:'s',most:0,im:'Im Pumpspeicherkraftwerk',von:'elektrischer Energie vom Tag',chain:'Im Pumpspeicherkraftwerk wird tagsüber elektrische Energie in Lageenergie umgewandelt. Abends wird die Lageenergie über Bewegungsenergie wieder in elektrische Energie umgewandelt.'}
+};
+var GKEYS=['A','B','C','D'];
+function G(){return GROUPS[st.grp]||GROUPS.A;}
+function inK(g,i){return i===0?100:g.parts[i-1].out;}
+function lossK(g,i){return inK(g,i)-g.parts[i].out;}
+function eta(g){return g.parts[2].out;}
+var st={station:0,done:[false,false,false,false,false,false,false],grp:null,part:0,heat:false,tips:{},early:{},
+  pv:{a:null,b:null},s1:{ok:false},s2:{f:{},ok:false},s3:{rows:[{},{},{}],ok:false},
+  s4:{sum:'',sumOk:false,most:'',mostOk:false},s5:{el:'',eta:'',half:'',night:'',ok:false},
+  s6:{v:'',vOk:false},s7:{gate:false,rk:{},rkOk:false,ms:{},msOk:false,rf:{},rfOk:false},
+  m:{},res:{},tries:{},help:{},t0:null};
+function save(){try{var o={};['station','done','grp','part','heat','tips','early','pv','s1','s2','s3','s4','s5','s6','s7','m','res','tries','help','t0','saves','remindOff'].forEach(function(k){o[k]=st[k];});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;Object.keys(x).forEach(function(k){if(x[k]!=null)st[k]=x[k];});while(st.done.length<STATIONS.length)st.done.push(false);}catch(e){}}
+/* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
+function tryInc(k,ok,val){var t=st.tries[k]||(st.tries[k]={n:0,ok:false,first:null});if(t.ok)return;t.n++;if(t.first===null)t.first=!!ok;if(ok)t.ok=true;else if(val!=null&&val!==''){t.w=t.w||[];if(t.w.length<12)t.w.push(val);}save();}
+function stuck(k){var t=st.tries[k];return !!(t&&!t.ok&&t.n>=3);}
+function showHelp(fb,k,fn){if(!fb||!stuck(k))return;var id='hb_'+k;if(document.getElementById(id))return;var b=document.createElement('button');b.type='button';b.id=id;b.className='btn tip';b.style.marginTop='6px';b.textContent='Ich komme nicht weiter: Lösung zeigen';
+  b.addEventListener('click',function(){st.help[k]=true;save();fn();});var wrap=document.createElement('div');wrap.className='row';wrap.appendChild(b);(fb.parentNode.classList&&fb.parentNode.classList.contains('row')?fb.parentNode:fb).insertAdjacentElement('afterend',wrap);}
+function helpMsg(id,t){var f=$(id);if(f){f.className='fb ok';f.textContent=t;}}
+function fnv(str){var h=0x811c9dc5;for(var i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return ('0000000'+h.toString(16)).slice(-8);}
+function resets(){try{return +(localStorage.getItem(RKEY)||0);}catch(e){return 0;}}
+function fmt(v,d){var p=Math.pow(10,d||0);return String(Math.round(v*p)/p).replace('.',',');}
+function num(s){if(s==null)return NaN;s=String(s).trim().replace(/\s/g,'').replace(',','.');if(s===''||!/^-?\d*\.?\d+$/.test(s))return NaN;return parseFloat(s);}
+function col(n){return getComputedStyle(document.documentElement).getPropertyValue('--'+n).trim();}
+function ff(){return getComputedStyle(document.body).fontFamily;}
+function font(px,b){return (b?'bold ':'')+px+'px '+ff();}
+function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+
+/* Steuerpult */
+function segHTML(id,opts,cur){return '<span class="seg full" id="'+id+'">'+opts.map(function(o){return '<button type="button" data-v="'+o[0]+'" class="'+(String(o[0])===String(cur)?'sel':'')+'">'+o[1]+'</button>';}).join('')+'</span>';}
+function bindSeg(id,fn){var el=$(id);if(!el)return;Array.prototype.forEach.call(el.children,function(b){b.addEventListener('click',function(){Array.prototype.forEach.call(el.children,function(x){x.className=x===b?'sel':'';});fn(b.dataset.v);});});}
+function slider(id,lab,disp,min,max,step,val,lo,hi,cls){return '<div class="lift"><div class="disp'+(cls?' '+cls:'')+'"><small>'+lab+'</small><span id="disp'+id+'">'+disp+'</span></div><div class="keys"><button class="key" id="'+id+'m" type="button" aria-label="weniger">◀</button><button class="key" id="'+id+'p" type="button" aria-label="mehr">▶</button></div></div>'+
+  '<input type="range" id="'+id+'S" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'" aria-label="'+lab+'"><div class="scale"><span>'+lo+'</span><span>'+hi+'</span></div>';}
+function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.min(max,v));set(v);$(id+'S').value=v;draw();}
+  $(id+'S').addEventListener('input',function(){u(parseFloat(this.value));});$(id+'m').addEventListener('click',function(){u(get()-step);});$(id+'p').addEventListener('click',function(){u(get()+step);});}
+
+/* Stationen-Weg */
+function unlocked(i){return i===0||st.done[i-1]||(!!STATIONS[i].pro&&APP.proAfter!=null&&!!st.done[APP.proAfter]);}
+/* Tipp-Karten: erst selbst probieren, dann gestuft helfen */
+function tipHTML(key,tips){st.tips=st.tips||{};var n=st.tips[key]||0,h=tips.slice(0,n).map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+':</b> '+t+'</p>';}).join('');
+  if(n<tips.length)h+='<div class="row"><button class="btn tip sm" type="button" data-tip="'+key+'">'+(n?'Nächste Tipp-Karte':'Tipp-Karte')+' ('+(n+1)+' von '+tips.length+')</button></div><p class="fb" id="tw_'+key+'"></p>';
+  return '<div class="tips">'+h+'</div>';}
+function bindTips(rr){Array.prototype.forEach.call(document.querySelectorAll('[data-tip]'),function(b){b.addEventListener('click',function(){var key=b.dataset.tip,t=st.tries[key],n=st.tips[key]||0;
+  if(!n&&!(t&&t.n>0)&&!b._warned){b._warned=true;var f=$('tw_'+key);if(f){f.className='fb bad';f.textContent='Probiert es zuerst noch einmal selbst! Die Tipp-Karte hilft, wenn ihr nach einem Versuch nicht weiterkommt.';}b.textContent='Tipp-Karte trotzdem zeigen';st.early=st.early||{};st.early[key]=true;save();return;}
+  st.tips[key]=n+1;save();rr();});});}
+function tipNudge(fb,key,ntips){var t=st.tries[key];if(fb&&t&&!t.ok&&t.n>=2&&!(st.tips[key]>0)&&ntips)fb.textContent+=' Nutzt jetzt die Tipp-Karte.';}
+function stNo(i){var n=0;for(var k=0;k<=i;k++)if(!STATIONS[k].pro)n++;return n;}
+function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
+    h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':stNo(i)))+'</span>'+s.name+'</button>';});
+  $('route').innerHTML=h;Array.prototype.forEach.call($('route').querySelectorAll('.stop'),function(b){b.addEventListener('click',function(){go(+b.dataset.i);});});}
+function go(i){if(!unlocked(i))return;st.station=i;save();render();window.scrollTo({top:0,behavior:'smooth'});}
+function finish(i){if(!st.done[i]){st.done[i]=true;save();renderRoute();}}
+function nextBtn(i){if(!st.done[i]||i>=STATIONS.length-1)return '';var n=STATIONS[i+1];return '<button class="btn pri" type="button" id="nextSt">'+(n.pro?'Zu den Profi-Aufgaben ★':'Weiter zu Station '+stNo(i+1)+': '+n.name)+' →</button>';}
+function bindNext(){var b=$('nextSt');if(b)b.addEventListener('click',function(){go(st.station+1);});}
+
+/* Aufgabenbausteine */
+function mcHTML(id,q,opts,val,ans,grid){return '<div class="q"><p><b>'+q+'</b></p><div class="choice'+(grid?' grid2':'')+'" data-mc="'+id+'">'+opts.map(function(o,j){return '<button type="button" class="opt'+(val===j?(j===ans?' ok':' bad'):'')+'" data-j="'+j+'">'+o+'</button>';}).join('')+'</div><p class="fb" id="fb_'+id+'"></p></div>';}
+function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelector('[data-mc="'+id+'"]');if(!box)return;
+  function evalJ(j){tryInc(key,j===ans,j);store(j);save();
+    Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===j?(j===ans?' ok':' bad'):'');});
+    var fb=$('fb_'+id);if(j===ans){fb.className='fb ok';fb.textContent=okMsg;var lb=$('lock_'+id);if(lb)lb.parentNode.removeChild(lb);if(onOk)onOk();}else{fb.className='fb bad';fb.textContent=(typeof badMsgs==='string')?badMsgs:(badMsgs[j]||'Noch nicht. Schau noch einmal ins Modell.');
+      showHelp(fb,key,function(){store(ans);save();if(onOk)onOk();});}}
+  var lock=typeof APP!=='undefined'&&APP.mcLock,done=!!box.querySelector('.opt.ok');
+  if(lock&&!done){var sel=-1,wrap=document.createElement('div');wrap.className='row';wrap.id='lock_'+id;wrap.innerHTML='<button type="button" class="btn pri" disabled>Antwort einloggen</button>';
+    box.parentNode.insertBefore(wrap,box.nextSibling);var lb=wrap.firstChild;
+    Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){sel=+b.dataset.j;Array.prototype.forEach.call(box.children,function(x,i){x.className='opt'+(i===sel?' sel':'');});lb.disabled=false;var fb=$('fb_'+id);if(fb){fb.className='fb';fb.textContent='';}});});
+    lb.addEventListener('click',function(){if(sel>=0)evalJ(sel);});}
+  else if(!lock)Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){evalJ(+b.dataset.j);});});}
+function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
+/* Ein MC-Baustein komplett: Objekt Q={q,o,a,ok,bad}, Speicher obj[field], Flag obj[field+'Ok'] */
+function mcBlock(id,Q,obj,field,key,grid){return mcHTML(id,Q.q,Q.o,obj[field],Q.a,grid);}
+function mcBind(id,Q,obj,field,key,rerender){bindMC(id,Q.a,key,Q.ok,Q.bad,function(){if(!obj[field+'Ok']){obj[field+'Ok']=true;save();rerender();showFb(id,true,Q.ok);}},function(j){obj[field]=j;});if(obj[field+'Ok'])showFb(id,true,Q.ok);}
+function segQHTML(list,store,locked){return list.map(function(q){var v=store[q.id];return '<div class="q"><p>'+q.q+'</p><span class="seg" data-sq="'+q.id+'">'+q.o.map(function(o,j){return '<button type="button" data-j="'+j+'" class="'+(v===j?(locked?'ok':'sel'):'')+'">'+o+'</button>';}).join('')+'</span></div>';}).join('');}
+function bindSegQ(store,locked,onChange){Array.prototype.forEach.call(document.querySelectorAll('[data-sq]'),function(sg){Array.prototype.forEach.call(sg.children,function(b){b.addEventListener('click',function(){if(locked())return;store[sg.dataset.sq]=+b.dataset.j;save();Array.prototype.forEach.call(sg.children,function(x){x.className=x===b?'sel':'';});if(onChange)onChange();});});});}
+function checkSegQ(list,store,key,fbId,onHelp){var fb=$(fbId),miss=0,wrong=[];
+  list.forEach(function(q){var v=store[q.id],sg=document.querySelector('[data-sq="'+q.id+'"]');if(v==null){miss++;return;}var ok=v===q.a;sg.children[v].className=ok?'ok':'bad';if(!ok)wrong.push(q);});
+  if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Antworten.';return false;}
+  tryInc(key,!wrong.length,wrong.map(function(q){return q.id;}).join(','));
+  if(wrong.length){fb.className='fb bad';fb.textContent=(wrong.length>1?wrong.length+' Antworten stimmen noch nicht. ':'')+wrong[0].w;if(onHelp)showHelp(fb,key,function(){list.forEach(function(q){store[q.id]=q.a;});save();onHelp();helpMsg(fbId,'Die Lösung ist markiert. Lies sie dir durch und tippe auf „Prüfen“.');});return false;}return true;}
+function segAns(q,v){return v==null?'(keine Antwort)':q.o[v].replace(/<[^>]+>/g,'')+(v===q.a?'  ✓':'  ✗');}
+function strip(t){return String(t).replace(/<[^>]+>/g,'');}
+
+/* Ergebnisse speichern (IServ) */
+function resFile(){var r=st.res||{};var n=((r.name||'Name')+'_'+(r.klasse||'')).replace(/[^A-Za-z0-9ÄÖÜäöüß_-]+/g,'_').replace(/_+$/,'');return APP.file+'_'+n+'.txt';}
+function ncore(){return STATIONS.filter(function(x){return !x.pro;}).length;}
+function nDone(){return st.done.slice(0,ncore()).filter(Boolean).length;}
+function standInfo(){var N=ncore(),n=nDone(),S=STATIONS[st.station],cur=S?S.name:'';
+  if(n>=N)return '<b>Alle '+N+' Stationen geschafft.</b>'+(st.done[N]?' Profi-Zusatz auch!':(S&&S.pro?' Ihr seid gerade beim Profi-Zusatz ★.':' Wenn noch Zeit ist: Profi-Zusatz ★.'));
+  return '<b>Zwischenstand: '+n+' von '+N+' Stationen geschafft.</b> Ihr seid gerade bei „'+esc(cur)+'“. Alles, was ihr bis jetzt bearbeitet habt, wird gespeichert.';}
+function standLine(){var N=ncore(),n=nDone();return 'Stand: '+(n>=N?'fertig (alle '+N+' Stationen)':'Zwischenstand ('+n+' von '+N+' Stationen, zuletzt bei „'+STATIONS[st.station].name+'“)');}
+function resultsHTML(){var r=st.res||{};
+  return '<div class="dlghead"><h3 id="saveTitle">Ergebnisse speichern</h3><button class="xbtn" type="button" id="saveClose" aria-label="Schließen">×</button></div>'+
+   '<p class="stand" id="standInfo">'+standInfo()+'</p>'+
+   '<p class="muted">Ihr könnt <b>jederzeit</b> speichern, auch wenn ihr noch nicht fertig seid. Speichert ihr später noch einmal, ladet die neue Datei zusätzlich hoch: <b>Die neueste Datei zählt.</b></p>'+
+   '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
+   '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||APP.klasse)+'"></div>'+
+   '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP.title+'“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
+   '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
+function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
+function bindCTA(){var b=$('ctaSave');if(b)b.addEventListener('click',openSave);}
+/* ---------- Start: Name und Klasse ---------- */
+function startDialog(){var r=st.res||{};if(r.name&&r.klasse)return;
+  var ov=document.createElement('div');ov.className='abg-ov';
+  ov.innerHTML='<div class="abg-box" role="dialog" aria-modal="true" aria-labelledby="stH"><p class="eyebrow">'+APP.lesson+'</p><h2 id="stH">'+APP.welcome+'</h2>'+
+    '<p>'+APP.intro+'</p>'+
+    '<p class="muted">Arbeitet ihr zu zweit? Dann tragt beide Namen ein.</p>'+
+    '<div class="abg-row"><label for="stName">Name(n)</label><input class="abg-in" id="stName" autocomplete="off" style="width:14em" value="'+esc(r.name)+'" placeholder="Vorname N."></div>'+
+    '<div class="abg-row"><label for="stKl">Klasse</label><input class="abg-in" id="stKl" autocomplete="off" style="width:6em" value="'+esc(r.klasse)+'" placeholder="10a"></div>'+
+    '<div class="abg-row"><button class="abg-copy" type="button" id="stGo">Los geht’s</button></div><p class="abg-fb bad" id="stFb"></p></div>';
+  document.body.appendChild(ov);var n=ov.querySelector('#stName'),k=ov.querySelector('#stKl');setTimeout(function(){n.focus();},30);
+  function go(){var nm=n.value.trim(),kl=k.value.trim();if(!nm){ov.querySelector('#stFb').textContent='Bitte trage deinen Namen ein.';n.focus();return;}if(!kl){ov.querySelector('#stFb').textContent='Bitte trage deine Klasse ein.';k.focus();return;}
+    st.res=st.res||{};st.res.name=nm;st.res.klasse=kl;save();ov.remove();}
+  ov.querySelector('#stGo').addEventListener('click',go);[n,k].forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')go();});});}
+var lastFocus=null;
+function openSave(){lastFocus=document.activeElement;$('saveBody').innerHTML=resultsHTML();$('saveDlg').hidden=false;document.body.style.overflow='hidden';
+  bindResults();$('saveClose').addEventListener('click',closeSave);$('saveBack').addEventListener('click',closeSave);
+  $('saveOpen').classList.remove('pulse');st.remindOff=true;save();
+  setTimeout(function(){var n=$('resName');(n&&!n.value?n:$('resSave')).focus();},30);}
+function closeSave(){$('saveDlg').hidden=true;document.body.style.overflow='';$('saveBody').innerHTML='';if(lastFocus&&lastFocus.focus)try{lastFocus.focus();}catch(e){}}
+function remind(){if(!st.remindOff&&st.t0&&Date.now()-st.t0>25*60000)$('saveOpen').classList.add('pulse');}
+function initSave(){$('saveOpen').addEventListener('click',openSave);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('saveDlg').hidden)closeSave();});
+  $('saveDlg').addEventListener('click',function(e){if(e.target===this)closeSave();});
+  setInterval(remind,30000);}
+function bindResults(){
+  if(!$('resSave'))return;st.res=st.res||{};
+  function upd(){st.res.name=$('resName').value.trim();st.res.klasse=$('resKlasse').value.trim();save();if(!$('resTxt').hidden)$('resTxt').value=resText();}
+  $('resName').addEventListener('input',upd);$('resKlasse').addEventListener('input',upd);
+  function msg(ok,t){var f=$('resFb');f.className='fb '+(ok?'ok':'bad');f.textContent=t;}
+  function need(){if(!st.res.name){msg(false,'Tragt zuerst eure Namen ein.');$('resName').focus();return false;}return true;}
+  $('resShow').addEventListener('click',function(){var t=$('resTxt');t.hidden=!t.hidden;if(!t.hidden)t.value=resText();this.textContent=t.hidden?'Text anzeigen':'Text ausblenden';});
+  $('resCopy').addEventListener('click',function(){if(!need())return;var txt=resText(),t=$('resTxt');t.hidden=false;t.value=txt;$('resShow').textContent='Text ausblenden';
+    function sel(){t.focus();t.select();msg(true,'Text markiert. Kopiere ihn mit Strg+C (Tablet: gedrückt halten → Kopieren).');}
+    try{navigator.clipboard.writeText(txt).then(function(){msg(true,'Kopiert! Ihr könnt den Text jetzt bei IServ einfügen.');},sel);}catch(e){sel();}});
+  $('resSave').addEventListener('click',function(){if(!need())return;var txt=resText(),name=resFile();st.saves=(st.saves||0)+1;save();
+    function blobSave(){try{var b=new Blob(['﻿'+txt],{type:'text/plain;charset=utf-8'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},4000);
+      msg(true,'Datei „'+name+'“ wird gespeichert. Falls nichts passiert: „Text kopieren“ benutzen.');}catch(e){msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');}}
+    var c=window.claude;
+    if(c&&c.use){c.use('downloads').then(function(d){if(!d){blobSave();return;}
+        d.save({filename:name,data:txt}).then(function(){msg(true,'Gespeichert als „'+name+'“. Jetzt bei IServ hochladen!');},function(err){
+          if(err&&err.code==='declined')msg(false,'Speichern abgebrochen. Ihr könnt es nochmal versuchen.');else msg(false,'Speichern klappt hier nicht. Benutzt „Text kopieren“.');});},blobSave);}
+    else blobSave();});
+}
+/* Versuchsstatistik für die Textdatei */
+function triesLines(L,TL,proPrefix){var tot=0,first=0;
+  TL.forEach(function(x){var t=st.tries[x[0]],pro=x[0].indexOf(proPrefix)===0;if(!t){if(!pro)L.push('  '+x[1]+': nicht bearbeitet');return;}if(!pro){tot++;if(t.first)first++;}
+    L.push('  '+x[1]+': '+t.n+(t.n===1?' Versuch':' Versuche')+(t.ok?(t.first?'  → beim 1. Versuch richtig':'  → gelöst'):'  → noch nicht gelöst'));});
+  L.push('  Beim 1. Versuch richtig: '+first+' von '+tot+' bearbeiteten Aufgaben');
+  var mins0=st.t0?Math.round((Date.now()-st.t0)/60000):null;if(mins0!=null)L.push('  Bearbeitungszeit seit dem Start: '+mins0+' min');
+  L.push('  „Neu starten“ gedrückt (auf diesem Gerät): '+resets()+'-mal');
+  var hk=Object.keys(st.help||{});L.push('  Lösung anzeigen benutzt: '+(hk.length?hk.length+'-mal ('+hk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return x?x[1]:k;}).join('; ')+')':'nein'));
+  return {mins:mins0,help:hk};}
+function bindReset(){$('reset').addEventListener('click',function(){var b=this;if(!b._armed){b._armed=true;b.textContent='Wirklich alles löschen?';setTimeout(function(){b._armed=false;b.textContent='Neu starten';},3500);return;}
+  try{localStorage.setItem(RKEY,String(resets()+1));localStorage.removeItem(KEY);}catch(e){}location.reload();});}
+
+/* Canvas-Helfer */
+var cv=$('cv'),ctx=cv.getContext('2d'),W=0,H=0;
+function line(x1,y1,x2,y2,c,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha==null?1:alpha;ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(dash||[]);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+function tag(t,x,y,c,align,bg){ctx.font=font(13,true);ctx.textBaseline='middle';ctx.textAlign=align||'center';var w=ctx.measureText(t).width,x0=align==='left'?x:align==='right'?x-w:x-w/2;
+  ctx.fillStyle=bg||col('surface');ctx.globalAlpha=.92;ctx.fillRect(x0-4,y-10,w+8,20);ctx.globalAlpha=1;ctx.fillStyle=c;ctx.fillText(t,x,y);}
+function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function sizeView(c){var w=c.getBoundingClientRect().width||220,dpr=window.devicePixelRatio||1;c.width=Math.round(w*dpr);c.height=Math.round(w*dpr);}
+function resize(){var w=cv.getBoundingClientRect().width||640,h=Math.round(Math.max(280,Math.min(w*0.62,460))),dpr=window.devicePixelRatio||1;
+  cv.style.height=h+'px';cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);W=w;H=h;sizeView($('cvA'));sizeView($('cvB'));draw();}
+function vctx(id){var c=$(id),x=c.getContext('2d'),w=c.width;x.setTransform(1,0,0,1,0,0);return {c:c,x:x,w:w};}
+
+
+/* ---------- Zeichnen ---------- */
+function draw(){if(!W)return;var sc=STATIONS[st.station].scene;ctx.fillStyle=col('surface');ctx.fillRect(0,0,W,H);
+  if(sc==='night'||!st.grp)drawNight();else if(sc==='plant')drawPlant();else if(sc==='sankey')drawSankeyMain(tableData(),G());else drawAll();
+  renderViews();}
+function txt(c,t,x,y,px,b,colr,al,bl){c.font=font(px,b);c.fillStyle=colr||col('ink');c.textAlign=al||'left';c.textBaseline=bl||'middle';c.fillText(t,x,y);}
+function wrap(c,t,x,y,maxW,lh){var w=t.split(' '),l='',yy=y;w.forEach(function(wd){var tt=l?l+' '+wd:wd;if(c.measureText(tt).width>maxW&&l){c.fillText(l,x,yy);l=wd;yy+=lh;}else l=tt;});if(l)c.fillText(l,x,yy);return yy;}
+function drawNight(){var w=W,h=H;var gr=ctx.createLinearGradient(0,0,0,h);gr.addColorStop(0,'#0B1230');gr.addColorStop(1,'#26315E');ctx.fillStyle=gr;ctx.fillRect(0,0,w,h);
+  for(var k=0;k<40;k++){var sx=(k*97.3)%w,sy=(k*53.7)%(h*0.45);ctx.fillStyle='rgba(255,255,255,'+(0.35+(k%3)*0.2)+')';ctx.fillRect(sx,sy,1.6,1.6);}
+  ctx.fillStyle='#F4F1DE';ctx.beginPath();ctx.arc(w*0.86,h*0.14,h*0.07,0,7);ctx.fill();ctx.fillStyle='#0B1230';ctx.beginPath();ctx.arc(w*0.86+h*0.03,h*0.12,h*0.065,0,7);ctx.fill();
+  /* Haus */
+  var hx=w*0.05,hy=h*0.30,hw=w*0.36,hh=h*0.62;ctx.fillStyle='#C9B79C';ctx.fillRect(hx,hy,hw,hh);
+  [[0.12,0.12],[0.58,0.12],[0.12,0.52],[0.58,0.52]].forEach(function(p){ctx.fillStyle='#FFD66B';ctx.fillRect(hx+hw*p[0],hy+hh*p[1],hw*0.3,hh*0.22);ctx.strokeStyle='#8A7A60';ctx.lineWidth=2;ctx.strokeRect(hx+hw*p[0],hy+hh*p[1],hw*0.3,hh*0.22);});
+  /* Balkon mit Modul */
+  ctx.fillStyle='#7A808F';ctx.fillRect(hx-6,hy+hh*0.86,hw+12,5);for(var b=0;b<10;b++)ctx.fillRect(hx+b*hw/9,hy+hh*0.80,2,hh*0.06);
+  ctx.fillStyle='#1E3A6E';ctx.fillRect(hx+hw*0.08,hy+hh*0.76,hw*0.32,hh*0.1);ctx.strokeStyle='#9CC3F0';ctx.lineWidth=1;for(var z=1;z<4;z++){ctx.beginPath();ctx.moveTo(hx+hw*0.08+z*hw*0.08,hy+hh*0.76);ctx.lineTo(hx+hw*0.08+z*hw*0.08,hy+hh*0.86);ctx.stroke();}
+  tag('Balkonkraftwerk: 0 W',hx+hw*0.24,hy+hh*0.70,'#B42318','center');
+  /* Leitung */
+  ctx.strokeStyle='#E8A317';ctx.lineWidth=3;ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(hx+hw,hy+hh*0.35);ctx.lineTo(w*0.52,hy+hh*0.35);ctx.lineTo(w*0.52,h*0.22);ctx.lineTo(w*0.97,h*0.22);ctx.stroke();ctx.setLineDash([]);
+  txt(ctx,'Stromnetz',w*0.53,h*0.18,13,true,'#FFD66B');
+  /* vier Kraftwerke */
+  var labs=[['A','Kohle'],['B','Gas'],['C','Wind'],['D','Speicher']];
+  labs.forEach(function(l,i){var cx=w*0.58+i*w*0.105,cy=h*0.62;plantIcon(ctx,l[0],cx,cy,w*0.09);txt(ctx,l[0],cx,cy+w*0.065,13,true,'#FFD66B','center');txt(ctx,l[1],cx,cy+w*0.065+16,11,true,'#FFFFFF','center');
+    ctx.strokeStyle='rgba(232,163,23,.7)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,cy-w*0.05);ctx.lineTo(cx,h*0.22);ctx.stroke();});
+  txt(ctx,'Abends um 19 Uhr',14,18,16,true,'#FFFFFF');txt(ctx,'Familie K. kocht, Licht und Fernseher sind an.',14,40,13,false,'#DDE3F5');
+  tag('?',w*0.75,h*0.36,'#1A1F36','center','#FFD66B');}
+function plantIcon(c,k,cx,cy,s,dark){c.save();c.lineWidth=2;var lite=dark?'#5B6278':'#E8ECF5';
+  if(k==='A'){c.fillStyle='#9AA0AE';c.fillRect(cx-s*0.45,cy-s*0.1,s*0.5,s*0.4);c.beginPath();c.moveTo(cx+s*0.05,cy+s*0.3);c.quadraticCurveTo(cx+s*0.2,cy,cx+s*0.12,cy-s*0.3);c.lineTo(cx+s*0.42,cy-s*0.3);c.quadraticCurveTo(cx+s*0.34,cy,cx+s*0.48,cy+s*0.3);c.closePath();c.fill();
+    c.fillStyle='rgba(230,230,240,.8)';c.beginPath();c.arc(cx+s*0.27,cy-s*0.42,s*0.12,0,7);c.arc(cx+s*0.38,cy-s*0.5,s*0.1,0,7);c.fill();}
+  else if(k==='B'){c.fillStyle='#9AA0AE';c.fillRect(cx-s*0.45,cy-s*0.05,s*0.9,s*0.35);c.fillRect(cx+s*0.2,cy-s*0.45,s*0.1,s*0.4);c.fillStyle='#3B82F6';c.beginPath();c.moveTo(cx-s*0.2,cy+s*0.15);c.quadraticCurveTo(cx-s*0.3,cy-s*0.05,cx-s*0.15,cy-s*0.2);c.quadraticCurveTo(cx-s*0.1,cy,cx-s*0.2,cy+s*0.15);c.fill();}
+  else if(k==='C'){c.strokeStyle=lite;c.lineWidth=3;c.beginPath();c.moveTo(cx,cy+s*0.3);c.lineTo(cx,cy-s*0.2);c.stroke();for(var a=0;a<3;a++){var an=a*2.094-1.57;c.beginPath();c.moveTo(cx,cy-s*0.2);c.lineTo(cx+Math.cos(an)*s*0.38,cy-s*0.2+Math.sin(an)*s*0.38);c.stroke();}}
+  else{c.fillStyle='#4A90D9';c.beginPath();c.moveTo(cx-s*0.45,cy+s*0.3);c.lineTo(cx-s*0.1,cy-s*0.35);c.lineTo(cx+s*0.45,cy+s*0.3);c.closePath();c.fillStyle='#6E7B5B';c.fill();c.fillStyle='#4A90D9';c.fillRect(cx-s*0.16,cy-s*0.33,s*0.18,s*0.06);c.fillRect(cx+s*0.1,cy+s*0.22,s*0.3,s*0.08);c.strokeStyle=lite;c.beginPath();c.moveTo(cx-s*0.05,cy-s*0.28);c.lineTo(cx+s*0.2,cy+s*0.24);c.stroke();}
+  c.restore();}
+function partIcon(c,ic,cx,cy,s,colr){c.save();c.strokeStyle=colr;c.fillStyle=colr;c.lineWidth=Math.max(2,s*0.06);
+  if(ic==='boiler'||ic==='flame'){c.strokeRect(cx-s*0.3,cy-s*0.32,s*0.6,s*0.62);c.fillStyle='#E8892B';for(var f=0;f<3;f++){var fx=cx-s*0.17+f*s*0.17;c.beginPath();c.moveTo(fx-s*0.07,cy+s*0.25);c.quadraticCurveTo(fx-s*0.08,cy+s*0.02,fx,cy-s*0.1);c.quadraticCurveTo(fx+s*0.08,cy+s*0.02,fx+s*0.07,cy+s*0.25);c.fill();}}
+  else if(ic==='turbine'){c.beginPath();c.arc(cx,cy,s*0.32,0,7);c.stroke();for(var k=0;k<6;k++){var a=k*1.047;c.beginPath();c.moveTo(cx,cy);c.quadraticCurveTo(cx+Math.cos(a+0.5)*s*0.2,cy+Math.sin(a+0.5)*s*0.2,cx+Math.cos(a)*s*0.3,cy+Math.sin(a)*s*0.3);c.stroke();}}
+  else if(ic==='gen'){c.beginPath();c.arc(cx,cy,s*0.32,0,7);c.stroke();c.font=font(Math.round(s*0.36),true);c.textAlign='center';c.textBaseline='middle';c.fillText('G',cx,cy+1);}
+  else if(ic==='rotor'){c.beginPath();c.arc(cx,cy,s*0.05,0,7);c.fill();for(var r=0;r<3;r++){var an=r*2.094-1.57;c.beginPath();c.moveTo(cx,cy);c.lineTo(cx+Math.cos(an)*s*0.36,cy+Math.sin(an)*s*0.36);c.stroke();}}
+  else if(ic==='gear'){[[-0.12,0.05,0.17],[0.16,-0.08,0.12]].forEach(function(g){c.beginPath();c.arc(cx+g[0]*s,cy+g[1]*s,g[2]*s,0,7);c.stroke();for(var t=0;t<8;t++){var a=t*0.785;c.beginPath();c.moveTo(cx+g[0]*s+Math.cos(a)*g[2]*s,cy+g[1]*s+Math.sin(a)*g[2]*s);c.lineTo(cx+g[0]*s+Math.cos(a)*(g[2]+0.06)*s,cy+g[1]*s+Math.sin(a)*(g[2]+0.06)*s);c.stroke();}});}
+  else if(ic==='pump'){c.beginPath();c.arc(cx,cy,s*0.3,0,7);c.stroke();c.beginPath();c.moveTo(cx,cy+s*0.18);c.lineTo(cx,cy-s*0.18);c.moveTo(cx-s*0.1,cy-s*0.06);c.lineTo(cx,cy-s*0.18);c.lineTo(cx+s*0.1,cy-s*0.06);c.stroke();}
+  c.restore();}
+function s2ok(){return !!st.s2.ok;}
+var FSHORT={c:['chemische','Energie'],t:['thermische','Energie'],b:['Bewegungs-','energie'],l:['Lage-','energie'],e:['elektrische','Energie']};
+function formLab(k,x,y,known){var c=known?FCOL[k]:'#6B7280',t=known?FSHORT[k]:['?',''];ctx.font=font(11,true);var w=Math.max(ctx.measureText(t[0]).width,ctx.measureText(t[1]).width);
+  ctx.fillStyle='rgba(255,255,255,.95)';rrect(ctx,x-w/2-5,y-15,w+10,t[1]?30:20,6);ctx.fill();ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.stroke();ctx.fillStyle=c;ctx.textAlign='center';ctx.textBaseline='middle';
+  if(t[1]){ctx.fillText(t[0],x,y-7);ctx.fillText(t[1],x,y+7);}else ctx.fillText(t[0],x,y-5);}
+function drawPlant(){var g=G(),ink=col('ink'),soft=col('ink-soft'),n=3,sw=58,sx=12,ex=46;
+  var bw=Math.min(118,(W-sx-sw-ex-12-4*44)/3),gap=(W-sx-sw-ex-12-3*bw)/4,bh=bw*0.9,y=Math.max(110,H*0.34);
+  txt(ctx,'Gruppe '+st.grp+': '+g.name,14,18,17,true,ink);txt(ctx,'Tippt auf ein Bauteil oder wählt es im Steuerpult.',14,40,12,false,soft);
+  rrect(ctx,sx,y+bh*0.18,sw,bh*0.64,10);ctx.fillStyle=col('surface-2');ctx.fill();ctx.strokeStyle='#C7CDDA';ctx.lineWidth=1;ctx.stroke();
+  ctx.font=font(11,true);ctx.fillStyle=ink;ctx.textAlign='center';ctx.textBaseline='middle';wrap(ctx,g.src,sx+sw/2,y+bh*0.42,sw-8,13);
+  var xs=[];for(var i=0;i<n;i++)xs.push(sx+sw+gap*(i+1)+bw*i);var known=s2ok(),heat=st.heat&&SK()!=='s2';
+  for(i=0;i<n;i++){var p=g.parts[i],x=xs[i],ax0=i===0?sx+sw:xs[i-1]+bw;
+    if(heat){var L=lossK(g,i),rad=bw*0.4+L*1.5,gl=ctx.createRadialGradient(x+bw/2,y+bh/2,4,x+bw/2,y+bh/2,rad),a=Math.min(0.85,0.12+L/50),cc=p.lw==='l'?'28,102,192':'232,72,15';
+      gl.addColorStop(0,'rgba('+cc+','+a+')');gl.addColorStop(1,'rgba('+cc+',0)');ctx.fillStyle=gl;ctx.fillRect(x+bw/2-rad,y+bh/2-rad,2*rad,2*rad);}}
+  for(i=0;i<n;i++){var p=g.parts[i],x=xs[i],sel=st.part===i,ax0=i===0?sx+sw:xs[i-1]+bw,ay=y+bh/2;
+    arrow(ax0+3,ay,x-3,ay,known?FCOL[p.i]:'#9AA0AE',6);formLab(p.i,(ax0+x)/2,y-22,known);
+    rrect(ctx,x,y,bw,bh,12);ctx.fillStyle=sel?'#FFF4E5':'#FFFFFF';ctx.fill();ctx.lineWidth=sel?4:2;ctx.strokeStyle=sel?'#E8892B':'#5B6278';ctx.stroke();
+    partIcon(ctx,p.ic,x+bw/2,y+bh*0.38,bw*0.55,'#1A1F36');
+    ctx.fillStyle=ink;ctx.font=font(12,true);ctx.textAlign='center';ctx.textBaseline='middle';wrap(ctx,(i+1)+' '+p.n,x+bw/2,y+bh*0.78,bw-10,14);
+    var dx=x+bw/2,dy0=y+bh+4,dy1=y+bh+62;arrow(dx,dy0,dx,dy1,p.lw==='l'?'#7FA7D9':'#E8590C',4,true);
+    var lt=SK()==='s2'?'nicht genutzt':'? kWh';tagSmall(lt,dx,dy1+14,p.lw==='l'?'#1C66C0':'#B42318');
+    p._box=[x,y,bw,bh];}
+  var lx=xs[n-1]+bw;arrow(lx+3,y+bh/2,W-8,y+bh/2,known?FCOL.e:'#9AA0AE',6);formLab('e',(lx+W-8)/2,y-22,known);
+  var yb=H-12;if(heat){txt(ctx,'Wärmebild: Je stärker es leuchtet, desto mehr Energie wird dort nicht genutzt.',14,yb,11,true,'#B42318');yb-=16;}
+  if(st.grp==='A')txt(ctx,'Der Kühlturm gehört hier zur Turbine.',14,yb,11,false,soft);}
+function tagSmall(t,x,y,c){ctx.font=font(12,true);var w=ctx.measureText(t).width;ctx.fillStyle='rgba(255,255,255,.92)';rrect(ctx,x-w/2-5,y-10,w+10,20,6);ctx.fill();ctx.fillStyle=c;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y);}
+function arrow(x0,y0,x1,y1,c,w,wavy){ctx.save();ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=w;ctx.lineCap='round';ctx.beginPath();
+  if(wavy){var n=4,len=y1-y0-10;ctx.moveTo(x0,y0);for(var k=1;k<=n*2;k++){ctx.quadraticCurveTo(x0+(k%2?8:-8),y0+len*(k-0.5)/(n*2),x0,y0+len*k/(n*2));}}else{var ang0=Math.atan2(y1-y0,x1-x0);ctx.moveTo(x0,y0);ctx.lineTo(x1-Math.cos(ang0)*10,y1-Math.sin(ang0)*10);}
+  ctx.stroke();var ang=wavy?Math.PI/2:Math.atan2(y1-y0,x1-x0),hl=w*2.6+6;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-Math.cos(ang-0.45)*hl,y1-Math.sin(ang-0.45)*hl);ctx.lineTo(x1-Math.cos(ang+0.45)*hl,y1-Math.sin(ang+0.45)*hl);ctx.closePath();ctx.fill();ctx.restore();}
+function canvasPick(e){if(STATIONS[st.station].scene!=='plant'||!st.grp)return;var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  G().parts.forEach(function(p,i){var b=p._box;if(b&&x>=b[0]&&x<=b[0]+b[2]&&y>=b[1]&&y<=b[1]+b[3]){st.part=i;save();renderCtl();draw();}});}
+cv.addEventListener('click',canvasPick);
+/* Energieflussdiagramm (Sankey). d = {el:[...], loss:[...], ok:bool} */
+function tableData(){var g=G(),r=st.s3.rows,o={inn:[],out:[],loss:[],ok:!!st.s3.ok};for(var i=0;i<3;i++){var x=r[i]||{};o.inn.push(num(x.inn));o.out.push(num(x.out));o.loss.push(num(x.loss));}
+  if(SK()==='s7'||st.s3.ok){o.inn=[0,1,2].map(function(i){return inK(g,i);});o.out=g.parts.map(function(p){return p.out;});o.loss=[0,1,2].map(function(i){return lossK(g,i);});o.ok=true;}return o;}
+function sankey(c,X,Y,Wd,Hd,g,d,big){var ink='#1A1F36',bottom=Y+Hd-(big?40:16),k=Math.min((bottom-Y-(big?36:12))*0.42/100,(Wd*0.5)/100*0.5),top=Y+(big?30:12),x0=X+(big?78:22),xe=X+Wd-(big?96:30),seg=(xe-x0)/3,r0=big?8:3;
+  c.save();c.fillStyle=FCOL[g.parts[0].i];c.globalAlpha=.9;c.fillRect(X+4,top,x0-X-4,100*k);c.globalAlpha=1;
+  if(big){c.font=font(13,true);c.fillStyle='#fff';c.textAlign='left';c.textBaseline='middle';c.fillText('100 kWh',X+8,top+50*k);}
+  for(var i=0;i<3;i++){var p=g.parts[i],inn=inK(g,i),known=d.ok||!isNaN(d.out[i]),out=known?(d.ok?p.out:d.out[i]):inn,loss=Math.max(0,inn-out),xa=x0+i*seg,xb=xa+seg*0.42,xc=xa+seg;
+    var gr=c.createLinearGradient(xa,0,xb,0);gr.addColorStop(0,FCOL[p.i]);gr.addColorStop(1,FCOL[p.o]);c.fillStyle=gr;c.globalAlpha=.9;c.fillRect(xa,top,xb-xa+0.5,inn*k);
+    c.fillStyle=FCOL[p.o];c.fillRect(xb,top,xc-xb+0.5,out*k);
+    if(known&&loss>0.01){var lw=loss*k,yT=top+out*k,R=r0+lw,cy=yT+R,lc=p.lw==='l'?'#7FA7D9':'#F08C4B';c.fillStyle=lc;
+      c.beginPath();c.moveTo(xb,yT);c.arc(xb,cy,R,-Math.PI/2,0,false);c.lineTo(xb+R,bottom);c.lineTo(xb+r0,bottom);c.lineTo(xb+r0,cy);c.arc(xb,cy,r0,0,-Math.PI/2,true);c.closePath();c.fill();
+      c.globalAlpha=1;c.font=font(big?12:9,true);c.fillStyle=p.lw==='l'?'#1C66C0':'#B42318';c.textAlign='center';c.textBaseline='top';
+      var lt=(d.ok||!isNaN(d.loss[i]))?fmt(loss,0)+(big?' kWh':''):'?';c.fillText(lt,xb+r0+lw/2,bottom+3);if(big){c.font=font(11,false);c.fillText(p.lw==='l'?'bleibt im Wind':'Wärme',xb+r0+lw/2,bottom+18);}}
+    c.globalAlpha=1;c.font=font(big?12:9,true);c.fillStyle=ink;c.textAlign='center';c.textBaseline='bottom';c.fillText(big?(i+1)+' '+p.n:String(i+1),xa+seg*0.21,top-4);}
+  var outE=d.ok?eta(g):d.out[2],aw=big?40:14;
+  if(!isNaN(outE)){c.fillStyle=FCOL.e;c.fillRect(xe,top,aw,outE*k);c.beginPath();c.moveTo(xe+aw,top-4);c.lineTo(xe+aw+(big?22:8),top+outE*k/2);c.lineTo(xe+aw,top+outE*k+4);c.closePath();c.fill();
+    c.font=font(big?14:9,true);c.fillStyle=ink;c.textAlign='left';c.textBaseline='bottom';if(big){c.fillText(fmt(outE,0)+' kWh',xe,top-6);c.font=font(12,false);c.textBaseline='top';c.fillText('elektrische',xe,top+outE*k+8);c.fillText('Energie',xe,top+outE*k+22);}else c.fillText(fmt(outE,0),xe,top-2);}
+  c.restore();}
+function drawSankeyMain(d,g){var ink=col('ink'),soft=col('ink-soft');txt(ctx,'Energieflussdiagramm: '+g.name,14,18,17,true,ink);
+  txt(ctx,d.ok?'Breite der Pfeile = Energie in kWh. Hinein gehen 100 kWh.':'Das Diagramm entsteht aus eurer Messtabelle.',14,40,12,false,soft);
+  ctx.fillStyle='#FFFFFF';rrect(ctx,8,56,W-16,H-64,12);ctx.fill();sankey(ctx,10,60,W-20,H-70,g,d,true);
+}
+function legend(c,xr,y){var keys=['c','t','b','l','e'],x=xr;c.font=font(11,true);c.textBaseline='middle';
+  for(var i=keys.length-1;i>=0;i--){var k=keys[i],t=FORMS[k].replace(' Energie','');var w=c.measureText(t).width;x-=w;c.fillStyle=col('ink-soft');c.textAlign='left';c.fillText(t,x,y);x-=16;c.fillStyle=FCOL[k];c.fillRect(x,y-6,12,12);x-=12;}}
+function drawAll(){var ink=col('ink');txt(ctx,'Klassenergebnis: Wirkungsgrade der vier Kraftwerke',14,18,17,true,ink);
+  var L=Math.min(250,W*0.42),R=W-80,top=56,bh=(H-top-20)/4;
+  GKEYS.forEach(function(k,i){var g=GROUPS[k],e=eta(g),y=top+i*bh;ctx.fillStyle=k===st.grp?'#FFF4E5':col('surface-2');rrect(ctx,8,y,W-16,bh-8,10);ctx.fill();
+    plantIcon(ctx,k,34,y+bh/2-4,40,true);ctx.fillStyle='#1A1F36';
+    txt(ctx,k+' '+g.name,62,y+bh/2-4,13,true,ink);
+    ctx.fillStyle=FCOL.e;rrect(ctx,L,y+bh*0.22,(R-L)*e/100,bh*0.44,6);ctx.fill();ctx.strokeStyle='#C7CDDA';ctx.lineWidth=1;ctx.strokeRect(L,y+bh*0.22,R-L,bh*0.44);
+    txt(ctx,e+' %',L+(R-L)*e/100+8,y+bh*0.44,15,true,ink);});}
+function renderViews(){var A=vctx('cvA'),a=A.x,w=A.w,B=vctx('cvB'),b=B.x,w2=B.w,sk=SK();
+  a.fillStyle='#FFFFFF';a.fillRect(0,0,w,w);b.fillStyle='#FFFFFF';b.fillRect(0,0,w2,w2);
+  if(!st.grp||sk==='s1'){$('capA').innerHTML='<b>Handy-App</b> Familie K.';$('capB').innerHTML='<b>Energieformen</b>';
+    phone(a,w,[['Balkonkraftwerk','0 W','#B42318'],['aus dem Netz','400 W','#1A1F36']]);forms(b,w2);return;}
+  var g=G();
+  if(sk==='s2'||sk==='s3'){var p=g.parts[st.part]||g.parts[0],shown=sk==='s3';$('capA').innerHTML='<b>Energiezähler</b> an Bauteil '+(st.part+1);
+    a.fillStyle='#111827';rrect(a,w*0.06,w*0.08,w*0.88,w*0.84,w*0.05);a.fill();
+    a.fillStyle='#9AE6B4';a.font=font(Math.round(w/14),true);a.textAlign='center';a.textBaseline='middle';a.fillText((st.part+1)+' '+p.n,w/2,w*0.2);
+    [['hinein',shown?fmt(inK(g,st.part),0)+' kWh':'– – –'],['heraus genutzt',shown?fmt(p.out,0)+' kWh':'– – –']].forEach(function(r,i){var yy=w*0.4+i*w*0.27;a.fillStyle='#9CA3AF';a.font=font(Math.round(w/17),false);a.fillText(r[0],w/2,yy);a.fillStyle='#FFFFFF';a.font='bold '+Math.round(w/8)+'px ui-monospace,Menlo,Consolas,monospace';a.fillText(r[1],w/2,yy+w*0.11);});
+    if(!shown){a.fillStyle='#9CA3AF';a.font=font(Math.round(w/20),false);a.fillText('Zähler ab Station 3',w/2,w*0.86);}
+    $('capB').innerHTML='<b>Energieflussdiagramm</b> aus eurer Tabelle';sankey(b,2,w2*0.05,w2-4,w2*0.9,g,tableData(),false);return;}
+  $('capA').innerHTML='<b>Wirkungsgrad</b> eures Kraftwerks';var e=sk==='s7'||st.s5.ok?eta(g):null;
+  a.fillStyle='#F3F5FA';a.beginPath();a.arc(w/2,w*0.58,w*0.36,Math.PI,0);a.lineTo(w*0.86,w*0.58);a.fill();
+  a.strokeStyle='#E5E7EB';a.lineWidth=w*0.09;a.beginPath();a.arc(w/2,w*0.58,w*0.3,Math.PI,0);a.stroke();
+  if(e!=null){a.strokeStyle=FCOL.e;a.beginPath();a.arc(w/2,w*0.58,w*0.3,Math.PI,Math.PI+Math.PI*e/100);a.stroke();}
+  a.fillStyle='#1A1F36';a.font=font(Math.round(w/9),true);a.textAlign='center';a.textBaseline='middle';a.fillText(e!=null?e+' %':'? %',w/2,w*0.5);
+  a.font=font(Math.round(w/17),false);a.fillStyle='#5B6278';a.fillText('genutzt : hineingesteckt',w/2,w*0.75);a.fillText(e!=null?e+' kWh : 100 kWh':'',w/2,w*0.86);
+  $('capB').innerHTML='<b>Familie K.</b> abends';phone(b,w2,[['Balkonkraftwerk','0 W','#B42318'],['aus dem Netz','400 W','#1A1F36']]);}
+function phone(c,w,rows){c.fillStyle='#E9ECF2';c.fillRect(0,0,w,w);c.fillStyle='#1A1F36';rrect(c,w*0.22,w*0.04,w*0.56,w*0.92,w*0.06);c.fill();c.fillStyle='#FFFFFF';rrect(c,w*0.25,w*0.1,w*0.5,w*0.8,w*0.03);c.fill();
+  c.textAlign='center';c.textBaseline='middle';c.fillStyle='#5B6278';c.font=font(Math.round(w/26),true);c.fillText('Zuhause, 19 Uhr',w/2,w*0.18);
+  rows.forEach(function(r,i){var y=w*0.36+i*w*0.27;c.fillStyle='#5B6278';c.font=font(Math.round(w/19),false);c.fillText(r[0],w/2,y);c.fillStyle=r[2];c.font=font(Math.round(w/8),true);c.fillText(r[1],w/2,y+w*0.1);});}
+function forms(c,w){var k=['c','t','b','l','e'],ex={c:'Kohle, Erdgas',t:'heißer Dampf',b:'Wind, Turbine',l:'Wasser oben',e:'Steckdose'};
+  k.forEach(function(x,i){var y=w*0.08+i*w*0.18;c.fillStyle=FCOL[x];rrect(c,w*0.05,y,w*0.1,w*0.12,4);c.fill();c.fillStyle='#1A1F36';c.font=font(Math.round(w/17),true);c.textAlign='left';c.textBaseline='middle';c.fillText(FORMS[x],w*0.2,y+w*0.04);
+    c.fillStyle='#5B6278';c.font=font(Math.round(w/21),false);c.fillText(ex[x],w*0.2,y+w*0.1);});}
+
+/* ---------- Steuerpult ---------- */
+function renderCtl(){var sc=STATIONS[st.station].scene,h='';
+  if(sc==='plant'&&st.grp){var g=G();h='<div class="ctlrow"><span>BAUTEIL</span>'+segHTML('sP',g.parts.map(function(p,i){return [i,(i+1)+' '+p.n];}),st.part)+'</div><p class="muted" style="margin:4px 0 0">'+((g.parts[st.part]||{}).hint||'')+'</p>'+
+    (SK()==='s3'?'<label class="chk"><input type="checkbox" id="tHeat"'+(st.heat?' checked':'')+'> Wärmebild einschalten</label>':'');}
+  else if(sc==='night'||!st.grp)h='<p class="muted" style="margin:0">Im Bild seht ihr Familie K. am Abend. Das Balkonkraftwerk liefert 0 W. Trotzdem brennt Licht.</p>';
+  else if(sc==='sankey')h='<p class="muted" style="margin:0">Das Energieflussdiagramm zeigt: Die Breite jedes Pfeils steht für die Energie. Unten gehen die nicht genutzten Teile ab.</p>';
+  else h='<p class="muted" style="margin:0">Das Bild zeigt die Wirkungsgrade aller vier Kraftwerke von der Tafel.</p>';
+  $('ctl').innerHTML=h;
+  bindSeg('sP',function(v){st.part=+v;save();renderCtl();draw();});
+  if($('tHeat'))$('tHeat').addEventListener('change',function(){st.heat=this.checked;save();draw();});}
+
+/* ---------- Bausteine ---------- */
+function head(i,t){return '<div><p class="eyebrow'+(STATIONS[i].pro?' pro':'')+'">'+(STATIONS[i].pro?'Profi-Zusatz ★':'Station '+stNo(i)+' · '+STATIONS[i].name)+(st.grp&&i>0&&STATIONS[i].key!=='s7'?' · Gruppe '+st.grp+': '+G().name:'')+'</p><h2>'+t+'</h2></div>';}
+function sel(attr,opts,val,bad,dis){return '<select '+attr+' class="'+(bad?'bad':'')+'"'+(dis?' disabled':'')+'><option value="">bitte wählen</option>'+opts.map(function(o){return '<option value="'+o[0]+'"'+(String(val)===String(o[0])?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
+function abBox(n,t){return '<div class="abbox"><b>✍ Jetzt aufs Arbeitsblatt, Aufgabe '+n+':</b><p>'+t+'</p></div>';}
+var FOPTS=['c','t','b','l','e'].map(function(k){return [k,FORMS[k]];});
+var TIPS={
+  s2:['Fragt euch bei jedem Bauteil: Was geht hinein? Was kommt heraus und geht weiter zum nächsten Bauteil?','Was heraus kommt, geht beim nächsten Bauteil hinein. Am Ende kommt immer elektrische Energie heraus.','Energieformen: Kohle und Erdgas speichern chemische Energie. Heißer Dampf hat thermische Energie. Was sich dreht oder strömt, hat Bewegungsenergie. Wasser oben auf dem Berg hat Lageenergie.'],
+  s3:['Wählt im Steuerpult ein Bauteil. Der Energiezähler zeigt „hinein“ und „heraus genutzt“.','Nicht genutzt = hinein − heraus genutzt. Beispiel: 100 kWh − 88 kWh = 12 kWh.','Schaltet das Wärmebild ein: Wo es leuchtet, wird Energie als Wärme an die Umgebung abgegeben. Beim Wind gilt: Ein Teil der Energie bleibt im Wind.'],
+  s4sum:['Addiert die elektrische Energie und alle drei Werte aus der Spalte „nicht genutzt“.'],
+  s4most:['Schaut in die Spalte „nicht genutzt“: Welcher Wert ist am größten?','Im Energieflussdiagramm ist es der breiteste Pfeil nach unten.'],
+  s5:['Die elektrische Energie steht in der Tabelle in der letzten Zeile unter „heraus genutzt“.','Es gehen 100 kWh hinein. Dann ist der Wirkungsgrad in % genauso groß wie die Zahl der genutzten kWh.','Die Hälfte von 100 kWh sind 50 kWh.'],
+  s6:['Bei 100 kWh hinein kommen '+'so viele kWh heraus, wie der Wirkungsgrad angibt.','250 kWh sind 2,5-mal so viel wie 100 kWh. Dann kommt auch 2,5-mal so viel heraus.']
+};
+
+/* Station 1: Vorhersage */
+var PV1={q:'Was vermutet ihr: Von <b>100 kWh</b>, die in euer Kraftwerk hineingehen, kommen als elektrische Energie heraus …',o:['alle 100 kWh.','mehr als die Hälfte, aber nicht alles.','weniger als die Hälfte.']};
+var PV2={q:'Und was passiert mit der Energie, die <b>nicht</b> als elektrische Energie herauskommt?',o:['Sie wird verbraucht und ist dann weg.','Sie ist noch da, man kann sie aber nicht mehr nutzen.','Sie bleibt im Kraftwerk gespeichert.']};
+function pvTxt(i){var Q=i===1?PV1:PV2,v=i===1?st.pv.a:st.pv.b;return v==null?'–':strip(Q.o[v]);}
+function r1(){var s=st.s1,g=st.grp?G():null;
+  var fall='<p>Abends um 19 Uhr kocht Familie K., Licht und Fernseher sind an. Das <b>Balkonkraftwerk</b> liefert jetzt <b>0 W</b>, denn die Sonne ist untergegangen. Trotzdem fließt Strom: <b>400 W</b> kommen aus dem Stromnetz. Ins Netz speisen viele Kraftwerke ein. Jedes Paar untersucht eines davon.</p>';
+  var grp='<div class="q"><p><b>Eure Gruppe:</b> Welches Kraftwerk untersucht ihr? (Eure Lehrkraft teilt es euch zu.)</p><div class="choice grid2" id="gg">'+GKEYS.map(function(k){var x=GROUPS[k];return '<button type="button" class="opt'+(st.grp===k?' sel':'')+'" data-k="'+k+'"'+(s.ok?' disabled':'')+'><b>'+k+' · '+x.name+'</b><br><span class="muted">'+x.lvl+'</span></button>';}).join('')+'</div>'+(s.ok?'<p class="muted">Die Gruppe ist festgelegt.</p>':'')+'</div>';
+  function opts(id,Q,v){return '<div class="q"><p><b>'+Q.q+'</b></p><div class="choice" id="'+id+'">'+Q.o.map(function(o,j){return '<button type="button" class="opt'+(v===j?' sel':'')+'" data-j="'+j+'"'+(s.ok?' disabled':'')+'>'+o+'</button>';}).join('')+'</div></div>';}
+  var pred=g?'<div class="merk"><h3>Gruppe '+st.grp+': '+g.name+'</h3><p style="margin:0">'+g.intro+'</p></div>'+opts('pv1',PV1,st.pv.a)+opts('pv2',PV2,st.pv.b)+
+    (s.ok?'<p class="fb ok">Vorhersage gespeichert. Hier gibt es noch kein richtig oder falsch. Ihr prüft sie gleich mit dem Energiezähler.</p>':'<div class="row"><button class="btn pri" type="button" id="c1">Vorhersage speichern</button></div><p class="fb" id="fb1"></p>'):'';
+  $('task').innerHTML=head(0,'Woher kommt der Strom, wenn die Sonne nicht scheint?')+fall+grp+pred+(st.done[0]?'<p class="win"><b>Startklar!</b> Jetzt baut ihr die Energiekette eures Kraftwerks.</p>':'')+'<div class="row">'+nextBtn(0)+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('#gg .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;if(st.grp!==b.dataset.k){st.s2={f:{},ok:false};st.s3={rows:[{},{},{}],ok:false};st.part=0;}st.grp=b.dataset.k;save();r1();draw();});});
+  [['pv1','a'],['pv2','b']].forEach(function(x){Array.prototype.forEach.call(document.querySelectorAll('#'+x[0]+' .opt'),function(b){b.addEventListener('click',function(){if(s.ok)return;st.pv[x[1]]=+b.dataset.j;save();r1();});});});
+  if($('c1'))$('c1').addEventListener('click',function(){var fb=$('fb1');if(st.pv.a==null||st.pv.b==null){fb.className='fb bad';fb.textContent='Beantwortet beide Fragen eurer Vorhersage.';return;}s.ok=true;finish(0);save();r1();});
+  bindNext();}
+
+/* Station 2: Energiekette */
+function chainSentence(g){return g.chain;}
+function r2(){var s=st.s2,g=G(),dis=s.ok,bad=s.bad||{};
+  var rows=g.parts.map(function(p,i){return '<tr class="'+(i===st.part?'cur':'')+'" data-prow="'+i+'"><td style="text-align:left"><b>'+(i+1)+' '+p.n+'</b></td><td>'+sel('data-f="i'+i+'"',FOPTS,s.f['i'+i],bad['i'+i],dis)+'</td><td>'+sel('data-f="o'+i+'"',FOPTS,s.f['o'+i],bad['o'+i],dis)+'</td></tr>';}).join('');
+  $('task').innerHTML=head(SI('s2'),'Welche Energieformen kommen vor?')+
+    '<p>Euer Kraftwerk hat drei Bauteile. In jedem Bauteil wird Energie umgewandelt oder weitergegeben. Wählt für jedes Bauteil: Welche Energieform geht <b>hinein</b>, welche kommt <b>heraus</b>? Die Bauteile seht ihr oben im Bild.</p>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>Bauteil</th><th>Energie hinein</th><th>Energie heraus (genutzt)</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (s.ok?'<p class="fb ok" style="display:block">Richtig! '+chainSentence(g)+'</p>'+abBox('1','Tragt die Energieformen in die Tabelle ein (Spalten „hinein“ und „heraus“).'):'<div class="row"><button class="btn pri" type="button" id="c2">Einloggen und prüfen</button></div><p class="fb" id="fb2"></p>'+tipHTML('s2',TIPS.s2))+
+    (st.done[SI('s2')]?'<p class="win"><b>Energiekette steht!</b> Jetzt messt ihr, wie viel Energie bei jedem Bauteil ankommt.</p>':'')+'<div class="row">'+nextBtn(SI('s2'))+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-f]'),function(e){e.addEventListener('change',function(){s.f[e.dataset.f]=this.value;if(s.bad)s.bad[e.dataset.f]=false;this.className='';save();});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-prow]'),function(tr){tr.addEventListener('click',function(){st.part=+tr.dataset.prow;save();renderCtl();draw();Array.prototype.forEach.call(document.querySelectorAll('[data-prow]'),function(t,j){t.className=j===st.part?'cur':'';});});});
+  if($('c2'))$('c2').addEventListener('click',function(){var fb=$('fb2'),b={},miss=0;g.parts.forEach(function(p,i){['i','o'].forEach(function(t){var v=s.f[t+i];if(!v){miss++;return;}if(v!==p[t])b[t+i]=true;});});
+    if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Angaben.';return;}
+    var n=Object.keys(b).length;tryInc('s2',!n,JSON.stringify(s.f));
+    if(!n){s.ok=true;s.bad={};finish(SI('s2'));save();r2();draw();return;}
+    s.bad=b;save();Object.keys(b).forEach(function(k){document.querySelector('[data-f="'+k+'"]').className='bad';});
+    var chainErr=g.parts.some(function(p,i){return i>0&&s.f['i'+i]&&s.f['o'+(i-1)]&&s.f['i'+i]!==s.f['o'+(i-1)];});
+    fb.className='fb bad';fb.textContent=(n===1?'Eine Angabe stimmt noch nicht. Sie ist rot markiert.':n+' Angaben stimmen noch nicht. Sie sind rot markiert.')+(chainErr?' Tipp: Was aus einem Bauteil herauskommt, geht in das nächste hinein.':'');
+    tipNudge(fb,'s2',1);showHelp(fb,'s2',function(){g.parts.forEach(function(p,i){s.f['i'+i]=p.i;s.f['o'+i]=p.o;});s.ok=true;s.bad={};finish(SI('s2'));save();r2();draw();});});
+  bindTips(r2);bindNext();}
+
+/* Station 3: Messen */
+function rowState(i){var g=G(),r=st.s3.rows[i]||{},I=num(r.inn),O=num(r.out),L=num(r.loss);
+  return {inn:I===inK(g,i),out:O===g.parts[i].out,loss:!isNaN(L)&&!isNaN(I)&&!isNaN(O)&&Math.abs(L-(I-O))<0.01&&L===lossK(g,i),w:r.w===g.parts[i].lw};}
+function r3(){var s=st.s3,g=G(),dis=s.ok,bad=s.bad||{};
+  var rows=g.parts.map(function(p,i){var r=s.rows[i]||(s.rows[i]={}),b=bad[i]||{};
+    return '<tr class="'+(i===st.part?'cur':'')+'" data-mrow="'+i+'"><td style="text-align:left"><b>'+(i+1)+' '+p.n+'</b></td>'+
+      ['inn','out','loss'].map(function(f){return '<td><input class="num'+(b[f]?' bad':'')+'" data-m="'+f+'" data-i="'+i+'" inputmode="decimal" value="'+esc(r[f]||'')+'"'+(dis?' disabled':'')+'></td>';}).join('')+
+      '<td>'+sel('data-w="'+i+'"',WOHIN,r.w,b.w,dis)+'</td></tr>';}).join('');
+  $('task').innerHTML=head(SI('s3'),'Wie viel Energie wird genutzt?')+
+    '<p>In euer Kraftwerk gehen <b>100 kWh</b> hinein. Wählt im Steuerpult ein Bauteil und lest am <b>Energiezähler</b> ab: Wie viel geht <b>hinein</b>, wie viel kommt <b>genutzt heraus</b>? Berechnet dann: <b>nicht genutzt = hinein − heraus</b>. Mit dem <b>Wärmebild</b> seht ihr, wohin der Rest geht.</p>'+
+    '<div class="tw"><table class="mt"><thead><tr><th>Bauteil</th><th>hinein<small>in kWh</small></th><th>heraus genutzt<small>in kWh</small></th><th>nicht genutzt<small>in kWh</small></th><th>Wohin geht der Rest?</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    (s.ok?'<p class="fb ok" style="display:block">Alle Werte stimmen. Rechts unten seht ihr euer Energieflussdiagramm.</p>'+abBox('1','Tragt die Werte in die Tabelle ein (hinein, heraus genutzt, nicht genutzt, wohin).'):'<div class="row"><button class="btn pri" type="button" id="c3">Werte prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3',TIPS.s3))+
+    (st.done[SI('s3')]?'<p class="win"><b>Gemessen und berechnet!</b> Jetzt wertet ihr aus.</p>':'')+'<div class="row">'+nextBtn(SI('s3'))+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m]'),function(e){var i=+e.dataset.i;e.addEventListener('input',function(){s.rows[i][e.dataset.m]=this.value;if(s.bad&&s.bad[i])s.bad[i][e.dataset.m]=false;this.className='num';save();renderViews();});
+    e.addEventListener('focus',function(){if(st.part!==i){st.part=i;save();renderCtl();draw();markRow();}});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-w]'),function(e){var i=+e.dataset.w;e.addEventListener('change',function(){s.rows[i].w=this.value;if(s.bad&&s.bad[i])s.bad[i].w=false;this.className='';save();});});
+  function markRow(){Array.prototype.forEach.call(document.querySelectorAll('[data-mrow]'),function(t,j){t.className=j===st.part?'cur':'';});}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-mrow]'),function(tr){tr.addEventListener('click',function(){var i=+tr.dataset.mrow;if(st.part!==i){st.part=i;save();renderCtl();draw();markRow();}});});
+  if($('c3'))$('c3').addEventListener('click',function(){var fb=$('fb3'),miss=0,B={},nb=0,wrongIO=[],wrongL=[],wrongW=[];
+    g.parts.forEach(function(p,i){var r=s.rows[i];['inn','out','loss','w'].forEach(function(f){if(!r[f])miss++;});});
+    if(miss){fb.className='fb bad';fb.textContent='Es fehlen noch '+miss+' Angaben.';return;}
+    g.parts.forEach(function(p,i){var x=rowState(i),b={};if(!x.inn)b.inn=true;if(!x.out)b.out=true;if(!x.loss)b.loss=true;if(!x.w)b.w=true;B[i]=b;var k=Object.keys(b).length;nb+=k;
+      if(b.inn||b.out)wrongIO.push(i+1);else if(b.loss)wrongL.push(i+1);if(b.w)wrongW.push(i+1);});
+    tryInc('s3',!nb,JSON.stringify(s.rows));
+    if(!nb){s.ok=true;s.bad={};finish(SI('s3'));save();r3();draw();return;}
+    s.bad=B;save();r3();var f2=$('fb3'),t=[];
+    if(wrongIO.length)t.push('Ablesen in Zeile '+wrongIO.join(', ')+': Wählt das Bauteil im Steuerpult und lest „hinein“ und „heraus genutzt“ genau ab.');
+    if(wrongL.length)t.push('Rechnung in Zeile '+wrongL.join(', ')+': nicht genutzt = hinein − heraus genutzt.');
+    if(wrongW.length)t.push('„Wohin“ in Zeile '+wrongW.join(', ')+': Schaut ins Wärmebild.');
+    f2.className='fb bad';f2.textContent=t.join(' ')+' Rot markierte Felder stimmen noch nicht.';tipNudge(f2,'s3',1);
+    showHelp(f2,'s3',function(){g.parts.forEach(function(p,i){s.rows[i]={inn:String(inK(g,i)),out:String(p.out),loss:String(lossK(g,i)),w:p.lw};});s.ok=true;s.bad={};finish(SI('s3'));save();r3();draw();});});
+  bindTips(r3);bindNext();}
+
+/* Station 4: Auswerten */
+function lostQ(g){var wind=st.grp==='C';return {q:'Die Summe ist wieder 100 kWh. Ist also Energie verloren gegangen?',o:['Ja. Ein Teil der Energie ist verschwunden.','Nein. Die Energie ist noch da. Der nicht genutzte Teil ist '+(wind?'zum Teil noch im Wind und zum Teil ':'')+'als Wärme in der Umgebung verteilt. Diese Energie kann man nicht mehr nutzen: Sie ist <b>entwertet</b>.','Nein. Der nicht genutzte Teil bleibt im Kraftwerk gespeichert und wird später genutzt.'],a:1,
+  ok:'Richtig! Energie geht nie verloren (Energieerhaltung). Aber ein Teil wird zu Wärme, die sich in der Umgebung verteilt. Die kann man nicht mehr nutzen: Sie ist entwertet.',bad:['Rechnet nach: Alles zusammen sind wieder 100 kWh. Es fehlt also nichts.','','Schaut ins Wärmebild: Die Wärme geht an die Umgebung, zum Beispiel über den Kühlturm oder heiße Teile. Sie bleibt nicht im Kraftwerk.']};}
+function r4(){var s=st.s4,g=G(),el=eta(g);
+  var sumQ='<div class="q"><p><b>1. Energiebilanz.</b> Addiert die elektrische Energie und alle Werte aus der Spalte „nicht genutzt“.</p><p class="lsatz">'+el+' kWh + '+g.parts.map(function(p,i){return lossK(g,i)+' kWh';}).join(' + ')+' = <input class="num'+(s.sumBad?' bad':'')+'" id="sum" inputmode="decimal" value="'+esc(s.sum)+'"'+(s.sumOk?' disabled':'')+'> kWh</p>'+
+    (s.sumOk?'':'<div class="row"><button class="btn pri" type="button" id="c4s">Prüfen</button></div><p class="fb" id="fb4s"></p>'+tipHTML('s4sum',TIPS.s4sum))+'</div>';
+  var mc=s.sumOk?mcHTML('lost',lostQ(g).q,lostQ(g).o,st.m.lost,1):'';
+  var most='';if(st.m.lostOk){most='<div class="q"><p><b>3. Wo wird am meisten Energie nicht genutzt?</b></p><p class="lsatz">Am meisten Energie wird bei Bauteil '+sel('id="most"',g.parts.map(function(p,i){return [i,(i+1)+' '+p.n];}),s.most,s.mostBad,s.mostOk)+' nicht genutzt.</p>'+
+    (s.mostOk?'<p class="fb ok" style="display:block">Richtig! Dort ist im Energieflussdiagramm der breiteste Pfeil nach unten: '+lossK(g,g.most)+' kWh.</p>'+abBox('2','Zeichnet das Energieflussdiagramm: Schreibt die Werte an die Pfeile. Kreuzt an, wo am meisten Energie nicht genutzt wird.'):'<div class="row"><button class="btn pri" type="button" id="c4m">Einloggen und prüfen</button></div><p class="fb" id="fb4m"></p>'+tipHTML('s4most',TIPS.s4most))+'</div>';}
+  var hit=s.mostOk?(st.pv.b===1):false;
+  var vgl=s.mostOk?'<div class="q"><p><b>Und eure Vorhersage?</b> Ihr hattet zum Rest gewählt: „'+pvTxt(2)+'“</p><p class="fb '+(hit?'ok':'')+'" style="display:block">'+(hit?'Das passt zu euren Messwerten.':'Eure Messwerte zeigen etwas anderes: Die Energie ist noch da, aber nicht mehr nutzbar. Das ist kein Fehler: Genau dafür messen wir.')+'</p></div>':'';
+  $('task').innerHTML=head(SI('s4'),'Wohin fließt die Energie?')+'<p>Oben seht ihr euer <b>Energieflussdiagramm</b>. Die Breite der Pfeile steht für die Energie. Nach rechts fließt die genutzte Energie weiter, nach unten geht der nicht genutzte Teil ab.</p>'+sumQ+mc+most+vgl+
+    (st.done[SI('s4')]?'<p class="win"><b>Ausgewertet!</b> Jetzt zieht ihr eure Schlussfolgerung.</p>':'')+'<div class="row">'+nextBtn(SI('s4'))+'</div>';
+  if($('sum')&&!s.sumOk)$('sum').addEventListener('input',function(){s.sum=this.value;s.sumBad=false;this.className='num';save();});
+  if($('c4s'))$('c4s').addEventListener('click',function(){var v=num(s.sum),fb=$('fb4s'),ok=v===100;tryInc('s4sum',ok,s.sum);if(ok){s.sumOk=true;save();r4();return;}
+    s.sumBad=true;save();$('sum').className='num bad';fb.className='fb bad';fb.textContent=isNaN(v)?'Gebt eine Zahl ein.':'Noch nicht. Rechnet Schritt für Schritt: erst die ersten beiden Zahlen, dann die nächste dazu.';tipNudge(fb,'s4sum',1);showHelp(fb,'s4sum',function(){s.sum='100';s.sumOk=true;save();r4();});});
+  if(s.sumOk)mcBind('lost',lostQ(g),st.m,'lost','s4lost',r4);
+  if($('most')&&!s.mostOk)$('most').addEventListener('change',function(){s.most=this.value;s.mostBad=false;this.className='';save();});
+  if($('c4m'))$('c4m').addEventListener('click',function(){var fb=$('fb4m');if(s.most===''){fb.className='fb bad';fb.textContent='Wählt ein Bauteil.';return;}var ok=+s.most===g.most;tryInc('s4most',ok,s.most);
+    if(ok){s.mostOk=true;finish(SI('s4'));save();r4();return;}s.mostBad=true;save();$('most').className='bad';fb.className='fb bad';fb.textContent='Noch nicht. Vergleicht die drei Werte in der Spalte „nicht genutzt“.';tipNudge(fb,'s4most',1);
+    showHelp(fb,'s4most',function(){s.most=String(g.most);s.mostOk=true;finish(SI('s4'));save();r4();});});
+  bindTips(r4);bindNext();}
+
+/* Station 5: Schlussfolgerung */
+var HALF=[['m','mehr als die Hälfte'],['w','weniger als die Hälfte']];
+var NIGHT=[['j','ja, jederzeit, solange Brennstoff da ist'],['w','nur, wenn der Wind weht'],['s','ja, mit Energie, die tagsüber gespeichert wurde'],['n','nein, nur wenn die Sonne scheint']];
+function s5sentence(){var g=G(),e=eta(g);return g.im+' kommen von 100 kWh '+g.von+(e>50?' ':' nur ')+e+' kWh als elektrische Energie heraus. Der Wirkungsgrad beträgt '+e+' %. Das ist '+(e>50?'mehr':'weniger')+' als die Hälfte. Am meisten Energie wird bei Bauteil '+(g.most+1)+' ('+g.parts[g.most].n+') nicht genutzt.';}
+function r5(){var s=st.s5,g=G(),e=eta(g),bad=s.badF||{},dis=s.ok;
+  var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt die Werte aus eurer Tabelle ein und wählt in jeder Lücke aus.</p>'+
+    '<p class="lsatz">Von 100 kWh kommen <input class="num'+(bad.el?' bad':'')+'" id="t_el" inputmode="decimal" value="'+esc(s.el)+'"'+(dis?' disabled':'')+'> kWh als elektrische Energie heraus. Der <b>Wirkungsgrad</b> beträgt also <input class="num'+(bad.eta?' bad':'')+'" id="t_eta" inputmode="decimal" value="'+esc(s.eta)+'"'+(dis?' disabled':'')+'> %. Das ist '+sel('id="t_half"',HALF,s.half,bad.half,dis)+' der hineingesteckten Energie.</p>'+
+    '<p class="lsatz">Kann euer Kraftwerk liefern, wenn die Sonne nicht scheint? '+sel('id="t_night"',NIGHT,s.night,bad.night,dis)+'</p>'+
+    (dis?'':'<div class="row"><button class="btn pri" type="button" id="c5">Einloggen und prüfen</button></div><p class="fb" id="fb5"></p>'+tipHTML('s5',TIPS.s5))+'</div>';
+  var mrk='<div class="merk"><h3>Wirkungsgrad</h3><p style="margin:0">Der Wirkungsgrad gibt an, welcher Anteil der hineingesteckten Energie als <b>nutzbare</b> Energie herauskommt: Wirkungsgrad = genutzte Energie : hineingesteckte Energie. Bei 100 kWh hinein könnt ihr ihn direkt ablesen.</p></div>';
+  var hit=st.pv.a===(e>50?1:2);
+  var vgl=dis?'<div class="q"><p><b>Und eure Vorhersage?</b> Ihr hattet gewählt: „'+pvTxt(1)+'“</p><p class="fb '+(hit?'ok':'')+'" style="display:block">'+(hit?'Eure Vorhersage passt zu euren Messwerten.':'Eure Messwerte zeigen etwas anderes als eure Vorhersage. Das ist kein Fehler: Genau dafür messen wir.')+'</p></div>':'';
+  var box=dis?'<div class="merk"><h3>Für das Klassengespräch</h3><p><b>Gruppe '+st.grp+' ('+g.name+'):</b> '+s5sentence()+'</p><p><b>Wenn die Sonne nicht scheint:</b> '+NIGHT.filter(function(o){return o[0]===g.night;})[0][1]+'.</p><p class="muted" style="margin:6px 0 0">Schreibt die Schlussfolgerung auf euer Arbeitsblatt (Aufgabe 2) und tragt euren Wirkungsgrad an der Tafel ein.</p></div>':'';
+  var after=dis?'<p class="win"><b>Fertig!</b> Ihr seid bereit für das Klassengespräch.</p>'+saveCTA(true)+'<p class="muted">Nach dem Klassengespräch an der Tafel geht es mit <b>Station 6: Ergebnisse sichern</b> weiter. Noch Zeit bis dahin? Dann weiter mit dem Profi-Zusatz ★.</p><div class="row"><button class="btn sec" type="button" id="toPro">Zum Profi-Zusatz ★ →</button></div>':'';
+  $('task').innerHTML=head(SI('s5'),'Wie gut nutzt euer Kraftwerk die Energie?')+mrk+q+vgl+box+after;
+  if(!dis){[['t_el','el'],['t_eta','eta']].forEach(function(x){$(x[0]).addEventListener('input',function(){s[x[1]]=this.value;if(s.badF)s.badF[x[1]]=false;this.className='num';save();});});
+    [['t_half','half'],['t_night','night']].forEach(function(x){$(x[0]).addEventListener('change',function(){s[x[1]]=this.value;if(s.badF)s.badF[x[1]]=false;this.className='';save();});});
+    $('c5').addEventListener('click',function(){var fb=$('fb5'),b={};if(num(s.el)!==e)b.el=true;if(num(s.eta)!==e)b.eta=true;if(s.half!==(e>50?'m':'w'))b.half=true;if(s.night!==g.night)b.night=true;
+      var ok=!Object.keys(b).length;tryInc('s5',ok,[s.el,s.eta,s.half,s.night].join('/'));
+      if(ok){s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
+      s.badF=b;save();r5();var f2=$('fb5'),n=Object.keys(b).length;f2.className='fb bad';f2.textContent=(n===1?'Eine Lücke stimmt noch nicht. Sie ist rot markiert.':n+' Lücken stimmen noch nicht. Sie sind rot markiert.')+(b.eta&&!b.el&&num(s.eta)===100-e?' Beim Wirkungsgrad habt ihr den nicht genutzten Teil eingetragen.':'');
+      tipNudge(f2,'s5',1);showHelp(f2,'s5',function(){s.el=String(e);s.eta=String(e);s.half=e>50?'m':'w';s.night=g.night;s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();});});}
+  if($('toPro'))$('toPro').addEventListener('click',function(){go(SI('s6'));});
+  bindTips(r5);bindCTA();}
+
+/* Profi-Zusatz */
+var QENT={q:'Viel Wärme geht über den Kühlturm, das Abgas oder heiße Bauteile an die Umgebung. Warum steckt man diese Wärme nicht einfach wieder ins Kraftwerk?',o:['Die Wärme ist auf sehr viel Luft und Wasser verteilt und nur noch lauwarm. Man kann sie kaum noch nutzen: Sie ist entwertet.','Die Wärme ist verschwunden. Man kann sie nicht mehr finden.','Wärme ist keine Energie.'],a:0,ok:'Richtig! Je mehr sich die Wärme verteilt und je kühler sie ist, desto weniger kann man damit noch anfangen. Deshalb nutzen manche Kraftwerke die Wärme direkt als Fernwärme zum Heizen.',bad:['','Energie verschwindet nie. Die Wärme ist noch da, aber verteilt.','Wärme ist thermische Energie. Sie ist nur sehr verteilt.']};
+function r6(){var s=st.s6,g=G(),e=eta(g),ans=2.5*e;
+  var c='<div class="q"><p><b>1. Rechnen wie ein Profi.</b> In euer '+g.name+' gehen nicht 100 kWh, sondern <b>250 kWh</b> hinein. Wie viel elektrische Energie kommt heraus? Der Wirkungsgrad beträgt '+e+' %.</p><div class="row"><input class="num'+(s.vBad?' bad':'')+'" id="pv" inputmode="decimal" value="'+esc(s.v)+'"'+(s.vOk?' disabled':'')+'><span>kWh</span>'+(s.vOk?'':'<button class="btn pri" type="button" id="c6">Prüfen</button>')+'</div>'+
+    (s.vOk?'<p class="fb ok" style="display:block">Richtig! '+e+' % von 250 kWh = '+fmt(ans,1)+' kWh.</p>':'<p class="fb" id="fb6"></p>'+tipHTML('s6',TIPS.s6))+'</div>';
+  var m=s.vOk?mcHTML('ent',QENT.q,QENT.o,st.m.ent,0):'';
+  $('task').innerHTML=head(SI('s6'),'Profi-Aufgaben')+'<p>Diese Aufgaben sind freiwillig. Sie sind für alle, die schon fertig sind.</p>'+c+m+(st.m.entOk?'<p class="win"><b>Profi!</b> Wartet jetzt auf das Klassengespräch.</p>':'');
+  if($('pv')&&!s.vOk)$('pv').addEventListener('input',function(){s.v=this.value;s.vBad=false;this.className='num';save();});
+  if($('c6'))$('c6').addEventListener('click',function(){var v=num(s.v),fb=$('fb6'),ok=!isNaN(v)&&Math.abs(v-ans)<=0.55;tryInc('p6calc',ok,s.v);if(ok){s.vOk=true;save();r6();return;}
+    s.vBad=true;save();$('pv').className='num bad';fb.className='fb bad';fb.textContent=(!isNaN(v)&&Math.abs(v-e)<0.01)?'Das gilt für 100 kWh. Hier gehen 250 kWh hinein.':'Noch nicht. Ein Tipp hilft.';tipNudge(fb,'s6',1);});
+  if(s.vOk)mcBind('ent',QENT,st.m,'ent','p6ent',function(){if(st.m.entOk)finish(SI('s6'));r6();});
+  bindTips(r6);}
+
+/* Station 6: Ergebnisse sichern */
+var MS=[['m1',[['e','erhalten'],['v','nicht erhalten']],'e'],['m2',[['w','Wärme'],['c','chemische Energie']],'w'],['m3',[['n','nicht mehr nutzen'],['g','gut weiter nutzen']],'n'],['m4',[['n','nutzbare'],['a','gesamte']],'n']];
+var RFS=[{t:'Kohle- und Gaskraftwerke können jederzeit liefern, solange Brennstoff da ist.',a:'r',g:['A','B']},{t:'Windkraftanlagen liefern abends nur, wenn Wind weht.',a:'r',g:['C']},{t:'Pumpspeicherkraftwerke liefern abends Energie, die tagsüber gespeichert wurde.',a:'r',g:['D']},
+  {t:'Das Balkonkraftwerk von Familie K. hat tagsüber Strom gesammelt und liefert ihn abends.',a:'f',g:[]},{t:'Ein Kraftwerk mit hohem Wirkungsgrad erzeugt Energie aus dem Nichts.',a:'f',g:[]}];
+function r7(){var s=st.s7,own=st.grp;
+  if(!s.gate){$('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+
+      '<div class="gate"><div class="gsig">✋</div><h3>Stopp! Erst die Tafel, dann diese Station.</h3><p>Hier haltet ihr das Ergebnis der <b>ganzen Klasse</b> fest. Dafür braucht ihr die Werte aller vier Kraftwerke von der Tafel.</p><p class="gq">Habt ihr die Ergebnisse aller Gruppen schon gemeinsam an der Tafel besprochen?</p>'+
+      '<div class="row" style="justify-content:center"><button class="btn sec" type="button" id="g7n">Nein, noch nicht</button><button class="btn pri" type="button" id="g7y">Ja, die Tafel ist fertig: Sicherung starten</button></div>'+
+      (s.no?'<p class="fb bad" style="display:block">Dann wartet bitte noch. Bearbeitet diese Station erst, wenn die Besprechung an der Tafel fertig ist und eure Lehrkraft das Startsignal gibt. Bis dahin: zuhören oder Profi-Zusatz ★.</p>':'')+'</div>';
+    $('g7n').addEventListener('click',function(){s.no=true;save();r7();});$('g7y').addEventListener('click',function(){s.gate=true;s.tGate=Date.now();save();r7();window.scrollTo({top:0,behavior:'smooth'});});return;}
+  var tab='<div class="q"><p><span class="task-step">1. Ordnen.</span> Das ist das Klassenergebnis von der Tafel (siehe auch Bild oben):</p><div class="tw"><table class="mt"><thead><tr><th>Kraftwerk</th><th>Wirkungsgrad</th></tr></thead><tbody>'+
+    GKEYS.map(function(k){return '<tr'+(k===own?' class="cur"':'')+'><td style="text-align:left">'+k+' · '+GROUPS[k].name+(k===own?' <b>(eure Gruppe)</b>':'')+'</td><td class="v"><b>'+eta(GROUPS[k])+' %</b></td></tr>';}).join('')+'</tbody></table></div>'+
+    '<p><b>Bringt die Kraftwerke in eine Reihenfolge.</b> Platz 1 hat den höchsten Wirkungsgrad.</p>'+[1,2,3,4].map(function(n){var bad=s.badR&&s.badR[n];return '<div class="ctlrow"><span>PLATZ '+n+(n===1?' (am höchsten)':n===4?' (am niedrigsten)':'')+'</span>'+sel('data-r7="'+n+'"',GKEYS.map(function(k){return [k,k+' · '+GROUPS[k].name];}),s.rk[n],bad,s.rkOk)+'</div>';}).join('')+
+    (s.rkOk?'<p class="fb ok" style="display:block">Richtig geordnet!</p>'+abBox('3a',RANK.map(function(k,i){return (i+1)+'. <u>'+GROUPS[k].name+' ('+eta(GROUPS[k])+' %)</u>';}).join(' · ')):'<div class="row"><button class="btn pri" type="button" id="c7r">Einloggen und prüfen</button></div><p class="fb" id="fb7r"></p>'+tipHTML('s7rank',['Der größte Wert in der Spalte „Wirkungsgrad“ kommt auf Platz 1.']))+'</div>';
+  var ms='';if(s.rkOk){var md=function(i){var m=MS[i],bad=s.badM&&s.badM[m[0]];return sel('data-m7="'+m[0]+'"',m[1],s.ms[m[0]],bad,s.msOk);};
+    ms='<div class="q"><p><span class="task-step">2. Merksatz.</span> Wählt in jeder Lücke aus.</p><p class="lsatz">Bei jeder Energieumwandlung bleibt die Energie insgesamt '+md(0)+' (Energieerhaltung). Ein Teil wird aber in '+md(1)+' umgewandelt, die sich in der Umgebung verteilt. Diese Energie kann man '+md(2)+': Sie ist <b>entwertet</b>. Der Wirkungsgrad gibt an, welcher Anteil der hineingesteckten Energie als '+md(3)+' Energie herauskommt.</p>'+
+      (s.msOk?abBox('3b','Bei jeder Energieumwandlung bleibt die Energie insgesamt <u>erhalten</u> (Energieerhaltung). Ein Teil wird aber in <u>Wärme</u> umgewandelt, die sich in der Umgebung verteilt. Diese Energie kann man <u>nicht mehr nutzen</u>: Sie ist <u>entwertet</u>. Der Wirkungsgrad gibt an, welcher Anteil der hineingesteckten Energie als <u>nutzbare</u> Energie herauskommt.'):'<div class="row"><button class="btn pri" type="button" id="c7m">Einloggen und prüfen</button></div><p class="fb" id="fb7m"></p>')+'</div>';}
+  var rf='';if(s.msOk){rf='<div class="q"><p><span class="task-step">3. Zurück zu Familie K.</span> Woher kommt abends die elektrische Energie? Entscheidet für jede Aussage: richtig oder falsch. Aussagen zu eurem Kraftwerk sind markiert ★.</p>'+
+    RFS.map(function(x,i){var mine=x.g.indexOf(own)>=0,bad=s.badF&&s.badF[i];return '<div class="rfrow'+(mine?' mine':'')+'"><p>'+(mine?'★ ':'')+x.t+'</p>'+sel('data-f7="'+i+'"',[['r','richtig'],['f','falsch']],s.rf[i],bad,s.rfOk)+'</div>';}).join('')+
+    (s.rfOk?abBox('3c','Abends kommt die elektrische Energie aus <u>Kohle- und Gaskraftwerken</u>, aus <u>Windkraftanlagen, wenn Wind weht</u>, und aus <u>Pumpspeicherkraftwerken</u>, die tagsüber Energie gespeichert haben.'):'<div class="row"><button class="btn pri" type="button" id="c7f">Einloggen und prüfen</button></div><p class="fb" id="fb7f"></p>')+'</div>';}
+  var fin=s.rfOk?'<p class="win"><b>Geschafft!</b> Ihr habt die Leitfrage beantwortet.</p>'+saveCTA(true):'';
+  $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+'<p>Jetzt sichert ihr, was die ganze Klasse herausgefunden hat. Nach jedem Schritt zeigt euch ein blauer Kasten ✍, was ihr in <b>Aufgabe 3</b> auf euer Arbeitsblatt übertragt.</p>'+tab+ms+rf+fin;
+  Array.prototype.forEach.call(document.querySelectorAll('[data-r7]'),function(e){e.addEventListener('change',function(){s.rk[e.dataset.r7]=this.value;if(s.badR)s.badR[e.dataset.r7]=false;this.className='';save();});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-m7]'),function(e){e.addEventListener('change',function(){s.ms[e.dataset.m7]=this.value;if(s.badM)s.badM[e.dataset.m7]=false;this.className='';save();});});
+  Array.prototype.forEach.call(document.querySelectorAll('[data-f7]'),function(e){e.addEventListener('change',function(){s.rf[e.dataset.f7]=this.value;if(s.badF)s.badF[e.dataset.f7]=false;this.className='';save();});});
+  if($('c7r'))$('c7r').addEventListener('click',function(){var b={},fb=$('fb7r');[1,2,3,4].forEach(function(n){if(s.rk[n]!==RANK[n-1])b[n]=true;});var ok=!Object.keys(b).length;tryInc('s7rank',ok,JSON.stringify(s.rk));
+    if(ok){s.rkOk=true;save();r7();return;}s.badR=b;save();r7();var f=$('fb7r');f.className='fb bad';f.textContent='Noch nicht ganz. Rot markierte Plätze stimmen nicht.';showHelp(f,'s7rank',function(){[1,2,3,4].forEach(function(n){s.rk[n]=RANK[n-1];});s.rkOk=true;save();r7();});});
+  if($('c7m'))$('c7m').addEventListener('click',function(){var b={};MS.forEach(function(m){if(s.ms[m[0]]!==m[2])b[m[0]]=true;});var ok=!Object.keys(b).length;tryInc('s7ms',ok,JSON.stringify(s.ms));
+    if(ok){s.msOk=true;save();r7();return;}s.badM=b;save();r7();var f=$('fb7m');f.className='fb bad';f.textContent='Rot markierte Lücken stimmen noch nicht. Denkt an eure Energiebilanz: Am Ende waren es wieder 100 kWh.';showHelp(f,'s7ms',function(){MS.forEach(function(m){s.ms[m[0]]=m[2];});s.msOk=true;save();r7();});});
+  if($('c7f'))$('c7f').addEventListener('click',function(){var b={};RFS.forEach(function(x,i){if(s.rf[i]!==x.a)b[i]=true;});var ok=!Object.keys(b).length;tryInc('s7rf',ok,JSON.stringify(s.rf));
+    if(ok){s.rfOk=true;finish(SI('s7'));save();r7();return;}s.badF=b;save();r7();var f=$('fb7f');f.className='fb bad';f.textContent='Rot markierte Aussagen stimmen noch nicht.'+(b[3]?' Hat das Balkonkraftwerk einen Speicher?':'')+(b[4]?' Kann Energie aus dem Nichts entstehen?':'');showHelp(f,'s7rf',function(){RFS.forEach(function(x,i){s.rf[i]=x.a;});s.rfOk=true;finish(SI('s7'));save();r7();});});
+  bindTips(r7);bindCTA();}
+var RANK=GKEYS.slice().sort(function(a,b){return eta(GROUPS[b])-eta(GROUPS[a]);});
+function unlockedK(i){var k=STATIONS[i].key;if(i===0)return true;if(k==='s6'||k==='s7')return !!st.done[SI('s5')];return !!st.done[i-1];}
+unlocked=unlockedK;
+
+/* ---------- Textdatei ---------- */
+var TL=[['s2','Energiekette · Energieformen zugeordnet'],['s3','Messen · Tabelle abgelesen und gerechnet'],['s4sum','Auswerten · Energiebilanz'],['s4lost','Auswerten · Energie verloren?'],['s4most','Auswerten · größter nicht genutzter Teil'],['s5','Schlussfolgerung · Wirkungsgrad und Abend'],['p6calc','Profi · 250 kWh'],['p6ent','Profi · Entwertung'],['s7rank','Sichern · Reihenfolge'],['s7ms','Sichern · Merksatz'],['s7rf','Sichern · Familie K.']];
+function resText(){var r=st.res||{},g=st.grp?G():null,L=[];
+  L.push(APP.title+' – Ergebnisse');L.push('Name(n): '+(r.name||'')+'   Klasse: '+(r.klasse||''));L.push(standLine());L.push('Gruppe: '+(g?st.grp+' · '+g.name:'noch nicht gewählt'));L.push('');
+  L.push('VORHERSAGE');L.push('  Wie viel kommt als elektrische Energie heraus? '+pvTxt(1));L.push('  Was passiert mit dem Rest? '+pvTxt(2));L.push('');
+  if(g){L.push('ENERGIEKETTE');g.parts.forEach(function(p,i){L.push('  '+(i+1)+' '+p.n+': '+(FORMS[st.s2.f['i'+i]]||'–')+' → '+(FORMS[st.s2.f['o'+i]]||'–'));});L.push('');
+    L.push('MESSTABELLE (kWh)');L.push('  Bauteil | hinein | heraus genutzt | nicht genutzt | wohin');g.parts.forEach(function(p,i){var x=st.s3.rows[i]||{};L.push('  '+(i+1)+' '+p.n+' | '+(x.inn||'–')+' | '+(x.out||'–')+' | '+(x.loss||'–')+' | '+((WOHIN.filter(function(o){return o[0]===x.w;})[0]||['',''])[1]||'–'));});L.push('');
+    if(st.s5.ok){L.push('SCHLUSSFOLGERUNG');L.push('  '+s5sentence());L.push('');}}
+  if(st.s7.rkOk){L.push('SICHERUNG');L.push('  Reihenfolge: '+RANK.map(function(k,i){return (i+1)+'. '+GROUPS[k].name+' ('+eta(GROUPS[k])+' %)';}).join(', '));if(st.s7.msOk)L.push('  Merksatz: Energie bleibt erhalten, ein Teil wird als Wärme entwertet.');if(st.s7.rfOk)L.push('  Familie K.: alle Aussagen richtig beurteilt.');L.push('');}
+  L.push('VERSUCHE');triesLines(L,TL,'p6');
+  L.push('');L.push('#DATEN '+JSON.stringify({v:1,name:r.name,klasse:r.klasse,ts:Date.now(),grp:st.grp,done:st.done,pv:st.pv,rows:st.s3.rows,s5:{el:st.s5.el,eta:st.s5.eta,half:st.s5.half,night:st.s5.night},tries:st.tries,help:Object.keys(st.help||{})}));
+  return L.join('\n');}
+
+/* ---------- Start ---------- */
+var lastSt=null;
+(function(){var c=document.createElement('style');c.textContent=
+ '.gate{border:3px solid #C8423D;background:#FDECEC;border-radius:16px;padding:18px;text-align:center;margin:12px 0}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:21px}.gate .gq{font-weight:700;font-size:17px}.gate .row{gap:10px;flex-wrap:wrap}'+
+ '.rfrow{border:1px solid var(--line,#d6dbe6);border-radius:10px;padding:8px 10px;margin:8px 0}.rfrow.mine{border:2px solid #E8892B;background:#FFF7EE}.rfrow p{margin:0 0 6px}'+
+ '.ctlrow select{max-width:100%}.abbox{border:2px dashed #1C66C0;background:#EEF4FC;border-radius:12px;padding:10px 12px;margin:10px 0 2px}.abbox b{color:#1C66C0}.abbox p{margin:6px 0 0;font-size:16px;line-height:1.5}.abbox u{text-decoration:none;border-bottom:2px solid #E8892B;font-weight:600}'+
+ 'select{font:inherit!important;font-size:16px!important;font-weight:600;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background:#fff!important;border:2px solid #1C66C0!important;border-radius:10px!important;padding:7px 32px 7px 10px!important;min-height:42px;line-height:1.3;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%278%27%3E%3Cpath d=%27M1 1l5 5 5-5%27 stroke=%27%231C66C0%27 stroke-width=%272.2%27 fill=%27none%27/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 10px center!important;max-width:100%}select option{font-size:16px;color:#1A1F36}'+
+ 'input.num:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background:#E8F5E9!important;border-color:#2E7D32!important}select:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background-color:#E8F5E9!important;border-color:#2E7D32!important}select.bad{border-color:#b42318!important;background-color:#fde3e3!important}input.num.bad{border-color:#b42318!important;background:#fde3e3!important}'+
+ '.lsatz{font-size:17px;line-height:2.1}.lsatz input.num{width:4em}table.mt td select{width:100%;min-width:8.8em;font-size:15px!important;padding:6px 26px 6px 8px!important}table.mt td input.num{width:3.6em}.task-step{font-weight:700;color:#1C66C0}#cv{cursor:pointer}';document.head.appendChild(c);})();
+(function(){var cc=document.getElementById('ctlCard'),tk=document.getElementById('task');if(cc&&tk&&cc.parentNode===tk.parentNode)tk.parentNode.insertBefore(tk,cc);})();
+function render(){if(st.station!==lastSt){lastSt=st.station;if(SK()==='s3'&&st.heat==null)st.heat=false;}
+  renderRoute();renderCtl();({s1:r1,s2:r2,s3:r3,s4:r4,s5:r5,s6:r6,s7:r7})[SK()]();resize();}
+bindReset();initSave();
+window.addEventListener('resize',resize);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+load();if(!st.t0){st.t0=Date.now();save();}if(!unlocked(st.station))st.station=0;if(st.station>0&&!st.grp)st.station=0;
+render();remind();startDialog();
+})();
+
+</script>
+</body>
+</html>
