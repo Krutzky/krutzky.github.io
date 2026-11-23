@@ -6,7 +6,7 @@
 <title>Rechenprofi Plus und Minus</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
 <style>
 html,body{margin:0}
 
@@ -161,19 +161,100 @@ button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-
 .cell.errcol{outline:3px solid var(--carry);outline-offset:-3px;border-radius:4px}
 @media (prefers-reduced-motion: reduce){.fin{transition:none}}
 @media (max-width:520px){.erritem{grid-template-columns:1fr} .keypad{grid-template-columns:repeat(5,1fr)} .keypad button.wide{grid-column:span 5} .levels{gap:6px} .lvl{font-size:.92rem}}
+.lvl.locked{opacity:.55;cursor:not-allowed}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.intro{display:grid;gap:14px}
+.sentence{border-radius:12px}
+.svdone{margin-top:16px;border-color:var(--ok);text-align:center}.svdone b{font-size:1.5rem;color:var(--ok)}.choice:disabled{opacity:1;cursor:default}.gate{border:3px solid #C8423D;background:#FDECEC;color:#3A0D0B;border-radius:16px;padding:18px;text-align:center}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:1.3rem}.gate .gq{font-weight:700}.codebox{display:inline-flex;flex-direction:column;align-items:center;background:#111;color:#FFC94D;border-radius:12px;padding:6px 22px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}.codebox small{font-size:.7rem;letter-spacing:2px;color:#9a9a9a}.codebox span{font-size:2rem;letter-spacing:4px}.codepad{max-width:420px}.codepad button{min-height:52px}.gaterow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}.rulebox .starts{color:var(--muted);margin-top:8px}.rulebox .btn{margin-top:10px}
+.bonus{margin-top:18px;border:3px solid var(--orange);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--orange) 7%,var(--surface))}
+.bonus h3{margin:0 0 4px;font-family:var(--f-head)}
+.bzrank{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;margin:4px 0 8px}
+.wall{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+.wrow{display:flex;gap:6px}
+.brick{width:68px;height:48px;border-radius:8px;border:2px solid #B9542A;background:#F6D9C6;font-size:1.35rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center}
+.brick.hid{background:var(--surface);border-style:dashed;border-color:var(--muted);cursor:pointer}
+.brick.hid.active{border:3px solid var(--focus)}
+.brick.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.brick.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
+/* ===== Farben und Look wie im Kosten-Detektiv ===== */
+:root{
+  --paper:#EEF1F6; --surface:#FFFFFF; --soft:#F3F5FA; --ink:#0B1442; --muted:#4E5677; --line:#CBD3E1;
+  --focus:#1C66C0; --ok:#22865A; --okbg:#DDF2E7; --carry:#C8423D; --badbg:#F9E1DF;
+  --navy:#020C45; --accent:#E8892B; --accent-ink:#1B1300; --blue-soft:#DCE8F7; --pro:#6B3FB0;
+  --f-head:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}
+body{background:var(--paper);background-image:none;font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
+header.kd{background:var(--navy);color:#fff;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.kd .hwrap{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+header.kd .brand{display:flex;flex-direction:column}
+header.kd .brand b{font-family:var(--f-head);font-weight:700;font-size:21px;letter-spacing:.2px}
+header.kd .brand span{font-size:13px;color:#8DB7EE}
+header.kd .route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+header.kd .route button{display:flex;align-items:center;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:700;font-family:var(--f-body)}
+header.kd .route button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+header.kd .hright{display:flex;gap:8px;align-items:center}
+header.kd .stars{background:transparent;border:1.5px solid #34428F;color:#fff}
+header.kd .reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700}
+.wrap{padding-top:16px}
+h2,h3,.lvl,.btn,.taskhead h2{font-family:var(--f-head)}
+.panel,.partner{border:1.5px solid var(--line);border-radius:14px;box-shadow:none}
+.btn{border-radius:999px;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:transparent;border:1.5px dashed var(--focus);color:var(--focus)}
+:root[data-theme="dark"] .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}}
+.tipcard{border:1.5px dashed var(--focus);background:var(--blue-soft);color:var(--ink)}
+:root[data-theme="dark"] .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}}
+.word,.introbox{background:var(--soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0}
+.choice{border-width:2px;border-radius:12px}
+.seg[aria-pressed="true"]{background:var(--focus);border-color:var(--focus);color:#fff}
+.keypad button{background:var(--soft);border:2px solid var(--line)}
+.keypad button:active{background:var(--accent);color:var(--accent-ink)}
+.chip{font-family:var(--f-head)}
+.stepnav .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.rulebox{border-color:var(--focus)}
+.sentence{border-radius:12px}
+.svdone{margin-top:16px;border-color:var(--ok);text-align:center}.svdone b{font-size:1.5rem;color:var(--ok)}.choice:disabled{opacity:1;cursor:default}.gate{border:3px solid #C8423D;background:#FDECEC;color:#3A0D0B;border-radius:16px;padding:18px;text-align:center}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:1.3rem}.gate .gq{font-weight:700}.codebox{display:inline-flex;flex-direction:column;align-items:center;background:#111;color:#FFC94D;border-radius:12px;padding:6px 22px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}.codebox small{font-size:.7rem;letter-spacing:2px;color:#9a9a9a}.codebox span{font-size:2rem;letter-spacing:4px}.codepad{max-width:420px}.codepad button{min-height:52px}.gaterow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}.rulebox .starts{color:var(--muted);margin-top:8px}.rulebox .btn{margin-top:10px}
+.bonus{margin-top:18px;border:3px solid var(--orange);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--orange) 7%,var(--surface))}
+.bonus h3{margin:0 0 4px;font-family:var(--f-head)}
+.bzrank{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;margin:4px 0 8px}
+.wall{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+.wrow{display:flex;gap:6px}
+.brick{width:68px;height:48px;border-radius:8px;border:2px solid #B9542A;background:#F6D9C6;font-size:1.35rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center}
+.brick.hid{background:var(--surface);border-style:dashed;border-color:var(--muted);cursor:pointer}
+.brick.hid.active{border:3px solid var(--focus)}
+.brick.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.brick.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
+.choice:disabled{cursor:default;opacity:1}
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header>
-    <h1 id="apptitle"></h1>
+<header class="kd">
+  <div class="hwrap">
+    <div class="brand"><b id="apptitle"></b><span id="appsub"></span></div>
+    <nav class="route" role="tablist" id="tabs" aria-label="Bereiche"></nav>
     <div class="hright">
       <div class="stars" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17.4l-6.1 3.4 1.4-6.7-5-4.6 6.8-.8z"/></svg><span id="starcount">0</span></div>
-      <button class="langbtn" id="langbtn" type="button"></button>
+      <button class="reset" id="langbtn" type="button"></button>
+      <button class="reset" id="resetbtn" type="button"></button>
     </div>
-  </header>
-  <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+<div class="wrap">
   <main id="view"></main>
 </div>
 
@@ -186,8 +267,10 @@ const ABBR = ["E","Z","H","T","ZT","HT"];
 const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g," ");
 const T = {
 de:{
-  title:'Rechenprofi <span class="pm">+ −</span>', other:"Türkçe",
-  tabs:["Üben","Experten","Erklärung","Merkzettel","Tippkarten"],
+  title:"Rechenprofi + −", sub:"Schriftlich addieren und subtrahieren", other:"Türkçe",
+  tabs:["Üben","Experten","Input","Merkzettel","Tippkarten","Ergebnisse sichern"],
+  svTitle:"Ergebnisse sichern: Schriftlich rechnen", svIntro:"Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr abgebt. Eure Lehrkraft kommt zu euch und hört zu.",
+  svParts:[{h:"Teil 1: Die Regeln",qs:[0,1,2,3]},{h:"Teil 2: Aufgaben",qs:[4,5,6,7]}],
   /* new: help, diagnosis, partner, experts */
   colHelp:pl=>`Jetzt bist du in der <b>${pl}-Spalte</b>.`,
   tip3:"Tipp 3: Diese Spalte wird dir vorgemacht. Rechne danach allein weiter.",
@@ -306,8 +389,10 @@ de:{
   }
 },
 tr:{
-  title:'Hesap Ustası <span class="pm">+ −</span>', other:"Deutsch",
-  tabs:["Alıştırma","Uzman","Açıklama","Not kâğıdı","İpucu kartları"],
+  title:"Hesap Ustası + −", sub:"Alt alta toplama ve çıkarma", other:"Deutsch",
+  tabs:["Alıştırma","Uzman","Giriş","Not kâğıdı","İpucu kartları","Sonuçları pekiştir"],
+  svTitle:"Sonuçları pekiştir: Alt alta hesaplama", svIntro:"İki kişi bir iPad ile çalışın. Teslim etmeden önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.",
+  svParts:[{h:"1. Bölüm: Kurallar",qs:[0,1,2,3]},{h:"2. Bölüm: Sorular",qs:[4,5,6,7]}],
   colHelp:pl=>`Şimdi <b>${pl} sütunundasın</b>.`,
   tip3:"3. ipucu: Bu sütun sana gösteriliyor. Sonra tek başına devam et.",
   whyTitle:"Neden yanlış?",
@@ -424,6 +509,97 @@ tr:{
     sub2:(a,b,c)=>[`Okul yeni bir oyun parkı için ${fmt(a)} € toplamak istiyor. 5a sınıfı ${fmt(b)} €, 5b sınıfı ${fmt(c)} € topladı. Daha ne kadar para gerekiyor?`, r=>`Daha ${fmt(r)} € gerekiyor.`]
   }
 }};
+const SVT = {
+ de: {
+  guessOk: "Verstanden",
+  reset: "Neu starten",
+  reset2: "Wirklich alles löschen?",
+  upMsg: (n, a, b) => `Stark! ${n} Aufgaben hintereinander in Stufe ${a} richtig gerechnet. Probiert jetzt Stufe ${b}!`,
+  lockShort: n => `nach ${n} Aufgaben in orange`,
+  lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`,
+  lockGo: "Zu Stufe orange",
+  unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`,
+  unlockStay: "In orange weiterrechnen",
+  guessT: "Stopp – nicht raten!",
+  guessP: "Ihr antwortet sehr schnell oder probiert nur aus. Raten führt nicht zum Ziel: So lernt ihr nichts für die Klassenarbeit. Lest die Aufgabe genau, rechnet zuerst und antwortet dann. Jede und jeder ist selbst für das eigene Lernen verantwortlich.",
+  svFast: "Das ging sehr schnell. Habt ihr jede Antwort wirklich gerechnet und besprochen? Raten führt nicht zum Ziel. Prüft eure Antworten noch einmal.",
+  svFastGo: "Wir haben alles geprüft – abgeben",
+  upGo: b => `Zu Stufe ${b}`,
+  upStay: "Noch hier bleiben",
+  bzT: "🧱 Bonus: Zahlenmauern",
+  bzIntro: "Schon fertig? Dann knackt die Zahlenmauern! Jeder Stein ist die Summe der beiden Steine direkt darunter. Tippt einen leeren Stein an und gebt die Zahl ein.",
+  bzCheck: "Prüfen",
+  bzNext: "Nächste Mauer",
+  bzOk: "Geschafft! Die Mauer steht. ⭐",
+  bzBad: "Noch nicht ganz. Die roten Steine stimmen nicht.",
+  bzEmpty: "Füllt zuerst alle leeren Steine aus.",
+  bzCount: n => `Geschaffte Mauern: ${n}`,
+  bzRank: ["Mauer-Lehrling","Mauer-Profi","Mauer-Meister"],
+  bzUp: "Neue Stufe! Die Mauern werden größer.",
+  svWrong: "Falsch.",
+  svSubmit: "Abgeben",
+  svLockHint: "Besprecht eure Antworten. Nach dem Abgeben könnt ihr nichts mehr ändern.",
+  svAnswered: (n, t) => `${n} von ${t} Fragen beantwortet`,
+  svResult: (n, t) => `Ergebnis: ${n} von ${t} richtig`,
+  svRetryIntro: "Zu euren Fehlern kommen jetzt neue Aufgaben. Beantwortet alle und gebt dann ab. Erst danach seht ihr, was richtig ist.",
+  svRetryT: "Nachübung",
+  svRetryDone: "Nachübung geschafft: Alle Fehler sind ausgebessert.",
+  svMore: "Noch nicht alles richtig. Hier kommen neue Aufgaben, diesmal mit Tipp.",
+  svRoundRes: (n, t) => `Nachübung: ${n} von ${t} richtig`,
+  svExpl: "Erklärung",
+  svRight: "Richtig ist:",
+  svOk: "Richtig!",
+  svDone: "Ergebnisse gesichert!",
+  svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`,
+  svMerk: "Merkzettel ansehen",
+  gateDel: "Löschen",
+ },
+ tr: {
+  guessOk: "Anladım",
+  reset: "Yeniden başla",
+  reset2: "Her şey silinsin mi?",
+  upMsg: (n, a, b) => `Harika! ${a} seviyesinde art arda ${n} soru doğru hesaplandı. Şimdi ${b} seviyesini deneyin!`,
+  lockShort: n => `turuncuda ${n} sorudan sonra`,
+  lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`,
+  lockGo: "Turuncu seviyeye git",
+  unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`,
+  unlockStay: "Turuncuda devam et",
+  guessT: "Dur – tahmin etme!",
+  guessP: "Çok hızlı cevap veriyorsunuz ya da sadece deniyorsunuz. Tahmin etmek hedefe götürmez: Böyle sınav için bir şey öğrenemezsiniz. Soruyu dikkatlice okuyun, önce hesaplayın, sonra cevap verin. Herkes kendi öğrenmesinden kendisi sorumludur.",
+  svFast: "Bu çok hızlı oldu. Her cevabı gerçekten hesapladınız ve konuştunuz mu? Tahmin etmek hedefe götürmez. Cevaplarınızı bir daha kontrol edin.",
+  svFastGo: "Hepsini kontrol ettik – teslim et",
+  upGo: b => `${b} seviyesine geç`,
+  upStay: "Burada kalmaya devam et",
+  bzT: "🧱 Bonus: Sayı duvarları",
+  bzIntro: "Bitirdiniz mi? O zaman sayı duvarlarını çözün! Her taş, hemen altındaki iki taşın toplamıdır. Boş bir taşa dokunun ve sayıyı girin.",
+  bzCheck: "Kontrol et",
+  bzNext: "Sonraki duvar",
+  bzOk: "Başardınız! Duvar tamam. ⭐",
+  bzBad: "Henüz tam değil. Kırmızı taşlar yanlış.",
+  bzEmpty: "Önce bütün boş taşları doldurun.",
+  bzCount: n => `Tamamlanan duvarlar: ${n}`,
+  bzRank: ["Duvar çırağı","Duvar kalfası","Duvar ustası"],
+  bzUp: "Yeni seviye! Duvarlar büyüyor.",
+  svWrong: "Yanlış.",
+  svSubmit: "Teslim et",
+  svLockHint: "Cevaplarınızı konuşun. Teslim ettikten sonra hiçbir şey değiştiremezsiniz.",
+  svAnswered: (n, t) => `${n} / ${t} soru cevaplandı`,
+  svResult: (n, t) => `Sonuç: ${n} / ${t} doğru`,
+  svRetryIntro: "Hatalarınız için şimdi yeni sorular geliyor. Hepsini cevaplayın, sonra teslim edin. Neyin doğru olduğunu ancak o zaman görürsünüz.",
+  svRetryT: "Ek alıştırma",
+  svRetryDone: "Ek alıştırma tamam: Bütün hatalar düzeltildi.",
+  svMore: "Henüz hepsi doğru değil. İşte yeni sorular, bu sefer ipucuyla.",
+  svRoundRes: (n, t) => `Ek alıştırma: ${n} / ${t} doğru`,
+  svExpl: "Açıklama",
+  svRight: "Doğrusu:",
+  svOk: "Doğru!",
+  svDone: "Sonuçlar pekiştirildi!",
+  svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`,
+  svMerk: "Not kâğıdını aç",
+  gateDel: "Sil",
+ },
+};
+for (const lg in SVT) Object.assign(T[lg], SVT[lg]);
 const store = {get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 let lang = store.get("rp-lang",null) || DEFAULT_LANG;
 const L = () => T[lang];
@@ -582,11 +758,11 @@ function makeWordPro(){
 }
 
 /* ---------- state ---------- */
-let stats=store.get("rp-stats",{stars:0,solved:[0,0,0,0]});
+let stats=store.get("rp-stats",{stars:0,solved:[0,0,0,0]}); if(!stats.streak)stats.streak=[0,0,0];
 while(stats.solved.length<4)stats.solved.push(0);
 let level=store.get("rp-level",1);
 let partner=store.get("rp-partner",{on:true,a:"",b:"",turn:0,showNames:false});
-let tab=0;
+let tab=2;
 let task=null; let ent=null; let active=null; let attempts=0; let tipLevel=0; let done=false; let feedback=null; let marks=null; let diag=null; let showCard=false;
 function save(){store.set("rp-stats",stats);store.set("rp-level",level);store.set("rp-lang",lang)}
 function savePartner(){store.set("rp-partner",partner)}
@@ -661,22 +837,30 @@ function gapCell(add,p){
 /* ---------- render ---------- */
 const view=document.getElementById("view");
 function renderShell(){
-  document.documentElement.lang=lang;
-  document.getElementById("apptitle").innerHTML=L().title;
+  document.documentElement.lang=lang; renderReset();
+  document.getElementById("apptitle").textContent=L().title; document.getElementById("appsub").textContent=L().sub;
   document.getElementById("langbtn").textContent=L().other;
   document.getElementById("starcount").textContent=stats.stars;
   const tabs=document.getElementById("tabs"); tabs.innerHTML="";
-  L().tabs.forEach((name,i)=>{const b=el("button","",name);b.type="button";b.setAttribute("role","tab");b.setAttribute("aria-selected",i===tab);b.onclick=()=>{stash();tab=i;unstash();render()};tabs.appendChild(b)});
+  TAB_ORDER.forEach(i=>{const b=el("button","",L().tabs[i]);b.type="button";b.setAttribute("role","tab");b.setAttribute("aria-selected",i===tab);b.onclick=()=>goTab(i);tabs.appendChild(b)});
 }
-function render(){renderShell();view.innerHTML="";[renderPractice,renderExpert,renderExplain,renderMerk,renderCards][tab]()}
+/* Reihenfolge der Reiter wie im Überschlagsprofi: Input, Üben, Experten, Ergebnisse sichern, Merkzettel, Tippkarten */
+const TAB_ORDER=[2,0,1,5,3,4];
+function goTab(i){stash();tab=i;unstash();render();window.scrollTo(0,0)}
+function render(){renderShell();view.innerHTML="";[renderPractice,renderExpert,renderExplain,renderMerk,renderCards,renderSave][tab]()}
 
+/* Pflicht: erst 5 Aufgaben in Stufe orange, danach sind pink, lila und Experten frei wählbar */
+const MUST=5, locked=()=>stats.solved[0]<MUST;
 function renderPractice(){
+  if(locked()&&level!==1){level=1;save();newTask()}
   const lv=el("div","levels");
-  [1,2,3].forEach(n=>{const b=el("button",`lvl lvl${n}`,`${L().lv[n-1][0]}<small>${L().lv[n-1][1]} · ${L().solvedN(stats.solved[n-1])}</small>`);b.type="button";b.setAttribute("aria-pressed",level===n);b.onclick=()=>{level=n;save();newTask();render()};lv.appendChild(b)});
+  [1,2,3].forEach(n=>{const lk=n>1&&locked();const b=el("button",`lvl lvl${n}`+(lk?" locked":""),`${L().lv[n-1][0]}<small>${lk?"🔒 "+L().lockShort(MUST):L().lv[n-1][1]+" · "+L().solvedN(stats.solved[n-1])}</small>`);b.type="button";b.disabled=lk;b.setAttribute("aria-pressed",level===n);b.onclick=()=>{level=n;save();newTask();render()};lv.appendChild(b)});
   view.appendChild(lv);
+  if(locked())view.appendChild(el("div","msg info lockinfo",L().lockInfo(MUST,stats.solved[0])));
   renderTask();
 }
 function renderExpert(){
+  if(locked()){const p=el("section","panel");p.appendChild(el("h2","",L().xTitle));p.appendChild(el("p","",L().lockInfo(MUST,stats.solved[0])));const b=el("button","btn primary",L().lockGo);b.type="button";b.onclick=()=>goTab(0);const r=el("div","actions");r.appendChild(b);p.appendChild(r);view.appendChild(p);return}
   const h=el("div","xhead");
   h.appendChild(el("h2","",L().xTitle));
   h.appendChild(el("p","",`${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`));
@@ -711,6 +895,7 @@ function renderTask(){
   if(lvl===4)chip.style.color="var(--paper)";
   const modeName=task.mode==="calc"?L().modes[task.kind]:(L().xModes[task.mode]||L().modes[task.mode]);
   head.append(chip,el("h2","",modeName)); head.lastChild.style.margin="0"; p.appendChild(head);
+  if (guessWarn) { const g = el("div", "why guess", `<b class="h">✋ ${L().guessT}</b>${L().guessP}`); const gb = el("button", "btn primary", L().guessOk); gb.type = "button"; gb.onclick = () => { guessWarn = false; render() }; const r = el("div", "actions"); r.appendChild(gb); g.appendChild(r); p.appendChild(g) }
 
   const showKeypad=()=>{
     const kp=el("div","keypad");
@@ -827,6 +1012,18 @@ function renderTask(){
   }
   p.appendChild(act);
   if(feedback)p.appendChild(el("div","msg "+feedback.cls,feedback.text));
+  if (done && tab === 0 && level === 1 && stats.solved[0] === MUST && !stats.unlocked) {
+    stats.unlocked = true; save();
+    const u = el("div", "swap levelup", `<p><b>${L().unlockMsg(MUST)}</b></p>`), row = el("div", "actions");
+    const go = el("button", "btn primary", L().upGo(L().lv[1][1])); go.type = "button"; go.onclick = () => { level = 2; save(); newTask(); render(); window.scrollTo(0, 0) };
+    const st = el("button", "btn", L().unlockStay); st.type = "button"; st.onclick = () => { newTask(); render() };
+    row.append(go, st); u.appendChild(row); p.appendChild(u);
+  } else if (done && tab === 0 && !locked() && level < 3 && stats.streak[level - 1] >= 5) {
+    const a = L().lv[level - 1][1], b = L().lv[level][1], u = el("div", "swap levelup", `<p><b>${L().upMsg(stats.streak[level - 1], a, b)}</b></p>`), row = el("div", "actions");
+    const go = el("button", "btn primary", L().upGo(b)); go.type = "button"; go.onclick = () => { level++; save(); newTask(); render(); window.scrollTo(0, 0) };
+    const st = el("button", "btn", L().upStay); st.type = "button"; st.onclick = () => { stats.streak[level - 1] = 0; save(); render() };
+    row.append(go, st); u.appendChild(row); p.appendChild(u);
+  }
   if(diag&&!done){
     const w=el("div","why",`<b class="h">${L().whyTitle}</b>${diag.text}`);
     const cb=el("button","linkbtn",L().cardBtn(diag.card+1));cb.type="button";cb.onclick=()=>{showCard=!showCard;render()};w.appendChild(cb);
@@ -863,11 +1060,20 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="ArrowLeft"&&active&&active.role==="res"&&active.p<task.W-1){active.p++;render()}
   else if(e.key==="ArrowRight"&&active&&active.role==="res"&&active.p>0){active.p--;render()}
 });
+/* Raten erkennen: sehr schnelle Antworten und schnelle Fehler hintereinander */
+let phaseT0 = Date.now(), lastAct = 0, guessScore = 0, guessWarn = false;
+function act(ok) {
+  const now = Date.now(), dt = now - lastAct; lastAct = now;
+  if (!ok && dt < 4000) guessScore++;
+  if (!ok && attempts >= 3) guessScore++;
+  if (dt > 8000) guessScore = Math.max(0, guessScore - 1);
+  if (guessScore >= 3) { guessWarn = true; guessScore = 0 }
+}
 function success(){
-  done=true; diag=null; stats.stars+=attempts===0&&tipLevel===0?2:1; stats.solved[curLevel()-1]++; save();
+  done=true; diag=null; stats.stars+=attempts===0&&tipLevel===0?2:1; stats.solved[curLevel()-1]++; if(tab===0){if(attempts===0&&!task.helped)stats.streak[level-1]++;else stats.streak[level-1]=0} act(true); save();
   feedback={cls:"ok",text:pick(L().ok)}; render();
 }
-function fail(){attempts++;feedback={cls:"bad",text:L().bad+(attempts>=2?" "+L().bad2:"")};diag=gridActive()?diagnose():null;showCard=false;render()}
+function fail(){attempts++;act(false);feedback={cls:"bad",text:L().bad+(attempts>=2?" "+L().bad2:"")};diag=gridActive()?diagnose():null;showCard=false;render()}
 function check(){
   if(done)return;
   if(task.mode==="gap"){
@@ -889,38 +1095,38 @@ function check(){
   }
   allOk?success():fail();
 }
-function showSolution(){task.solShown=true;done=true;marks={};diag=null;feedback={cls:"info",text:L().solShown};render()}
-function pickEst(i){task.picked=i;if(task.opts[i].ok){success()}else{attempts++;feedback={cls:"bad",text:L().estBad};if(attempts>=2){done=true}render()}}
+function showSolution(){task.helped=true;if(tab===0){stats.streak[level-1]=0;save()}task.solShown=true;done=true;marks={};diag=null;feedback={cls:"info",text:L().solShown};render()}
+function pickEst(i){task.picked=i;if(task.opts[i].ok){success()}else{attempts++;act(false);feedback={cls:"bad",text:L().estBad};if(attempts>=2){done=true}render()}}
 function judge(saysRight){
   if(task.isRight&&saysRight){success();feedback={cls:"ok",text:L().errRightOk};render();return}
   if(task.isRight&&!saysRight){done=true;feedback={cls:"bad",text:L().errRightBad};render();return}
   if(!task.isRight&&!saysRight){task.phase=2;feedback={cls:"ok",text:L().errWrongOk};render();return}
-  attempts++;feedback={cls:"bad",text:L().errWrongBad};render();
+  attempts++;act(false);feedback={cls:"bad",text:L().errWrongBad};render();
 }
 function pickWord(i){task.picked=i;if(task.opts[i].ok){task.phase=2;feedback=null}else{feedback={cls:"bad",text:L().wordBad}}render()}
 /* expert interactions */
 function pickCol(q){
   if(q===task.firstWrong){task.phase=2;feedback={cls:"ok",text:L().errColOk(PLACES[lang][q])}}
-  else{attempts++;if(!task.badCols.includes(q))task.badCols.push(q);feedback={cls:"bad",text:L().errColBad}}
+  else{attempts++;act(false);if(!task.badCols.includes(q))task.badCols.push(q);feedback={cls:"bad",text:L().errColBad}}
   render();
 }
 function pickReason(r){
   if(r===task.errType){task.phase=3;feedback=null;setupGrid()}
-  else{attempts++;if(!task.badReasons.includes(r))task.badReasons.push(r);feedback={cls:"bad",text:L().reasonBad}}
+  else{attempts++;act(false);if(!task.badReasons.includes(r))task.badReasons.push(r);feedback={cls:"bad",text:L().reasonBad}}
   render();
 }
 function checkNums(){
   const extra=task.sel.filter(x=>!task.need.includes(x)); const missing=task.need.filter(x=>!task.sel.includes(x));
-  if(extra.length){attempts++;task.wrongSel=extra;feedback={cls:"bad",text:L().numsExtra(extra[0])}}
-  else if(missing.length){attempts++;feedback={cls:"bad",text:L().numsMissing}}
+  if(extra.length){attempts++;act(false);task.wrongSel=extra;feedback={cls:"bad",text:L().numsExtra(extra[0])}}
+  else if(missing.length){attempts++;act(false);feedback={cls:"bad",text:L().numsMissing}}
   else{task.phase=2;feedback={cls:"ok",text:L().numsOk}}
   render();
 }
-function pickWordPro(i){task.picked=i;if(task.opts[i].ok){task.phase=3;feedback=null;setupGrid()}else{attempts++;feedback={cls:"bad",text:L().wordBad}}render()}
+function pickWordPro(i){task.picked=i;if(task.opts[i].ok){task.phase=3;feedback=null;setupGrid()}else{attempts++;act(false);feedback={cls:"bad",text:L().wordBad}}render()}
 function pickEstPro(i){
   task.picked=i;
   if(task.opts[i].ok){success();feedback={cls:"ok",text:L().estProOk(task.ovs)};render()}
-  else{attempts++;feedback={cls:"bad",text:L().estProBad(task.ovs)};if(attempts>=2)done=true;render()}
+  else{attempts++;act(false);feedback={cls:"bad",text:L().estProBad(task.ovs)};if(attempts>=2)done=true;render()}
 }
 /* stepped help */
 function onTip(){
@@ -930,7 +1136,7 @@ function onTip(){
   if(tipLevel===3)revealColumn();
   render();
 }
-function revealColumn(){
+function revealColumn(){task.helped=true;
   const t=task.cols.find(c=>c.p<len(task.result)&&(ent.res[c.p]===""||ent.res[c.p]!==String(c.r)));
   if(!t)return;
   ent.res[t.p]=String(t.r); if(t.cout&&t.p+1<task.W)ent.carry[t.p+1]=String(t.cout);
@@ -1057,6 +1263,157 @@ function renderCards(){
   p.appendChild(grid);
 }
 document.getElementById("langbtn").onclick=()=>{lang=lang==="de"?"tr":"de";save();render()};
+/* Neu starten (wie im Kosten-Detektiv) */
+let resetArmed=false, resetTimer=null;
+function renderReset(){const b=document.getElementById("resetbtn");b.textContent=resetArmed?L().reset2:L().reset;b.style.borderColor=resetArmed?"#E8892B":"";b.style.color=resetArmed?"#FFD9B0":""}
+document.getElementById("resetbtn").onclick=()=>{
+  if(!resetArmed){resetArmed=true;renderReset();clearTimeout(resetTimer);resetTimer=setTimeout(()=>{resetArmed=false;renderReset()},3500);return}
+  try{["rp-stats","rp-level","rp-partner"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+  location.reload();
+};
+/* ---- Ergebnisse sichern (ohne Startcode) ---- */
+/* svQ(): Fragen der Sicherung, svGen(i): neue, gleichartige Aufgabe zu Frage i (für die Nachübung) */
+let svPick = {}, svSub = false, svRounds = [], svT0 = 0, svFastAsk = false;
+function renderSave() {
+ if (!svT0) svT0 = Date.now();
+ const Q = svQ(), p = el("section", "panel intro"); view.appendChild(p);
+ p.appendChild(el("h2", "", L().svTitle)); p.appendChild(el("p", "", L().svIntro));
+ const nAns = Object.keys(svPick).length, nOk = Q.filter((q, i) => svPick[i] === q.ok).length;
+ const expl = (txt, right) => el("div", "why", `<b class="h">${L().svExpl}</b>${txt}${right ? `<br><b>${L().svRight}</b> ${right}` : ""}`);
+ const qBox = (q, pick, setPick, sub, tip, right) => {
+  const box = el("div", "section");
+  box.appendChild(el("p", "", `${q.ctx ? q.ctx + "<br>" : ""}<b>${q.stem}</b>`));
+  if (tip) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${q.hint}`));
+  const ch = el("div", "choices");
+  q.opts.forEach((s, k) => { const b = el("button", "choice", s); b.type = "button";
+   if (!sub) { if (pick === k) b.classList.add("sel"); b.onclick = () => { setPick(k); render() } }
+   else { b.disabled = true; if (k === q.ok) b.classList.add("ok"); else if (pick === k) b.classList.add("bad") }
+   ch.appendChild(b) });
+  box.appendChild(ch);
+  if (sub) { const r = pick === q.ok; box.appendChild(el("div", "msg " + (r ? "ok" : "bad"), r ? "✓ " + L().svOk : "✗ " + L().svWrong)); if (!r) box.appendChild(expl(q.hint, right ? q.opts[q.ok] : "")) }
+  return box;
+ };
+ const submitBox = (n, t, go, t0, minMs) => { const f = el("div", "rulebox"); f.appendChild(el("p", "", `<b>${L().svAnswered(n, t)}</b><br>${L().svLockHint}`));
+  if (svFastAsk) f.appendChild(el("div", "why guess", `<b class="h">✋ ${L().guessT}</b>${L().svFast}`));
+  const row = el("div", "actions"), sb = el("button", "btn primary", svFastAsk ? L().svFastGo : L().svSubmit); sb.type = "button"; sb.disabled = n < t;
+  sb.onclick = () => { if (!svFastAsk && Date.now() - t0 < minMs) { svFastAsk = true; render(); return } svFastAsk = false; go() }; row.appendChild(sb); f.appendChild(row); return f };
+ const scrollTo = sel => setTimeout(() => { const x = document.querySelectorAll(sel); if (x.length) x[x.length - 1].scrollIntoView({ behavior: "smooth", block: "start" }) }, 30);
+ const newRound = idx => ({ tasks: idx.map(i => ({ qi: i, b: svGen(i), pick: null })), sub: false, t0: Date.now() });
+ L().svParts.forEach(pt => { p.appendChild(el("h3", "", pt.h)); if (pt.ctx) p.appendChild(el("p", "word", pt.ctx)); pt.qs.forEach(i => p.appendChild(qBox(Q[i], svPick[i], k => { svPick[i] = k }, svSub, false, false))) });
+ if (!svSub) { p.appendChild(submitBox(nAns, Q.length, () => { svSub = true; const w = Q.map((q, i) => i).filter(i => svPick[i] !== Q[i].ok); svRounds = w.length ? [newRound(w)] : []; render(); scrollTo(".svres") }, svT0, 7000 * Q.length)); return }
+ const res = el("div", "rulebox svres"); res.innerHTML = `<b>${L().svResult(nOk, Q.length)}</b>` + (svRounds.length ? `<p>${L().svRetryIntro}</p>` : ""); p.appendChild(res);
+ for (let ri = 0; ri < svRounds.length; ri++) {
+  const R = svRounds[ri];
+  p.appendChild(el("h3", "rtitle", L().svRetryT + (ri ? " " + (ri + 1) : "")));
+  if (ri) p.appendChild(el("p", "", L().svMore));
+  R.tasks.forEach(t => p.appendChild(qBox(t.b(), t.pick, k => { t.pick = k }, R.sub, ri > 0 && !R.sub, true)));
+  const nP = R.tasks.filter(t => t.pick !== null).length;
+  if (!R.sub) { p.appendChild(submitBox(nP, R.tasks.length, () => { R.sub = true; const w = R.tasks.filter(t => t.pick !== t.b().ok).map(t => t.qi); if (w.length) svRounds.push(newRound(w)); render(); scrollTo(".rres") }, R.t0, 8000 * R.tasks.length)); return }
+  const okR = R.tasks.filter(t => t.pick === t.b().ok).length;
+  p.appendChild(el("div", "msg " + (okR === R.tasks.length ? "ok" : "info") + " rres", L().svRoundRes(okR, R.tasks.length)));
+ }
+ const r = el("div", "rulebox svdone");
+ r.innerHTML = `<b>✓ ${L().svDone}</b><p>${L().svFirst(nOk, Q.length)}</p>${svRounds.length ? `<p>${L().svRetryDone}</p>` : ""}`;
+ const b = el("button", "btn primary", L().svMerk); b.type = "button"; b.onclick = () => goTab(MERK_TAB); r.appendChild(b); p.appendChild(r);
+ renderBonus(p);
+}
+/* Nachübungs-Aufgabe: build() liefert {ctx, stem, opts, hint} in der aktuellen Sprache, opts[0] ist richtig; die Reihenfolge wird einmal gemischt und bleibt dann fest */
+function svFix(build) { let perm = null; return () => { const q = build(); if (!perm) perm = shuffle(q.opts.map((_, i) => i)); return { ctx: q.ctx, stem: q.stem, hint: q.hint, opts: perm.map(k => q.opts[k]), ok: perm.indexOf(0) } } }
+const tt = (d, r) => lang === "tr" ? r : d;
+function svQ() { return SV.map((x, i) => { const q = x.q(x.fix), n = q.opts.length, s = (i * 2 + 1) % n, perm = q.opts.map((_, k) => (k + s) % n); return { ctx: q.ctx, stem: q.stem, hint: q.hint, opts: perm.map(k => q.opts[k]), ok: perm.indexOf(0) } }) }
+function svGen(i) { const d = SV[i].rnd(); return svFix(() => SV[i].q(d)) }
+const MERK_TAB = 3, MINUS = "−";
+/* Fragen der Sicherung: schriftlich addieren und subtrahieren */
+const wrongOf = (kind, nums, r) => { let w = wrongResult(kind, nums); if (w === r || w < 0) w = r + (kind === "add" ? 100 : -100); return w };
+const SV = [
+ { fix: {}, rnd: () => ({}), q: () => ({ stem: tt("Beim schriftlichen Rechnen beginnst du …", "Alt alta hesaplarken … başlarsın."), opts: [tt("rechts bei den Einern.", "sağdan, birlerden"), tt("links bei der größten Stelle.", "soldan, en büyük basamaktan"), tt("bei der Spalte mit der größten Ziffer.", "en büyük rakamın olduğu sütundan")], hint: tt("Du rechnest Spalte für Spalte von rechts nach links, damit du den Übertrag mitnehmen kannst.", "Eldeyi taşıyabilmek için sütun sütun sağdan sola hesaplarsın.") }) },
+ { fix: {}, rnd: () => ({}), q: () => ({ stem: tt("Ist beim Addieren eine Spaltensumme 10 oder mehr, …", "Toplamada bir sütunun toplamı 10 veya daha fazlaysa …"), opts: [tt("schreibst du die Einer hin und die 1 als Übertrag in die nächste Spalte.", "birleri yazarsın, 1'i elde olarak bir sonraki sütuna geçirirsin."), tt("schreibst du die ganze Zahl in die Ergebniszeile.", "sayının tamamını sonuç satırına yazarsın."), tt("lässt du die Zehner einfach weg.", "onlukları yazmazsın.")], hint: tt("Beispiel: 8 + 7 = 15 → 5 hinschreiben, 1 übertragen.", "Örnek: 8 + 7 = 15 → 5'i yaz, 1 elde.") }) },
+ { fix: {}, rnd: () => ({}), q: () => ({ stem: tt("Beim Subtrahieren mit dem Ergänzungsverfahren rechnest du in jeder Spalte …", "Tamamlama yöntemiyle çıkarırken her sütunda …"), opts: [tt("von unten nach oben: untere Ziffer + ? = obere Ziffer.", "aşağıdan yukarıya hesaplarsın: alttaki rakam + ? = üstteki rakam."), tt("die untere Ziffer minus die obere Ziffer.", "alttaki rakamdan üstteki rakamı çıkarırsın."), tt("immer bis zur nächsten Zehnerzahl.", "her zaman bir sonraki onluğa tamamlarsın.")], hint: tt("Beispiel: 3 + ? = 8 → 5. Geht das nicht, ergänzt du bis 13, 14, … und schreibst 1 als Übertrag.", "Örnek: 3 + ? = 8 → 5. Olmuyorsa 13'e, 14'e … tamamlarsın ve 1 elde yazarsın.") }) },
+ { fix: { a: 852, b: 317 }, rnd: () => { const a = rnd(400, 989); return { a, b: rnd(105, a - 100) } },
+   q: d => { const r = d.a - d.b; return { stem: tt(`Wie machst du die Probe zu ${fmt(d.a)} ${MINUS} ${fmt(d.b)} = ${fmt(r)}?`, `${fmt(d.a)} ${MINUS} ${fmt(d.b)} = ${fmt(r)} için sağlamayı nasıl yaparsın?`), opts: [`${fmt(r)} + ${fmt(d.b)} = ${fmt(d.a)}`, `${fmt(d.a)} + ${fmt(d.b)} = ${fmt(d.a + d.b)}`, `${fmt(r)} ${MINUS} ${fmt(d.b)} = ${fmt(Math.abs(r - d.b))}`], hint: tt("Probe mit der Umkehraufgabe: Ergebnis + Subtrahend = Minuend.", "Ters işlemle sağlama: fark + çıkan = eksilen.") } } },
+ { fix: { n: [4758, 2694] }, rnd: () => ({ n: gen(() => [rnd(1000, 6999), rnd(1000, 2999)], n => nCarries("add", n) >= 2) }),
+   q: d => { const r = d.n[0] + d.n[1], w = wrongOf("add", d.n, r); return { stem: tt(`Berechne schriftlich: ${fmt(d.n[0])} + ${fmt(d.n[1])}`, `Alt alta hesapla: ${fmt(d.n[0])} + ${fmt(d.n[1])}`), opts: [fmt(r), fmt(w), fmt(w === r + 1000 ? r - 1000 : r + 1000)], hint: tt("Denk an die Überträge in jeder Spalte.", "Her sütundaki eldeleri unutma.") } } },
+ { fix: { n: [8342, 2576] }, rnd: () => ({ n: gen(() => { const a = rnd(3000, 9999); return [a, rnd(1000, a - 500)] }, n => nCarries("sub", n) >= 2) }),
+   q: d => { const r = d.n[0] - d.n[1], w = wrongOf("sub", d.n, r); return { stem: tt(`Berechne schriftlich: ${fmt(d.n[0])} ${MINUS} ${fmt(d.n[1])}`, `Alt alta hesapla: ${fmt(d.n[0])} ${MINUS} ${fmt(d.n[1])}`), opts: [fmt(r), fmt(w), fmt(w === r + 1000 ? r - 1000 : r + 1000)], hint: tt(`Probe: ${fmt(r)} + ${fmt(d.n[1])} = ${fmt(d.n[0])}.`, `Sağlama: ${fmt(r)} + ${fmt(d.n[1])} = ${fmt(d.n[0])}.`) } } },
+ { fix: { a: 3870, b: 2140 }, rnd: () => ({ a: rnd(11, 89) * 100 + rnd(1, 99), b: rnd(11, 49) * 100 + rnd(1, 99) }),
+   q: d => { const ra = Math.round(d.a / 1000) * 1000, rb = Math.round(d.b / 1000) * 1000, f = x => x + (x === ra ? 1000 : 0); return { stem: tt(`Welcher Überschlag passt zu ${fmt(d.a)} + ${fmt(d.b)}?`, `${fmt(d.a)} + ${fmt(d.b)} için hangi tahmini hesap uygun?`), opts: [`${fmt(ra)} + ${fmt(rb)} = ${fmt(ra + rb)}`, `${fmt(ra + (d.a % 1000 >= 500 ? -1000 : 1000))} + ${fmt(rb)} = ${fmt(ra + rb + (d.a % 1000 >= 500 ? -1000 : 1000))}`, `${fmt(ra)} + ${fmt(rb + (d.b % 1000 >= 500 ? -1000 : 1000))} = ${fmt(ra + rb + (d.b % 1000 >= 500 ? -1000 : 1000))}`], hint: tt("Runde beide Zahlen auf Tausender: Schau auf die Hunderterziffer. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.", "İki sayıyı da binliğe yuvarla: Yüzler basamağına bak. 0–4 → aşağı, 5–9 → yukarı.") } } },
+ { fix: { a: 6352, b: 2489, ok: false }, rnd: () => { const n = gen(() => { const a = rnd(3000, 9999); return [a, rnd(1000, a - 500)] }, n => nCarries("sub", n) >= 2); return { a: n[0], b: n[1], ok: Math.random() < .5 } },
+   q: d => { const r = d.a - d.b, w = d.ok ? r : wrongOf("sub", [d.a, d.b], r); return { stem: tt(`Mia hat gerechnet: ${fmt(d.a)} ${MINUS} ${fmt(d.b)} = ${fmt(w)}. Stimmt das?`, `Mia hesapladı: ${fmt(d.a)} ${MINUS} ${fmt(d.b)} = ${fmt(w)}. Doğru mu?`), opts: d.ok ? [tt(`Ja. Probe: ${fmt(r)} + ${fmt(d.b)} = ${fmt(d.a)}.`, `Evet. Sağlama: ${fmt(r)} + ${fmt(d.b)} = ${fmt(d.a)}.`), tt("Nein. Mia hat einen Übertrag vergessen.", "Hayır. Mia bir eldeyi unutmuş."), tt("Das kann man nicht prüfen.", "Bu kontrol edilemez.")] : [tt(`Nein. Richtig ist ${fmt(r)}.`, `Hayır. Doğrusu ${fmt(r)}.`), tt("Ja, das Ergebnis stimmt.", "Evet, sonuç doğru."), tt("Das kann man nicht prüfen.", "Bu kontrol edilemez.")], hint: tt(`Mach die Probe: Ergebnis + ${fmt(d.b)} muss ${fmt(d.a)} ergeben.`, `Sağlama yap: sonuç + ${fmt(d.b)}, ${fmt(d.a)} etmeli.`) } } }
+];
+/* ---- Bonus nach der Sicherung: Zahlenmauern (endlos, drei Stufen) ---- */
+let bz = null;
+function bzSolvable(n, hid) {
+  const k = []; for (let r = 0; r < n; r++) { k.push([]); for (let i = 0; i < n - r; i++) k[r].push(!hid.has(r + "," + i)) }
+  let ch = true;
+  while (ch) { ch = false;
+    for (let r = 1; r < n; r++) for (let i = 0; i < n - r; i++) {
+      const a = k[r - 1][i], b = k[r - 1][i + 1], c = k[r][i];
+      if (!c && a && b) { k[r][i] = true; ch = true }
+      if (c && a && !b) { k[r - 1][i + 1] = true; ch = true }
+      if (c && !a && b) { k[r - 1][i] = true; ch = true }
+    } }
+  return k.every(row => row.every(Boolean));
+}
+function bzNew() {
+  const done = bz ? bz.done : 0, lvl = Math.min(3, 1 + Math.floor(done / 2));
+  const n = lvl === 1 ? 3 : 4, lo = [1, 2, 5][lvl - 1], hi = [20, 25, 30][lvl - 1], nh = [3, 5, 6][lvl - 1];
+  const v = [[]]; for (let i = 0; i < n; i++) v[0].push(rnd(lo, hi));
+  for (let r = 1; r < n; r++) { v.push([]); for (let i = 0; i < n - r; i++) v[r].push(v[r - 1][i] + v[r - 1][i + 1]) }
+  const all = []; for (let r = 0; r < n; r++) for (let i = 0; i < n - r; i++) all.push(r + "," + i);
+  let hid = null;
+  for (let t = 0; t < 500; t++) {
+    const s = new Set(all.slice().sort(() => Math.random() - .5).slice(0, nh));
+    const base = [...s].filter(x => x.startsWith("0,")).length;
+    if (lvl === 3 && base < 2) continue;
+    if (lvl === 1 && base > 1) continue;
+    if (bzSolvable(n, s)) { hid = s; break }
+  }
+  if (!hid) hid = new Set(all.filter(x => !x.startsWith("0,")));
+  const up = bz && lvl > bz.lvl;
+  bz = { done, lvl, n, v, hid, inp: {}, sel: [...hid][0], marks: {}, msg: up ? ["info", L().bzUp] : null, solved: false };
+}
+function renderBonus(p) {
+  if (!bz) bzNew();
+  const b = el("div", "bonus");
+  b.appendChild(el("h3", "", L().bzT));
+  b.appendChild(el("p", "", L().bzIntro));
+  b.appendChild(el("span", "bzrank", `${L().bzRank[bz.lvl - 1]} · ${L().bzCount(bz.done)}`));
+  const w = el("div", "wall");
+  for (let r = bz.n - 1; r >= 0; r--) {
+    const row = el("div", "wrow");
+    for (let i = 0; i < bz.n - r; i++) {
+      const key = r + "," + i, h = bz.hid.has(key);
+      const c = el(h ? "button" : "div", "brick" + (h ? " hid" : "") + (h && bz.sel === key && !bz.solved ? " active" : "") + (bz.marks[key] ? " " + bz.marks[key] : ""), h ? (bz.inp[key] || "") : String(bz.v[r][i]));
+      if (h) { c.type = "button"; c.setAttribute("aria-label", "Stein " + (r + 1) + "." + (i + 1)); c.onclick = () => { if (!bz.solved) { bz.sel = key; render() } } }
+      row.appendChild(c);
+    }
+    w.appendChild(row);
+  }
+  b.appendChild(w);
+  if (!bz.solved) {
+    const kp = el("div", "keypad");
+    ["1","2","3","4","5","6","7","8","9","0"].forEach(x => { const k = el("button", "", x); k.type = "button"; k.onclick = () => { const s = bz.inp[bz.sel] || ""; if (s.length < 3) bz.inp[bz.sel] = s + x; delete bz.marks[bz.sel]; bz.msg = null; render() }; kp.appendChild(k) });
+    const del = el("button", "wide", "⌫"); del.type = "button"; del.setAttribute("aria-label", L().gateDel); del.onclick = () => { bz.inp[bz.sel] = (bz.inp[bz.sel] || "").slice(0, -1); delete bz.marks[bz.sel]; render() }; kp.appendChild(del);
+    b.appendChild(kp);
+  }
+  const act = el("div", "actions");
+  if (!bz.solved) {
+    const ck = el("button", "btn primary", L().bzCheck); ck.type = "button";
+    ck.onclick = () => {
+      const keys = [...bz.hid];
+      if (keys.some(k => !bz.inp[k])) { bz.msg = ["bad", L().bzEmpty]; render(); return }
+      bz.marks = {}; let ok = true;
+      keys.forEach(k => { const [r, i] = k.split(",").map(Number); const g = Number(bz.inp[k]) === bz.v[r][i]; bz.marks[k] = g ? "ok" : "bad"; if (!g) ok = false });
+      if (ok) { bz.solved = true; bz.done++; stats.stars++; save(); bz.msg = ["ok", L().bzOk] } else bz.msg = ["bad", L().bzBad];
+      render();
+    };
+    act.appendChild(ck);
+  } else { const nx = el("button", "btn good", L().bzNext); nx.type = "button"; nx.onclick = () => { bzNew(); render() }; act.appendChild(nx) }
+  b.appendChild(act);
+  if (bz.msg) b.appendChild(el("div", "msg " + bz.msg[0], bz.msg[1]));
+  p.appendChild(b);
+}
+
 newTask(); render();
 </script>
 
