@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>Solar-Labor</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,7 +62,8 @@ main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env
 .card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
 .plot{position:sticky;top:env(safe-area-inset-top,0px);padding:10px;display:flex;flex-direction:column;gap:10px}
 @media (max-width:900px){.plot{position:static}}
-canvas{display:block;width:100%;border-radius:10px;touch-action:none}
+canvas{display:block;width:100%;border-radius:10px;touch-action:manipulation}
+html,body,button,input,select,textarea,label,a,.opt,.key,.stop{touch-action:manipulation}
 .views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
 .view{display:flex;flex-direction:column;gap:4px;min-width:0}
 .view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
@@ -361,7 +362,7 @@ function resultsHTML(){var r=st.res||{};
    '<div class="row"><label for="resName">Name(n)</label><input class="num" style="width:13em;text-align:left;padding-inline:8px" id="resName" autocomplete="off" value="'+esc(r.name)+'">'+
    '<label for="resKlasse">Klasse</label><input class="num" style="width:5em" id="resKlasse" autocomplete="off" value="'+esc(r.klasse||APP.klasse)+'"></div>'+
    '<div class="row"><button class="btn pri" type="button" id="resSave">Als Textdatei speichern</button><button class="btn sec" type="button" id="resCopy">Text kopieren</button><button class="btn tip" type="button" id="resShow">Text anzeigen</button></div>'+
-   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:13px"></textarea>'+
+   '<p class="fb" id="resFb"></p><textarea class="free" id="resTxt" rows="10" readonly hidden style="font-family:var(--f-mono);font-size:16px"></textarea>'+
    '<p class="muted"><b>So geht’s bei IServ:</b> Aufgaben → „'+APP.title+'“ öffnen → Datei hochladen → gespeicherte Datei auswählen (meist im Ordner „Downloads“).</p>'+
    '<div class="row"><button class="btn sec" type="button" id="saveBack">Zurück zur Aufgabe</button></div>';}
 function saveCTA(end){return '<div class="merk stack" style="border-color:var(--accent)"><h3 style="color:var(--ink)">Ergebnisse speichern</h3><p class="muted">'+(end?'Geschafft! Speichert jetzt eure Ergebnisse und ladet sie bei IServ hoch.':'Speichert eure Ergebnisse und ladet sie bei IServ hoch.')+'</p><div class="row"><button class="btn pri" type="button" id="ctaSave">Ergebnisse speichern</button></div></div>';}
@@ -933,7 +934,7 @@ var RKN={A:'Schatten',B:'Staub',C:'Dunst',D:'Ausrichtung'};
 var EMO=[['v','ja: Modul aus dem Schatten verschieben'],['p','ja: Modul putzen'],['a','ja: Modul direkt zur Sonne ausrichten'],['n','nein: kann sie nicht ändern']];
 var EMOK={A:'v',B:'p',C:'n',D:'a'};var MASS={v:'Modul verschieben',p:'Modul putzen',a:'Modul ausrichten'};
 var EMB={w:[['s','der Schatten die Leistung am stärksten verringert'],['e','Verschieben am wenigsten Arbeit macht'],['z','der Schatten nur eine Zelle trifft']],d:[['n','kann sie nichts tun'],['p','hilft Putzen'],['a','hilft Ausrichten']]};
-function s7model(k){if(k===st.grp&&!isNaN(famPct()))return famPct();return modelPct(k,GROUPS[k].famV);}
+function s7model(k){if(k===st.grp&&!isNaN(famPct()))return famPct();var m=meas(famSet(k)),m0=meas(base()),r=function(v,d){var q=Math.pow(10,d);return Math.round(v*q)/q;};return r(m.U,1)*r(m.I,2)/(r(m0.U,1)*r(m0.I,2))*100;}/* wie die Paare rechnen: angezeigte Messwerte U und I, dann Anteil an der Referenz */
 function r7(){var s=st.s7,own=st.grp;
   if(!s.gate){var code=s.code||'';
     $('task').innerHTML=head(SI('s7'),'Ergebnisse sichern')+
@@ -950,7 +951,7 @@ function r7(){var s=st.s7,own=st.grp;
   s.fv=s.fv||{};var fvd=function(k){var bad=s.badV&&s.badV[k];return '<select data-v7="'+k+'" class="'+(bad?'bad':'')+'"'+(s.fvOk?' disabled':'')+'><option value="">bitte wählen</option>'+FVD[k].map(function(o){return '<option value="'+o[0]+'"'+(s.fv[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';};
   var fv='<div class="q"><p><span class="task-step">1. So sind wir vorgegangen.</span> Wie habt ihr gemessen, damit man die Ergebnisse aller Gruppen vergleichen kann?</p><p class="lsatz">Wir haben immer nur '+fvd('f1')+' verändert. Alle anderen Größen blieben '+fvd('f2')+' (fairer Versuch). Die Leistung haben wir mit P = '+fvd('f3')+' berechnet.</p>'+
     (s.fvOk?abBox('a',AB3.a):'<div class="row"><button class="btn pri" type="button" id="c7v">Einloggen und prüfen</button></div><p class="fb" id="fb7v"></p>'+tipHTML('s7fv',['Denkt an die Meldung „Kein fairer Versuch“ in der App: Wann kam sie?','Die Formel für die Leistung habt ihr in jeder Zeile der Messtabelle benutzt.']))+'</div>';
-  if(!s.tabOk){s.tabOk=true;GKEYS.forEach(function(k){s.tab[k]=fmt(s7model(k),0);});save();}
+  if(!s.tabOk||s.tabV!==2){s.tabOk=true;s.tabV=2;GKEYS.forEach(function(k){s.tab[k]=fmt(s7model(k),0);});save();}
   var tab='<div class="q"><p><span class="task-step">2. Ordnen.</span> Das ist das Klassenergebnis von der Tafel: So viel Prozent der Referenzleistung bleiben bei Familie K. übrig.</p>'+
     '<div class="tw"><table class="mt"><thead><tr><th>Gruppe · Ursache</th><th>übrig in %</th></tr></thead><tbody>'+GKEYS.map(function(k){var me=k===own;
       return '<tr'+(me?' class="cur"':'')+'><td style="text-align:left">'+k+' · '+FAMR[k]+(me?' <b>(eure Gruppe)</b>':'')+'</td><td class="v"><b>'+s.tab[k]+' %</b></td></tr>';}).join('')+'</tbody></table></div></div>';
