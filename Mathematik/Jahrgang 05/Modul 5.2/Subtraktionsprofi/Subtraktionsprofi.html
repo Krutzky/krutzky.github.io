@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Subtraktionsprofi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+
+html,body{margin:0}
+
+
+/* Layout: a single working column over squared exercise-book paper; the grid of Rechenkästchen is the hero. */
+:root{
+  --paper:#F7FAFD; --line:#D3E0EE; --surface:#FFFFFF; --ink:#1C2A4A; --muted:#55627F;
+  --carry:#D3263A; --ok:#17844F; --okbg:#E3F5EB; --badbg:#FCE6E9; --focus:#2B6CD8;
+  --orange:#E97A00; --pink:#CF0A6E; --purple:#6C3A98; --soft:#EEF3F9;
+  --f-head:"Fredoka","Andika","Trebuchet MS",sans-serif;
+  --f-body:"Andika","Segoe UI",system-ui,sans-serif;
+  --cell:clamp(38px,9.4vw,54px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:24px 24px;}
+.wrap{max-width:860px;margin:0 auto;padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
+h1{font-family:var(--f-head);font-weight:600;font-size:1.6rem;margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .pm{color:var(--carry)}
+h2{font-family:var(--f-head);font-weight:600;font-size:1.3rem;margin:0 0 8px}
+h3{font-family:var(--f-head);font-weight:500;font-size:1.1rem;margin:0 0 6px}
+.hright{display:flex;gap:8px;align-items:center}
+.stars{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars svg{width:20px;height:20px;fill:#F2B705}
+button{font:inherit;color:inherit;cursor:pointer}
+.langbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700}
+nav.tabs{display:flex;gap:6px;margin:14px 0 12px;overflow-x:auto}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:10px;font-family:var(--f-head);font-weight:500;font-size:1.02rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 0 var(--line)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lvl{border:2px solid var(--c);background:var(--surface);border-radius:12px;padding:8px 6px;text-align:center;font-family:var(--f-head);font-weight:500;line-height:1.2}
+.lvl small{display:block;font-family:var(--f-body);font-weight:400;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.lvl[aria-pressed="true"]{background:var(--c);color:#fff}
+.lvl[aria-pressed="true"] small{color:#fff}
+.lvl1{--c:var(--orange)} .lvl2{--c:var(--pink)} .lvl3{--c:var(--purple)}
+.taskhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;color:#fff;background:var(--c)}
+.instr{margin:4px 0 12px}
+.word{background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:1.05rem}
+.gridbox{overflow-x:auto;padding:6px 0 4px}
+.cgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-variant-numeric:tabular-nums;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*.6);font-weight:700;position:relative}
+.cell.lab{font-size:calc(var(--cell)*.32);color:var(--muted);font-weight:700}
+.cell.sign{color:var(--ink)}
+.cell.in{cursor:pointer;background:color-mix(in srgb,var(--surface) 70%,transparent);border-radius:6px;margin:3px;width:calc(var(--cell) - 6px);height:calc(var(--cell) - 6px);border:2px dashed var(--muted)}
+.cell.in.active{border:3px solid var(--focus);background:var(--surface)}
+.cell.carry{font-size:calc(var(--cell)*.42);color:var(--carry)}
+.cell.carry.in{border-color:var(--carry);border-width:1.5px;width:calc(var(--cell) - 18px);height:calc(var(--cell) - 18px);margin:9px}
+.cell.carry.in.active{border-width:3px}
+.cell.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.cell.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.cell.sol{color:var(--focus)}
+.cell.hl{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:4px}
+.rule{grid-column:1/-1;height:3px;background:var(--ink);border-radius:2px;margin:0 2px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px auto 0;max-width:520px}
+.keypad button{border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:52px;font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.keypad button.wide{grid-column:span 2;font-size:1rem}
+.keypad button:active{transform:translateY(1px)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-family:var(--f-head);font-weight:500;font-size:1.05rem;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:#FFF4CC;color:#5A4500;border-color:#E8CF6A}
+:root[data-theme="dark"] .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}}
+.choices{display:grid;gap:8px;margin:8px 0}
+.choice{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.choice.ok{border-color:var(--ok);background:var(--okbg)}
+.choice.bad{border-color:var(--carry);background:var(--badbg)}
+.msg{margin-top:12px;border-radius:12px;padding:10px 14px;font-weight:700}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--carry)}
+.msg.info{background:var(--soft);color:var(--ink);font-weight:400}
+.tipcard{margin-top:12px;border:2px solid #E8CF6A;background:#FFFBEA;color:#3D3000;border-radius:14px;padding:12px 14px}
+:root[data-theme="dark"] .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.tipcard b{font-family:var(--f-head);font-weight:600}
+.claimed{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.progress{color:var(--muted);font-size:.9rem;text-align:center;margin-top:10px;font-variant-numeric:tabular-nums}
+/* explanation */
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px}
+.term{background:var(--soft);border-radius:12px;padding:12px;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.term .eq{font-size:1.4rem;font-weight:700;margin:4px 0}
+.term .lbl{font-size:.85rem;color:var(--muted)}
+.player{display:grid;gap:12px}
+.steptext{background:var(--soft);border-radius:12px;padding:12px 14px;min-height:4.5em}
+.stepnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.stepnav .count{color:var(--muted);font-variant-numeric:tabular-nums;min-width:4em;text-align:center}
+.section{margin-bottom:16px}
+/* merkzettel */
+.merk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.merk ol{margin:0;padding-left:1.3em;display:grid;gap:4px}
+.err{display:grid;gap:10px}
+.erritem{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;background:var(--badbg);border-radius:12px;padding:10px 12px}
+.erritem .ex{font-variant-numeric:tabular-nums;font-weight:700}
+.erritem .ex s{color:var(--carry)}
+.gloss{width:100%;border-collapse:collapse;font-size:.95rem}
+.gloss td,.gloss th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+/* tip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.fcard{perspective:900px;min-height:190px;border:none;background:none;padding:0;text-align:left}
+.fin{position:relative;width:100%;height:100%;min-height:190px;transition:transform .45s;transform-style:preserve-3d}
+.fcard[aria-pressed="true"] .fin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.front{background:var(--surface)}
+.front .q{font-family:var(--f-head);font-weight:600;font-size:1.15rem}
+.front .hint{margin-top:auto;font-size:.82rem;color:var(--muted)}
+.back{background:#FFFBEA;color:#3D3000;transform:rotateY(180deg);border-color:#E8CF6A;font-size:.98rem;overflow:auto}
+:root[data-theme="dark"] .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex:none}
+/* partner work */
+.partner{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:12px}
+.partner .who{flex:1 1 260px;min-width:0}
+.partner .pbtns{display:flex;gap:6px;flex-wrap:wrap}
+.seg{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.9rem}
+.seg[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.names{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.names label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:2px;flex:1 1 140px}
+.names input{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.swap{margin-top:12px;border:2px solid var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface));border-radius:14px;padding:12px 14px}
+.swap p{margin:4px 0}
+/* diagnosis */
+.why{margin-top:12px;border:2px solid var(--carry);background:var(--badbg);border-radius:14px;padding:12px 14px}
+.why b.h{font-family:var(--f-head);font-weight:600;display:block;margin-bottom:4px}
+.why .cardref{margin-top:8px;background:var(--surface);border-radius:10px;padding:8px 10px;border:1px solid var(--line)}
+.linkbtn{border:none;background:none;color:var(--focus);font-weight:700;padding:4px 0;text-decoration:underline}
+.colhelp{text-align:center;color:var(--focus);margin:0 0 4px}
+/* experts */
+.xhead{margin-bottom:12px}
+.xhead p{margin:4px 0 0;color:var(--muted)}
+.numchip{display:inline-block;border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:0 6px;margin:0 1px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.5}
+.numchip[aria-pressed="true"]{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 18%,var(--surface))}
+.numchip.wrong{border-color:var(--carry);background:var(--badbg)}
+.colbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.colbtns button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:700}
+.colbtns button.bad{border-color:var(--carry);background:var(--badbg)}
+.colbtns button.ok{border-color:var(--ok);background:var(--okbg)}
+.cell.errcol{outline:3px solid var(--carry);outline-offset:-3px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){.fin{transition:none}}
+@media (max-width:520px){.erritem{grid-template-columns:1fr} .keypad{grid-template-columns:repeat(5,1fr)} .keypad button.wide{grid-column:span 5} .levels{gap:6px} .lvl{font-size:.92rem}}
+
+/* Klammerprofi additions */
+h1 .br{color:var(--focus)}
+.term{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;font-variant-numeric:tabular-nums;text-align:center;margin:8px 0 4px;line-height:1.3}
+.term .bk{color:var(--focus)}
+.term .hot{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:8px;padding:0 4px}
+.steps{display:grid;gap:6px;justify-content:center;margin:6px 0 4px}
+.sline{display:flex;align-items:center;gap:8px;font-size:clamp(1.3rem,5vw,1.9rem);font-weight:700;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.sline .eq{color:var(--muted);min-width:1em}
+.sline .bk{color:var(--focus)}
+.sline .done{color:var(--ok)}
+.ans{display:inline-flex;align-items:center;justify-content:center;min-width:3.2em;height:1.6em;padding:0 8px;border:2px dashed var(--muted);border-radius:8px;background:var(--surface);color:var(--ink)}
+.ans.active{border:3px solid var(--focus)}
+.ans.bad{border-style:solid;border-color:var(--carry);background:var(--badbg);color:var(--carry)}
+.ans.sol{color:var(--focus);border-style:solid}
+.stepnote{text-align:center;color:var(--muted);font-size:.95rem;margin:0}
+.tomlines{display:grid;gap:6px;justify-content:center;margin:8px 0}
+.tomline{display:flex;gap:10px;align-items:center;font-size:clamp(1.2rem,4.6vw,1.7rem);font-weight:700;font-variant-numeric:tabular-nums}
+.tomline .lab{font-size:.8rem;font-weight:700;color:var(--muted);min-width:4.5em}
+.tomline.mark{outline:3px solid var(--carry);outline-offset:4px;border-radius:6px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:8px 0}
+.pair .term{background:var(--soft);border-radius:12px;padding:10px;margin:0;font-size:clamp(1.3rem,5vw,1.9rem)}
+/* input intro */
+.introbox h3{margin:0 0 6px;font-family:var(--f-head);font-weight:600;font-size:1.2rem}
+.intro{display:grid;gap:14px}
+.dice{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.die{width:64px;height:64px;border-radius:14px;background:var(--surface);border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums}
+.die b{font-size:1.5rem;line-height:1}
+.die small{font-size:.7rem;color:var(--muted)}
+.introbox{background:var(--soft);border-radius:14px;padding:14px 16px}
+.introbox p{margin:6px 0}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox b{font-family:var(--f-head);font-weight:600}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots span.on{background:var(--ink)}
+.way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.15rem,4.4vw,1.6rem);font-weight:700;font-variant-numeric:tabular-nums}
+.way .eq{color:var(--muted)}
+
+
+
+/* Überschlagsprofi additions */
+h1 .br{color:var(--focus)}
+.shop{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.shop td{padding:4px 2px;border-bottom:1px dashed var(--line)}
+.shop td.r{text-align:right;font-weight:700;white-space:nowrap}
+.shop tr.bud td{border-bottom:none;border-top:2px solid var(--ink);font-weight:700;padding-top:8px}
+.shop .ic{width:2em;font-size:1.25rem}
+.given{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-variant-numeric:tabular-nums}
+.steps{display:grid;gap:8px;justify-content:center;margin:6px 0 4px}
+.sline{display:flex;align-items:center;gap:8px;font-size:clamp(1.15rem,4.6vw,1.6rem);font-weight:700;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.sline .lab{font-size:.95rem;font-weight:400;color:var(--muted)}
+.sline .done{color:var(--ok)}
+.ans{display:inline-flex;align-items:center;justify-content:center;min-width:3.4em;height:1.6em;padding:0 8px;border:2px dashed var(--muted);border-radius:8px;background:var(--surface);color:var(--ink)}
+.ans.active{border:3px solid var(--focus)}
+.ans.bad{border-style:solid;border-color:var(--carry);background:var(--badbg);color:var(--carry)}
+.ans.sol{color:var(--focus);border-style:solid}
+.stepnote{text-align:center;color:var(--muted);font-size:.95rem;margin:0}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.prod{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;line-height:1.2}
+.prod .ic{font-size:1.9rem}
+.prod b{font-variant-numeric:tabular-nums}
+.prod[aria-pressed="true"]{border-color:var(--ok);background:var(--okbg)}
+.receipt{font-family:"Courier New",ui-monospace,monospace;background:#FFFDF6;color:#222;border:1px dashed #999;border-radius:6px;padding:12px 16px;max-width:360px;margin:0 auto 12px;font-variant-numeric:tabular-nums}
+.receipt .r{display:flex;justify-content:space-between;gap:12px}
+.receipt hr{border:0;border-top:1px dashed #999;margin:6px 0}
+.receipt .tot{font-weight:700;font-size:1.15rem}
+.tomlines{display:grid;gap:6px;justify-content:center;margin:8px 0}
+.tomline{display:flex;gap:10px;align-items:center;font-size:clamp(1.1rem,4.4vw,1.5rem);font-weight:700;font-variant-numeric:tabular-nums}
+.tomline .lab{font-size:.8rem;font-weight:700;color:var(--muted);min-width:4.5em}
+.tomline.mark{outline:3px solid var(--carry);outline-offset:4px;border-radius:6px}
+.introbox h3{margin:0 0 6px;font-family:var(--f-head);font-weight:600;font-size:1.2rem}
+.intro{display:grid;gap:14px}
+.introbox{background:var(--soft);border-radius:14px;padding:14px 16px}
+.introbox p{margin:6px 0}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox b{font-family:var(--f-head);font-weight:600}
+.rulebox ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots span.on{background:var(--ink)}
+.way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.1rem,4.4vw,1.5rem);font-weight:700;font-variant-numeric:tabular-nums;margin:8px 0}
+.way .eq{color:var(--muted)}
+.way .ok{color:var(--ok)}
+.tags{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.tag{background:#FFD34D;color:#3A2A00;border-radius:6px 14px 14px 6px;padding:4px 14px;font-weight:700;font-variant-numeric:tabular-nums}
+.sentence{margin-top:12px;border:2px solid var(--ok);background:var(--okbg);border-radius:14px;padding:12px 14px}
+.sentence b.h{font-family:var(--f-head);font-weight:600;display:block;margin-bottom:4px;color:var(--ok)}
+
+/* ===== Farben und Look wie im Kosten-Detektiv ===== */
+:root{
+  --paper:#EEF1F6; --surface:#FFFFFF; --soft:#F3F5FA; --ink:#0B1442; --muted:#4E5677; --line:#CBD3E1;
+  --focus:#1C66C0; --ok:#22865A; --okbg:#DDF2E7; --carry:#C8423D; --badbg:#F9E1DF;
+  --navy:#020C45; --accent:#E8892B; --accent-ink:#1B1300; --blue-soft:#DCE8F7; --pro:#6B3FB0;
+  --f-head:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}
+body{background:var(--paper);background-image:none;font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
+header.kd{background:var(--navy);color:#fff;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.kd .hwrap{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+header.kd .brand{display:flex;flex-direction:column}
+header.kd .brand b{font-family:var(--f-head);font-weight:700;font-size:21px;letter-spacing:.2px}
+header.kd .brand span{font-size:13px;color:#8DB7EE}
+header.kd .route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+header.kd .route button{display:flex;align-items:center;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:700;font-family:var(--f-body)}
+header.kd .route button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+header.kd .hright{display:flex;gap:8px;align-items:center}
+header.kd .stars{background:transparent;border:1.5px solid #34428F;color:#fff}
+header.kd .reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700}
+.wrap{padding-top:16px}
+h2,h3,.lvl,.btn,.taskhead h2{font-family:var(--f-head)}
+.panel,.partner{border:1.5px solid var(--line);border-radius:14px;box-shadow:none}
+.btn{border-radius:999px;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:transparent;border:1.5px dashed var(--focus);color:var(--focus)}
+:root[data-theme="dark"] .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}}
+.tipcard{border:1.5px dashed var(--focus);background:var(--blue-soft);color:var(--ink)}
+:root[data-theme="dark"] .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}}
+.word,.introbox{background:var(--soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0}
+.choice{border-width:2px;border-radius:12px}
+.seg[aria-pressed="true"]{background:var(--focus);border-color:var(--focus);color:#fff}
+.keypad button{background:var(--soft);border:2px solid var(--line)}
+.keypad button:active{background:var(--accent);color:var(--accent-ink)}
+.chip{font-family:var(--f-head)}
+.stepnav .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.rulebox{border-color:var(--focus)}
+.sentence{border-radius:12px}
+.svdone{margin-top:16px;border-color:var(--ok);text-align:center}.svdone b{font-size:1.5rem;color:var(--ok)}.choice:disabled{opacity:1;cursor:default}.gate{border:3px solid #C8423D;background:#FDECEC;color:#3A0D0B;border-radius:16px;padding:18px;text-align:center}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:1.3rem}.gate .gq{font-weight:700}.codebox{display:inline-flex;flex-direction:column;align-items:center;background:#111;color:#FFC94D;border-radius:12px;padding:6px 22px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}.codebox small{font-size:.7rem;letter-spacing:2px;color:#9a9a9a}.codebox span{font-size:2rem;letter-spacing:4px}.codepad{max-width:420px}.codepad button{min-height:52px}.gaterow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}.rulebox .starts{color:var(--muted);margin-top:8px}.rulebox .btn{margin-top:10px}
+.multi .cell.sub{color:var(--ink)}
+.cmpbox{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:8px 0}
+.cmpbox .wayc{background:var(--soft);border-radius:12px;padding:10px 12px}
+.cmpbox .wayc h3{margin:0 0 4px}
+.colsteps{display:grid;gap:6px;margin:8px 0;font-variant-numeric:tabular-nums}
+.colsteps div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.colsteps b{color:var(--focus)}
+</style>
+</head>
+<body>
+
+<header class="kd">
+  <div class="hwrap">
+    <div class="brand"><b id="apptitle"></b><span id="appsub"></span></div>
+    <nav class="route" role="tablist" id="tabs" aria-label="Bereiche"></nav>
+    <div class="hright">
+      <div class="stars" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17.4l-6.1 3.4 1.4-6.7-5-4.6 6.8-.8z"/></svg><span id="starcount">0</span></div>
+      <button class="reset" id="langbtn" type="button"></button>
+      <button class="reset" id="resetbtn" type="button"></button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <main id="view"></main>
+</div>
+
+<script>
+const DEFAULT_LANG = "de";
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const MINUS = "−";
+const PLACES = { de: ["Einer", "Zehner", "Hunderter", "Tausender", "Zehntausender"], tr: ["birler", "onlar", "yüzler", "binler", "on binler"] };
+const ABBR = { de: ["E", "Z", "H", "T", "ZT"], tr: ["B", "O", "Y", "Bn", "OBn"] };
+const NAMES = ["Lena", "Murat", "Elif", "Jonas", "Mia", "Ben", "Emre", "Sophie", "Can", "Hannah", "Leon", "Ayla", "Noah", "Zeynep", "Paul", "Amira", "Tim", "Lea", "Yusuf", "Emma"];
+/* Startcode für „Ergebnisse sichern“: die Lehrkraft schreibt ihn nach der Sicherung an der Tafel an */
+const START_CODE = "318";
+
+/* ======================= texts ======================= */
+const T = {
+  de: {
+    title: "Subtraktionsprofi −", sub: "Mehrere Subtrahenden schriftlich subtrahieren", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
+    tabs: ["Input", "Üben", "Experten", "Ergebnisse sichern", "Merkzettel", "Tippkarten"],
+    lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]], solvedN: n => `${n} gelöst`,
+    modes: { klammer: "Was bleibt übrig?", direct: "Direkt subtrahieren", word: "Textaufgabe", compare: "Welcher Weg ist schneller?", errpro: "Fehlersuche für Profis", big: "Drei Subtrahenden" },
+    xTitle: "Expertenaufgaben", xIntro: "Schwierige Aufgaben für Profis: Fehler finden, drei Subtrahenden und knifflige Textaufgaben.", xSolved: n => `${n} Expertenaufgaben gelöst`,
+    pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pA: "Partner A", pB: "Partner B",
+    pTurn: (a, b) => `<b>${a}</b> rechnet. <b>${b}</b> schaut zu, prüft mit und hilft beim Erklären.`, pSwap: (a, b) => `Wechsel! Jetzt rechnet <b>${b}</b>. Vorher erklärt <b>${a}</b> kurz den Rechenweg.`,
+    pDiscuss: "Besprecht zusammen:", pPrompts: ["Warum darf man die Subtrahenden zuerst addieren?", "Wo war ein Übertrag? Wie groß war er?", "Wie könnt ihr das Ergebnis mit der Probe prüfen?", "Welcher Weg war schneller: schrittweise oder direkt?"],
+    tip: "Tipp", check: "Prüfen", show: "Lösung zeigen", next: "Nächste Aufgabe", del: "Löschen",
+    ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Subtraktionsprofi.", "Richtig! Weiter so."],
+    bad: "Noch nicht ganz. Die roten Kästchen stimmen noch nicht.", bad2: "Nutze den Tipp.", carryWord: "Übertrag",
+    colHelp: pl => `Jetzt bist du in der <b>${pl}-Spalte</b>.`,
+    whyTitle: "Warum stimmt das nicht?", cardBtn: n => `Tippkarte ${n} ansehen`,
+    iGrid: "Rechne direkt: Addiere in jeder Spalte die unteren Ziffern und den Übertrag. Ergänze dann bis zur oberen Ziffer. Tippe ein Kästchen an und dann eine Ziffer.",
+    iKlammer: (a, b, c) => `Welcher Term hat denselben Wert wie <b>${fmt(a)} ${MINUS} ${fmt(b)} ${MINUS} ${fmt(c)}</b>?`,
+    klOk: "Richtig! Wer zweimal etwas wegnimmt, nimmt insgesamt die Summe weg.",
+    klBad: ["", "Nein. In der Klammer muss die Summe der Subtrahenden stehen: Beide Zahlen werden weggenommen.", "Nein. Hier wird die zweite Zahl addiert. Sie soll aber auch weggenommen werden."],
+    iWord: "Welcher Term passt zur Aufgabe?", wordOk: "Richtig! Vom Anfang werden beide Zahlen weggenommen.", wordBad: "Lies noch einmal: Was ist am Anfang da, und was wird weggenommen?",
+    words: [
+      (n, a, b, c) => `${n} hat ${fmt(a)} Sammelkarten. ${n} verschenkt ${fmt(b)} Karten an eine Freundin und ${fmt(c)} Karten an den Bruder. Wie viele Karten bleiben übrig?`,
+      (n, a, b, c) => `In der Klassenkasse sind ${fmt(a)} €. Für den Ausflug werden ${fmt(b)} € ausgegeben, für Bücher ${fmt(c)} €. Wie viel Geld bleibt übrig?`,
+      (n, a, b, c) => `Ein Sportverein hat ${fmt(a)} Mitglieder. ${fmt(b)} Mitglieder spielen Fußball, ${fmt(c)} spielen Basketball. Die anderen schwimmen. Wie viele Mitglieder schwimmen?`,
+      (n, a, b, c) => `Eine Bäckerei backt ${fmt(a)} Brötchen. Am Vormittag werden ${fmt(b)} verkauft, am Nachmittag ${fmt(c)}. Wie viele Brötchen bleiben übrig?`,
+    ],
+    words3: (a, b, c, d) => `Auf einem Schulfest werden ${fmt(a)} Lose gedruckt. Die 5a verkauft ${fmt(b)}, die 5b ${fmt(c)} und die 5c ${fmt(d)} Lose. Wie viele Lose sind noch übrig?`,
+    iCmp: "Vergleiche die beiden Wege.", stepWay: "Schrittweise", directWay: "Direkt", twoCalc: "zwei Rechnungen", oneCalc: "eine Rechnung",
+    cmpQ1: "Kommt bei beiden Wegen dasselbe Ergebnis heraus?", cmpO1: ["Ja, das Ergebnis ist gleich.", "Nein, die Ergebnisse sind verschieden."], cmpOk1: "Richtig! a − b − c = a − (b + c). Beide Wege führen zum gleichen Ergebnis.", cmpBad1: "Schau genau hin: Vergleiche die beiden Ergebnisse.",
+    cmpQ2: "Welcher Weg ist effizienter?", cmpO2: ["Direkt: Ich schreibe nur eine Rechnung.", "Schrittweise: Ich brauche zwei Rechnungen.", "Beide sind gleich schnell."], cmpOk2: "Genau! Direkt schreibst du weniger auf und rechnest nur einmal untereinander.", cmpBad2: "Zähle, wie viele Rechnungen du bei jedem Weg aufschreiben musst.",
+    iErr1: "Tom hat schriftlich subtrahiert. In einer Spalte steckt ein Fehler. In welcher?", iErr2: "Warum ist die Spalte falsch?", errColOk: "Richtig, hier steckt der Fehler.", errColBad: "In dieser Spalte stimmt alles. Rechne Spalte für Spalte nach.",
+    reasons: { carry: "Tom hat den Übertrag vergessen.", erg: "Tom hat falsch ergänzt.", top: "Tom hat nur die erste untere Ziffer abgezogen." }, reasonOk: "Genau! So entsteht der Fehler.", reasonBad: "Rechne die Spalte noch einmal nach: Summe der unteren Ziffern mit Übertrag, dann ergänzen.",
+    tip1: "Beginne bei den Einern. Addiere in jeder Spalte die unteren Ziffern und den Übertrag. Ergänze dann bis zur oberen Ziffer.",
+    tip2: "Reicht es nicht bis zur oberen Ziffer, ergänzt du bis zur nächsten Zahl mit dieser Endziffer, zum Beispiel bis 12 oder 22. Die Zehnerziffer davon ist der Übertrag.",
+    colText: (pl, parts, s, target, r, cout) => `<b>${pl}:</b> ${parts} = ${s}. ${s} + <b>${r}</b> = ${target} → schreibe <b>${r}</b>${cout ? `, Übertrag <b>${cout}</b>` : ""}.`,
+    carryIn: c => ` + ${c} (Übertrag)`,
+    diagCarry: pl => `In der ${pl}-Spalte fehlt der Übertrag aus der Spalte davor. Addiere ihn zu den unteren Ziffern.`,
+    diagCol: "So geht diese Spalte:",
+    inTitle: "So subtrahierst du mehrere Zahlen", inBack: "Zurück", inNext: "Weiter", inGo: "Jetzt üben",
+    in1h: "Was bleibt übrig?", in1: "Ayla hat 852 Sammelkarten. Sie schenkt Ben 317 Karten und Mia 245 Karten. Wie viele Karten behält sie?", in1t: "852 − 317 − 245",
+    in2h: "Zweimal wegnehmen", in2: "Ayla nimmt zweimal etwas weg. Das ist so, als würde sie die beiden Zahlen zuerst zusammenzählen und die Summe auf einmal wegnehmen. Das kennst du von der Klammerregel:",
+    in3h: "Weg 1: schrittweise", in3: "Man kann nacheinander subtrahieren. Dafür braucht man zwei Rechnungen:",
+    in4h: "Weg 2: direkt", in4: "Schneller geht es in einer Rechnung. Schreibe alle Zahlen untereinander. In jeder Spalte addierst du die unteren Ziffern und den Übertrag und ergänzt bis zur oberen Ziffer:",
+    in4c: ["<b>Einer:</b> 7 + 5 = 12. 12 + <b>0</b> = 12 → schreibe 0, Übertrag 1.", "<b>Zehner:</b> 1 + 4 + 1 = 6. 6 + <b>9</b> = 15 → schreibe 9, Übertrag 1.", "<b>Hunderter:</b> 3 + 2 + 1 = 6. 6 + <b>2</b> = 8 → schreibe 2."],
+    in5h: "Vergleich", in5: "Beide Wege ergeben 290. Der direkte Weg braucht nur eine Rechnung. Er ist effizienter. Mit der Probe prüfst du: 290 + 317 + 245 = 852 ✓",
+    in5r: "a − b − c = a − (b + c). Direkt: In jeder Spalte die unteren Ziffern mit Übertrag addieren und bis zur oberen Ziffer ergänzen.",
+    in6h: "Teste dich!", in6: "Berechne 643 − 218 − 175.", in6opts: [["250", true], ["260", false], ["350", false]], in6ok: "Richtig! 8 + 5 = 13 → 0, Übertrag 1. 1 + 7 + 1 = 9 → 5, Übertrag 1. 2 + 1 + 1 = 4 → 2. Jetzt kannst du üben.", in6bad: "Noch nicht. Denk an die Überträge: Einer 8 + 5 = 13, Zehner 1 + 7 + 1.",
+    svTitle: "Ergebnisse sichern: Was bleibt übrig?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr tippt. Eure Lehrkraft kommt zu euch und hört zu.",
+    gateH: "Stopp! Erst die Tafel, dann diese Station.", gateP: "Hier sichert ihr zu zweit, was ihr an der Tafel gemeinsam besprochen habt.",
+    gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, schreibt sie den <b>Startcode</b> an die Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen",
+    gateWait: "Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: weiter bei „Üben“ oder „Experten“.",
+    svP1: "Teil 1: Die Regeln", svP2: "Teil 2: Eine Aufgabe zum Schluss", svTask: "Berechnet direkt: <b>643 − 218 − 175</b>",
+    svQ: [["a − b − c hat denselben Wert wie …", ["a − (b + c)", "a − (b − c)", "a − b + c"], 0, "Wer zweimal etwas wegnimmt, nimmt insgesamt die Summe weg."],
+      ["Beim direkten Verfahren rechne ich in jeder Spalte zuerst …", ["die unteren Ziffern und den Übertrag zusammen.", "die obere minus die erste untere Ziffer.", "nur die unterste Ziffer."], 0, "Alle unteren Ziffern werden zuerst addiert, auch der Übertrag."],
+      ["Danach ergänze ich …", ["bis zur oberen Ziffer, wenn nötig mit Übertrag.", "immer bis zur nächsten Zehnerzahl.", "bis zur unteren Ziffer."], 0, "Du ergänzt bis zur oberen Ziffer, zum Beispiel von 12 bis 12 oder von 6 bis 15."],
+      ["Das direkte Verfahren ist effizienter, weil …", ["ich nur eine Rechnung aufschreibe.", "ich keinen Übertrag brauche.", "das Ergebnis größer ist."], 0, "Zähle die Rechnungen: schrittweise zwei, direkt nur eine."],
+      ["Was ist das Ergebnis?", ["250", "260", "350"], 0, "Denk an die Überträge: Einer 8 + 5 = 13, Zehner 1 + 7 + 1 = 9, Hunderter 2 + 1 + 1 = 4."],
+      ["Wie prüft ihr das Ergebnis mit der Probe?", ["250 + 218 + 175 = 643", "643 + 218 + 175", "250 − 218 − 175"], 0, "Bei der Probe addierst du das Ergebnis und alle Subtrahenden. Es muss der Minuend herauskommen."]],
+    svR: "Teil 1: Rechnet direkt", svRi: "Rechnet jede Aufgabe direkt in den Rechenkästchen. Tippt ein Kästchen an und dann eine Ziffer. Die Überträge tragt ihr in die kleinen roten Kästchen ein.",
+    svCheck: "Prüfen", svGridOk: "Richtig!", svGridBad: "Noch nicht. Die roten Kästchen stimmen noch nicht.", svGridHint: "Hilfe für diese Spalte:",
+    svW: "Teil 2: Textaufgabe", svWt: "Ein Schwimmbad hat am Samstag <b>1 250 €</b> eingenommen. Davon werden <b>487 €</b> für Strom und <b>368 €</b> für die Reinigung bezahlt. Wie viel Geld bleibt übrig?",
+    svWq: "Welcher Term passt?", svWopts: ["1 250 − 487 − 368", "1 250 − 487 + 368", "487 + 368 − 1 250"], svWbad: "Am Anfang sind 1 250 €. Beide Beträge werden weggenommen.",
+    svWres: "Ergebnis: Es bleiben", svWprobe: "Probe:", svWnumOk: "Richtig!", svWnumBad: "Noch nicht. Rechnet noch einmal nach.", svWans: "Antwort: Es bleiben 395 € übrig.", svEuro: "€",
+    svP3: "Teil 3: Erklärt es euch gegenseitig",
+    svTalk: "<b>Person 1</b> erklärt: Warum ist a − b − c dasselbe wie a − (b + c)?<br><b>Person 2</b> erklärt: Wie rechnest du beim direkten Verfahren in einer Spalte?<br>Benutzt dabei die Wörter <b>Subtrahend</b>, <b>Übertrag</b>, <b>ergänzen</b> und <b>Differenz</b>.",
+    svStarts: "Satzanfänge: „Wenn ich zweimal etwas wegnehme, …“ · „In jeder Spalte addiere ich zuerst …“",
+    svTalkBtn: "Wir haben es uns gegenseitig erklärt", svTalkDone: "✓ Ihr habt es euch gegenseitig erklärt.",
+    svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svShow: "Zeigt euer iPad eurer Lehrkraft.", svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
+    merkTitle: "Merkzettel",
+    merkRules: ["Zweimal wegnehmen ist dasselbe wie einmal die Summe wegnehmen: a − b − c = a − (b + c).", "Schreibe alle Zahlen stellengerecht untereinander: oben der Minuend, darunter die Subtrahenden.", "Beginne bei den Einern. Addiere in jeder Spalte die unteren Ziffern und den Übertrag.", "Ergänze bis zur oberen Ziffer. Reicht das nicht, ergänze bis zur nächsten Zahl mit dieser Endziffer, zum Beispiel bis 12 oder 22. Die Zehnerziffer davon ist der Übertrag.", "Der Übertrag kann auch 2 sein.", "Probe: Ergebnis + alle Subtrahenden = Minuend.", "Direkt rechnen ist effizienter als schrittweise: eine Rechnung statt zwei."],
+    errTitle: "Typische Fehler",
+    errs: [["Übertrag vergessen", "Zehner: 1 + 4 = 5 → <s>0</s> → richtig: 1 + 4 + 1 = 6 → 9"], ["Nur die erste untere Ziffer abgezogen", "Einer: 2 − 7 … → richtig: 7 + 5 = 12, bis 12 ergänzen → 0"], ["Nicht stellengerecht notiert", "Einer unter Einer, Zehner unter Zehner schreiben"]],
+    glossTitle: "Fachbegriffe",
+    gloss: [["Minuend", "die Zahl, von der weggenommen wird (oben)"], ["Subtrahend", "die Zahl, die weggenommen wird (unten)"], ["Differenz / Wert der Differenz", "das Ergebnis der Subtraktion"], ["Übertrag", "die Zehnerziffer, die in die nächste Spalte wandert"], ["ergänzen", "so viel dazurechnen, bis die obere Ziffer erreicht ist"], ["Probe", "Ergebnis + Subtrahenden = Minuend"]],
+    cardsTitle: "Tippkarten", tapHint: "Tippe zum Umdrehen",
+    cards: [["Warum darf ich die Subtrahenden addieren?", "Zweimal wegnehmen ist wie einmal die Summe wegnehmen: 852 − 317 − 245 = 852 − (317 + 245)."],
+      ["Womit fange ich an?", "Mit den Einern. Addiere alle unteren Ziffern und den Übertrag."],
+      ["Wie ergänze ich?", "Bis zur oberen Ziffer. Beispiel: unten 6, oben 8 → 6 + 2 = 8, schreibe 2."],
+      ["Was, wenn die Summe größer ist?", "Ergänze bis zur nächsten Zahl mit der oberen Endziffer. Beispiel: unten 12, oben 2 → bis 12: 0, Übertrag 1. Unten 6, oben 5 → bis 15: 9, Übertrag 1."],
+      ["Kann der Übertrag 2 sein?", "Ja, bei mehreren Subtrahenden. Beispiel: unten 9 + 8 + 7 = 24, oben 1 → bis 31: 7, Übertrag 3? Nein: bis zur nächsten Zahl mit Endziffer 1 ab 24 ist 31 → 7, Übertrag 3."],
+      ["Wie prüfe ich mein Ergebnis?", "Mit der Probe: Ergebnis + alle Subtrahenden. Es muss der Minuend herauskommen."]],
+  },
+  tr: {
+    title: "Çıkarma ustası −", sub: "Birden fazla çıkanı alt alta çıkarma", other: "Deutsch", reset: "Yeniden başla", reset2: "Gerçekten her şey silinsin mi?",
+    tabs: ["Giriş", "Alıştırma", "Uzman", "Sonuçları pekiştir", "Not kâğıdı", "İpucu kartları"],
+    lv: [["1. seviye", "turuncu"], ["2. seviye", "pembe"], ["3. seviye", "mor"]], solvedN: n => `${n} çözüldü`,
+    modes: { klammer: "Geriye ne kalır?", direct: "Doğrudan çıkar", word: "Problem", compare: "Hangi yol daha hızlı?", errpro: "Uzmanlar için hata arama", big: "Üç çıkan" },
+    xTitle: "Uzman soruları", xIntro: "Uzmanlar için zor sorular: hata bul, üç çıkan ve zor problemler.", xSolved: n => `${n} uzman sorusu çözüldü`,
+    pTitle: "İkili çalışma", pOn: "İki kişi", pOff: "Tek başına", pA: "A kişisi", pB: "B kişisi",
+    pTurn: (a, b) => `<b>${a}</b> hesaplıyor. <b>${b}</b> izliyor, kontrol ediyor ve açıklamaya yardım ediyor.`, pSwap: (a, b) => `Değişim! Şimdi <b>${b}</b> hesaplıyor. Önce <b>${a}</b> çözüm yolunu kısaca açıklıyor.`,
+    pDiscuss: "Birlikte konuşun:", pPrompts: ["Çıkanları neden önce toplayabiliriz?", "Elde nerede vardı? Kaçtı?", "Sonucu sağlamayla nasıl kontrol edersiniz?", "Hangi yol daha hızlıydı: adım adım mı, doğrudan mı?"],
+    tip: "İpucu", check: "Kontrol et", show: "Çözümü göster", next: "Sonraki soru", del: "Sil",
+    ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir çıkarma ustasısın.", "Doğru! Böyle devam et."],
+    bad: "Henüz tam değil. Kırmızı kutular henüz doğru değil.", bad2: "İpucunu kullan.", carryWord: "Elde",
+    colHelp: pl => `Şimdi <b>${pl}</b> sütunundasın.`,
+    whyTitle: "Neden doğru değil?", cardBtn: n => `${n}. ipucu kartına bak`,
+    iGrid: "Doğrudan hesapla: Her sütunda alttaki rakamları ve eldeyi topla. Sonra üstteki rakama tamamla. Bir kutuya, sonra bir rakama dokun.",
+    iKlammer: (a, b, c) => `Hangi ifade <b>${fmt(a)} ${MINUS} ${fmt(b)} ${MINUS} ${fmt(c)}</b> ile aynı değere sahip?`,
+    klOk: "Doğru! İki kez bir şey çıkaran, toplamda ikisinin toplamını çıkarır.",
+    klBad: ["", "Hayır. Parantezin içinde çıkanların toplamı olmalı: İki sayı da çıkarılır.", "Hayır. Burada ikinci sayı ekleniyor. Ama o da çıkarılmalı."],
+    iWord: "Hangi ifade probleme uyuyor?", wordOk: "Doğru! Baştaki sayıdan iki sayı da çıkarılır.", wordBad: "Tekrar oku: Başta ne var, ne çıkarılıyor?",
+    words: [
+      (n, a, b, c) => `${n} ${fmt(a)} koleksiyon kartına sahip. ${fmt(b)} kartı bir arkadaşına, ${fmt(c)} kartı kardeşine veriyor. Geriye kaç kart kalır?`,
+      (n, a, b, c) => `Sınıf kasasında ${fmt(a)} € var. Gezi için ${fmt(b)} €, kitaplar için ${fmt(c)} € harcanıyor. Geriye ne kadar para kalır?`,
+      (n, a, b, c) => `Bir spor kulübünün ${fmt(a)} üyesi var. ${fmt(b)} üye futbol, ${fmt(c)} üye basketbol oynuyor. Diğerleri yüzüyor. Kaç üye yüzüyor?`,
+      (n, a, b, c) => `Bir fırın ${fmt(a)} ekmek pişiriyor. Öğleden önce ${fmt(b)}, öğleden sonra ${fmt(c)} tane satılıyor. Geriye kaç ekmek kalır?`,
+    ],
+    words3: (a, b, c, d) => `Bir okul şenliği için ${fmt(a)} piyango bileti basılıyor. 5a ${fmt(b)}, 5b ${fmt(c)} ve 5c ${fmt(d)} bilet satıyor. Geriye kaç bilet kalır?`,
+    iCmp: "İki yolu karşılaştır.", stepWay: "Adım adım", directWay: "Doğrudan", twoCalc: "iki işlem", oneCalc: "bir işlem",
+    cmpQ1: "İki yolda da aynı sonuç mu çıkıyor?", cmpO1: ["Evet, sonuç aynı.", "Hayır, sonuçlar farklı."], cmpOk1: "Doğru! a − b − c = a − (b + c). İki yol da aynı sonuca götürür.", cmpBad1: "Dikkatli bak: İki sonucu karşılaştır.",
+    cmpQ2: "Hangi yol daha verimli?", cmpO2: ["Doğrudan: Sadece bir işlem yazarım.", "Adım adım: İki işlem gerekir.", "İkisi de aynı hızda."], cmpOk2: "Aynen öyle! Doğrudan yolda daha az yazarsın ve sadece bir kez alt alta hesaplarsın.", cmpBad2: "Her yolda kaç işlem yazman gerektiğini say.",
+    iErr1: "Tom alt alta çıkarma yaptı. Bir sütunda hata var. Hangisinde?", iErr2: "Bu sütun neden yanlış?", errColOk: "Doğru, hata burada.", errColBad: "Bu sütunda her şey doğru. Sütun sütun tekrar hesapla.",
+    reasons: { carry: "Tom eldeyi unuttu.", erg: "Tom yanlış tamamladı.", top: "Tom sadece ilk alttaki rakamı çıkardı." }, reasonOk: "Aynen öyle! Hata böyle oluşuyor.", reasonBad: "Sütunu tekrar hesapla: alttaki rakamların ve eldenin toplamı, sonra tamamla.",
+    tip1: "Birlerden başla. Her sütunda alttaki rakamları ve eldeyi topla. Sonra üstteki rakama tamamla.",
+    tip2: "Üstteki rakama yetmiyorsa, bu son rakamla biten bir sonraki sayıya tamamla, örneğin 12'ye veya 22'ye. Onun onlar basamağındaki rakam eldedir.",
+    colText: (pl, parts, s, target, r, cout) => `<b>${pl}:</b> ${parts} = ${s}. ${s} + <b>${r}</b> = ${target} → <b>${r}</b> yaz${cout ? `, elde <b>${cout}</b>` : ""}.`,
+    carryIn: c => ` + ${c} (elde)`,
+    diagCarry: pl => `${pl} sütununda önceki sütundan gelen elde eksik. Onu alttaki rakamlara ekle.`,
+    diagCol: "Bu sütun böyle hesaplanır:",
+    inTitle: "Birden fazla sayıyı böyle çıkarırsın", inBack: "Geri", inNext: "İleri", inGo: "Şimdi alıştırma yap",
+    in1h: "Geriye ne kalır?", in1: "Ayla'nın 852 koleksiyon kartı var. Ben'e 317, Mia'ya 245 kart veriyor. Kendisine kaç kart kalır?", in1t: "852 − 317 − 245",
+    in2h: "İki kez çıkarmak", in2: "Ayla iki kez bir şey çıkarıyor. Bu, iki sayıyı önce toplayıp toplamı bir kerede çıkarmak gibidir. Bunu parantez kuralından biliyorsun:",
+    in3h: "1. yol: adım adım", in3: "Art arda çıkarabilirsin. Bunun için iki işlem gerekir:",
+    in4h: "2. yol: doğrudan", in4: "Tek işlemle daha hızlı olur. Bütün sayıları alt alta yaz. Her sütunda alttaki rakamları ve eldeyi toplarsın ve üstteki rakama tamamlarsın:",
+    in4c: ["<b>Birler:</b> 7 + 5 = 12. 12 + <b>0</b> = 12 → 0 yaz, elde 1.", "<b>Onlar:</b> 1 + 4 + 1 = 6. 6 + <b>9</b> = 15 → 9 yaz, elde 1.", "<b>Yüzler:</b> 3 + 2 + 1 = 6. 6 + <b>2</b> = 8 → 2 yaz."],
+    in5h: "Karşılaştırma", in5: "İki yol da 290 verir. Doğrudan yol sadece bir işlem gerektirir. Daha verimlidir. Sağlama ile kontrol edersin: 290 + 317 + 245 = 852 ✓",
+    in5r: "a − b − c = a − (b + c). Doğrudan: Her sütunda alttaki rakamları eldeyle topla ve üstteki rakama tamamla.",
+    in6h: "Kendini dene!", in6: "643 − 218 − 175 işlemini hesapla.", in6opts: [["250", true], ["260", false], ["350", false]], in6ok: "Doğru! 8 + 5 = 13 → 0, elde 1. 1 + 7 + 1 = 9 → 5, elde 1. 2 + 1 + 1 = 4 → 2. Şimdi alıştırma yapabilirsin.", in6bad: "Henüz değil. Eldeleri düşün: birler 8 + 5 = 13, onlar 1 + 7 + 1.",
+    svTitle: "Sonuçları pekiştir: Geriye ne kalır?", svIntro: "İki kişi bir iPad ile çalışın. Dokunmadan önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.",
+    gateH: "Dur! Önce tahta, sonra bu bölüm.", gateP: "Burada tahtada birlikte konuştuklarınızı iki kişi olarak pekiştiriyorsunuz.",
+    gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtaya yazar. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil",
+    gateWait: "Bu henüz başlama kodu değil. Öğretmeninizin işaretini bekleyin. O zamana kadar „Alıştırma“ veya „Uzman“ ile devam edin.",
+    svP1: "1. Bölüm: Kurallar", svP2: "2. Bölüm: Son bir soru", svTask: "Doğrudan hesaplayın: <b>643 − 218 − 175</b>",
+    svQ: [["a − b − c şununla aynı değere sahiptir …", ["a − (b + c)", "a − (b − c)", "a − b + c"], 0, "İki kez bir şey çıkaran, toplamda ikisinin toplamını çıkarır."],
+      ["Doğrudan yöntemde her sütunda önce …", ["alttaki rakamları ve eldeyi toplarım.", "üstteki rakamdan ilk alttaki rakamı çıkarırım.", "sadece en alttaki rakamı alırım."], 0, "Önce bütün alttaki rakamlar toplanır, elde de."],
+      ["Sonra …", ["gerekirse elde ile üstteki rakama tamamlarım.", "her zaman bir sonraki onluğa tamamlarım.", "alttaki rakama tamamlarım."], 0, "Üstteki rakama tamamlarsın, örneğin 12'den 12'ye veya 6'dan 15'e."],
+      ["Doğrudan yöntem daha verimlidir, çünkü …", ["sadece bir işlem yazarım.", "eldeye ihtiyacım olmaz.", "sonuç daha büyük olur."], 0, "İşlemleri say: adım adım iki, doğrudan sadece bir."],
+      ["Sonuç nedir?", ["250", "260", "350"], 0, "Eldeleri düşün: birler 8 + 5 = 13, onlar 1 + 7 + 1 = 9, yüzler 2 + 1 + 1 = 4."],
+      ["Sonucu sağlamayla nasıl kontrol edersiniz?", ["250 + 218 + 175 = 643", "643 + 218 + 175", "250 − 218 − 175"], 0, "Sağlamada sonucu ve bütün çıkanları toplarsın. Eksilen çıkmalı."]],
+    svR: "1. Bölüm: Doğrudan hesaplayın", svRi: "Her işlemi kutucuklarda doğrudan hesaplayın. Bir kutuya, sonra bir rakama dokunun. Eldeleri küçük kırmızı kutulara yazın.",
+    svCheck: "Kontrol et", svGridOk: "Doğru!", svGridBad: "Henüz değil. Kırmızı kutular henüz doğru değil.", svGridHint: "Bu sütun için yardım:",
+    svW: "2. Bölüm: Problem", svWt: "Bir yüzme havuzu cumartesi günü <b>1 250 €</b> kazanıyor. Bunun <b>487 €</b>'su elektriğe, <b>368 €</b>'su temizliğe ödeniyor. Geriye ne kadar para kalır?",
+    svWq: "Hangi ifade uyuyor?", svWopts: ["1 250 − 487 − 368", "1 250 − 487 + 368", "487 + 368 − 1 250"], svWbad: "Başta 1 250 € var. İki tutar da çıkarılıyor.",
+    svWres: "Sonuç: Geriye kalan", svWprobe: "Sağlama:", svWnumOk: "Doğru!", svWnumBad: "Henüz değil. Tekrar hesaplayın.", svWans: "Cevap: Geriye 395 € kalır.", svEuro: "€",
+    svP3: "3. Bölüm: Birbirinize açıklayın",
+    svTalk: "<b>1. kişi</b> açıklar: a − b − c neden a − (b + c) ile aynıdır?<br><b>2. kişi</b> açıklar: Doğrudan yöntemde bir sütunda nasıl hesaplarsın?<br>Şu kelimeleri kullanın: <b>çıkan (Subtrahend)</b>, <b>elde (Übertrag)</b>, <b>tamamlamak (ergänzen)</b>, <b>fark (Differenz)</b>.",
+    svStarts: "Cümle başlangıçları: „İki kez bir şey çıkarırsam …“ · „Her sütunda önce … toplarım.“",
+    svTalkBtn: "Birbirimize açıkladık", svTalkDone: "✓ Birbirinize açıkladınız.",
+    svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svShow: "iPad'inizi öğretmeninize gösterin.", svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
+    merkTitle: "Not kâğıdı",
+    merkRules: ["İki kez çıkarmak, toplamı bir kez çıkarmakla aynıdır: a − b − c = a − (b + c).", "Bütün sayıları basamaklarına göre alt alta yaz: üstte eksilen, altta çıkanlar.", "Birlerden başla. Her sütunda alttaki rakamları ve eldeyi topla.", "Üstteki rakama tamamla. Yetmiyorsa, bu son rakamla biten bir sonraki sayıya tamamla, örneğin 12'ye veya 22'ye. Onun onlar basamağı eldedir.", "Elde 2 de olabilir.", "Sağlama: sonuç + bütün çıkanlar = eksilen.", "Doğrudan hesaplamak adım adım hesaplamaktan daha verimlidir: iki yerine bir işlem."],
+    errTitle: "Sık yapılan hatalar",
+    errs: [["Elde unutulmuş", "Onlar: 1 + 4 = 5 → <s>0</s> → doğrusu: 1 + 4 + 1 = 6 → 9"], ["Sadece ilk alttaki rakam çıkarılmış", "Birler: 2 − 7 … → doğrusu: 7 + 5 = 12, 12'ye tamamla → 0"], ["Basamaklar karışmış", "Birler birlerin, onlar onların altına yazılır"]],
+    glossTitle: "Terimler",
+    gloss: [["Minuend (eksilen)", "kendisinden çıkarılan sayı (üstte)"], ["Subtrahend (çıkan)", "çıkarılan sayı (altta)"], ["Differenz (fark)", "çıkarmanın sonucu"], ["Übertrag (elde)", "bir sonraki sütuna geçen onlar rakamı"], ["ergänzen (tamamlamak)", "üstteki rakama ulaşana kadar eklemek"], ["Probe (sağlama)", "sonuç + çıkanlar = eksilen"]],
+    cardsTitle: "İpucu kartları", tapHint: "Çevirmek için dokun",
+    cards: [["Çıkanları neden toplayabilirim?", "İki kez çıkarmak, toplamı bir kez çıkarmak gibidir: 852 − 317 − 245 = 852 − (317 + 245)."],
+      ["Nereden başlarım?", "Birlerden. Bütün alttaki rakamları ve eldeyi topla."],
+      ["Nasıl tamamlarım?", "Üstteki rakama kadar. Örnek: altta 6, üstte 8 → 6 + 2 = 8, 2 yaz."],
+      ["Toplam daha büyükse?", "Üstteki son rakamla biten bir sonraki sayıya tamamla. Örnek: altta 12, üstte 2 → 12'ye: 0, elde 1. Altta 6, üstte 5 → 15'e: 9, elde 1."],
+      ["Elde 2 olabilir mi?", "Evet, birden fazla çıkan varsa. Örnek: altta 9 + 8 + 7 = 24, üstte 1 → 31'e: 7, elde 3."],
+      ["Sonucumu nasıl kontrol ederim?", "Sağlama ile: sonuç + bütün çıkanlar. Eksilen çıkmalı."]],
+  },
+};
+/* Tippkarte 5: Beispiel mit Übertrag 2 (statt 3) */
+T.de.cards[4] = ["Kann der Übertrag 2 sein?", "Ja, bei mehreren Subtrahenden. Beispiel: unten 9 + 8 = 17, oben 3 → bis 23: 6, Übertrag 2."];
+T.tr.cards[4] = ["Elde 2 olabilir mi?", "Evet, birden fazla çıkan varsa. Örnek: altta 9 + 8 = 17, üstte 3 → 23'e: 6, elde 2."];
+
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) { } } };
+let lang = store.get("sp-lang", null) || DEFAULT_LANG;
+const L = () => T[lang];
+
+/* ======================= math ======================= */
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+const dig = (n, p) => Math.floor(n / 10 ** p) % 10, len = n => String(n).length;
+const sum = a => a.reduce((x, y) => x + y, 0);
+/* direkte schriftliche Subtraktion mehrerer Subtrahenden (Ergänzungsverfahren) */
+function calcMulti(a, subs) {
+  const W = len(a), cols = []; let cin = 0;
+  for (let p = 0; p < W; p++) {
+    const ds = subs.map(s => p < len(s) ? dig(s, p) : null).filter(x => x !== null);
+    const s = sum(ds) + cin, t = dig(a, p), r = ((t - s) % 10 + 10) % 10, cout = (s + r - t) / 10;
+    cols.push({ p, ds, cin, s, t, r, cout, target: s + r }); cin = cout;
+  }
+  return { a, subs, W, cols, result: a - sum(subs) };
+}
+function carryCount(P) { return P.cols.filter(c => c.cout > 0).length }
+function maxCarry(P) { return Math.max(...P.cols.map(c => c.cout)) }
+function genNums(lv, n) {
+  let g = 0;
+  while (g++ < 2000) {
+    let a, subs;
+    if (lv === 1) { a = rnd(400, 989); subs = [rnd(105, Math.floor(a * .45)), rnd(21, Math.floor(a * .4))] }
+    else if (lv === 2) { a = rnd(2100, 9890); subs = [rnd(310, Math.floor(a * .45)), rnd(120, Math.floor(a * .4))] }
+    else if (lv === 3) { a = rnd(4100, 9890); subs = [rnd(810, Math.floor(a * .35)), rnd(310, Math.floor(a * .3)), rnd(120, Math.floor(a * .25))] }
+    else { a = rnd(21000, 98900); subs = [rnd(3100, Math.floor(a * .35)), rnd(1200, Math.floor(a * .3)), rnd(210, Math.floor(a * .2))] }
+    if (n === 3 && subs.length === 2) subs.push(rnd(110, Math.floor(a * .15)));
+    const res = a - sum(subs);
+    if (res < 10 || a % 10 === 0 || subs.some(s => s % 10 === 0)) continue;
+    const P = calcMulti(a, subs);
+    const need = lv === 1 ? 1 : 2;
+    if (carryCount(P) < need) continue;
+    if (lv >= 3 && subs.length === 3 && maxCarry(P) < 2 && g < 1500) continue;
+    return { a, subs };
+  }
+  return { a: 852, subs: [317, 245] };
+}
+
+/* ======================= tasks ======================= */
+const CYCLE = { 1: ["klammer", "direct", "word", "direct", "compare"], 2: ["direct", "klammer", "word", "direct", "compare"], 3: ["direct", "word", "direct", "compare"] };
+let seq = store.get("sp-seq", { 1: 0, 2: 0, 3: 0 });
+const gridPhase = (a, subs) => ({ type: "grid", P: calcMulti(a, subs) });
+function makeTask(lv) {
+  if (lv === 4) { const r = Math.random(); return r < .4 ? makeErr() : r < .7 ? makeWord(4, true) : makeBig() }
+  const m = CYCLE[lv][seq[lv] % CYCLE[lv].length]; seq[lv]++; store.set("sp-seq", seq);
+  return ({ klammer: makeKlammer, direct: makeDirect, word: makeWord, compare: makeCompare })[m](lv);
+}
+function makeDirect(lv) { const { a, subs } = genNums(lv); return { mode: "direct", lv, phases: [gridPhase(a, subs)] } }
+function makeBig() { const { a, subs } = genNums(4, 3); return { mode: "big", lv: 4, phases: [gridPhase(a, subs)] } }
+function makeKlammer(lv) {
+  const { a, subs } = genNums(lv, 2); const [b, c] = subs;
+  const opts = shuffle([{ t: `${fmt(a)} ${MINUS} (${fmt(b)} + ${fmt(c)})`, ok: true, k: 0 }, { t: `${fmt(a)} ${MINUS} (${fmt(b)} ${MINUS} ${fmt(c)})`, ok: false, k: 1 }, { t: `${fmt(a)} ${MINUS} ${fmt(b)} + ${fmt(c)}`, ok: false, k: 2 }]);
+  return { mode: "klammer", lv, a, b, c, phases: [{ type: "choice", instr: "klammer", opts: opts.map(o => ({ text: o.t, ok: o.ok, bad: () => L().klBad[o.k] })), okMsg: () => L().klOk }, gridPhase(a, subs)] };
+}
+function makeWord(lv, three) {
+  const n = three ? 3 : 2, { a, subs } = genNums(lv === 4 ? 3 : lv, n), nm = pick(NAMES), x = rnd(0, 3);
+  const sStr = subs.map(fmt);
+  const right = `${fmt(a)} ${MINUS} ${sStr.join(` ${MINUS} `)}`;
+  const w1 = `${fmt(a)} ${MINUS} ${sStr[0]} + ${sStr.slice(1).join(" + ")}`;
+  const w2 = `${sStr.join(" + ")} ${MINUS} ${fmt(a)}`;
+  const opts = shuffle([{ text: right, ok: true }, { text: w1, ok: false }, { text: w2, ok: false }]).map(o => ({ ...o, bad: () => L().wordBad }));
+  return { mode: three ? "word" : "word", lv, nm, x, a, subs, three: !!three, phases: [{ type: "choice", instr: "word", opts, okMsg: () => L().wordOk }, gridPhase(a, subs)] };
+}
+function makeCompare(lv) {
+  const { a, subs } = genNums(lv, 2); const [b, c] = subs;
+  return {
+    mode: "compare", lv, a, b, c, phases: [
+      { type: "choice", instr: "cmp1", opts: [{ text: () => L().cmpO1[0], ok: true }, { text: () => L().cmpO1[1], ok: false, bad: () => L().cmpBad1 }], okMsg: () => L().cmpOk1 },
+      { type: "choice", instr: "cmp2", opts: [{ text: () => L().cmpO2[0], ok: true }, { text: () => L().cmpO2[1], ok: false, bad: () => L().cmpBad2 }, { text: () => L().cmpO2[2], ok: false, bad: () => L().cmpBad2 }], okMsg: () => L().cmpOk2 }]
+  };
+}
+function makeErr() {
+  let g = 0;
+  while (g++ < 200) {
+    const { a, subs } = genNums(3, 3), P = calcMulti(a, subs);
+    const cand = P.cols.filter(c => c.cin > 0);
+    if (!cand.length) continue;
+    const col = pick(cand), errType = Math.random() < .6 ? "carry" : "erg";
+    const wrong = P.cols.map(c => c.r);
+    if (errType === "carry") { const s = col.s - col.cin, r = ((col.t - s) % 10 + 10) % 10, co = (s + r - col.t) / 10; if (r === col.r || co !== col.cout) continue; wrong[col.p] = r }
+    else { wrong[col.p] = (col.r + pick([1, 9])) % 10 }
+    return { mode: "errpro", lv: 4, P, errCol: col.p, errType, wrong, badCols: [], badReasons: [], reasons: shuffle(["carry", "erg", "top"]), phases: [{ type: "cols" }, { type: "reasons" }] };
+  }
+  return makeBig();
+}
+
+/* ======================= state ======================= */
+let stats = store.get("sp-stats", { stars: 0, solved: [0, 0, 0, 0] });
+let level = store.get("sp-level", 1);
+let partner = store.get("sp-partner", { on: false, turn: 0 });
+let tab = 0, introStep = 0, introPick = null;
+let task = null, pi = 0, ent = null, active = null, marks = null, attempts = 0, tipLevel = 0, done = false, feedback = null, diag = null, showCard = false, revealed = false;
+function save() { store.set("sp-stats", stats); store.set("sp-level", level); store.set("sp-lang", lang) }
+const curLevel = () => tab === 2 ? 4 : level;
+const ph = () => task.phases[pi];
+function newTask() { task = makeTask(curLevel()); task.promptIdx = rnd(0, 3); attempts = 0; done = false; feedback = null; diag = null; pi = 0; initPhase() }
+function initPhase() { const P = ph(); tipLevel = 0; marks = null; active = null; revealed = false; task.picked = null; task.badPicks = []; if (P.type === "grid") { ent = { res: [], carry: [] }; active = { role: "res", p: 0 } } }
+function advance(msg) { if (pi < task.phases.length - 1) { pi++; initPhase(); feedback = msg ? { cls: "ok", text: msg } : null; render() } else success(msg) }
+const saved = {};
+function stash() { if (tab === 1 || tab === 2) saved[tab] = { task, pi, ent, active, marks, attempts, tipLevel, done, feedback, diag, showCard, revealed } }
+function unstash() { if (tab === 1 || tab === 2) { const s = saved[tab]; if (s) ({ task, pi, ent, active, marks, attempts, tipLevel, done, feedback, diag, showCard, revealed } = s); else newTask() } }
+
+/* ======================= render ======================= */
+function el(tag, cls, h) { const e = document.createElement(tag); if (cls) e.className = cls; if (h !== undefined) e.innerHTML = h; return e }
+const view = document.getElementById("view");
+function renderShell() {
+  document.documentElement.lang = lang; renderReset();
+  document.getElementById("apptitle").textContent = L().title; document.getElementById("appsub").textContent = L().sub;
+  document.getElementById("langbtn").textContent = L().other; document.getElementById("starcount").textContent = stats.stars;
+  const tabs = document.getElementById("tabs"); tabs.innerHTML = "";
+  L().tabs.forEach((name, i) => { const b = el("button", "", name); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", i === tab); b.onclick = () => goTab(i); tabs.appendChild(b) });
+}
+function goTab(i) { stash(); tab = i; unstash(); render(); window.scrollTo(0, 0) }
+function render() { renderShell(); view.innerHTML = "";[renderIntro, renderPractice, renderExpert, renderSave, renderMerk, renderCards][tab]() }
+
+/* static grid (Input, Fehlersuche) */
+function staticGrid(P, o = {}) {
+  const W = P.W, g = el("div", "cgrid multi"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
+  const add = (cls, txt) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); g.appendChild(c); return c };
+  add("lab", ""); for (let p = W - 1; p >= 0; p--) { const c = add("lab", ABBR[lang][p]); if (o.errP === p) c.classList.add("errcol") }
+  add("sign", ""); for (let p = W - 1; p >= 0; p--) add("", dig(P.a, p));
+  P.subs.forEach(s => { add("sign", MINUS); for (let p = W - 1; p >= 0; p--) add("sub", p < len(s) ? dig(s, p) : "") });
+  add("", ""); for (let p = W - 1; p >= 0; p--) { const c = p > 0 ? P.cols[p].cin : 0; const v = o.noCarry ? (p > 0 && o.noCarry[p] !== undefined ? o.noCarry[p] : c) : c; add("carry", v ? v : "") }
+  g.appendChild(el("div", "rule"));
+  add("", ""); const rd = o.digits || P.cols.map(c => c.r);
+  const lead = len(P.result);
+  for (let p = W - 1; p >= 0; p--) { const c = add(o.cls || "", p < lead || o.digits ? (p < W ? rd[p] : "") : ""); if (o.digits && p >= lead && rd[p] === 0) c.textContent = ""; if (o.errP === p) c.classList.add("errcol") }
+  return g;
+}
+
+/* ---- ergebnisse sichern ---- */
+let svPick = {}, svFirst = {}, svGate = false, svNo = false, svTalk = false, svCode = "";
+/* Rechenaufgaben der Sicherung (wie in einer Klassenarbeit) */
+const SV_GRIDS = [[643, [218, 175]], [5372, [1486, 2095]], [7405, [2368, 1759]]];
+const svG = SV_GRIDS.map(([a, subs]) => ({ P: calcMulti(a, subs), ent: { res: {}, carry: {} }, marks: null, done: false, tries: 0 }));
+let svActive = { i: 0, role: "res", p: 0 }, svNum = { res: { v: "", ok: false, bad: false }, probe: { v: "", ok: false, bad: false } }, svNumActive = "res";
+function svGridBlock(i) {
+  const G = svG[i], P = G.P, W = P.W, box = el("div", "section");
+  box.appendChild(el("p", "", `<b>${String.fromCharCode(97 + i)})</b> ${fmt(P.a)} ${P.subs.map(x => MINUS + " " + fmt(x)).join(" ")}`));
+  const g = el("div", "cgrid multi"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
+  const add = (cls, txt, attrs = {}) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); for (const k in attrs) c.setAttribute(k, attrs[k]); g.appendChild(c); return c };
+  add("lab", ""); for (let p = W - 1; p >= 0; p--) add("lab", ABBR[lang][p]);
+  add("sign", ""); for (let p = W - 1; p >= 0; p--) add("", dig(P.a, p));
+  P.subs.forEach(s => { add("sign", MINUS); for (let p = W - 1; p >= 0; p--) add("sub", p < len(s) ? dig(s, p) : "") });
+  const isAct = (role, p) => svActive.i === i && svActive.role === role && svActive.p === p;
+  add("", "");
+  for (let p = W - 1; p >= 0; p--) {
+    if (p > 0 && !G.done) { const c = add("carry in", G.ent.carry[p] === undefined ? "" : G.ent.carry[p], { "data-role": "carry", "data-p": p, role: "button", tabindex: "0" }); if (isAct("carry", p)) c.classList.add("active"); if (G.marks && G.marks["c" + p]) c.classList.add(G.marks["c" + p]) }
+    else add("carry", p > 0 && P.cols[p].cin ? P.cols[p].cin : "");
+  }
+  g.appendChild(el("div", "rule"));
+  add("", "");
+  const lead = len(P.result);
+  for (let p = W - 1; p >= 0; p--) {
+    if (G.done) { add("", p < lead ? dig(P.result, p) : ""); continue }
+    const c = add("in", G.ent.res[p] === undefined ? "" : G.ent.res[p], { "data-role": "res", "data-p": p, role: "button", tabindex: "0" }); if (isAct("res", p)) c.classList.add("active"); if (G.marks && G.marks["r" + p]) c.classList.add(G.marks["r" + p]);
+  }
+  const gb = el("div", "gridbox"); gb.appendChild(g); box.appendChild(gb);
+  if (!G.done) {
+    gb.addEventListener("click", e => { const c = e.target.closest(".cell.in"); if (!c) return; svActive = { i, role: c.dataset.role, p: Number(c.dataset.p) }; render() });
+    if (svActive.i === i) {
+      const kp = el("div", "keypad"); [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => svType(String(d)); kp.appendChild(b) });
+      const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => svType(""); kp.appendChild(del); box.appendChild(kp);
+    }
+    const a = el("div", "actions"), cb = el("button", "btn primary", L().svCheck); cb.type = "button"; cb.onclick = () => svCheck(i); a.appendChild(cb); box.appendChild(a);
+    if (G.marks) { box.appendChild(el("div", "msg bad", L().svGridBad)); if (G.tries >= 2 && G.hint !== undefined) box.appendChild(el("div", "colsteps", `<div>${L().svGridHint} ${colText(P.cols[G.hint])}</div>`)) }
+  } else box.appendChild(el("div", "msg ok", L().svGridOk));
+  return box;
+}
+function svType(d) {
+  const G = svG[svActive.i]; if (G.done) return; const W = G.P.W, p = svActive.p;
+  if (svActive.role === "res") { if (d === "") delete G.ent.res[p]; else G.ent.res[p] = Number(d); if (d !== "" && p + 1 < W) svActive = { i: svActive.i, role: "carry", p: p + 1 } }
+  else { if (d === "") delete G.ent.carry[p]; else G.ent.carry[p] = Number(d); if (d !== "") svActive = { i: svActive.i, role: "res", p } }
+  G.marks = null; render();
+}
+function svCheck(i) {
+  const G = svG[i], P = G.P, lead = len(P.result), m = {}; let bad = null;
+  for (let p = 0; p < P.W; p++) {
+    const got = G.ent.res[p], ok = p < lead ? got === P.cols[p].r : (got === undefined || got === 0); m["r" + p] = ok ? "ok" : "bad"; if (!ok && bad === null) bad = p;
+    if (p > 0) { const wc = P.cols[p].cin, gc = G.ent.carry[p] === undefined ? 0 : G.ent.carry[p]; if (G.ent.carry[p] !== undefined || wc) m["c" + p] = gc === wc ? "ok" : "bad"; if (gc !== wc && bad === null) bad = p }
+  }
+  const ok = bad === null; if (!(("g" + i) in svFirst)) svFirst["g" + i] = ok;
+  if (ok) { G.done = true; G.marks = null; const nx = svG.findIndex(x => !x.done); if (nx >= 0) svActive = { i: nx, role: "res", p: 0 } }
+  else { G.tries++; G.marks = m; G.hint = bad }
+  render();
+}
+function renderSave() {
+  const Q = L().svQ, p = el("section", "panel intro"); view.appendChild(p);
+  if (!svGate) {
+    const g = el("div", "gate");
+    g.innerHTML = `<div class="gsig">✋</div><h3>${L().gateH}</h3><p>${L().gateP}</p><p class="gq">${L().gateQ}</p>`;
+    g.appendChild(el("div", "codebox", `<small>${L().gateCode}</small><span>${(svCode + "___").slice(0, 3).split("").join(" ")}</span>`));
+    const kp = el("div", "keypad codepad");
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].forEach(x => { const b = el("button", "", x); b.type = "button"; b.onclick = () => { if (svCode.length < 3) svCode += x; svNo = false; render() }; kp.appendChild(b) });
+    const bd = el("button", "", "⌫"); bd.type = "button"; bd.setAttribute("aria-label", L().gateDel); bd.onclick = () => { svCode = svCode.slice(0, -1); svNo = false; render() }; kp.appendChild(bd);
+    g.appendChild(kp);
+    const row = el("div", "gaterow"), by = el("button", "btn primary", L().gateGo); by.type = "button"; by.disabled = svCode.length < 3;
+    by.onclick = () => { if (svCode === START_CODE) { svGate = true; render(); window.scrollTo(0, 0) } else { svNo = true; svCode = ""; render() } };
+    row.append(by); g.appendChild(row);
+    if (svNo) g.appendChild(el("div", "msg bad", L().gateWait));
+    p.appendChild(g); return;
+  }
+  p.appendChild(el("h2", "", L().svTitle)); p.appendChild(el("p", "", L().svIntro));
+  /* Teil 1: drei Aufgaben in Rechenkästchen */
+  p.appendChild(el("h3", "", L().svR)); p.appendChild(el("p", "instr", L().svRi));
+  SV_GRIDS.forEach((g, i) => p.appendChild(svGridBlock(i)));
+  /* Teil 2: Textaufgabe mit Term, Ergebnis und Probe */
+  p.appendChild(el("h3", "", L().svW)); p.appendChild(el("p", "word", L().svWt));
+  const tb = el("div", "section"); tb.appendChild(el("p", "", `<b>${L().svWq}</b>`));
+  const ch = el("div", "choices"), tOk = svPick.term === 0;
+  L().svWopts.forEach((o, k) => { const b = el("button", "choice", o); b.type = "button"; if (svPick.term === k) b.classList.add(k === 0 ? "ok" : "bad"); if (tOk) b.disabled = true; b.onclick = () => { if (!("term" in svFirst)) svFirst.term = k === 0; svPick.term = k; render() }; ch.appendChild(b) });
+  tb.appendChild(ch); if (svPick.term !== undefined) tb.appendChild(el("div", "msg " + (tOk ? "ok" : "bad"), tOk ? L().svOk : L().svWbad)); p.appendChild(tb);
+  if (tOk) {
+    const nb = el("div", "section");
+    const fld = (key, pre, post) => { const st = svNum[key], cls = "ans" + (svNumActive === key && !st.ok ? " active" : "") + (st.ok ? " sol" : st.bad ? " bad" : ""); return `<div class="sline"><span class="lab">${pre}</span> <span class="${cls}" data-sv="${key}" role="button" tabindex="0">${st.v || "&nbsp;"}</span> ${post}</div>` };
+    nb.innerHTML = `<div class="steps">${fld("res", L().svWres, L().svEuro)}${svNum.res.ok ? fld("probe", `${L().svWprobe} 395 + 487 + 368 =`, L().svEuro) : ""}</div>`;
+    nb.querySelectorAll("[data-sv]").forEach(x => x.onclick = () => { svNumActive = x.dataset.sv; render() });
+    const cur = svNum[svNumActive];
+    if (cur && !cur.ok) {
+      const kp = el("div", "keypad"); [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => { if (cur.v.length < 5) cur.v += d; cur.bad = false; render() }; kp.appendChild(b) });
+      const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => { cur.v = cur.v.slice(0, -1); cur.bad = false; render() }; kp.appendChild(del); nb.appendChild(kp);
+      const a = el("div", "actions"), cb = el("button", "btn primary", L().svCheck); cb.type = "button"; cb.onclick = () => { const want = svNumActive === "res" ? "395" : "1250"; const ok = cur.v === want; if (!(svNumActive in svFirst)) svFirst[svNumActive] = ok; if (ok) { cur.ok = true; if (svNumActive === "res") svNumActive = "probe" } else cur.bad = true; render() }; a.appendChild(cb); nb.appendChild(a);
+      if (cur.bad) nb.appendChild(el("div", "msg bad", L().svWnumBad));
+    }
+    if (svNum.res.ok && svNum.probe.ok) nb.appendChild(el("div", "msg ok", `${L().svWnumOk} ${L().svWans}`));
+    p.appendChild(nb);
+  }
+  /* Teil 3: kurz erklären */
+  p.appendChild(el("h3", "", L().svP3));
+  const t = el("div", "rulebox"); t.innerHTML = `<p>${L().svTalk}</p><p class="starts">${L().svStarts}</p>`;
+  if (svTalk) t.appendChild(el("div", "msg ok", L().svTalkDone));
+  else { const b = el("button", "btn primary", L().svTalkBtn); b.type = "button"; b.onclick = () => { svTalk = true; render() }; t.appendChild(b) }
+  p.appendChild(t);
+  const items = SV_GRIDS.length + 3, okN = SV_GRIDS.filter((g, i) => svG[i].done).length + (tOk ? 1 : 0) + (svNum.res.ok ? 1 : 0) + (svNum.probe.ok ? 1 : 0);
+  const total = items + 1, doneN = okN + (svTalk ? 1 : 0);
+  if (doneN === total) {
+    const n = Object.values(svFirst).filter(Boolean).length, r = el("div", "rulebox svdone");
+    r.innerHTML = `<b>✓ ${L().svDone}</b><p>${L().svFirst(n, items)}</p><p>${L().svShow}</p>`;
+    const b = el("button", "btn primary", L().svMerk); b.type = "button"; b.onclick = () => goTab(4); r.appendChild(b); p.appendChild(r);
+  } else p.appendChild(el("div", "msg info", L().svOpen(doneN, total)));
+}
+
+/* ---- input ---- */
+function renderIntro() {
+  const p = el("section", "panel intro"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().inTitle));
+  const total = 6;
+  const dots = el("div", "dots"); for (let i = 0; i < total; i++) dots.appendChild(el("span", i === introStep ? "on" : "")); p.appendChild(dots);
+  const box = el("div", "introbox"); p.appendChild(box);
+  const way = lines => `<div class="way">${lines.map(l => `<div>${l}</div>`).join("")}</div>`;
+  const EX = calcMulti(852, [317, 245]);
+  if (introStep === 0) box.innerHTML = `<h3>${L().in1h}</h3><p>${L().in1}</p>` + way([L().in1t]);
+  if (introStep === 1) box.innerHTML = `<h3>${L().in2h}</h3><p>${L().in2}</p>` + way(["852 − 317 − 245", "<span class='eq'>=</span> 852 − (317 + 245)", "<span class='eq'>=</span> 852 − 562 = <span class='ok'>290</span>"]);
+  if (introStep === 2) box.innerHTML = `<h3>${L().in3h}</h3><p>${L().in3}</p>` + way(["852 − 317 = 535", "535 − 245 = <span class='ok'>290</span>"]);
+  if (introStep === 3) { box.innerHTML = `<h3>${L().in4h}</h3><p>${L().in4}</p>`; const gb = el("div", "gridbox"); gb.appendChild(staticGrid(EX)); box.appendChild(gb); box.appendChild(el("div", "colsteps", L().in4c.map(x => `<div>${x}</div>`).join(""))) }
+  if (introStep === 4) box.innerHTML = `<h3>${L().in5h}</h3><p>${L().in5}</p><div class="rulebox"><b>${L().in5r}</b></div>`;
+  if (introStep === 5) {
+    box.innerHTML = `<h3>${L().in6h}</h3><p>${L().in6}</p>`;
+    const ch = el("div", "choices");
+    L().in6opts.forEach(([s, ok], i) => { const b = el("button", "choice", s); b.type = "button"; if (introPick === i) b.classList.add(ok ? "ok" : "bad"); b.onclick = () => { introPick = i; render() }; ch.appendChild(b) });
+    box.appendChild(ch);
+    if (introPick !== null) { const ok = L().in6opts[introPick][1]; box.appendChild(el("div", "msg " + (ok ? "ok" : "bad"), ok ? L().in6ok : L().in6bad)) }
+  }
+  const nav = el("div", "stepnav");
+  const b1 = el("button", "btn", L().inBack); b1.type = "button"; b1.disabled = introStep === 0; b1.onclick = () => { introStep--; render() };
+  const b2 = el("button", "btn primary", introStep < total - 1 ? L().inNext : L().inGo); b2.type = "button"; b2.onclick = () => { if (introStep < total - 1) { introStep++; render() } else goTab(1) };
+  nav.append(b1, el("span", "count", `${introStep + 1} / ${total}`), b2); p.appendChild(nav);
+}
+
+/* ---- practice / experts ---- */
+function renderPractice() {
+  const lv = el("div", "levels");
+  [1, 2, 3].forEach(n => { const b = el("button", `lvl lvl${n}`, `${L().lv[n - 1][0]}<small>${L().lv[n - 1][1]} · ${L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
+  view.appendChild(lv); renderTask();
+}
+function renderExpert() {
+  const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
+  h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
+}
+const pName = i => i === 0 ? L().pA : L().pB;
+function renderPartner() {
+  const bar = el("div", "partner");
+  const who = el("div", "who", partner.on ? L().pTurn(pName(partner.turn), pName(1 - partner.turn)) : `<b>${L().pTitle}</b>`);
+  const btns = el("div", "pbtns");
+  const on = el("button", "seg", L().pOn); on.type = "button"; on.setAttribute("aria-pressed", !!partner.on); on.onclick = () => { partner.on = true; store.set("sp-partner", partner); render() };
+  const off = el("button", "seg", L().pOff); off.type = "button"; off.setAttribute("aria-pressed", !partner.on); off.onclick = () => { partner.on = false; store.set("sp-partner", partner); render() };
+  btns.append(on, off); bar.append(who, btns); return bar;
+}
+function keypad(p) {
+  const kp = el("div", "keypad");
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => typeDigit(String(d)); kp.appendChild(b) });
+  const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => typeDigit(""); kp.appendChild(del);
+  p.appendChild(kp);
+}
+/* editable grid */
+function buildGrid(P, o) {
+  const W = P.W, g = el("div", "cgrid multi"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
+  const add = (cls, txt, attrs = {}) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); for (const k in attrs) c.setAttribute(k, attrs[k]); g.appendChild(c); return c };
+  add("lab", ""); for (let p = W - 1; p >= 0; p--) { const c = add("lab", ABBR[lang][p]); c.title = PLACES[lang][p]; if (o.hlP === p) c.classList.add("hl") }
+  add("sign", ""); for (let p = W - 1; p >= 0; p--) { const c = add("", dig(P.a, p)); if (o.hlP === p) c.classList.add("hl") }
+  P.subs.forEach(s => { add("sign", MINUS); for (let p = W - 1; p >= 0; p--) { const c = add("sub", p < len(s) ? dig(s, p) : ""); if (o.hlP === p) c.classList.add("hl") } });
+  add("", "");
+  for (let p = W - 1; p >= 0; p--) {
+    if (p > 0 && !done) { const c = add("carry in", ent.carry[p] === undefined ? "" : ent.carry[p], { tabindex: "0", "data-role": "carry", "data-p": p, role: "button", "aria-label": `${L().carryWord} ${PLACES[lang][p]}` }); if (active && active.role === "carry" && active.p === p) c.classList.add("active"); if (marks && marks["c" + p]) c.classList.add(marks["c" + p]) }
+    else if (done && p > 0 && P.cols[p].cin) add("carry", P.cols[p].cin); else add("carry", "");
+  }
+  g.appendChild(el("div", "rule"));
+  add("", "");
+  for (let p = W - 1; p >= 0; p--) {
+    const rv = p < len(P.result) ? dig(P.result, p) : "";
+    if (done) { add(revealed ? "sol" : "", rv); continue }
+    const c = add("in", ent.res[p] === undefined ? "" : ent.res[p], { tabindex: "0", "data-role": "res", "data-p": p, role: "button", "aria-label": PLACES[lang][p] });
+    if (active && active.role === "res" && active.p === p) c.classList.add("active");
+    if (marks && marks["r" + p]) c.classList.add(marks["r" + p]);
+  }
+  return g;
+}
+function gridBlock(p) {
+  const P = ph().P, o = {};
+  if (curLevel() === 1 && !done && active) { o.hlP = active.p; p.appendChild(el("p", "colhelp", L().colHelp(PLACES[lang][active.p]))) }
+  const box = el("div", "gridbox"); box.appendChild(buildGrid(P, o)); p.appendChild(box); box.addEventListener("click", onCellClick);
+  if (!done) keypad(p);
+}
+function ctxHTML() {
+  const t = task;
+  if (t.mode === "word") return `<p class="word">${t.three ? L().words3(t.a, ...t.subs) : L().words[t.x](t.nm, t.a, ...t.subs)}</p>`;
+  if (t.mode === "compare") {
+    const s1 = t.a - t.b, r = s1 - t.c;
+    return `<p class="instr">${L().iCmp}</p><div class="cmpbox"><div class="wayc"><h3>${L().stepWay} · ${L().twoCalc}</h3><div class="way"><div>${fmt(t.a)} ${MINUS} ${fmt(t.b)} = ${fmt(s1)}</div><div>${fmt(s1)} ${MINUS} ${fmt(t.c)} = <span class="ok">${fmt(r)}</span></div></div></div><div class="wayc"><h3>${L().directWay} · ${L().oneCalc}</h3><div class="way"><div>${fmt(t.a)} ${MINUS} ${fmt(t.b)} ${MINUS} ${fmt(t.c)} = <span class="ok">${fmt(r)}</span></div></div></div></div>`;
+  }
+  return "";
+}
+function instrText() {
+  const P = ph(), t = task;
+  if (P.type === "grid") return L().iGrid;
+  if (P.instr === "klammer") return L().iKlammer(t.a, t.b, t.c);
+  if (P.instr === "word") return L().iWord;
+  if (P.instr === "cmp1") return L().cmpQ1;
+  if (P.instr === "cmp2") return L().cmpQ2;
+  return "";
+}
+function renderTask() {
+  view.appendChild(renderPartner());
+  const lvl = curLevel(), p = el("section", "panel"); view.appendChild(p);
+  const head = el("div", "taskhead");
+  const chip = el("span", "chip", lvl === 4 ? L().tabs[2] : L().lv[level - 1][0]); chip.style.setProperty("--c", lvl === 4 ? "var(--ink)" : `var(--${["orange", "pink", "purple"][level - 1]})`); if (lvl === 4) chip.style.color = "var(--paper)";
+  head.append(chip, el("h2", "", L().modes[task.mode])); head.lastChild.style.margin = "0"; p.appendChild(head);
+  const P = done ? task.phases[task.phases.length - 1] : ph(), t = task;
+  const c = ctxHTML(); if (c) p.appendChild(el("div", "", c));
+  if (t.mode === "errpro") {
+    p.appendChild(el("p", "instr", pi === 0 && !done ? L().iErr1 : L().iErr2));
+    const gb = el("div", "gridbox"); gb.appendChild(staticGrid(t.P, { digits: t.wrong, errP: pi > 0 || done ? t.errCol : undefined, noCarry: t.errType === "carry" ? { [t.errCol]: 0 } : null })); p.appendChild(gb);
+    if (!done && pi === 0) { const a = el("div", "colbtns"); for (let q = t.P.W - 1; q >= 0; q--) { const b = el("button", t.badCols.includes(q) ? "bad" : "", PLACES[lang][q]); b.type = "button"; b.onclick = () => pickCol(q); a.appendChild(b) } p.appendChild(a) }
+    if (!done && pi === 1) { const ch = el("div", "choices"); t.reasons.forEach(r => { const b = el("button", "choice", L().reasons[r]); b.type = "button"; if (t.badReasons.includes(r)) b.classList.add("bad"); b.onclick = () => pickReason(r); ch.appendChild(b) }); p.appendChild(ch) }
+    if (done) p.appendChild(el("div", "colsteps", `<div>${colText(t.P.cols[t.errCol])}</div>`));
+  } else {
+    if (!done) { const it = instrText(); if (it) p.appendChild(el("p", "instr", it)) }
+    if (P.type === "grid") gridBlock(p);
+    if (P.type === "choice" && !done) {
+      const ch = el("div", "choices");
+      P.opts.forEach((o, i) => { const txt = typeof o.text === "function" ? o.text() : o.text; const b = el("button", "choice", txt); b.type = "button"; if (task.badPicks.includes(i)) b.classList.add("bad"); b.onclick = () => pickChoice(i); ch.appendChild(b) });
+      p.appendChild(ch);
+    }
+  }
+  const act = el("div", "actions");
+  const work = P.type === "grid";
+  if (!done) {
+    if (work) {
+      const tb = el("button", "btn tip", L().tip + (tipLevel ? ` ${Math.min(tipLevel + 1, 2)}` : "")); tb.type = "button"; tb.onclick = onTip; act.appendChild(tb);
+      const cb = el("button", "btn primary", L().check); cb.type = "button"; cb.onclick = check; act.appendChild(cb);
+      if (attempts >= 2) { const sb = el("button", "btn", L().show); sb.type = "button"; sb.onclick = showSolution; act.appendChild(sb) }
+    }
+  } else { const nb = el("button", "btn good", L().next); nb.type = "button"; nb.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } newTask(); render() }; act.appendChild(nb) }
+  p.appendChild(act);
+  if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
+  if (diag && !done) {
+    const w = el("div", "why", `<b class="h">${L().whyTitle}</b>${diag.text}`);
+    const cb = el("button", "linkbtn", L().cardBtn(diag.card + 1)); cb.type = "button"; cb.onclick = () => { showCard = !showCard; render() }; w.appendChild(cb);
+    if (showCard) { const [q, a] = L().cards[diag.card]; w.appendChild(el("div", "cardref", `<b>${q}</b><br>${a}`)) }
+    p.appendChild(w);
+  }
+  if (tipLevel > 0 && !done && work) p.appendChild(el("div", "tipcard", tipText()));
+  if (done && partner.on) p.appendChild(el("div", "swap", `<p>${L().pSwap(pName(partner.turn), pName(1 - partner.turn))}</p><p><b>${L().pDiscuss}</b> ${L().pPrompts[task.promptIdx || 0]}</p>`));
+}
+
+/* ======================= interaction ======================= */
+function onCellClick(e) { const c = e.target.closest(".cell.in"); if (!c || done) return; active = { role: c.dataset.role, p: Number(c.dataset.p) }; render() }
+function typeDigit(d) {
+  if (!active || done) return; const P = ph().P;
+  if (active.role === "res") { if (d === "") delete ent.res[active.p]; else ent.res[active.p] = Number(d); if (marks) delete marks["r" + active.p];
+    if (d !== "" && active.p + 1 < P.W) active = { role: "carry", p: active.p + 1 } }
+  else { if (d === "") delete ent.carry[active.p]; else ent.carry[active.p] = Number(d); if (marks) delete marks["c" + active.p]; if (d !== "") active = { role: "res", p: active.p } }
+  render();
+}
+function colText(c) {
+  const parts = c.ds.join(" + ") + (c.cin ? L().carryIn(c.cin) : "");
+  return L().colText(PLACES[lang][c.p], parts, c.s, c.target, c.r, c.cout);
+}
+function success(msg) { done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
+function check() {
+  const P = ph().P; marks = {}; let firstBad = null, carryBad = null;
+  const lead = len(P.result);
+  for (let p = 0; p < P.W; p++) {
+    const want = P.cols[p].r, got = ent.res[p];
+    const ok = p < lead ? got === want : (got === undefined || got === 0);
+    marks["r" + p] = ok ? "ok" : "bad"; if (!ok && firstBad === null) firstBad = p;
+    if (p > 0) { const wc = P.cols[p].cin, gc = ent.carry[p] === undefined ? 0 : ent.carry[p]; const cok = gc === wc; if (ent.carry[p] !== undefined || wc) marks["c" + p] = cok ? "ok" : "bad"; if (!cok && carryBad === null) carryBad = p }
+  }
+  if (firstBad === null && carryBad === null) { success(); return }
+  attempts++;
+  const col = P.cols[firstBad !== null ? firstBad : carryBad];
+  if (col.cin && (ent.carry[col.p] === undefined || ent.carry[col.p] !== col.cin)) diag = { text: `<p>${L().diagCarry(PLACES[lang][col.p])}</p><div class="colsteps"><div>${colText(col)}</div></div>`, card: 3 };
+  else diag = { text: `<p>${L().diagCol}</p><div class="colsteps"><div>${colText(col)}</div></div>`, card: 2 };
+  showCard = false; feedback = { cls: "bad", text: L().bad + (attempts >= 2 ? " " + L().bad2 : "") }; render();
+}
+function pickChoice(i) {
+  const P = ph(), o = P.opts[i];
+  if (o.ok) { const msg = P.okMsg ? P.okMsg() : null; advance(msg) }
+  else { attempts++; if (!task.badPicks.includes(i)) task.badPicks.push(i); feedback = { cls: "bad", text: o.bad ? o.bad() : L().bad }; render() }
+}
+function pickCol(q) { if (q === task.errCol) advance(L().errColOk); else { attempts++; if (!task.badCols.includes(q)) task.badCols.push(q); feedback = { cls: "bad", text: L().errColBad }; render() } }
+function pickReason(r) { if (r === task.errType) advance(L().reasonOk); else { attempts++; if (!task.badReasons.includes(r)) task.badReasons.push(r); feedback = { cls: "bad", text: L().reasonBad }; render() } }
+function showSolution() { const P = ph().P; revealed = true; done = true; diag = null; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "info", text: P.cols.map(colText).join("<br>") }; render() }
+function onTip() { tipLevel = Math.min(tipLevel + 1, 2); render() }
+function tipText() {
+  const P = ph().P;
+  if (tipLevel === 1) return `<b>${L().tip} 1:</b> ${L().tip1}`;
+  const lead = len(P.result); let q = 0; for (; q < P.W; q++) { const ok = q < lead ? ent.res[q] === P.cols[q].r : true; if (!ok) break }
+  const col = P.cols[Math.min(q, P.W - 1)];
+  return `<b>${L().tip} 2:</b> ${L().tip2}<div class="colsteps"><div>${colText(col)}</div></div>`;
+}
+
+/* ---- merk & cards ---- */
+function renderMerk() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().merkTitle));
+  const ol = el("ol"); L().merkRules.forEach(x => ol.appendChild(el("li", "", x))); const m = el("div", "rulebox"); m.appendChild(ol); p.appendChild(m);
+  const e = el("div", "section"); e.style.marginTop = "18px"; e.appendChild(el("h3", "", L().errTitle));
+  const list = el("div", "err"); L().errs.forEach(([t, x]) => list.appendChild(el("div", "erritem", `<span>${t}</span><span class="ex">${x}</span>`))); e.appendChild(list); p.appendChild(e);
+  const g = el("div", "section"); g.appendChild(el("h3", "", L().glossTitle));
+  const tbl = el("table", "gloss"); L().gloss.forEach(([a, b]) => tbl.appendChild(el("tr", "", `<td><b>${a}</b></td><td>${b}</td>`)));
+  const tw = el("div", ""); tw.style.overflowX = "auto"; tw.appendChild(tbl); g.appendChild(tw); p.appendChild(g);
+}
+function renderCards() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().cardsTitle));
+  const grid = el("div", "cards");
+  L().cards.forEach(([q, a], i) => {
+    const b = el("button", "fcard"); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<div class="fin"><div class="face front"><span class="num">${i + 1}</span><span class="q">${q}</span><span class="hint">${L().tapHint}</span></div><div class="face back">${a}</div></div>`;
+    b.onclick = () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    grid.appendChild(b);
+  });
+  p.appendChild(grid);
+}
+document.getElementById("langbtn").onclick = () => { lang = lang === "de" ? "tr" : "de"; save(); render() };
+/* Neu starten wie im Kosten-Detektiv */
+let resetArmed = false, resetTimer = null;
+function renderReset() { const b = document.getElementById("resetbtn"); b.textContent = resetArmed ? L().reset2 : L().reset; b.style.borderColor = resetArmed ? "#E8892B" : ""; b.style.color = resetArmed ? "#FFD9B0" : "" }
+document.getElementById("resetbtn").onclick = () => {
+  if (!resetArmed) { resetArmed = true; renderReset(); clearTimeout(resetTimer); resetTimer = setTimeout(() => { resetArmed = false; renderReset() }, 3500); return }
+  try { ["sp-stats", "sp-level", "sp-seq", "sp-partner"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
+  location.reload();
+};
+render();
+
+</script>
+</body>
+</html>
