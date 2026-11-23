@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Überschlagsprofi</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
+<style>
+
+html,body{margin:0}
+
+
+/* Layout: a single working column over squared exercise-book paper; the grid of Rechenkästchen is the hero. */
+:root{
+  --paper:#F7FAFD; --line:#D3E0EE; --surface:#FFFFFF; --ink:#1C2A4A; --muted:#55627F;
+  --carry:#D3263A; --ok:#17844F; --okbg:#E3F5EB; --badbg:#FCE6E9; --focus:#2B6CD8;
+  --orange:#E97A00; --pink:#CF0A6E; --purple:#6C3A98; --soft:#EEF3F9;
+  --f-head:"Fredoka","Andika","Trebuchet MS",sans-serif;
+  --f-body:"Andika","Segoe UI",system-ui,sans-serif;
+  --cell:clamp(38px,9.4vw,54px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111827; --line:#223149; --surface:#18233A; --ink:#E5ECF8; --muted:#A3B0C8;
+  --carry:#FF6F80; --ok:#4FCB8C; --okbg:#173A2B; --badbg:#47202A; --focus:#7FB0FF;
+  --orange:#FF9C33; --pink:#FF5AAE; --purple:#B78AEA; --soft:#1F2B44; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:24px 24px;}
+.wrap{max-width:860px;margin:0 auto;padding-block:12px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
+h1{font-family:var(--f-head);font-weight:600;font-size:1.6rem;margin:0;letter-spacing:.2px;text-wrap:balance}
+h1 .pm{color:var(--carry)}
+h2{font-family:var(--f-head);font-weight:600;font-size:1.3rem;margin:0 0 8px}
+h3{font-family:var(--f-head);font-weight:500;font-size:1.1rem;margin:0 0 6px}
+.hright{display:flex;gap:8px;align-items:center}
+.stars{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-variant-numeric:tabular-nums}
+.stars svg{width:20px;height:20px;fill:#F2B705}
+button{font:inherit;color:inherit;cursor:pointer}
+.langbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:700}
+nav.tabs{display:flex;gap:6px;margin:14px 0 12px;overflow-x:auto}
+nav.tabs button{border:none;background:transparent;padding:8px 14px;border-radius:10px;font-family:var(--f-head);font-weight:500;font-size:1.02rem;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 0 var(--line)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.lvl.locked{opacity:.55;cursor:not-allowed}
+.lvl{border:2px solid var(--c);background:var(--surface);border-radius:12px;padding:8px 6px;text-align:center;font-family:var(--f-head);font-weight:500;line-height:1.2}
+.lvl small{display:block;font-family:var(--f-body);font-weight:400;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.lvl[aria-pressed="true"]{background:var(--c);color:#fff}
+.lvl[aria-pressed="true"] small{color:#fff}
+.lvl1{--c:var(--orange)} .lvl2{--c:var(--pink)} .lvl3{--c:var(--purple)}
+.taskhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.chip{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.82rem;font-weight:700;color:#fff;background:var(--c)}
+.instr{margin:4px 0 12px}
+.word{background:var(--soft);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:1.05rem}
+.gridbox{overflow-x:auto;padding:6px 0 4px}
+.cgrid{display:grid;gap:0;width:max-content;margin:0 auto;font-variant-numeric:tabular-nums;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:var(--cell) var(--cell);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cell)*.6);font-weight:700;position:relative}
+.cell.lab{font-size:calc(var(--cell)*.32);color:var(--muted);font-weight:700}
+.cell.sign{color:var(--ink)}
+.cell.in{cursor:pointer;background:color-mix(in srgb,var(--surface) 70%,transparent);border-radius:6px;margin:3px;width:calc(var(--cell) - 6px);height:calc(var(--cell) - 6px);border:2px dashed var(--muted)}
+.cell.in.active{border:3px solid var(--focus);background:var(--surface)}
+.cell.carry{font-size:calc(var(--cell)*.42);color:var(--carry)}
+.cell.carry.in{border-color:var(--carry);border-width:1.5px;width:calc(var(--cell) - 18px);height:calc(var(--cell) - 18px);margin:9px}
+.cell.carry.in.active{border-width:3px}
+.cell.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.cell.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.cell.sol{color:var(--focus)}
+.cell.hl{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:4px}
+.rule{grid-column:1/-1;height:3px;background:var(--ink);border-radius:2px;margin:0 2px}
+.keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px auto 0;max-width:520px}
+.keypad button{border:1px solid var(--line);background:var(--soft);border-radius:12px;min-height:52px;font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.keypad button.wide{grid-column:span 2;font-size:1rem}
+.keypad button:active{transform:translateY(1px)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-family:var(--f-head);font-weight:500;font-size:1.05rem;background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:#FFF4CC;color:#5A4500;border-color:#E8CF6A}
+:root[data-theme="dark"] .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:#3A3115;color:#FFE18A;border-color:#6B5A1E}}
+.choices{display:grid;gap:8px;margin:8px 0}
+.choice{text-align:left;border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.choice.ok{border-color:var(--ok);background:var(--okbg)}
+.choice.bad{border-color:var(--carry);background:var(--badbg)}
+.msg{margin-top:12px;border-radius:12px;padding:10px 14px;font-weight:700}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--carry)}
+.msg.info{background:var(--soft);color:var(--ink);font-weight:400}
+.tipcard{margin-top:12px;border:2px solid #E8CF6A;background:#FFFBEA;color:#3D3000;border-radius:14px;padding:12px 14px}
+:root[data-theme="dark"] .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.tipcard b{font-family:var(--f-head);font-weight:600}
+.claimed{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:10px;background:var(--soft);font-variant-numeric:tabular-nums}
+.progress{color:var(--muted);font-size:.9rem;text-align:center;margin-top:10px;font-variant-numeric:tabular-nums}
+/* explanation */
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:14px}
+.term{background:var(--soft);border-radius:12px;padding:12px;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.term .eq{font-size:1.4rem;font-weight:700;margin:4px 0}
+.term .lbl{font-size:.85rem;color:var(--muted)}
+.player{display:grid;gap:12px}
+.steptext{background:var(--soft);border-radius:12px;padding:12px 14px;min-height:4.5em}
+.stepnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.stepnav .count{color:var(--muted);font-variant-numeric:tabular-nums;min-width:4em;text-align:center}
+.section{margin-bottom:16px}
+/* merkzettel */
+.merk{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.merk ol{margin:0;padding-left:1.3em;display:grid;gap:4px}
+.err{display:grid;gap:10px}
+.erritem{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start;background:var(--badbg);border-radius:12px;padding:10px 12px}
+.erritem .ex{font-variant-numeric:tabular-nums;font-weight:700}
+.erritem .ex s{color:var(--carry)}
+.gloss{width:100%;border-collapse:collapse;font-size:.95rem}
+.gloss td,.gloss th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+/* tip cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.fcard{perspective:900px;min-height:190px;border:none;background:none;padding:0;text-align:left}
+.fin{position:relative;width:100%;height:100%;min-height:190px;transition:transform .45s;transform-style:preserve-3d}
+.fcard[aria-pressed="true"] .fin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:14px;padding:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line)}
+.front{background:var(--surface)}
+.front .q{font-family:var(--f-head);font-weight:600;font-size:1.15rem}
+.front .hint{margin-top:auto;font-size:.82rem;color:var(--muted)}
+.back{background:#FFFBEA;color:#3D3000;transform:rotateY(180deg);border-color:#E8CF6A;font-size:.98rem;overflow:auto}
+:root[data-theme="dark"] .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .back{background:#2B2510;color:#FFEAA8;border-color:#6B5A1E}}
+.num{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex:none}
+/* partner work */
+.partner{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:12px}
+.partner .who{flex:1 1 260px;min-width:0}
+.partner .pbtns{display:flex;gap:6px;flex-wrap:wrap}
+.seg{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 12px;font-weight:700;font-size:.9rem}
+.seg[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.names{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.names label{display:flex;flex-direction:column;font-size:.8rem;color:var(--muted);gap:2px;flex:1 1 140px}
+.names input{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.swap{margin-top:12px;border:2px solid var(--focus);background:color-mix(in srgb,var(--focus) 10%,var(--surface));border-radius:14px;padding:12px 14px}
+.swap p{margin:4px 0}
+/* diagnosis */
+.why{margin-top:12px;border:2px solid var(--carry);background:var(--badbg);border-radius:14px;padding:12px 14px}
+.why b.h{font-family:var(--f-head);font-weight:600;display:block;margin-bottom:4px}
+.why .cardref{margin-top:8px;background:var(--surface);border-radius:10px;padding:8px 10px;border:1px solid var(--line)}
+.linkbtn{border:none;background:none;color:var(--focus);font-weight:700;padding:4px 0;text-decoration:underline}
+.colhelp{text-align:center;color:var(--focus);margin:0 0 4px}
+/* experts */
+.xhead{margin-bottom:12px}
+.xhead p{margin:4px 0 0;color:var(--muted)}
+.numchip{display:inline-block;border:2px solid var(--line);background:var(--surface);border-radius:8px;padding:0 6px;margin:0 1px;font:inherit;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.5}
+.numchip[aria-pressed="true"]{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 18%,var(--surface))}
+.numchip.wrong{border-color:var(--carry);background:var(--badbg)}
+.colbtns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.colbtns button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:700}
+.colbtns button.bad{border-color:var(--carry);background:var(--badbg)}
+.colbtns button.ok{border-color:var(--ok);background:var(--okbg)}
+.cell.errcol{outline:3px solid var(--carry);outline-offset:-3px;border-radius:4px}
+@media (prefers-reduced-motion: reduce){.fin{transition:none}}
+@media (max-width:520px){.erritem{grid-template-columns:1fr} .keypad{grid-template-columns:repeat(5,1fr)} .keypad button.wide{grid-column:span 5} .levels{gap:6px} .lvl{font-size:.92rem}}
+
+/* Klammerprofi additions */
+h1 .br{color:var(--focus)}
+.term{font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;font-variant-numeric:tabular-nums;text-align:center;margin:8px 0 4px;line-height:1.3}
+.term .bk{color:var(--focus)}
+.term .hot{background:color-mix(in srgb,var(--focus) 16%,transparent);border-radius:8px;padding:0 4px}
+.steps{display:grid;gap:6px;justify-content:center;margin:6px 0 4px}
+.sline{display:flex;align-items:center;gap:8px;font-size:clamp(1.3rem,5vw,1.9rem);font-weight:700;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.sline .eq{color:var(--muted);min-width:1em}
+.sline .bk{color:var(--focus)}
+.sline .done{color:var(--ok)}
+.ans{display:inline-flex;align-items:center;justify-content:center;min-width:3.2em;height:1.6em;padding:0 8px;border:2px dashed var(--muted);border-radius:8px;background:var(--surface);color:var(--ink)}
+.ans.active{border:3px solid var(--focus)}
+.ans.bad{border-style:solid;border-color:var(--carry);background:var(--badbg);color:var(--carry)}
+.ans.sol{color:var(--focus);border-style:solid}
+.stepnote{text-align:center;color:var(--muted);font-size:.95rem;margin:0}
+.tomlines{display:grid;gap:6px;justify-content:center;margin:8px 0}
+.tomline{display:flex;gap:10px;align-items:center;font-size:clamp(1.2rem,4.6vw,1.7rem);font-weight:700;font-variant-numeric:tabular-nums}
+.tomline .lab{font-size:.8rem;font-weight:700;color:var(--muted);min-width:4.5em}
+.tomline.mark{outline:3px solid var(--carry);outline-offset:4px;border-radius:6px}
+.pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:8px 0}
+.pair .term{background:var(--soft);border-radius:12px;padding:10px;margin:0;font-size:clamp(1.3rem,5vw,1.9rem)}
+/* input intro */
+.introbox h3{margin:0 0 6px;font-family:var(--f-head);font-weight:600;font-size:1.2rem}
+.intro{display:grid;gap:14px}
+.dice{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.die{width:64px;height:64px;border-radius:14px;background:var(--surface);border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-variant-numeric:tabular-nums}
+.die b{font-size:1.5rem;line-height:1}
+.die small{font-size:.7rem;color:var(--muted)}
+.introbox{background:var(--soft);border-radius:14px;padding:14px 16px}
+.introbox p{margin:6px 0}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox b{font-family:var(--f-head);font-weight:600}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots span.on{background:var(--ink)}
+.way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.15rem,4.4vw,1.6rem);font-weight:700;font-variant-numeric:tabular-nums}
+.way .eq{color:var(--muted)}
+
+
+
+/* Überschlagsprofi additions */
+h1 .br{color:var(--focus)}
+.shop{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.shop td{padding:4px 2px;border-bottom:1px dashed var(--line)}
+.shop td.r{text-align:right;font-weight:700;white-space:nowrap}
+.shop tr.bud td{border-bottom:none;border-top:2px solid var(--ink);font-weight:700;padding-top:8px}
+.shop .ic{width:2em;font-size:1.25rem}
+.given{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:700;font-variant-numeric:tabular-nums}
+.steps{display:grid;gap:8px;justify-content:center;margin:6px 0 4px}
+.sline{display:flex;align-items:center;gap:8px;font-size:clamp(1.15rem,4.6vw,1.6rem);font-weight:700;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.sline .lab{font-size:.95rem;font-weight:400;color:var(--muted)}
+.sline .done{color:var(--ok)}
+.ans{display:inline-flex;align-items:center;justify-content:center;min-width:3.4em;height:1.6em;padding:0 8px;border:2px dashed var(--muted);border-radius:8px;background:var(--surface);color:var(--ink)}
+.ans.active{border:3px solid var(--focus)}
+.ans.bad{border-style:solid;border-color:var(--carry);background:var(--badbg);color:var(--carry)}
+.ans.sol{color:var(--focus);border-style:solid}
+.stepnote{text-align:center;color:var(--muted);font-size:.95rem;margin:0}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+.prod{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;line-height:1.2}
+.prod .ic{font-size:1.9rem}
+.prod b{font-variant-numeric:tabular-nums}
+.prod[aria-pressed="true"]{border-color:var(--ok);background:var(--okbg)}
+.receipt{font-family:"Courier New",ui-monospace,monospace;background:#FFFDF6;color:#222;border:1px dashed #999;border-radius:6px;padding:12px 16px;max-width:360px;margin:0 auto 12px;font-variant-numeric:tabular-nums}
+.receipt .r{display:flex;justify-content:space-between;gap:12px}
+.receipt hr{border:0;border-top:1px dashed #999;margin:6px 0}
+.receipt .tot{font-weight:700;font-size:1.15rem}
+.tomlines{display:grid;gap:6px;justify-content:center;margin:8px 0}
+.tomline{display:flex;gap:10px;align-items:center;font-size:clamp(1.1rem,4.4vw,1.5rem);font-weight:700;font-variant-numeric:tabular-nums}
+.tomline .lab{font-size:.8rem;font-weight:700;color:var(--muted);min-width:4.5em}
+.tomline.mark{outline:3px solid var(--carry);outline-offset:4px;border-radius:6px}
+.introbox h3{margin:0 0 6px;font-family:var(--f-head);font-weight:600;font-size:1.2rem}
+.intro{display:grid;gap:14px}
+.introbox{background:var(--soft);border-radius:14px;padding:14px 16px}
+.introbox p{margin:6px 0}
+.rulebox{border:3px solid var(--focus);border-radius:14px;padding:12px 16px;background:var(--surface)}
+.rulebox b{font-family:var(--f-head);font-weight:600}
+.rulebox ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots span.on{background:var(--ink)}
+.way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.1rem,4.4vw,1.5rem);font-weight:700;font-variant-numeric:tabular-nums;margin:8px 0}
+.way .eq{color:var(--muted)}
+.way .ok{color:var(--ok)}
+.tags{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.tag{background:#FFD34D;color:#3A2A00;border-radius:6px 14px 14px 6px;padding:4px 14px;font-weight:700;font-variant-numeric:tabular-nums}
+.sentence{margin-top:12px;border:2px solid var(--ok);background:var(--okbg);border-radius:14px;padding:12px 14px}
+.sentence b.h{font-family:var(--f-head);font-weight:600;display:block;margin-bottom:4px;color:var(--ok)}
+
+/* ===== Farben und Look wie im Kosten-Detektiv ===== */
+:root{
+  --paper:#EEF1F6; --surface:#FFFFFF; --soft:#F3F5FA; --ink:#0B1442; --muted:#4E5677; --line:#CBD3E1;
+  --focus:#1C66C0; --ok:#22865A; --okbg:#DDF2E7; --carry:#C8423D; --badbg:#F9E1DF;
+  --navy:#020C45; --accent:#E8892B; --accent-ink:#1B1300; --blue-soft:#DCE8F7; --pro:#6B3FB0;
+  --f-head:"Lexend","Segoe UI",system-ui,sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",Calibri,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#060B26; --surface:#0E1640; --soft:#141D4F; --ink:#EEF1FA; --muted:#A9B1D3; --line:#2B3672;
+  --focus:#6FA8F0; --ok:#4CC48A; --okbg:#123A2C; --carry:#F07A73; --badbg:#40181C;
+  --navy:#020722; --accent:#F3A04F; --blue-soft:#1A2A63; --pro:#B89AF0; color-scheme:dark}
+body{background:var(--paper);background-image:none;font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
+header.kd{background:var(--navy);color:#fff;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.kd .hwrap{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+header.kd .brand{display:flex;flex-direction:column}
+header.kd .brand b{font-family:var(--f-head);font-weight:700;font-size:21px;letter-spacing:.2px}
+header.kd .brand span{font-size:13px;color:#8DB7EE}
+header.kd .route{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+header.kd .route button{display:flex;align-items:center;border:2px solid #34428F;background:transparent;color:#fff;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:700;font-family:var(--f-body)}
+header.kd .route button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+header.kd .hright{display:flex;gap:8px;align-items:center}
+header.kd .stars{background:transparent;border:1.5px solid #34428F;color:#fff}
+header.kd .reset{background:transparent;border:1.5px solid #34428F;color:#B9C6EE;border-radius:999px;padding:5px 10px;font-size:13px;font-weight:700}
+.wrap{padding-top:16px}
+h2,h3,.lvl,.btn,.taskhead h2{font-family:var(--f-head)}
+.panel,.partner{border:1.5px solid var(--line);border-radius:14px;box-shadow:none}
+.btn{border-radius:999px;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.good{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.tip{background:transparent;border:1.5px dashed var(--focus);color:var(--focus)}
+:root[data-theme="dark"] .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.tip{background:transparent;color:var(--focus);border-color:var(--focus)}}
+.tipcard{border:1.5px dashed var(--focus);background:var(--blue-soft);color:var(--ink)}
+:root[data-theme="dark"] .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipcard{background:var(--blue-soft);color:var(--ink);border-color:var(--focus)}}
+.word,.introbox{background:var(--soft);border-left:4px solid var(--accent);border-radius:0 12px 12px 0}
+.choice{border-width:2px;border-radius:12px}
+.seg[aria-pressed="true"]{background:var(--focus);border-color:var(--focus);color:#fff}
+.keypad button{background:var(--soft);border:2px solid var(--line)}
+.keypad button:active{background:var(--accent);color:var(--accent-ink)}
+.chip{font-family:var(--f-head)}
+.stepnav .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.rulebox{border-color:var(--focus)}
+.sentence{border-radius:12px}
+.svdone{margin-top:16px;border-color:var(--ok);text-align:center}.svdone b{font-size:1.5rem;color:var(--ok)}.choice:disabled{opacity:1;cursor:default}.gate{border:3px solid #C8423D;background:#FDECEC;color:#3A0D0B;border-radius:16px;padding:18px;text-align:center}.gate .gsig{font-size:54px;line-height:1}.gate h3{color:#B42318;margin:6px 0 8px;font-size:1.3rem}.gate .gq{font-weight:700}.codebox{display:inline-flex;flex-direction:column;align-items:center;background:#111;color:#FFC94D;border-radius:12px;padding:6px 22px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}.codebox small{font-size:.7rem;letter-spacing:2px;color:#9a9a9a}.codebox span{font-size:2rem;letter-spacing:4px}.codepad{max-width:420px}.codepad button{min-height:52px}.gaterow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}.rulebox .starts{color:var(--muted);margin-top:8px}.rulebox .btn{margin-top:10px}
+.bonus{margin-top:18px;border:3px solid var(--orange);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--orange) 7%,var(--surface))}
+.bonus h3{margin:0 0 4px;font-family:var(--f-head)}
+.bzrank{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;margin:4px 0 8px}
+.wall{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+.wrow{display:flex;gap:6px}
+.brick{width:68px;height:48px;border-radius:8px;border:2px solid #B9542A;background:#F6D9C6;font-size:1.35rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center}
+.brick.hid{background:var(--surface);border-style:dashed;border-color:var(--muted);cursor:pointer}
+.brick.hid.active{border:3px solid var(--focus)}
+.brick.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.brick.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
+.choice:disabled{cursor:default;opacity:1}
+</style>
+</head>
+<body>
+
+<header class="kd">
+  <div class="hwrap">
+    <div class="brand"><b id="apptitle"></b><span id="appsub"></span></div>
+    <nav class="route" role="tablist" id="tabs" aria-label="Bereiche"></nav>
+    <div class="hright">
+      <div class="stars" aria-live="polite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17.4l-6.1 3.4 1.4-6.7-5-4.6 6.8-.8z"/></svg><span id="starcount">0</span></div>
+      <button class="reset" id="langbtn" type="button"></button>
+      <button class="reset" id="resetbtn" type="button"></button>
+    </div>
+  </div>
+</header>
+<div class="wrap">
+  <main id="view"></main>
+</div>
+
+<script>
+const DEFAULT_LANG = "de";
+const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const eur = n => fmt(n) + " €";
+const MINUS = "−";
+const PLACES = {de:["Einer","Zehner","Hunderter","Tausender","Zehntausender","Hunderttausender"],
+                tr:["birler","onlar","yüzler","binler","on binler","yüz binler"]};
+const ABBR = ["E","Z","H","T","ZT","HT"];
+
+/* ======================= data ======================= */
+const NAMES = ["Lena","Murat","Elif","Jonas","Mia","Ben","Emre","Sophie","Can","Hannah","Leon","Ayla","Noah","Zeynep","Paul","Amira","Tim","Lea","Yusuf","Emma"];
+const ITEMS = {
+ 1: [{de:"Springseil",acc:"ein Springseil",tr:"Atlama ipi",ic:"🪢",p:8},{de:"Kartenspiel",acc:"ein Kartenspiel",tr:"İskambil kağıdı",ic:"🃏",p:6},{de:"Straßenkreide",acc:"Straßenkreide",tr:"Tebeşir seti",ic:"🖍️",p:9},
+     {de:"Frisbee",acc:"ein Frisbee",tr:"Frizbi",ic:"🥏",p:17},{de:"Jonglierbälle",acc:"Jonglierbälle",tr:"Jonglör topları",ic:"🤹",p:16},{de:"Fußball",acc:"einen Fußball",tr:"Futbol topu",ic:"⚽",p:19},
+     {de:"Federball-Set",acc:"ein Federball-Set",tr:"Badminton seti",ic:"🏸",p:26},{de:"Basketball",acc:"einen Basketball",tr:"Basketbol topu",ic:"🏀",p:27},{de:"Tischtennis-Set",acc:"ein Tischtennis-Set",tr:"Masa tenisi seti",ic:"🏓",p:36},
+     {de:"Kegelspiel",acc:"ein Kegelspiel",tr:"Bowling seti",ic:"🎳",p:38}],
+ 2: [{de:"Sitzsack",acc:"einen Sitzsack",tr:"Puf koltuk",ic:"🛋️",p:89},{de:"Leselampe",acc:"eine Leselampe",tr:"Okuma lambası",ic:"💡",p:47},{de:"Teppich",acc:"einen Teppich",tr:"Halı",ic:"🧶",p:119},
+     {de:"Bücherregal",acc:"ein Bücherregal",tr:"Kitaplık",ic:"📚",p:149},{de:"Pflanzen",acc:"Pflanzen",tr:"Saksı bitkileri",ic:"🪴",p:36},{de:"Lesesessel",acc:"einen Lesesessel",tr:"Okuma koltuğu",ic:"🪑",p:189},
+     {de:"Bücherpaket",acc:"ein Bücherpaket",tr:"Kitap paketi",ic:"📦",p:238},{de:"Kuschelkissen",acc:"Kuschelkissen",tr:"Yastık seti",ic:"🧸",p:56},{de:"Pinnwand",acc:"eine Pinnwand",tr:"Mantar pano",ic:"📌",p:58},
+     {de:"Vorhang",acc:"einen Vorhang",tr:"Perde",ic:"🪟",p:78}],
+ 3: [{de:"Beamer",acc:"einen Beamer",tr:"Projeksiyon cihazı",ic:"📽️",p:1279},{de:"Leinwand",acc:"eine Leinwand",tr:"Projeksiyon perdesi",ic:"🎞️",p:389},{de:"Laptop",acc:"einen Laptop",tr:"Dizüstü bilgisayar",ic:"💻",p:879},
+     {de:"Dokumentenkamera",acc:"eine Dokumentenkamera",tr:"Belge kamerası",ic:"📷",p:359},{de:"Tablet-Koffer",acc:"einen Tablet-Koffer",tr:"Tablet dolabı",ic:"🧳",p:2479},{de:"Lautsprecher",acc:"einen Lautsprecher",tr:"Hoparlör",ic:"🔊",p:769},
+     {de:"Drucker",acc:"einen Drucker",tr:"Yazıcı",ic:"🖨️",p:459},{de:"Hocker-Set",acc:"ein Hocker-Set",tr:"Tabure seti",ic:"🪑",p:276},{de:"Mikrofon-Set",acc:"ein Mikrofon-Set",tr:"Mikrofon seti",ic:"🎤",p:194},
+     {de:"Whiteboard",acc:"ein Whiteboard",tr:"Beyaz tahta",ic:"📋",p:1568}]
+};
+const STEP = {1:10, 2:10, 3:100};
+const PLAN = {1:[100,80], 2:[500,400], 3:[4000,3000]};
+
+/* ======================= texts ======================= */
+const T = {
+de: {
+  title: 'Überschlagsprofi ≈', sub: "Überschlag und Probe beim Einkaufen", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
+  tabs: ["Input", "Üben", "Experten", "Ergebnisse sichern", "Merkzettel", "Tippkarten"],
+  lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]],
+  solvedN: n => `${n} gelöst`, upMsg: (n, a, b) => `Stark! ${n} Aufgaben hintereinander in Stufe ${a} richtig gerechnet. Probiert jetzt Stufe ${b}!`, lockShort: n => `nach ${n} Aufgaben in orange`, lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`, lockGo: "Zu Stufe orange", unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`, unlockStay: "In orange weiterrechnen", guessT: "Stopp – nicht raten!", guessP: "Ihr antwortet sehr schnell oder probiert nur aus. Raten führt nicht zum Ziel: So lernt ihr nichts für die Klassenarbeit. Lest die Aufgabe genau, rechnet zuerst und antwortet dann. Jede und jeder ist selbst für das eigene Lernen verantwortlich.", guessOk: "Verstanden", svFast: "Das ging sehr schnell. Habt ihr jede Antwort wirklich gerechnet und besprochen? Raten führt nicht zum Ziel. Prüft eure Antworten noch einmal.", svFastGo: "Wir haben alles geprüft – abgeben", upGo: b => `Zu Stufe ${b}`, upStay: "Noch hier bleiben",
+  bzT: "🧱 Bonus: Zahlenmauern", bzIntro: "Schon fertig? Dann knackt die Zahlenmauern! Jeder Stein ist die Summe der beiden Steine direkt darunter. Tippt einen leeren Stein an und gebt die Zahl ein.", bzCheck: "Prüfen", bzNext: "Nächste Mauer", bzOk: "Geschafft! Die Mauer steht. ⭐", bzBad: "Noch nicht ganz. Die roten Steine stimmen nicht.", bzEmpty: "Füllt zuerst alle leeren Steine aus.", bzCount: n => `Geschaffte Mauern: ${n}`, bzRank: ["Mauer-Lehrling", "Mauer-Profi", "Mauer-Meister"], bzUp: "Neue Stufe! Die Mauern werden größer.",
+  modes: { book: "Überschlag wie im Buch", why: "Wie rundest du?", over: "Überschlag beim Einkaufen", exact: "Genau rechnen und prüfen", plaus: "Kann das stimmen?", plan: "Reicht unser Geld?", rest: "Wechselgeld und Probe",
+           errpro: "Fehlersuche für Profis", wordpro: "Zahlen aus dem Text", receipt: "Kassenbon-Detektiv", restpro: "Wechselgeld-Profi", rough: "Warum so grob?" },
+  zahl: s => s === 100 ? "Hunderterzahl" : "Zehnerzahl", stelle: s => s === 100 ? "Hunderter" : "Zehner",
+  budget: "Budget", total: "Summe", ueberschlag: "Überschlag", exact: "genau",
+  check: "Prüfen", tip: "Tipp", next: "Nächste Aufgabe", show: "Lösung zeigen", del: "Löschen", go: "Weiter",
+  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Überschlagsprofi.", "Richtig! Weiter so."],
+  stepOk: "Richtig! Weiter mit der nächsten Zeile.",
+  bad: "Noch nicht ganz. Prüfe diesen Schritt noch einmal.",
+  badGrid: "Noch nicht ganz. Die rot markierten Kästchen stimmen nicht. Prüfe diese Spalten noch einmal.",
+  bad2: "Schau dir den Tipp an oder lass dir die Lösung zeigen.",
+  empty: "Gib zuerst eine Zahl ein.", emptyGrid: "Fülle zuerst die Ergebniszeile aus.",
+  solShown: "Hier ist die Lösung. Vergleiche sie mit deiner Rechnung.",
+  tip3: "Tipp 3: Dieser Schritt wird dir vorgemacht. Rechne danach allein weiter.",
+  whyTitle: "Warum stimmt das nicht?", cardBtn: n => `Tippkarte ${n} ansehen`,
+  /* instructions */
+  iWhy1: (nm, it, p, B) => `<b>${nm}</b> hat <b>${eur(B)}</b> und möchte ${it} für <b>${eur(p)}</b> kaufen. ${nm} will sicher wissen, ob das Geld reicht. Welche Zahl nimmt ${nm} für den Überschlag?`,
+  iWhy2: "Warum rundet man so? Wähle die passende Begründung.",
+  why: ["Wenn ich aufrunde, weiß ich sicher, ob mein Geld reicht.", "Beim Abrunden ist die Zahl kleiner, dann kann ich mehr kaufen.", "Man muss immer abrunden, wenn die Ziffer kleiner als 5 ist."],
+  whyBad1: d => `Normales Runden ergibt ${eur(d)}. Willst du sicher wissen, ob das Geld reicht, rechnest du aber lieber etwas zu viel als zu wenig. Sonst reicht das Geld an der Kasse vielleicht nicht.`,
+  whyBad2: "Die Begründung passt nicht. Was passiert an der Kasse, wenn du zu wenig gerechnet hast?",
+  whySent: (nm, p, u) => `${nm} rundet ${eur(p)} auf ${eur(u)} auf, weil man dann sicher weiß, ob das Geld reicht.`,
+  iOver: s => `💶 <b>Budget-Regel:</b> Du willst sicher wissen, ob das Geld reicht. Darum rundest du hier jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} <b>auf</b>. Addiere dann im Kopf.`,
+  iBook: (pl, lv) => lv === 3 ? `Überschlage wie im Buch: Runde normal an der größten Stelle der kleinsten Zahl. Rechne dann im Kopf.` : `Überschlage wie im Buch: Runde beide Zahlen <b>normal</b> auf ${pl}. Rechne dann im Kopf.`,
+  bookCtx: {
+    add1: (a, b) => `🎬 Im Kino waren am Samstag ${fmt(a)} Besucher und am Sonntag ${fmt(b)} Besucher. Wie viele waren es <b>ungefähr</b> zusammen?`,
+    add2: (a, b) => `🎟️ Beim Schulfest verkauft die 5a ${fmt(a)} Lose, die 5b verkauft ${fmt(b)} Lose. Wie viele Lose sind es <b>ungefähr</b>?`,
+    sub1: (a, b) => `🏟️ Im Stadion gibt es ${fmt(a)} Plätze. ${fmt(b)} Karten sind schon verkauft. Wie viele Plätze sind <b>ungefähr</b> noch frei?`,
+    sub2: (a, b) => `📚 In der Bücherei stehen ${fmt(a)} Bücher. ${fmt(b)} Bücher sind ausgeliehen. Wie viele stehen <b>ungefähr</b> noch im Regal?`
+  },
+  pl10: { 10: "Zehner", 100: "Hunderter", 1000: "Tausender" },
+  dRoundDir: "Schau auf die Ziffer rechts von der Rundungsstelle: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.",
+  dPlace: pl => `Du hast an der falschen Stelle gerundet. Hier rundest du auf ${pl}.`,
+  dBookSum: "Rechne mit den gerundeten Zahlen im Kopf. Den genauen Wert brauchst du hier nicht.",
+  tipBook: pl => `Runde normal auf ${pl}: Schau auf die Ziffer rechts daneben. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.`,
+  tipBookPlace: (n, pl) => `Die kleinere Zahl ist ${fmt(n)}. Ihre größte Stelle sind die ${pl}. Darum rundest du beide Zahlen auf ${pl}.`,
+  tipBook2: (n, a, b) => `${fmt(n)} liegt zwischen ${fmt(a)} und ${fmt(b)}. Welche Zahl ist näher?`,
+  labWOver: "Überschlag:",
+  iRough1: (U, E) => `Der Überschlag war ${eur(U)}, genau sind es nur ${eur(E)}. Warum ist der Überschlag hier so viel größer?`,
+  rough1: ["Weil wir jeden Preis fast um 10 € aufgerundet haben.", "Weil wir beim Addieren einen Fehler gemacht haben.", "Weil ein Überschlag immer doppelt so groß ist."],
+  rough1Bad: "Schau dir die Preise an: 21 € wird zu 30 €. Wie viel kommt bei jedem Preis dazu?",
+  iRough2: "Ist der Überschlag trotzdem nützlich?",
+  rough2: ["Ja. Er zeigt sicher, dass der Einkauf nicht teurer ist. Ist es knapp, rechne ich genau.", "Nein. Bei solchen Preisen sollte man nie überschlagen.", "Ja. Der Überschlag ist immer der genaue Preis."],
+  rough2Bad: "Denk an die Budget-Regel: Was weißt du sicher, wenn du aufgerundet hast?",
+  roughKey: "Profi-Wissen",
+  roughSent: "Bei Preisen wie 21 € oder 31 € macht das Aufrunden viel aus. Der Überschlag ist dann grob, aber trotzdem sicher: Der echte Preis ist nie höher. Wird es knapp, rechnest du genau.",
+  restHint: pl => `Überschlag zuerst: Runde den Preis normal auf ${pl} und rechne im Kopf.`,
+  iDecide: "Was zeigt dein Überschlag?",
+  decSure: "Das Geld reicht sicher.", decExact: "Der Überschlag ist größer als das Budget. Ich muss genau rechnen.",
+  decSureBad: (U, B) => `Der Überschlag (${eur(U)}) ist nicht größer als das Budget (${eur(B)}). Du hast aufgerundet, also ist der genaue Preis noch kleiner. Das Geld reicht sicher.`,
+  decExactBad: (U, B) => `Der Überschlag (${eur(U)}) ist größer als das Budget (${eur(B)}). Ob es trotzdem reicht, zeigt nur die genaue Rechnung.`,
+  decSureOk: (U, B) => `Richtig! ${eur(U)} ist nicht mehr als ${eur(B)}. Das Geld reicht sicher.`,
+  decExactOk: (U, B) => `Richtig! ${eur(U)} ist mehr als ${eur(B)}. Jetzt hilft nur genaues Rechnen.`,
+  iGrid: "Rechne den genauen Preis schriftlich. Tippe auf ein Kästchen und gib die Ziffer ein. Überträge darfst du in die kleinen roten Kästchen schreiben.",
+  iFinal: "Reicht das Geld?", decYes: "Ja, das Geld reicht.", decNo: "Nein, das Geld reicht nicht.",
+  finYesBad: (E, B) => `${eur(E)} ist nicht mehr als ${eur(B)}. Das Geld reicht.`,
+  finNoBad: (E, B) => `${eur(E)} ist mehr als ${eur(B)}. Das Geld reicht nicht.`,
+  gridOk: (E, U) => `Richtig: ${eur(E)}. Das passt zum Überschlag ${eur(U)}.`,
+  iPlaus: (nm, C) => `<b>${nm}</b> hat genau gerechnet und <b>${eur(C)}</b> herausbekommen. Mach zuerst den Überschlag.`,
+  iPlaus2: (nm, C, U) => `Dein Überschlag: ${eur(U)}. Kann ${nm}s Ergebnis ${eur(C)} stimmen?`,
+  canYes: "Das kann stimmen.", canNo: "Das kann nicht stimmen.",
+  plBig: (C, U) => `${eur(C)} ist größer als der Überschlag ${eur(U)}. Weil du aufgerundet hast, muss das genaue Ergebnis kleiner sein. Das kann nicht stimmen.`,
+  plSmall: (C, U) => `${eur(C)} ist viel kleiner als der Überschlag ${eur(U)}. So viel kann das Aufrunden nicht ausmachen. Das kann nicht stimmen.`,
+  plFits: (C, U) => `${eur(C)} liegt knapp unter dem Überschlag ${eur(U)}. Das passt.`,
+  plNoOk: "Gut erkannt! Der Überschlag hat den Fehler entdeckt. Rechne jetzt richtig.",
+  plYesOk: "Richtig! Das Ergebnis passt zum Überschlag.",
+  claimed: (nm, C) => `${nm}s Ergebnis: ${eur(C)}`,
+  iPlan: (a, b, B) => `${a} und ${b} dürfen für die Klasse einkaufen. Sie haben <b>${eur(B)}</b>. Tippt im Prospekt mindestens 3 Sachen an.`,
+  planCtx: { 1: "Neue Pausenspiele für die 5a", 2: "Eine Leseecke für die 5a", 3: "Ein neuer Medienraum für die Schule" },
+  cart: "Einkaufskorb", need3: "Wählt mindestens 3 Sachen aus.", toOver: "Weiter zum Überschlag",
+  planNo: "Richtig erkannt: Das Geld reicht nicht. Nehmt etwas heraus oder tauscht es aus und plant neu.",
+  portfolio: "Für euer Portfolio",
+  planSent: (items, U, E, B) => `Wir kaufen ${items}. Unser Überschlag: ${eur(U)}. Genau kostet es ${eur(E)}. ${eur(E)} ist nicht mehr als ${eur(B)}, also reicht unser Geld.`,
+  and: " und ", comma: ", ",
+  iRest: (nm, B) => `<b>${nm}</b> bezahlt mit <b>${eur(B)}</b>. Überschlage zuerst, wie viel Wechselgeld ${nm} ungefähr bekommt. Rechne es dann genau aus und mach die Probe mit der Umkehraufgabe.`,
+  labRest: "Wechselgeld:", labProbe: "Probe:",
+  /* experts */
+  xTitle: "Expertenaufgaben",
+  xIntro: "Schwierige Aufgaben für Profis: Fehler finden, Zahlen aus Texten herauslesen, Kassenbons prüfen, Wechselgeld mit Probe und „Warum so grob?“.",
+  xSolved: n => `${n} Expertenaufgaben gelöst`,
+  iErr1: (B) => `Tom hat einen Überschlag gemacht. Budget: ${eur(B)}. In welcher Zeile steckt der erste Fehler?`,
+  line: n => `Zeile ${n}`, errLineBad: "In dieser Zeile stimmt es noch. Rechne selbst nach und vergleiche.", errLineOk: n => `Richtig! Der erste Fehler steckt in Zeile ${n}.`,
+  iErr2: "Was hat Tom falsch gemacht?",
+  reasons: { down: "Er hat einen Preis abgerundet statt aufgerundet.", sum: "Er hat sich beim Addieren verrechnet.", dec: "Er hat falsch entschieden, ob das Geld reicht." },
+  reasonBad: "Das passt nicht. Vergleiche Toms Zeile genau mit deiner eigenen Rechnung.",
+  iErr3: "Gut erkannt! Mach den Überschlag jetzt richtig.",
+  tomSure: "Das Geld reicht sicher.", tomExact: "Ich muss genau rechnen.",
+  iWp1: "Lies genau. Tippe alle Zahlen an, die du zum Rechnen brauchst. Achtung: Nicht jede Zahl ist wichtig!",
+  checkNums: "Zahlen prüfen", numsMissing: "Dir fehlt noch eine wichtige Zahl. Lies die Frage noch einmal.",
+  numsExtra: x => `Die Zahl ${x} brauchst du nicht. Sie hilft nicht bei der Frage.`, numsOk: "Richtig! Das sind die wichtigen Zahlen.",
+  wp: {
+    x1: (k, d, B, a, b, c) => `Die ⟦${k}⟧ Kinder der 5a feiern am ⟦${d}⟧. Dezember ein Klassenfest. In der Klassenkasse sind ⟦${fmt(B)}⟧ €. Sie kaufen Getränke für ⟦${fmt(a)}⟧ €, Snacks für ⟦${fmt(b)}⟧ € und Deko für ⟦${fmt(c)}⟧ €. Reicht das Geld?`,
+    x2: (k, d, B, a, b, c) => `Familie Demir fährt in ⟦${k}⟧ Tagen in den Urlaub. Sie hat ⟦${fmt(B)}⟧ € für Ausrüstung. Das Zelt kostet ⟦${fmt(a)}⟧ €, die Schlafsäcke ⟦${fmt(b)}⟧ € und die Kühlbox ⟦${fmt(c)}⟧ €. Der Laden hat bis ⟦${d}⟧ Uhr geöffnet. Reicht das Geld?`,
+    x3: (k, d, B, a, b, c) => `Der Förderverein hat ⟦${fmt(B)}⟧ € für ⟦${k}⟧ Klassen. Er kauft einen Beamer für ⟦${fmt(a)}⟧ €, einen Laptop für ⟦${fmt(b)}⟧ € und Lautsprecher für ⟦${fmt(c)}⟧ €. Die Lieferung dauert ⟦${d}⟧ Tage. Reicht das Geld?`
+  },
+  iReceipt: "Stimmt die Summe auf dem Kassenbon? Mach zuerst den Überschlag.",
+  iReceipt2: U => `Dein Überschlag: ${eur(U)}. Stimmt die Summe auf dem Kassenbon?`,
+  recYes: "Die Summe stimmt.", recNo: "Die Summe stimmt nicht.", shop: "Schulmarkt",
+  restBad: (S, v, B) => `Mach die Probe: ${fmt(S)} + ${fmt(v)} = ${fmt(S + v)}. Das ist nicht ${fmt(B)}.`,
+  /* diagnosis */
+  dDown: s => `Du hast abgerundet. Für eine sichere Entscheidung rundest du jeden Preis <b>auf</b>, auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"}.`,
+  dExactPrice: "Das ist der genaue Preis. Für den Überschlag brauchst du eine glatte Zahl.",
+  dNotRound: s => `Das ist keine glatte ${s === 100 ? "Hunderterzahl" : "Zehnerzahl"}.`,
+  dRoundGen: "Welche glatte Zahl kommt direkt nach dem Preis?",
+  dSumExact: "Das ist der genaue Preis. Für den Überschlag addierst du die gerundeten Zahlen.",
+  dSumGen: parts => `Addiere noch einmal Schritt für Schritt: ${parts}.`,
+  dOverBig: U => `Dein Ergebnis ist größer als der Überschlag (${eur(U)}). Das kann nicht stimmen, denn du hast aufgerundet.`,
+  dOverSmall: U => `Dein Ergebnis ist viel kleiner als der Überschlag (${eur(U)}). Hast du einen Übertrag oder einen Preis vergessen?`,
+  dAddCarry: (pl, parts, tot, r) => `${pl}: Du hast den Übertrag vergessen. Richtig ist ${parts} = ${tot}, also ${r}.`,
+  dGeneric: pl => `${pl}: Hier hast du dich verrechnet. So geht es:`,
+  dLead: "Vorne steht eine Ziffer zu viel oder es fehlt eine. Wie viele Stellen muss das Ergebnis haben?",
+  dProbe: "Addiere Preis und Wechselgeld. Es muss wieder der bezahlte Betrag herauskommen.",
+  colAdd: (pl, parts, tot, r, c, next) => c ? `${pl}: ${parts} = ${tot}. Schreibe ${r} hin und den Übertrag ${c} in die ${next}-Spalte.` : `${pl}: ${parts} = ${tot}. Schreibe ${tot} hin.`,
+  colHelp: pl => `Jetzt bist du in der <b>${pl}-Spalte</b>.`,
+  carryWord: "Übertrag",
+  /* tips */
+  tipRound: s => `Budget-Regel: Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} auf.`,
+  tipRound2: (p, a, b) => `${fmt(p)} liegt zwischen ${fmt(a)} und ${fmt(b)}. Beim Aufrunden nimmst du die größere Zahl.`,
+  tipSum: s => `Addiere die gerundeten Zahlen im Kopf. Rechne mit den ${s === 100 ? "Hundertern" : "Zehnern"}.`,
+  tipSum2: parts => `Schritt für Schritt: ${parts}`,
+  tipDecide: "Vergleiche den aufgerundeten Überschlag mit dem Budget. Überschlag ≤ Budget: Das Geld reicht sicher. Überschlag > Budget: genau rechnen.",
+  tipFinal: "Vergleiche den genauen Preis mit dem Budget.",
+  tipCan: "Prüfregel: Das genaue Ergebnis ist nicht größer als der aufgerundete Überschlag, aber nur ein bisschen kleiner.",
+  tipWhy: "Was passiert an der Kasse, wenn du zu wenig gerechnet hast?",
+  tipRest: "Wechselgeld = bezahlter Betrag − Preis. Du kannst auch ergänzen: Preis + ? = bezahlter Betrag.",
+  tipRest2: (S, B) => `${fmt(S)} + ? = ${fmt(B)}`,
+  tipProbe: "Probe mit der Umkehraufgabe: Preis + Wechselgeld. Es muss der bezahlte Betrag herauskommen.",
+  tipGrid: "Schreibe die Zahlen stellengerecht. Beginne rechts bei den Einern und rechne Spalte für Spalte nach links. Ist eine Spaltensumme 10 oder mehr, schreibst du die Einer unten hin und den Zehner als Übertrag in die nächste Spalte.",
+  tipNums: "Welche Zahlen sind Geldbeträge? Nur die brauchst du.",
+  tipLines: "Rechne selbst Zeile für Zeile und vergleiche mit Tom.",
+  tipPlan: "Tippt ein Produkt an, um es in den Korb zu legen. Noch einmal tippen nimmt es wieder heraus.",
+  /* partner */
+  pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pNames: "Namen", pA: "Partner A", pB: "Partner B",
+  pTurn: (a, b) => `<b>${a}</b> rechnet. <b>${b}</b> schaut zu, prüft mit und hilft beim Erklären.`,
+  pSwap: (a, b) => `Wechsel! Jetzt rechnet <b>${b}</b>. Vorher erklärt <b>${a}</b> kurz den Rechenweg.`,
+  pDiscuss: "Besprecht zusammen:",
+  pPm: { why: "Warum rundet man hier auf? Erklärt es euch gegenseitig.", over: "Reicht das Geld sicher? Woran seht ihr das?", exact: "Passt das genaue Ergebnis zum Überschlag? Woran seht ihr das?", book: "Wann habt ihr abgerundet, wann aufgerundet? Erklärt die Rundungsregel.", plaus: "Woran habt ihr erkannt, ob das Ergebnis stimmen kann?", plan: "Wie habt ihr entschieden, ob euer Geld reicht?", rest: "Wie habt ihr die Probe gemacht?", def: "Erklärt euch gegenseitig euren Rechenweg." },
+  pPrompts: ["Wie habt ihr gerundet? Warum auf?", "Reicht das Geld sicher? Woran seht ihr das?", "Passt das genaue Ergebnis zum Überschlag?", "Erklärt die Prüfregel mit eigenen Worten.", "Macht zusammen die Probe.", "Wo im Alltag hilft euch ein Überschlag?"],
+  /* input */
+  inTitle: "Überschlag und Probe beim Einkaufen",
+  inNext: "Weiter", inBack: "Zurück", inGo: "Jetzt üben",
+  in1h: "Reicht Elifs Geld?", in1: "Elif hat 50 €. Sie möchte für die Pause einkaufen:", in1q: "Reicht ihr Geld? Elif will es schnell wissen, ohne genau zu rechnen.",
+  in1items: [["Frisbee", 18], ["Jonglierbälle", 14], ["Springseil", 9]],
+  in2h: "Schritt 1: Runden", in2: "Mit gerundeten Werten rechnest du schnell im Kopf. Das nennt man „das Ergebnis überschlagen“. Das Zeichen ≈ bedeutet „ungefähr gleich“. Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.",
+  in3h: "Soll das Geld sicher reichen? Dann aufrunden!", in3: "Für ein ungefähres Ergebnis reicht normales Runden. Beim Einkaufen mit festem Budget gibt es aber einen Trick: Rundet Elif 14 € auf 10 € ab, rechnet sie zu wenig. Dann reicht das Geld an der Kasse vielleicht nicht. Darum rundet sie jeden Preis <b>auf</b>:",
+  in4h: "Schritt 2: Der Überschlag", in4: "Elif addiert die gerundeten Preise im Kopf und vergleicht mit ihrem Geld:", in4b: "50 € ist nicht mehr als 50 €. Das Geld reicht sicher.",
+  in5h: "Schritt 3: Genau rechnen und prüfen", in5: "Elif rechnet genau und prüft mit dem Überschlag. 41 € ist etwas kleiner als 50 €. Das passt! Sie bezahlt mit einem 50-€-Schein. Zum Schluss rechnet sie das Wechselgeld aus und macht die Probe mit der Umkehraufgabe:",
+  in6h: "Teste dich!", in6: "Ben hat 30 €. Er kauft einen Ball für 19 € und Kreide für 7 €. Mit welchem Überschlag weiß Ben sicher, ob sein Geld reicht?",
+  in6opts: [["20 + 10 = 30", true], ["20 + 7 = 27", false], ["10 + 10 = 20", false]],
+  in6ok: "Richtig! Beide Preise aufgerundet: 30 € reicht sicher. Jetzt kannst du üben.", in6bad: "Noch nicht. Runde beide Preise auf den nächsten Zehner auf.",
+  /* merk */
+  svTitle: "Ergebnisse sichern: Reicht mein Geld?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr abgebt. Eure Lehrkraft kommt zu euch und hört zu.", gateH: "Stopp! Erst die Tafel, dann diese Station.", gateP: "Hier sichert ihr zu zweit, was ihr an der Tafel gemeinsam besprochen habt.", gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, zeigt sie den <b>Startcode</b> an der Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen", gateWait: "Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: weiter bei „Üben“ oder „Experten“.", svP3: "Teil 3: Erklärt es euch gegenseitig", svTalk: "<b>Person 1</b> erklärt: Warum rundet man jeden Preis auf, wenn man sicher wissen will, ob das Geld reicht?<br><b>Person 2</b> erklärt: Was macht ihr, wenn der Überschlag größer ist als das Budget?<br>Benutzt dabei die Wörter <b>Überschlag</b>, <b>aufrunden</b>, <b>Budget</b> und <b>genau rechnen</b>.", svStarts: "Satzanfänge: „Wir runden auf, weil …“ · „Wenn der Überschlag größer ist als das Budget, …“", svTalkBtn: "Wir haben es uns gegenseitig erklärt", svTalkDone: "✓ Ihr habt es euch gegenseitig erklärt.", svP1: "Teil 1: Die Regeln", svP2: "Teil 2: Zwei Einkäufe", svShopA: "Lea kauft ein Frisbee (13 €), Straßenkreide (22 €) und ein Springseil (8 €).", svShop: "Jonas hat <b>70 €</b>. Er möchte einen Fußball (19 €), Jonglierbälle (16 €) und ein Kartenspiel (12 €) kaufen.",
+  svQ: [["Will ich sicher wissen, ob mein Budget reicht, runde ich jeden Preis …", ["auf.", "ab."], 0, "Beim Abrunden rechnest du zu wenig. Dann reicht das Geld an der Kasse vielleicht nicht."],
+   ["Ist der aufgerundete Überschlag kleiner als das Budget oder gleich groß, …", ["reicht das Geld sicher.", "muss ich genau rechnen."], 0, "Du hast aufgerundet. Der echte Preis ist nie höher als der Überschlag."],
+   ["Ist der aufgerundete Überschlag größer als das Budget, …", ["reicht das Geld nicht.", "muss ich genau rechnen."], 1, "Nicht so schnell! Der echte Preis ist kleiner als der Überschlag. Vielleicht reicht das Geld trotzdem."],
+   ["Wie viel kostet Leas Einkauf ungefähr?", ["20 + 30 + 10 = 60 €", "10 + 20 + 10 = 40 €", "13 + 22 + 8 = 43 €"], 1, "Für ein ungefähres Ergebnis gilt die Rundungsregel: 13 ≈ 10 und 22 ≈ 20 (abrunden), 8 ≈ 10 (aufrunden)."],
+   ["Mit welchem Überschlag weiß Jonas sicher, ob sein Geld reicht?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "19 + 16 + 12 = 47 €"], 1, "Für eine sichere Entscheidung rundest du jeden Preis auf, auch 12 € auf 20 €. 50 € ist nach der Rundungsregel gerundet, 47 € ist genau gerechnet."],
+   ["Was zeigt der aufgerundete Überschlag?", ["Das Geld reicht sicher.", "Jonas muss genau rechnen.", "Das Geld reicht nicht."], 0, "60 € ist nicht mehr als 70 €. Das Geld reicht sicher."],
+   ["Tim rundet für ein ungefähres Ergebnis nach der Rundungsregel. Welche Rundung ist richtig?", ["35 € ≈ 30 €", "43 € ≈ 50 €", "37 € ≈ 40 €"], 2, "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden. Also 35 € ≈ 40 € und 43 € ≈ 40 €."]],
+  svWrong: "Falsch.", svSubmit: "Abgeben", svLockHint: "Besprecht eure Antworten. Nach dem Abgeben könnt ihr nichts mehr ändern.", svAnswered: (n, t) => `${n} von ${t} Fragen beantwortet`, svResult: (n, t) => `Ergebnis: ${n} von ${t} richtig`, svRetryIntro: "Zu euren Fehlern kommen jetzt neue Aufgaben. Beantwortet alle und gebt dann ab. Erst danach seht ihr, was richtig ist.", svRetryT: "Nachübung", svRetryDone: "Nachübung geschafft: Alle Fehler sind ausgebessert.", svMore: "Noch nicht alles richtig. Hier kommen neue Aufgaben, diesmal mit Tipp.", svRoundRes: (n, t) => `Nachübung: ${n} von ${t} richtig`, svExpl: "Erklärung", svRight: "Richtig ist:",
+  sv2: { c0: B => `Du hast ${B} €. Du willst sicher wissen, ob dein Geld reicht.`, s0: p => `Wie rundest du den Preis ${p} € für den Überschlag?`, h0: "Für eine sichere Entscheidung rundest du jeden Preis auf, auch wenn die Einerziffer kleiner als 5 ist.",
+   sure: "Das Geld reicht sicher.", exact: "Ich muss genau rechnen.", no: "Das Geld reicht nicht.",
+   c1: (o, B) => `Dein aufgerundeter Überschlag ist ${o} €. Du hast ${B} €.`, s1: "Was stimmt?", hDec: "Vergleiche: Aufgerundeter Überschlag ≤ Budget → Das Geld reicht sicher. Aufgerundeter Überschlag > Budget → genau rechnen, denn der echte Preis ist kleiner.",
+   c3: ps => `Du kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s3: "Wie viel kostet der Einkauf ungefähr?", h3: "Für „ungefähr“ gilt die Rundungsregel: Einerziffer 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden.",
+   c4: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s4: "Welcher Überschlag zeigt sicher, ob dein Geld reicht?", h4: "Für eine sichere Entscheidung rundest du jeden Preis auf die nächste Zehnerzahl auf.",
+   c5: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s5: "Was zeigt der aufgerundete Überschlag?", h5: e => `Aufgerundeter Überschlag: ${e}.`, c6: "Für ein ungefähres Ergebnis rundest du nach der Rundungsregel.", s6: "Welche Rundung ist richtig?", h6: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden." },
+   svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svShow: "Zeigt euer iPad eurer Lehrkraft.", svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
+  merkTitle: "Merkzettel",
+  merkRules: ["Überschlag: Runde die Zahlen und rechne im Kopf. Das Zeichen ≈ heißt „ungefähr gleich“.", "Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.", "Runde an der größten Stelle der kleinsten Zahl. Beispiel: 358 + 47 → beide auf Zehner: 360 + 50 = 410.", "💶 Budget-Regel: Willst du sicher wissen, ob dein Geld reicht, rundest du jeden Preis <b>auf</b>. Für ein ungefähres Ergebnis gilt die Rundungsregel.", "Aufgerundeter Überschlag ≤ Budget: Das Geld reicht sicher. Aufgerundeter Überschlag > Budget: genau rechnen.", "Prüfregel: Das genaue Ergebnis ist nicht größer als der aufgerundete Überschlag, aber nur ein bisschen kleiner.", "Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag.", "Mehr dazu im Buch auf Seite 34."],
+  errTitle: "Typische Fehler",
+  errs: [["Abgerundet statt aufgerundet", "Budget 50 €: 14 € → <s>10 €</s> → richtig 20 €"], ["Genaue Preise statt gerundeter", "Überschlag: <s>18 + 14 + 9</s> → richtig 20 + 20 + 10"], ["Übertrag vergessen", "18 + 14 + 9 = <s>31</s> → richtig 41"], ["Ergebnis größer als der Überschlag", "Überschlag 50, Ergebnis <s>61</s> → kann nicht stimmen"], ["Wechselgeld ohne Probe", "50 − 41 = <s>19</s>, Probe: 41 + 19 = 60 → richtig 9"]],
+  glossTitle: "Fachbegriffe",
+  gloss: [["Überschlagsrechnung (kurz: Überschlag)", "ungefähres Ergebnis mit gerundeten Werten"], ["≈", "ungefähr gleich"], ["runden / aufrunden", "eine Zahl durch eine glatte Zahl ersetzen / nach oben runden"], ["Budget", "das Geld, das man ausgeben kann"], ["Probe", "Kontrolle mit der Umkehraufgabe"], ["Umkehraufgabe", "die Aufgabe rückwärts, z. B. 41 + 9 = 50 zu 50 − 41 = 9"], ["Wechselgeld", "Geld, das man an der Kasse zurückbekommt"], ["Summand + Summand = Wert der Summe", "Addition"]],
+  cardsTitle: "Tippkarten", tapHint: "Tippe zum Umdrehen",
+  cards: [
+    ["Wie runde ich?", "Schau auf die Ziffer rechts von der Rundungsstelle. 0 bis 4: abrunden. 5 bis 9: aufrunden. Beispiel: 34 ≈ 30, 36 ≈ 40."],
+    ["Was ist ein Überschlag?", "Ein ungefähres Ergebnis mit gerundeten Zahlen. Du rechnest es schnell im Kopf aus."],
+    ["Warum runde ich bei festem Budget auf?", "Wenn du aufrundest, rechnest du eher zu viel als zu wenig. So weißt du sicher, ob dein Geld an der Kasse reicht."],
+    ["Wie rechne ich den Überschlag?", "Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf. Addiere dann die glatten Zahlen im Kopf: 40 + 40 + 30 = 110."],
+    ["Reicht das Geld sicher?", "Ist der aufgerundete Überschlag nicht größer als das Budget, reicht das Geld sicher. Ist er größer, musst du genau rechnen."],
+    ["Passt mein Ergebnis?", "Das genaue Ergebnis ist kleiner als der aufgerundete Überschlag oder gleich groß, aber nur ein bisschen kleiner. Sonst hast du dich verrechnet."],
+    ["Wie mache ich die Probe?", "Wechselgeld = bezahlter Betrag − Preis. Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag. Beispiel: 100 − 81 = 19, Probe: 19 + 81 = 100 ✓"],
+    ["Schriftlich addieren", "Zahlen stellengerecht untereinander. Rechts bei den Einern anfangen. Spaltensumme 10 oder mehr: Einer hinschreiben, Zehner als Übertrag in die nächste Spalte."],
+    ["Auf welche Stelle runde ich?", "Schau dir die kleinere Zahl an. Auf ihre größte Stelle rundest du beide Zahlen. 358 + 47: 47 hat Zehner, also 360 + 50."]
+  ]
+},
+tr: {
+  title: 'Tahmin Ustası ≈', sub: "Alışverişte tahmini hesap ve sağlama", other: "Deutsch", reset: "Yeniden başla", reset2: "Her şey silinsin mi?",
+  tabs: ["Giriş", "Alıştırma", "Uzman", "Sonuçları pekiştir", "Not kâğıdı", "İpucu kartları"],
+  lv: [["Seviye 1", "turuncu"], ["Seviye 2", "pembe"], ["Seviye 3", "mor"]],
+  solvedN: n => `${n} çözüldü`, upMsg: (n, a, b) => `Harika! ${a} seviyesinde art arda ${n} soru doğru hesaplandı. Şimdi ${b} seviyesini deneyin!`, lockShort: n => `turuncuda ${n} sorudan sonra`, lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`, lockGo: "Turuncu seviyeye git", unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`, unlockStay: "Turuncuda devam et", guessT: "Dur – tahmin etme!", guessP: "Çok hızlı cevap veriyorsunuz ya da sadece deniyorsunuz. Tahmin etmek hedefe götürmez: Böyle sınav için bir şey öğrenemezsiniz. Soruyu dikkatlice okuyun, önce hesaplayın, sonra cevap verin. Herkes kendi öğrenmesinden kendisi sorumludur.", guessOk: "Anladım", svFast: "Bu çok hızlı oldu. Her cevabı gerçekten hesapladınız ve konuştunuz mu? Tahmin etmek hedefe götürmez. Cevaplarınızı bir daha kontrol edin.", svFastGo: "Hepsini kontrol ettik – teslim et", upGo: b => `${b} seviyesine geç`, upStay: "Burada kalmaya devam et",
+  bzT: "🧱 Bonus: Sayı duvarları", bzIntro: "Bitirdiniz mi? O zaman sayı duvarlarını çözün! Her taş, hemen altındaki iki taşın toplamıdır. Boş bir taşa dokunun ve sayıyı girin.", bzCheck: "Kontrol et", bzNext: "Sonraki duvar", bzOk: "Başardınız! Duvar tamam. ⭐", bzBad: "Henüz tam değil. Kırmızı taşlar yanlış.", bzEmpty: "Önce bütün boş taşları doldurun.", bzCount: n => `Tamamlanan duvarlar: ${n}`, bzRank: ["Duvar çırağı", "Duvar kalfası", "Duvar ustası"], bzUp: "Yeni seviye! Duvarlar büyüyor.",
+  modes: { book: "Kitaptaki gibi tahmini hesap", why: "Nasıl yuvarlarsın?", over: "Alışverişte tahmini hesap", exact: "Tam hesapla ve kontrol et", plaus: "Bu doğru olabilir mi?", plan: "Paramız yeter mi?", rest: "Para üstü ve sağlama",
+           errpro: "Uzmanlar için hata arama", wordpro: "Metindeki sayılar", receipt: "Fiş dedektifi", restpro: "Para üstü ustası", rough: "Neden bu kadar kaba?" },
+  zahl: s => s === 100 ? "yüzlük sayı" : "onluk sayı", stelle: s => s === 100 ? "yüzlük" : "onluk",
+  budget: "Bütçe", total: "Toplam", ueberschlag: "Tahmini hesap", exact: "tam",
+  check: "Kontrol et", tip: "İpucu", next: "Sonraki soru", show: "Çözümü göster", del: "Sil", go: "İleri",
+  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir tahmin ustasısın.", "Doğru! Böyle devam et."],
+  stepOk: "Doğru! Sonraki satıra geç.",
+  bad: "Henüz tam değil. Bu adımı bir daha kontrol et.",
+  badGrid: "Henüz tam değil. Kırmızı işaretli kutular yanlış. Bu sütunları bir daha kontrol et.",
+  bad2: "İpucuna bak ya da çözümü göster.",
+  empty: "Önce bir sayı yaz.", emptyGrid: "Önce sonuç satırını doldur.",
+  solShown: "İşte çözüm. Kendi hesabınla karşılaştır.",
+  tip3: "3. ipucu: Bu adım sana gösteriliyor. Sonra tek başına devam et.",
+  whyTitle: "Neden yanlış?", cardBtn: n => `${n}. ipucu kartına bak`,
+  iWhy1: (nm, it, p, B) => `<b>${nm}</b> adlı öğrencinin <b>${eur(B)}</b> parası var ve <b>${eur(p)}</b> tutan ${it} almak istiyor. Paranın kesin yetip yetmeyeceğini bilmek istiyor. Tahmini hesap için hangi sayıyı alır?`,
+  iWhy2: "Neden böyle yuvarlanır? Uygun gerekçeyi seç.",
+  why: ["Yukarı yuvarlarsam, paramın yetip yetmeyeceğini kesin bilirim.", "Aşağı yuvarlarsam sayı küçülür, daha çok şey alabilirim.", "Rakam 5'ten küçükse her zaman aşağı yuvarlamak gerekir."],
+  whyBad1: d => `Normal yuvarlama ${eur(d)} verir. Ama paranın kesin yetip yetmeyeceğini bilmek istiyorsan, biraz fazla hesaplamak daha iyidir. Yoksa kasada para yetmeyebilir.`,
+  whyBad2: "Gerekçe uymuyor. Az hesaplarsan kasada ne olur?",
+  whySent: (nm, p, u) => `${nm}, ${eur(p)} fiyatını ${eur(u)} olarak yukarı yuvarlar, çünkü böylece paranın yetip yetmeyeceği kesin bilinir.`,
+  iOver: s => `💶 <b>Bütçe kuralı:</b> Paranın yetip yetmeyeceğini kesin bilmek istiyorsun. Bu yüzden burada her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} <b>yukarı</b> yuvarlarsın. Sonra aklından topla.`,
+  iBook: (pl, lv) => lv === 3 ? `Kitaptaki gibi tahmin et: En küçük sayının en büyük basamağına göre normal yuvarla. Sonra aklından hesapla.` : `Kitaptaki gibi tahmin et: İki sayıyı da <b>normal</b> olarak ${pl} yuvarla. Sonra aklından hesapla.`,
+  bookCtx: {
+    add1: (a, b) => `🎬 Sinemaya cumartesi ${fmt(a)}, pazar ${fmt(b)} kişi geldi. Toplam <b>yaklaşık</b> kaç kişi geldi?`,
+    add2: (a, b) => `🎟️ Okul şenliğinde 5a ${fmt(a)}, 5b ${fmt(b)} piyango bileti satıyor. <b>Yaklaşık</b> kaç bilet satıldı?`,
+    sub1: (a, b) => `🏟️ Stadyumda ${fmt(a)} koltuk var. ${fmt(b)} bilet satıldı. <b>Yaklaşık</b> kaç koltuk boş?`,
+    sub2: (a, b) => `📚 Kütüphanede ${fmt(a)} kitap var. ${fmt(b)} kitap ödünç verildi. Rafta <b>yaklaşık</b> kaç kitap kaldı?`
+  },
+  pl10: { 10: "onluğa", 100: "yüzlüğe", 1000: "binliğe" },
+  dRoundDir: "Yuvarlanacak basamağın sağındaki rakama bak: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı.",
+  dPlace: pl => `Yanlış basamağa yuvarladın. Burada ${pl} yuvarlarsın.`,
+  dBookSum: "Yuvarlanmış sayılarla aklından hesapla. Burada tam değere gerek yok.",
+  tipBook: pl => `Normal olarak ${pl} yuvarla: Sağdaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.`,
+  tipBookPlace: (n, pl) => `Küçük sayı ${fmt(n)}. En büyük basamağına göre iki sayıyı da ${pl} yuvarlarsın.`,
+  tipBook2: (n, a, b) => `${fmt(n)}, ${fmt(a)} ile ${fmt(b)} arasında. Hangisine daha yakın?`,
+  labWOver: "Tahmin:",
+  iRough1: (U, E) => `Tahmin ${eur(U)} idi, tam fiyat ise sadece ${eur(E)}. Tahmin burada neden bu kadar büyük?`,
+  rough1: ["Çünkü her fiyatı neredeyse 10 € yukarı yuvarladık.", "Çünkü toplarken hata yaptık.", "Çünkü tahmin her zaman iki kat büyüktür."],
+  rough1Bad: "Fiyatlara bak: 21 €, 30 € oluyor. Her fiyata ne kadar ekleniyor?",
+  iRough2: "Tahmin yine de işe yarar mı?",
+  rough2: ["Evet. Alışverişin daha pahalı olmadığını kesin gösterir. Sınırdaysa tam hesaplarım.", "Hayır. Böyle fiyatlarda asla tahmin yapılmamalı.", "Evet. Tahmin her zaman tam fiyattır."],
+  rough2Bad: "Bütçe kuralını düşün: Yukarı yuvarladığında neyi kesin bilirsin?",
+  roughKey: "Uzman bilgisi",
+  roughSent: "21 € ya da 31 € gibi fiyatlarda yukarı yuvarlamak çok şey değiştirir. Tahmin o zaman kabadır ama yine de güvenlidir: Gerçek fiyat asla daha yüksek değildir. Sınırdaysa tam hesaplarsın.",
+  restHint: pl => `Önce tahmin: Fiyatı normal olarak ${pl} yuvarla ve aklından hesapla.`,
+  iDecide: "Tahmini hesabın ne gösteriyor?",
+  decSure: "Para kesin yeter.", decExact: "Tahmini toplam bütçeden büyük. Tam hesap yapmalıyım.",
+  decSureBad: (U, B) => `Tahmini toplam (${eur(U)}) bütçeden (${eur(B)}) büyük değil. Yukarı yuvarladığın için tam fiyat daha da küçük. Para kesin yeter.`,
+  decExactBad: (U, B) => `Tahmini toplam (${eur(U)}) bütçeden (${eur(B)}) büyük. Yine de yetip yetmeyeceğini sadece tam hesap gösterir.`,
+  decSureOk: (U, B) => `Doğru! ${eur(U)}, ${eur(B)} tutarından fazla değil. Para kesin yeter.`,
+  decExactOk: (U, B) => `Doğru! ${eur(U)}, ${eur(B)} tutarından fazla. Şimdi tam hesap gerekli.`,
+  iGrid: "Tam fiyatı alt alta hesapla. Bir kutuya dokun ve rakamı yaz. Eldeleri (Übertrag) küçük kırmızı kutulara yazabilirsin.",
+  iFinal: "Para yeter mi?", decYes: "Evet, para yeter.", decNo: "Hayır, para yetmez.",
+  finYesBad: (E, B) => `${eur(E)}, ${eur(B)} tutarından fazla değil. Para yeter.`,
+  finNoBad: (E, B) => `${eur(E)}, ${eur(B)} tutarından fazla. Para yetmez.`,
+  gridOk: (E, U) => `Doğru: ${eur(E)}. Bu, tahmini hesap ${eur(U)} ile uyuşuyor.`,
+  iPlaus: (nm, C) => `<b>${nm}</b> tam hesap yaptı ve <b>${eur(C)}</b> buldu. Önce tahmini hesap yap.`,
+  iPlaus2: (nm, C, U) => `Tahmini hesabın: ${eur(U)}. ${nm} adlı öğrencinin sonucu ${eur(C)} doğru olabilir mi?`,
+  canYes: "Doğru olabilir.", canNo: "Doğru olamaz.",
+  plBig: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinden büyük. Yukarı yuvarladığın için tam sonuç daha küçük olmalı. Doğru olamaz.`,
+  plSmall: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinden çok küçük. Yukarı yuvarlama bu kadar fark yapamaz. Doğru olamaz.`,
+  plFits: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinin biraz altında. Bu uyuyor.`,
+  plNoOk: "İyi buldun! Tahmini hesap hatayı buldu. Şimdi doğru hesapla.",
+  plYesOk: "Doğru! Sonuç tahmini hesaba uyuyor.",
+  claimed: (nm, C) => `${nm} adlı öğrencinin sonucu: ${eur(C)}`,
+  iPlan: (a, b, B) => `${a} ve ${b} sınıf için alışveriş yapabilir. <b>${eur(B)}</b> paraları var. Broşürden en az 3 ürüne dokunun.`,
+  planCtx: { 1: "5a için yeni teneffüs oyunları", 2: "5a için bir okuma köşesi", 3: "Okul için yeni bir medya odası" },
+  cart: "Alışveriş sepeti", need3: "En az 3 ürün seçin.", toOver: "Tahmini hesaba geç",
+  planNo: "Doğru: Para yetmiyor. Bir ürünü çıkarın ya da değiştirin ve yeniden planlayın.",
+  portfolio: "Portfolyonuz için",
+  planSent: (items, U, E, B) => `${items} alıyoruz. Tahmini hesabımız: ${eur(U)}. Tam fiyat: ${eur(E)}. ${eur(E)}, ${eur(B)} tutarından fazla değil, yani paramız yeter.`,
+  and: " ve ", comma: ", ",
+  iRest: (nm, B) => `<b>${nm}</b> <b>${eur(B)}</b> ile ödüyor. Önce yaklaşık ne kadar para üstü alacağını tahmin et. Sonra tam hesapla ve ters işlemle sağlama yap.`,
+  labRest: "Para üstü:", labProbe: "Sağlama:",
+  xTitle: "Uzman soruları",
+  xIntro: "Ustalar için zor sorular: hataları bul, metinden sayıları çıkar, fişleri kontrol et ve sağlamayla para üstünü hesapla.",
+  xSolved: n => `${n} uzman sorusu çözüldü`,
+  iErr1: (B) => `Tom tahmini hesap yaptı. Bütçe: ${eur(B)}. İlk hata hangi satırda?`,
+  line: n => `${n}. satır`, errLineBad: "Bu satır doğru. Kendin hesapla ve karşılaştır.", errLineOk: n => `Doğru! İlk hata ${n}. satırda.`,
+  iErr2: "Tom neyi yanlış yaptı?",
+  reasons: { down: "Bir fiyatı yukarı yerine aşağı yuvarlamış.", sum: "Toplarken yanlış hesaplamış.", dec: "Paranın yetip yetmeyeceğine yanlış karar vermiş." },
+  reasonBad: "Bu uymuyor. Tom'un satırını kendi hesabınla dikkatlice karşılaştır.",
+  iErr3: "İyi buldun! Şimdi tahmini hesabı doğru yap.",
+  tomSure: "Para kesin yeter.", tomExact: "Tam hesap yapmalıyım.",
+  iWp1: "Dikkatlice oku. Hesaplamak için gereken tüm sayılara dokun. Dikkat: Her sayı önemli değil!",
+  checkNums: "Sayıları kontrol et", numsMissing: "Önemli bir sayı eksik. Soruyu tekrar oku.",
+  numsExtra: x => `${x} sayısına ihtiyacın yok. Soruyu cevaplamaya yardım etmiyor.`, numsOk: "Doğru! Önemli sayılar bunlar.",
+  wp: {
+    x1: (k, d, B, a, b, c) => `5a sınıfındaki ⟦${k}⟧ çocuk ⟦${d}⟧ Aralık'ta sınıf partisi yapıyor. Sınıf kasasında ⟦${fmt(B)}⟧ € var. ⟦${fmt(a)}⟧ € içecek, ⟦${fmt(b)}⟧ € atıştırmalık ve ⟦${fmt(c)}⟧ € süs alıyorlar. Para yeter mi?`,
+    x2: (k, d, B, a, b, c) => `Demir ailesi ⟦${k}⟧ gün sonra tatile gidiyor. Kamp malzemesi için ⟦${fmt(B)}⟧ € ayırdılar. Çadır ⟦${fmt(a)}⟧ €, uyku tulumları ⟦${fmt(b)}⟧ €, soğutucu çanta ⟦${fmt(c)}⟧ €. Mağaza saat ⟦${d}⟧'e kadar açık. Para yeter mi?`,
+    x3: (k, d, B, a, b, c) => `Okul derneğinin ⟦${k}⟧ sınıf için ⟦${fmt(B)}⟧ € parası var. ⟦${fmt(a)}⟧ € projeksiyon cihazı, ⟦${fmt(b)}⟧ € dizüstü bilgisayar ve ⟦${fmt(c)}⟧ € hoparlör alıyor. Teslimat ⟦${d}⟧ gün sürüyor. Para yeter mi?`
+  },
+  iReceipt: "Fişteki toplam doğru mu? Önce tahmini hesap yap.",
+  iReceipt2: U => `Tahmini hesabın: ${eur(U)}. Fişteki toplam doğru mu?`,
+  recYes: "Toplam doğru.", recNo: "Toplam yanlış.", shop: "Okul marketi",
+  restBad: (S, v, B) => `Sağlama yap: ${fmt(S)} + ${fmt(v)} = ${fmt(S + v)}. Bu ${fmt(B)} değil.`,
+  dDown: s => `Aşağı yuvarlamışsın. Kesin karar için her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} <b>yukarı</b> yuvarlarsın.`,
+  dExactPrice: "Bu tam fiyat. Tahmini hesap için yuvarlak bir sayı gerekir.",
+  dNotRound: s => `Bu yuvarlak bir ${s === 100 ? "yüzlük sayı" : "onluk sayı"} değil.`,
+  dRoundGen: "Fiyattan hemen sonra gelen yuvarlak sayı hangisi?",
+  dSumExact: "Bu tam fiyat. Tahmini hesap için yuvarlanmış sayıları topla.",
+  dSumGen: parts => `Adım adım tekrar topla: ${parts}.`,
+  dOverBig: U => `Sonucun tahmini hesaptan (${eur(U)}) büyük. Bu doğru olamaz, çünkü yukarı yuvarladın.`,
+  dOverSmall: U => `Sonucun tahmini hesaptan (${eur(U)}) çok küçük. Bir eldeyi ya da bir fiyatı unuttun mu?`,
+  dAddCarry: (pl, parts, tot, r) => `${pl}: Eldeyi unutmuşsun. Doğrusu ${parts} = ${tot}, yani ${r}.`,
+  dGeneric: pl => `${pl}: Burada yanlış hesaplamışsın. Doğrusu şöyle:`,
+  dLead: "Başta fazladan bir rakam var ya da bir rakam eksik. Sonuç kaç basamaklı olmalı?",
+  dProbe: "Fiyat ile para üstünü topla. Ödenen para çıkmalı.",
+  colAdd: (pl, parts, tot, r, c, next) => c ? `${pl}: ${parts} = ${tot}. ${r} yaz, ${c} elde olarak ${next} sütununa geçer.` : `${pl}: ${parts} = ${tot}. ${tot} yaz.`,
+  colHelp: pl => `Şimdi <b>${pl} sütunundasın</b>.`,
+  carryWord: "elde",
+  tipRound: s => `Bütçe kuralı: Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} yukarı yuvarlarsın.`,
+  tipRound2: (p, a, b) => `${fmt(p)}, ${fmt(a)} ile ${fmt(b)} arasında. Yukarı yuvarlarken büyük sayıyı alırsın.`,
+  tipSum: s => `Yuvarlanmış sayıları aklından topla. ${s === 100 ? "Yüzlüklerle" : "Onluklarla"} hesapla.`,
+  tipSum2: parts => `Adım adım: ${parts}`,
+  tipDecide: "Yukarı yuvarlanmış tahmini hesabı bütçeyle karşılaştır. Tahmin ≤ bütçe: Para kesin yeter. Tahmin > bütçe: Tam hesapla.",
+  tipFinal: "Tam fiyatı bütçeyle karşılaştır.",
+  tipCan: "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış tahmini hesaptan büyük değildir, ama sadece biraz küçüktür.",
+  tipWhy: "Az hesaplarsan kasada ne olur?",
+  tipRest: "Para üstü = ödenen para − fiyat. Tamamlayarak da bulabilirsin: fiyat + ? = ödenen para.",
+  tipRest2: (S, B) => `${fmt(S)} + ? = ${fmt(B)}`,
+  tipProbe: "Ters işlemle sağlama: fiyat + para üstü. Ödenen para çıkmalı.",
+  tipGrid: "Sayıları basamaklarına göre yaz. Sağdan, birlerden başla ve sütun sütun sola doğru hesapla. Bir sütunun toplamı 10 veya daha fazlaysa birleri aşağıya, onluğu elde olarak bir sonraki sütuna yaz.",
+  tipNums: "Hangi sayılar para miktarı? Sadece onlara ihtiyacın var.",
+  tipLines: "Satır satır kendin hesapla ve Tom ile karşılaştır.",
+  tipPlan: "Bir ürünü sepete koymak için ona dokunun. Tekrar dokunursanız çıkar.",
+  pTitle: "Eşli çalışma", pOn: "İki kişi", pOff: "Tek kişi", pNames: "İsimler", pA: "Partner A", pB: "Partner B",
+  pTurn: (a, b) => `<b>${a}</b> hesaplıyor. <b>${b}</b> izliyor, kontrol ediyor ve açıklamaya yardım ediyor.`,
+  pSwap: (a, b) => `Değişin! Şimdi <b>${b}</b> hesaplıyor. Önce <b>${a}</b> hesaplama yolunu kısaca anlatıyor.`,
+  pDiscuss: "Birlikte konuşun:",
+  pPm: { why: "Burada neden yukarı yuvarlanıyor? Birbirinize açıklayın.", over: "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", exact: "Tam sonuç tahmini hesaba uyuyor mu? Bunu nereden anlıyorsunuz?", book: "Ne zaman aşağı, ne zaman yukarı yuvarladınız? Yuvarlama kuralını açıklayın.", plaus: "Sonucun doğru olup olamayacağını nereden anladınız?", plan: "Paranızın yetip yetmeyeceğine nasıl karar verdiniz?", rest: "Sağlamayı nasıl yaptınız?", def: "Hesaplama yolunuzu birbirinize açıklayın." },
+  pPrompts: ["Nasıl yuvarladınız? Neden yukarı?", "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", "Tam sonuç tahmini hesaba uyuyor mu?", "Kontrol kuralını kendi sözlerinizle açıklayın.", "Sağlamayı birlikte yapın.", "Günlük hayatta tahmini hesap size nerede yardım eder?"],
+  inTitle: "Alışverişte tahmini hesap ve sağlama",
+  inNext: "İleri", inBack: "Geri", inGo: "Alıştırmaya başla",
+  in1h: "Elif'in parası yeter mi?", in1: "Elif'in 50 € parası var. Teneffüs için alışveriş yapmak istiyor:", in1q: "Parası yeter mi? Elif bunu tam hesaplamadan hızlıca öğrenmek istiyor.",
+  in1items: [["Frizbi", 18], ["Jonglör topları", 14], ["Atlama ipi", 9]],
+  in2h: "1. adım: Yuvarlama", in2: "Yuvarlak sayılarla akıldan daha hızlı hesaplanır. Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı yuvarla. 5, 6, 7, 8, 9 → yukarı yuvarla.",
+  in3h: "Para kesin yetmeli mi? O zaman yukarı yuvarla!", in3: "Yaklaşık bir sonuç için normal yuvarlama yeterli. Ama sabit bütçeyle alışverişte bir püf noktası var: Elif 14 €'yu 10 €'ya aşağı yuvarlarsa az hesaplar. O zaman kasada para yetmeyebilir. Bu yüzden her fiyatı <b>yukarı</b> yuvarlar:",
+  in4h: "2. adım: Tahmini hesap", in4: "Elif yuvarlanmış fiyatları aklından toplar ve parasıyla karşılaştırır:", in4b: "50 €, 50 €'dan fazla değil. Para kesin yeter.",
+  in5h: "3. adım: Tam hesapla ve kontrol et", in5: "Elif tam hesaplar ve tahmini hesapla kontrol eder. 41 €, 50 €'dan biraz küçük. Bu uyuyor! 50 €'luk banknotla öder. En sonda para üstünü hesaplar ve ters işlemle sağlama yapar:",
+  in6h: "Kendini dene!", in6: "Ben'in 30 € parası var. 19 €'ya bir top ve 7 €'ya tebeşir alıyor. Hangi tahmini hesapla Ben parasının yetip yetmeyeceğini kesin bilir?",
+  in6opts: [["20 + 10 = 30", true], ["20 + 7 = 27", false], ["10 + 10 = 20", false]],
+  in6ok: "Doğru! İki fiyat da yukarı yuvarlandı: 30 € kesin yeter. Şimdi alıştırma yapabilirsin.", in6bad: "Henüz değil. İki fiyatı da bir sonraki onluğa yukarı yuvarla.",
+  svTitle: "Sonuçları pekiştir: Param yeter mi?", svIntro: "İki kişi bir iPad ile çalışın. Teslim etmeden önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.", gateH: "Dur! Önce tahta, sonra bu bölüm.", gateP: "Burada tahtada birlikte konuştuklarınızı iki kişi olarak pekiştiriyorsunuz.", gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtada gösterir. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil", gateWait: "Bu henüz başlama kodu değil. Öğretmeninizin işaretini bekleyin. O zamana kadar „Alıştırma“ veya „Uzman“ ile devam edin.", svP3: "3. Bölüm: Birbirinize açıklayın", svTalk: "<b>1. kişi</b> açıklar: Paranın kesin yetip yetmeyeceğini bilmek istediğimizde neden her fiyatı yukarı yuvarlarız?<br><b>2. kişi</b> açıklar: Tahmini hesap bütçeden büyükse ne yaparsınız?<br>Şu kelimeleri kullanın: <b>tahmini hesap (Überschlag)</b>, <b>yukarı yuvarlamak (aufrunden)</b>, <b>bütçe (Budget)</b>, <b>tam hesaplamak (genau rechnen)</b>.", svStarts: "Cümle başlangıçları: „Yukarı yuvarlıyoruz, çünkü …“ · „Tahmini hesap bütçeden büyükse …“", svTalkBtn: "Birbirimize açıkladık", svTalkDone: "✓ Birbirinize açıkladınız.", svP1: "1. Bölüm: Kurallar", svP2: "2. Bölüm: İki alışveriş", svShopA: "Lea bir frizbi (13 €), tebeşir seti (22 €) ve bir atlama ipi (8 €) alıyor.", svShop: "Jonas'ın <b>70 €</b> parası var. Bir futbol topu (19 €), jonglör topları (16 €) ve bir iskambil kağıdı (12 €) almak istiyor.",
+  svQ: [["Bütçemin yetip yetmeyeceğini kesin bilmek istersem, her fiyatı …", ["yukarı yuvarlarım.", "aşağı yuvarlarım."], 0, "Aşağı yuvarlarsan az hesaplarsın. O zaman kasada para yetmeyebilir."],
+   ["Yukarı yuvarlanmış tahmini hesap bütçeden küçük veya bütçeye eşitse …", ["para kesin yeter.", "tam hesap yapmalıyım."], 0, "Yukarı yuvarladın. Gerçek fiyat asla tahmini hesaptan büyük değildir."],
+   ["Yukarı yuvarlanmış tahmini hesap bütçeden büyükse …", ["para yetmez.", "tam hesap yapmalıyım."], 1, "Acele etme! Gerçek fiyat tahmini hesaptan küçüktür. Belki para yine de yeter."],
+   ["Lea'nın alışverişi yaklaşık kaç euro tutar?", ["20 + 30 + 10 = 60 €", "10 + 20 + 10 = 40 €", "13 + 22 + 8 = 43 €"], 1, "Yaklaşık bir sonuç için yuvarlama kuralı geçerlidir: 13 ≈ 10 ve 22 ≈ 20 (aşağı yuvarla), 8 ≈ 10 (yukarı yuvarla)."],
+   ["Hangi tahmini hesapla Jonas parasının yetip yetmeyeceğini kesin bilir?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "19 + 16 + 12 = 47 €"], 1, "Kesin karar için her fiyatı yukarı yuvarlarsın, 12 €'yu da 20 €'ya. 50 € yuvarlama kuralına göre, 47 € tam hesap."],
+   ["Yukarı yuvarlanmış tahmini hesap ne gösteriyor?", ["Para kesin yeter.", "Jonas tam hesap yapmalı.", "Para yetmez."], 0, "60 €, 70 €'dan fazla değil. Para kesin yeter."],
+   ["Tim yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlıyor. Hangi yuvarlama doğru?", ["35 € ≈ 30 €", "43 € ≈ 50 €", "37 € ≈ 40 €"], 2, "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı. Yani 35 € ≈ 40 € ve 43 € ≈ 40 €."]],
+  svWrong: "Yanlış.", svSubmit: "Teslim et", svLockHint: "Cevaplarınızı konuşun. Teslim ettikten sonra hiçbir şey değiştiremezsiniz.", svAnswered: (n, t) => `${n} / ${t} soru cevaplandı`, svResult: (n, t) => `Sonuç: ${n} / ${t} doğru`, svRetryIntro: "Hatalarınız için şimdi yeni sorular geliyor. Hepsini cevaplayın, sonra teslim edin. Neyin doğru olduğunu ancak o zaman görürsünüz.", svRetryT: "Ek alıştırma", svRetryDone: "Ek alıştırma tamam: Bütün hatalar düzeltildi.", svMore: "Henüz hepsi doğru değil. İşte yeni sorular, bu sefer ipucuyla.", svRoundRes: (n, t) => `Ek alıştırma: ${n} / ${t} doğru`, svExpl: "Açıklama", svRight: "Doğrusu:",
+  sv2: { c0: B => `${B} € paran var. Paranın kesin yetip yetmeyeceğini bilmek istiyorsun.`, s0: p => `Tahmini hesap için ${p} € fiyatını nasıl yuvarlarsın?`, h0: "Kesin karar için her fiyatı yukarı yuvarlarsın, birler basamağı 5'ten küçük olsa bile.",
+   sure: "Para kesin yeter.", exact: "Tam hesaplamam gerekir.", no: "Para yetmez.",
+   c1: (o, B) => `Yukarı yuvarlanmış tahmini hesabın ${o} €. ${B} € paran var.`, s1: "Hangisi doğru?", hDec: "Karşılaştır: Yukarı yuvarlanmış tahmin ≤ bütçe → Para kesin yeter. Yukarı yuvarlanmış tahmin > bütçe → tam hesapla, çünkü gerçek fiyat daha küçüktür.",
+   c3: ps => `${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s3: "Alışveriş yaklaşık kaç euro tutar?", h3: "„Yaklaşık“ için yuvarlama kuralı geçerlidir: birler basamağı 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı.",
+   c4: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s4: "Hangi tahmini hesap paranın yetip yetmediğini kesin gösterir?", h4: "Kesin karar için her fiyatı bir sonraki onluğa yukarı yuvarlarsın.",
+   c5: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s5: "Yukarı yuvarlanmış tahmini hesap ne gösteriyor?", h5: e => `Yukarı yuvarlanmış tahmin: ${e}.`, c6: "Yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlarsın.", s6: "Hangi yuvarlama doğru?", h6: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı." },
+   svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svShow: "iPad'inizi öğretmeninize gösterin.", svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
+  merkTitle: "Not kâğıdı",
+  merkRules: ["Tahmini hesap: Sayıları yuvarla ve aklından hesapla. ≈ işareti „yaklaşık olarak eşit“ demek.", "Yuvarlama kuralı: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı.", "En küçük sayının en büyük basamağına göre yuvarla. Örnek: 358 + 47 → ikisi de onluğa: 360 + 50 = 410.", "💶 Bütçe kuralı: Paranın yetip yetmeyeceğini kesin bilmek istiyorsan her fiyatı <b>yukarı</b> yuvarlarsın. Yaklaşık bir sonuç için yuvarlama kuralı geçerlidir.", "Yukarı yuvarlanmış tahmin ≤ bütçe: Para kesin yeter. Yukarı yuvarlanmış tahmin > bütçe: Tam hesapla.", "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış tahmini hesaptan büyük değildir, ama sadece biraz küçüktür.", "Ters işlemle sağlama: fiyat + para üstü = ödenen para.", "Daha fazlası kitapta, sayfa 34'te."],
+  errTitle: "Sık yapılan hatalar",
+  errs: [["Yukarı yerine aşağı yuvarlanmış", "Bütçe 50 €: 14 € → <s>10 €</s> → doğrusu 20 €"], ["Yuvarlanmış yerine tam fiyatlar", "Tahmin: <s>18 + 14 + 9</s> → doğrusu 20 + 20 + 10"], ["Elde unutulmuş", "18 + 14 + 9 = <s>31</s> → doğrusu 41"], ["Sonuç tahminden büyük", "Tahmin 50, sonuç <s>61</s> → doğru olamaz"], ["Sağlamasız para üstü", "50 − 41 = <s>19</s>, sağlama: 41 + 19 = 60 → doğrusu 9"]],
+  glossTitle: "Terimler (Almanca – Türkçe)",
+  gloss: [["Überschlagsrechnung (Überschlag)", "tahmini hesap (yuvarlanmış sayılarla)"], ["≈", "yaklaşık olarak eşit"], ["runden / aufrunden", "yuvarlamak / yukarı yuvarlamak"], ["Budget", "bütçe: harcanabilecek para"], ["Probe", "sağlama (ters işlemle kontrol)"], ["Umkehraufgabe", "ters işlem, ör. 41 + 9 = 50 ↔ 50 − 41 = 9"], ["Wechselgeld", "para üstü"], ["Summand + Summand = Wert der Summe", "toplanan + toplanan = toplam"]],
+  cardsTitle: "İpucu kartları", tapHint: "Çevirmek için dokun",
+  cards: [
+    ["Nasıl yuvarlarım?", "Yuvarlanacak basamağın sağındaki rakama bak. 0–4: aşağı yuvarla. 5–9: yukarı yuvarla. Örnek: 34 ≈ 30, 36 ≈ 40."],
+    ["Tahmini hesap nedir?", "Yuvarlanmış sayılarla bulunan yaklaşık sonuç. Aklından hızlıca hesaplarsın."],
+    ["Sabit bütçede neden yukarı yuvarlarım?", "Yukarı yuvarlarsan az değil, biraz fazla hesaplarsın. Böylece paranın kasada yetip yetmeyeceğini kesin bilirsin."],
+    ["Tahmini hesabı nasıl yaparım?", "Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı yukarı yuvarla. Sonra yuvarlak sayıları aklından topla: 40 + 40 + 30 = 110."],
+    ["Para kesin yeter mi?", "Yukarı yuvarlanmış tahmini hesap bütçeden büyük değilse para kesin yeter. Büyükse tam hesaplaman gerekir."],
+    ["Sonucum uyuyor mu?", "Tam sonuç yukarı yuvarlanmış tahmini hesaptan küçük ya da ona eşittir, ama sadece biraz küçüktür. Değilse yanlış hesaplamışsın."],
+    ["Sağlama nasıl yapılır?", "Para üstü = ödenen para − fiyat. Sağlama: fiyat + para üstü = ödenen para. Bu doğruysa doğru hesaplamışsın."],
+    ["Alt alta toplama", "Sayıları basamaklarına göre alt alta yaz. Sağdan, birlerden başla. Sütun toplamı 10 veya fazlaysa birleri yaz, onluğu elde olarak bir sonraki sütuna geçir."],
+    ["Hangi basamağa yuvarlarım?", "Küçük sayıya bak. İki sayıyı da onun en büyük basamağına yuvarlarsın. 358 + 47: 47'nin onlukları var, yani 360 + 50."]
+  ]
+}};
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d } catch (e) { return d } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)) } catch (e) { } } };
+let lang = store.get("up-lang", null) || DEFAULT_LANG;
+const L = () => T[lang];
+
+/* ======================= math ======================= */
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]] } return a }
+const up = (p, s) => Math.ceil(p / s) * s, down = (p, s) => Math.floor(p / s) * s;
+const dig = (n, p) => Math.floor(n / 10 ** p) % 10, len = n => String(n).length;
+const sum = a => a.reduce((x, y) => x + y, 0);
+function calcAdd(nums) {
+  const result = sum(nums); const cols = []; let c = 0;
+  for (let p = 0; p < len(result); p++) {
+    const ds = nums.filter(n => len(n) > p).map(n => dig(n, p)); const tot = sum(ds) + c;
+    cols.push({ p, ds, cin: c, tot, r: tot % 10, cout: Math.floor(tot / 10) }); c = Math.floor(tot / 10);
+  }
+  return { result, cols };
+}
+/* realistic price around the catalog price, never a round number */
+const rem = (p, s) => (p % s) / (s / 10); /* digit right of the rounding place */
+function price(lv, it, near) { const s = STEP[lv]; let p, g = 0; do { p = rnd(Math.max(3, Math.round(it.p * .75)), Math.round(it.p * 1.3)); g++ } while ((p % s === 0 || (lv === 3 && p % 10 === 0) || (near && rem(p, s) < 5)) && g < 400); if (p % s === 0) p += s / 2 + 3; return p }
+function basket(lv, n, near = true) { return shuffle(ITEMS[lv].slice()).slice(0, n).map(it => ({ it, p: price(lv, it, near) })) }
+const inWindow = (C, U, n, s) => C <= U && C > U - n * s;
+function claim(b, E, U, s, lv) {
+  if (Math.random() < .4) return E;
+  for (let k = 0; k < 30; k++) {
+    const kind = pick(lv === 1 ? ["stelle", "vergessen"] : ["stelle", "vergessen", "uebertrag"]); let C;
+    if (kind === "stelle") { const x = pick(b); C = E - x.p + x.p * 10 }
+    else if (kind === "vergessen") { const x = b.slice().sort((a, c) => c.p - a.p)[0]; C = E - x.p }
+    else C = E - (lv === 3 ? 1000 : 100);
+    if (C > 0 && !inWindow(C, U, b.length, s)) return C;
+  }
+  return E - b[0].p;
+}
+
+/* ======================= phases =======================
+   steps : lines {kind, value, ...} with one hole each
+   choice: opts {key, ok, bad}
+   grid  : schriftliche Addition of nums
+   select: prospekt (plan)
+   chips : numbers in a text (wordpro)
+   lines : Tom's lines (errpro), reasons
+*/
+const roundLines = (b, s) => b.map(x => ({ kind: "round", it: x.it, p: x.p, s, value: up(x.p, s) }));
+const sumLine = (b, s) => ({ kind: "sum", ups: b.map(x => up(x.p, s)), E: sum(b.map(x => x.p)), s, value: sum(b.map(x => up(x.p, s))) });
+const overPhase = (b, s) => ({ type: "steps", instr: "over", lines: [...roundLines(b, s), sumLine(b, s)] });
+const decidePhase = (U, B) => ({ type: "choice", instr: "decide", opts: [{ key: "decSure", ok: U <= B, bad: () => L().decSureBad(U, B) }, { key: "decExact", ok: U > B, bad: () => L().decExactBad(U, B) }], okMsg: () => U <= B ? L().decSureOk(U, B) : L().decExactOk(U, B) });
+const finalPhase = (E, B) => ({ type: "choice", instr: "final", opts: [{ key: "decYes", ok: E <= B, bad: () => L().finYesBad(E, B) }, { key: "decNo", ok: E > B, bad: () => L().finNoBad(E, B) }] });
+const gridPhase = (nums, U, n, s) => ({ type: "grid", instr: "grid", nums, U, n, s });
+
+/* ======================= generators ======================= */
+const CYCLE = { 1: ["why", "over", "exact", "book", "plaus", "plan"], 2: ["why", "over", "exact", "book", "plaus", "plan", "rest"], 3: ["why", "over", "exact", "book", "plaus", "plan", "rest"] };
+function makeTask(level) {
+  if (level === 4) return makeExpert();
+  const seq = store.get("up-seq", { 1: 0, 2: 0, 3: 0 }); const m = CYCLE[level][seq[level] % CYCLE[level].length]; seq[level]++; store.set("up-seq", seq);
+  return ({ book: makeBook, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest })[m](level);
+}
+const nround = (n, pl) => Math.floor(n / pl + .5) * pl;
+function makeBook(lv) {
+  const kind = Math.random() < (lv === 1 ? .6 : .5) ? "add" : "sub"; let a, b, g = 0;
+  do {
+    if (lv === 1) { a = kind === "add" ? rnd(21, 89) : rnd(52, 98); b = rnd(11, kind === "add" ? 49 : a - 12) }
+    else if (lv === 2) { if (Math.random() < .5) { a = rnd(120, 890); b = rnd(21, 89) } else { a = rnd(310, 890); b = rnd(110, kind === "add" ? 590 : a - 120) } }
+    else { if (Math.random() < .5) { a = rnd(1200, 8900); b = rnd(120, 890) } else { a = rnd(3100, 8900); b = rnd(1100, kind === "add" ? 4900 : a - 1200) } }
+    g++;
+  } while (g < 200 && (a % 10 === 0 || b % 10 === 0 || (kind === "sub" && a <= b)));
+  const pl = 10 ** (len(Math.min(a, b)) - 1);
+  const ra = nround(a, pl), rb = nround(b, pl), val = kind === "add" ? ra + rb : ra - rb;
+  return { mode: "book", lv, kind, a, b, pl, ctxKey: kind + pick(["1", "2"]), ctx: "book",
+    phases: [{ type: "steps", instr: "book", lines: [{ kind: "nround", n: a, pl, value: ra }, { kind: "nround", n: b, pl, value: rb }, { kind: "osum", op: kind, ra, rb, exact: kind === "add" ? a + b : a - b, value: val }] }] };
+}
+function makeWhy(lv) {
+  const s = STEP[lv]; let it, p, g = 0;
+  do { it = pick(ITEMS[lv]); p = price(lv, it); g++ } while ((((p % s) / (s / 10)) >= 5 || p % s === 0 || p < s) && g < 500);
+  const u = up(p, s), d = down(p, s), B = u + s * rnd(1, 4), nm = pick(NAMES);
+  return {
+    mode: "why", nm, it, p, B, u, d, ctx: "single",
+    phases: [
+      { type: "choice", instr: "why1", opts: shuffle([{ text: eur(d), ok: false, bad: () => L().whyBad1(d) }, { text: eur(u), ok: true }]) },
+      { type: "choice", instr: "why2", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().why[i], ok: i === 0, bad: () => L().whyBad2 }))) }
+    ],
+    final: () => `<div class="sentence"><b class="h">${L().portfolio}</b>${L().whySent(nm, p, u)}</div>`
+  };
+}
+function makeOver(lv) {
+  const s = STEP[lv], b = basket(lv, lv === 1 ? 2 : 3), U = sum(b.map(x => up(x.p, s)));
+  const B = Math.random() < .5 ? U + s * rnd(0, 2) : Math.max(s, U - s * rnd(1, 2));
+  return { mode: "over", b, B, U, nm: pick(NAMES), ctx: "basket", phases: [overPhase(b, s), decidePhase(U, B)] };
+}
+function makeExact(lv) {
+  const s = STEP[lv], b = basket(lv, lv === 1 ? 2 : 3), E = sum(b.map(x => x.p)), U = sum(b.map(x => up(x.p, s)));
+  let B = Math.random() < .55 ? up(E, s) : down(E, s); if (B === E && E > B - 1 && Math.random() < .5) B -= s;
+  return { mode: "exact", b, B, U, E, nm: pick(NAMES), ctx: "basketU", phases: [gridPhase(b.map(x => x.p), U, b.length, s), finalPhase(E, B)] };
+}
+function makePlaus(lv) {
+  const s = STEP[lv], b = basket(lv, 3), E = sum(b.map(x => x.p)), U = sum(b.map(x => up(x.p, s))), C = claim(b, E, U, s, lv), nm = pick(NAMES);
+  const can = inWindow(C, U, b.length, s);
+  const ph = [overPhase(b, s), { type: "choice", instr: "plaus2", opts: [{ key: "canYes", ok: can, bad: () => C > U ? L().plBig(C, U) : L().plSmall(C, U) }, { key: "canNo", ok: !can, bad: () => L().plFits(C, U) }], okMsg: () => can ? L().plYesOk : L().plNoOk }];
+  if (!can) ph.push(gridPhase(b.map(x => x.p), U, b.length, s));
+  return { mode: "plaus", b, U, E, C, nm, ctx: "claim", phases: ph };
+}
+function makePlan(lv) {
+  const sq = store.get("up-plan", 0); store.set("up-plan", sq + 1);
+  const n = shuffle(NAMES.slice());
+  return { mode: "plan", lv, B: PLAN[lv][sq % 2], a: n[0], b2: n[1], sel: [], ctx: "plan", phases: [{ type: "select" }] };
+}
+function buildPlan(t) {
+  const s = STEP[t.lv], cat = ITEMS[t.lv], b = t.sel.map(i => ({ it: cat[i], p: cat[i].p }));
+  t.b = b; t.E = sum(b.map(x => x.p)); t.U = sum(b.map(x => up(x.p, s)));
+  t.phases = [{ type: "select" }, overPhase(b, s), decidePhase(t.U, t.B), gridPhase(b.map(x => x.p), t.U, b.length, s),
+    { type: "choice", instr: "final", opts: [{ key: "decYes", ok: t.E <= t.B, bad: () => L().finYesBad(t.E, t.B) }, { key: "decNo", ok: t.E > t.B, bad: () => L().finNoBad(t.E, t.B), replan: true }] }];
+  t.final = () => { const names = b.map(x => lang === "de" ? x.it.acc || x.it.de : x.it[lang]); const list = names.length > 1 ? names.slice(0, -1).join(L().comma) + L().and + names[names.length - 1] : names[0]; return `<div class="sentence"><b class="h">${L().portfolio}</b>${L().planSent(list, t.U, t.E, t.B)}</div>` };
+}
+function restTask(lv, mode) {
+  const b = basket(lv, lv === 1 ? 2 : rnd(1, 2), false), S = sum(b.map(x => x.p)), big = lv === 3 ? 1000 : lv === 2 ? 100 : 10;
+  let B = up(S, big); if (B === S) B += big; if (lv === 1 && B - S < 5) B += 10;
+  let pl = 10 ** (len(S) - 1); if (B - nround(S, pl) <= 0 && pl > 10) pl /= 10; const rs = nround(S, pl);
+  return { mode, b, S, B, nm: pick(NAMES), ctx: "rest", phases: [{ type: "steps", instr: "rest", lines: [{ kind: "nround", n: S, pl, value: rs }, { kind: "osum", op: "sub", ra: B, rb: rs, exact: B - S, value: B - rs, lab: true }, { kind: "rest", S, B, value: B - S }, { kind: "probe", S, B, value: B }] }] };
+}
+const makeRest = lv => restTask(lv, "rest");
+
+/* ---- experts ---- */
+function makeExpert() { const r = Math.random(); return r < .25 ? makeErrPro() : r < .45 ? makeWordPro() : r < .65 ? makeReceipt() : r < .85 ? makeRough() : restTask(3, "restpro") }
+function makeRough() {
+  const s = 10, its = shuffle(ITEMS[2].slice()).slice(0, 3);
+  const b = its.map(it => ({ it, p: Math.max(1, Math.round(it.p / 10)) * 10 + rnd(1, 2) }));
+  const E = sum(b.map(x => x.p)), U = sum(b.map(x => up(x.p, s))), B = up(E, s) + (Math.random() < .5 ? 0 : 10) <= U - 10 ? up(E, s) + 10 : up(E, s);
+  return { mode: "rough", b, B, U, E, nm: pick(NAMES), ctx: "basket", phases: [overPhase(b, s), decidePhase(U, B), gridPhase(b.map(x => x.p), U, 3, s), finalPhase(E, B),
+    { type: "choice", instr: "rough1", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().rough1[i], ok: i === 0, bad: () => L().rough1Bad }))) },
+    { type: "choice", instr: "rough2", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().rough2[i], ok: i === 0, bad: () => L().rough2Bad }))) }],
+    final: () => `<div class="sentence"><b class="h">${L().roughKey}</b>${L().roughSent}</div>` };
+}
+function makeErrPro() {
+  const lv = pick([2, 3]), s = STEP[lv], b = basket(lv, 3), ups = b.map(x => up(x.p, s)), U = sum(ups);
+  const B = Math.random() < .5 ? U + s * rnd(0, 2) : U - s * rnd(1, 2);
+  const type = pick(["down", "sum", "dec"]); let tu = ups.slice(), tU, tDec, first;
+  if (type === "down") { const i = rnd(0, 2); tu[i] = down(b[i].p, s); tU = sum(tu); first = 0 }
+  else if (type === "sum") { tU = U + pick([s, -s, 10 * s]); first = 1 }
+  else { tU = U; first = 2 }
+  tDec = tU <= B ? "tomSure" : "tomExact";
+  if (type === "dec") tDec = U <= B ? "tomExact" : "tomSure";
+  else if ((tDec === "tomSure") === (U <= B)) { /* decision accidentally right: keep, error is still in line 1/2 */ }
+  return { mode: "errpro", lv, b, B, U, ctx: "basket", lines: [tu.map(fmt).join(" + "), "= " + fmt(tU), tDec], first, errType: type, reasons: shuffle(["down", "sum", "dec"]), badLines: [], badReasons: [],
+    phases: [{ type: "lines" }, { type: "reasons" }, overPhase(b, s), decidePhase(U, B)] };
+}
+function makeWordPro() {
+  const x = pick(["x1", "x2", "x3"]); const lv = x === "x3" ? 3 : 2, s = STEP[lv];
+  const ranges = { x1: [[31, 79], [21, 69], [11, 49]], x2: [[89, 249], [61, 189], [31, 99]], x3: [[789, 1490], [512, 989], [151, 790]] }[x];
+  let v; do { v = ranges.map(([a, b]) => rnd(a, b)) } while (v.some(p => p % s === 0));
+  const U = sum(v.map(p => up(p, s))), E = sum(v);
+  const B = Math.random() < .5 ? U + s * rnd(0, 1) : (Math.random() < .5 ? up(E, s) : down(E, s));
+  const k = x === "x1" ? 28 : x === "x2" ? rnd(3, 9) : rnd(12, 24), d = x === "x1" ? rnd(12, 20) : x === "x2" ? pick([18, 19, 20]) : rnd(3, 9);
+  const b = v.map((p, i) => ({ it: { de: "", tr: "", ic: "" }, p }));
+  const ph = [{ type: "chips" }, overPhase(b, s), decidePhase(U, B)];
+  if (U > B) ph.push(gridPhase(v, U, 3, s), finalPhase(E, B));
+  return { mode: "wordpro", x, args: [k, d, B, ...v], need: [B, ...v].map(fmt), sel: [], wrongSel: [], b, B, U, E, ctx: "wp", phases: ph };
+}
+function makeReceipt() {
+  const lv = pick([2, 3]), s = STEP[lv], b = basket(lv, 4), E = sum(b.map(x => x.p)), U = sum(b.map(x => up(x.p, s))), C = claim(b, E, U, s, lv), ok = C === E;
+  const can = inWindow(C, U, b.length, s);
+  const ph = [{ type: "steps", instr: "receipt", lines: [...roundLines(b, s), sumLine(b, s)] }, { type: "choice", instr: "receipt2", opts: [{ key: "recYes", ok: can, bad: () => C > U ? L().plBig(C, U) : L().plSmall(C, U) }, { key: "recNo", ok: !can, bad: () => L().plFits(C, U) }], okMsg: () => can ? L().plYesOk : L().plNoOk }];
+  if (!can) ph.push(gridPhase(b.map(x => x.p), U, b.length, s));
+  return { mode: "receipt", b, E, U, C, ctx: "receipt", phases: ph };
+}
+
+/* ======================= state ======================= */
+let stats = store.get("up-stats", { stars: 0, solved: [0, 0, 0, 0] }); while (stats.solved.length < 4) stats.solved.push(0); if (!stats.streak) stats.streak = [0, 0, 0];
+let level = store.get("up-level", 1);
+let partner = store.get("up-partner", { on: true, a: "", b: "", turn: 0, showNames: false });
+let tab = 0, introStep = 0, introPick = null;
+let task = null, pi = 0, lineIdx = 0, entry = "", ent = null, active = null, marks = null, attempts = 0, tipLevel = 0, done = false, feedback = null, diag = null, showCard = false, badMark = false, revealed = false;
+function save() { store.set("up-stats", stats); store.set("up-level", level); store.set("up-lang", lang) }
+function savePartner() { store.set("up-partner", partner) }
+const curLevel = () => tab === 2 ? 4 : level;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pName = i => { const n = (i === 0 ? partner.a : partner.b) || ""; return n.trim() ? esc(n.trim()) : (i === 0 ? L().pA : L().pB) };
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const ph = () => task.phases[pi];
+function newTask() { task = makeTask(curLevel()); task.promptIdx = rnd(0, 5); attempts = 0; done = false; feedback = null; pi = 0; initPhase() }
+/* Raten erkennen: sehr schnelle Antworten und schnelle Fehler hintereinander */
+let phaseT0 = Date.now(), lastAct = 0, guessScore = 0, guessWarn = false;
+function act(ok) {
+  const now = Date.now(), dt = now - lastAct; lastAct = now;
+  if (!ok && dt < 4000) guessScore++;
+  if (!ok && attempts >= 3) guessScore++;
+  if (dt > 8000) guessScore = Math.max(0, guessScore - 1);
+  if (guessScore >= 3) { guessWarn = true; guessScore = 0 }
+}
+function initPhase() {
+  phaseT0 = Date.now();
+  lineIdx = 0; entry = ""; badMark = false; revealed = false; marks = null; tipLevel = 0; diag = null; showCard = false; task.picked = null; task.badPicks = [];
+  const p = ph();
+  if (p && p.type === "grid") { const c = calcAdd(p.nums); p.result = c.result; p.cols = c.cols; p.W = Math.max(...p.nums.map(len), len(c.result)); ent = { res: Array(p.W).fill(""), carry: Array(p.W + 1).fill("") }; active = { role: "res", p: 0 } }
+}
+function advance(msg) {
+  pi++;
+  if (pi >= task.phases.length) { pi = task.phases.length - 1; success(msg); return }
+  initPhase(); feedback = msg ? { cls: "ok", text: msg } : null; render();
+}
+const saved = {};
+function stash() { if (tab === 1 || tab === 2) saved[tab] = { task, pi, lineIdx, entry, ent, active, marks, attempts, tipLevel, done, feedback, diag, showCard, badMark, revealed } }
+function unstash() { if (tab === 1 || tab === 2) { const s = saved[tab]; if (s) { ({ task, pi, lineIdx, entry, ent, active, marks, attempts, tipLevel, done, feedback, diag, showCard, badMark, revealed } = s) } else newTask() } }
+
+/* ======================= render ======================= */
+function el(tag, cls, h) { const e = document.createElement(tag); if (cls) e.className = cls; if (h !== undefined) e.innerHTML = h; return e }
+const view = document.getElementById("view");
+function renderShell() {
+  document.documentElement.lang = lang;
+  renderReset();
+  document.getElementById("apptitle").textContent = L().title; document.getElementById("appsub").textContent = L().sub;
+  document.getElementById("langbtn").textContent = L().other;
+  document.getElementById("starcount").textContent = stats.stars;
+  const tabs = document.getElementById("tabs"); tabs.innerHTML = "";
+  L().tabs.forEach((name, i) => { const b = el("button", "", name); b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", i === tab); b.onclick = () => goTab(i); tabs.appendChild(b) });
+}
+function goTab(i) { stash(); tab = i; unstash(); render(); window.scrollTo(0, 0) }
+function render() { renderShell(); view.innerHTML = "";[renderIntro, renderPractice, renderExpert, renderSave, renderMerk, renderCards][tab]() }
+
+
+/* ---- ergebnisse sichern ---- */
+/* Startcode: die Lehrkraft schreibt ihn nach der Sicherung an der Tafel an */
+const START_CODE = "725";
+let svPick = {}, svGate = false, svNo = false, svTalk = false, svCode = "";
+function renderSave() {
+ const Q = L().svQ, p = el("section", "panel intro"); view.appendChild(p);
+ if (!svGate) {
+  const g = el("div", "gate");
+  g.innerHTML = `<div class="gsig">✋</div><h3>${L().gateH}</h3><p>${L().gateP}</p><p class="gq">${L().gateQ}</p>`;
+  const disp = el("div", "codebox", `<small>${L().gateCode}</small><span>${(svCode + "___").slice(0, 3).split("").join(" ")}</span>`); g.appendChild(disp);
+  const kp = el("div", "keypad codepad");
+  ["1","2","3","4","5","6","7","8","9","0"].forEach(x => { const b = el("button", "", x); b.type = "button"; b.onclick = () => { if (svCode.length < 3) svCode += x; svNo = false; render() }; kp.appendChild(b) });
+  const bd = el("button", "", "⌫"); bd.type = "button"; bd.setAttribute("aria-label", L().gateDel); bd.onclick = () => { svCode = svCode.slice(0, -1); svNo = false; render() }; kp.appendChild(bd);
+  g.appendChild(kp);
+  const row = el("div", "gaterow"), by = el("button", "btn primary", L().gateGo); by.type = "button"; by.disabled = svCode.length < 3;
+  by.onclick = () => { if (svCode === START_CODE) { svGate = true; svT0 = Date.now(); render(); window.scrollTo(0, 0) } else { svNo = true; svCode = ""; render() } };
+  row.append(by); g.appendChild(row);
+  if (svNo) g.appendChild(el("div", "msg bad", L().gateWait));
+  p.appendChild(g); return;
+ }
+ p.appendChild(el("h2", "", L().svTitle)); p.appendChild(el("p", "", L().svIntro));
+ const nAns = Object.keys(svPick).length, nOk = Q.filter((q, i) => svPick[i] === q[2]).length;
+ const expl = (txt, right) => el("div", "why", `<b class="h">${L().svExpl}</b>${txt}${right ? `<br><b>${L().svRight}</b> ${right}` : ""}`);
+ const block = i => {
+  const [stem, opts, ok, hint] = Q[i], box = el("div", "section");
+  box.appendChild(el("p", "", `<b>${stem}</b>`));
+  const ch = el("div", "choices");
+  opts.forEach((s, k) => { const b = el("button", "choice", s); b.type = "button";
+   if (!svSub) { if (svPick[i] === k) b.classList.add("sel"); b.onclick = () => { svPick[i] = k; render() } }
+   else { b.disabled = true; if (k === ok) b.classList.add("ok"); else if (svPick[i] === k) b.classList.add("bad") }
+   ch.appendChild(b) });
+  box.appendChild(ch);
+  if (svSub) { const r = svPick[i] === ok; box.appendChild(el("div", "msg " + (r ? "ok" : "bad"), r ? "✓ " + L().svOk : "✗ " + L().svWrong)); if (!r) box.appendChild(expl(hint)) }
+  return box;
+ };
+ const submitBox = (n, t, go, t0, minMs) => { const f = el("div", "rulebox"); f.appendChild(el("p", "", `<b>${L().svAnswered(n, t)}</b><br>${L().svLockHint}`));
+  if (svFastAsk) f.appendChild(el("div", "why guess", `<b class="h">✋ ${L().guessT}</b>${L().svFast}`));
+  const row = el("div", "actions"), sb = el("button", "btn primary", svFastAsk ? L().svFastGo : L().svSubmit); sb.type = "button"; sb.disabled = n < t;
+  sb.onclick = () => { if (!svFastAsk && Date.now() - t0 < minMs) { svFastAsk = true; render(); return } svFastAsk = false; go() }; row.appendChild(sb); f.appendChild(row); return f };
+ const scrollTo = sel => setTimeout(() => { const x = document.querySelectorAll(sel); if (x.length) x[x.length - 1].scrollIntoView({ behavior: "smooth", block: "start" }) }, 30);
+ const newRound = idx => ({ tasks: idx.map(i => ({ qi: i, d: svGen(i), pick: null })), sub: false, t0: Date.now() });
+ p.appendChild(el("h3", "", L().svP1)); [0, 1, 2, 6].forEach(i => p.appendChild(block(i)));
+ p.appendChild(el("h3", "", L().svP2)); p.appendChild(el("p", "", L().svShopA)); p.appendChild(block(3));
+ p.appendChild(el("p", "", L().svShop)); [4, 5].forEach(i => p.appendChild(block(i)));
+ if (!svSub) { p.appendChild(submitBox(nAns, Q.length, () => { svSub = true; const w = Q.map((q, i) => i).filter(i => svPick[i] !== Q[i][2]); svRounds = w.length ? [newRound(w)] : []; render(); scrollTo(".svres") }, svT0, 50000)); return }
+ const res = el("div", "rulebox svres"); res.innerHTML = `<b>${L().svResult(nOk, Q.length)}</b>` + (svRounds.length ? `<p>${L().svRetryIntro}</p>` : ""); p.appendChild(res);
+ for (let ri = 0; ri < svRounds.length; ri++) {
+  const R = svRounds[ri];
+  p.appendChild(el("h3", "rtitle", L().svRetryT + (ri ? " " + (ri + 1) : "")));
+  if (ri) p.appendChild(el("p", "", L().svMore));
+  R.tasks.forEach(t => {
+   const q = svBuild(t), box = el("div", "section");
+   box.appendChild(el("p", "", `${q.ctx ? q.ctx + "<br>" : ""}<b>${q.stem}</b>`));
+   if (ri && !R.sub) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${q.hint}`));
+   const ch = el("div", "choices");
+   q.opts.forEach((s, k) => { const b = el("button", "choice", s); b.type = "button";
+    if (!R.sub) { if (t.pick === k) b.classList.add("sel"); b.onclick = () => { t.pick = k; render() } }
+    else { b.disabled = true; if (k === q.ok) b.classList.add("ok"); else if (t.pick === k) b.classList.add("bad") }
+    ch.appendChild(b) });
+   box.appendChild(ch);
+   if (R.sub) { const r = t.pick === q.ok; box.appendChild(el("div", "msg " + (r ? "ok" : "bad"), r ? "✓ " + L().svOk : "✗ " + L().svWrong)); if (!r) box.appendChild(expl(q.hint, q.opts[q.ok])) }
+   p.appendChild(box);
+  });
+  const nP = R.tasks.filter(t => t.pick !== null).length;
+  if (!R.sub) { p.appendChild(submitBox(nP, R.tasks.length, () => { R.sub = true; const w = R.tasks.filter(t => t.pick !== svBuild(t).ok).map(t => t.qi); if (w.length) svRounds.push(newRound(w)); render(); scrollTo(".rres") }, R.t0, 8000 * R.tasks.length)); return }
+  const okR = R.tasks.filter(t => t.pick === svBuild(t).ok).length;
+  p.appendChild(el("div", "msg " + (okR === R.tasks.length ? "ok" : "info") + " rres", L().svRoundRes(okR, R.tasks.length)));
+ }
+ const r = el("div", "rulebox svdone");
+ r.innerHTML = `<b>✓ ${L().svDone}</b><p>${L().svFirst(nOk, Q.length)}</p>${svRounds.length ? `<p>${L().svRetryDone}</p>` : ""}`;
+ const b = el("button", "btn primary", L().svMerk); b.type = "button"; b.onclick = () => goTab(4); r.appendChild(b); p.appendChild(r);
+ renderBonus(p);
+}
+/* Nachübung: zu jeder falsch beantworteten Frage eine neue, gleichartige Aufgabe mit Hinweis */
+let svSub = false, svRounds = [], svT0 = 0, svFastAsk = false;
+function svP(lo) { let p; do { p = rnd(11, 49) } while (!lo.includes(p % 10)); return p }
+function svGen(i) {
+ const lowD = [1, 2, 3, 4], anyD = [1, 2, 3, 4, 6, 7, 8, 9];
+ if (i === 0) { const p = svP(lowD); return { p, B: up(p, 10) + 10 * rnd(1, 3), perm: shuffle([0, 1]) } }
+ if (i === 1) { const o = 10 * rnd(5, 9); return { o, B: o + 10 * rnd(0, 2), perm: shuffle([0, 1, 2]) } }
+ if (i === 2) { const o = 10 * rnd(6, 9); return { o, B: o - 10 * rnd(1, 2), perm: shuffle([0, 1, 2]) } }
+ if (i === 3) { const ps = shuffle([svP(lowD), svP(lowD), svP(anyD)]); return { ps, perm: shuffle([0, 1, 2]) } }
+ if (i === 4) { const ps = shuffle([svP(lowD), svP(anyD), svP(anyD)]); return { ps, B: ps.reduce((s, x) => s + up(x, 10), 0) + 10 * rnd(0, 2), perm: shuffle([0, 1, 2]) } }
+ if (i === 6) { let a, b, c; do { a = 10 * rnd(1, 4) + 5; b = 10 * rnd(1, 4) + rnd(1, 4); c = 10 * rnd(1, 4) + pick([1, 2, 3, 4, 6, 7, 8, 9]) } while (c === a || c === b); return { a, b, c, perm: shuffle([0, 1, 2]) } }
+ const ps = [svP(anyD), svP(anyD), svP(lowD)], o = ps.reduce((s, x) => s + up(x, 10), 0), sure = Math.random() < .5;
+ return { ps, B: sure ? o + 10 * rnd(0, 1) : o - 10 * rnd(1, 2), perm: shuffle([0, 1, 2]) };
+}
+function svBuild(t) {
+ const R = L().sv2, d = t.d, i = t.qi, P = (opts, ok) => ({ opts: d.perm.map(k => opts[k]), ok: d.perm.indexOf(ok) });
+ const rr = x => Math.round(x / 10) * 10, U = ps => ps.map(x => up(x, 10)), sum = a => a.reduce((s, x) => s + x, 0), ex = a => `${a.join(" + ")} = ${sum(a)} €`;
+ if (i === 0) return { ctx: R.c0(d.B), stem: R.s0(d.p), ...P([eur(up(d.p, 10)), eur(down(d.p, 10))], 0), hint: R.h0 };
+ const dec = [R.sure, R.exact, R.no];
+ if (i === 1 || i === 2) return { ctx: R.c1(d.o, d.B), stem: R.s1, ...P(dec, d.o <= d.B ? 0 : 1), hint: R.hDec };
+ if (i === 3) return { ctx: R.c3(d.ps), stem: R.s3, ...P([ex(d.ps.map(rr)), ex(U(d.ps)), ex(d.ps)], 0), hint: R.h3 };
+ if (i === 4) return { ctx: R.c4(d.B, d.ps), stem: R.s4, ...P([ex(U(d.ps)), ex(d.ps.map(rr)), ex(d.ps)], 0), hint: R.h4 };
+ if (i === 6) return { ctx: R.c6, stem: R.s6, ...P([`${d.c} € ≈ ${rr(d.c)} €`, `${d.a} € ≈ ${d.a - 5} €`, `${d.b} € ≈ ${up(d.b, 10)} €`], 0), hint: R.h6 };
+ return { ctx: R.c5(d.B, d.ps), stem: R.s5, ...P(dec, sum(U(d.ps)) <= d.B ? 0 : 1), hint: R.hDec + " " + R.h5(ex(U(d.ps))) };
+}
+/* ---- Bonus nach der Sicherung: Zahlenmauern (endlos, drei Stufen) ---- */
+let bz = null;
+function bzSolvable(n, hid) {
+  const k = []; for (let r = 0; r < n; r++) { k.push([]); for (let i = 0; i < n - r; i++) k[r].push(!hid.has(r + "," + i)) }
+  let ch = true;
+  while (ch) { ch = false;
+    for (let r = 1; r < n; r++) for (let i = 0; i < n - r; i++) {
+      const a = k[r - 1][i], b = k[r - 1][i + 1], c = k[r][i];
+      if (!c && a && b) { k[r][i] = true; ch = true }
+      if (c && a && !b) { k[r - 1][i + 1] = true; ch = true }
+      if (c && !a && b) { k[r - 1][i] = true; ch = true }
+    } }
+  return k.every(row => row.every(Boolean));
+}
+function bzNew() {
+  const done = bz ? bz.done : 0, lvl = Math.min(3, 1 + Math.floor(done / 2));
+  const n = lvl === 1 ? 3 : 4, lo = [1, 2, 5][lvl - 1], hi = [20, 25, 30][lvl - 1], nh = [3, 5, 6][lvl - 1];
+  const v = [[]]; for (let i = 0; i < n; i++) v[0].push(rnd(lo, hi));
+  for (let r = 1; r < n; r++) { v.push([]); for (let i = 0; i < n - r; i++) v[r].push(v[r - 1][i] + v[r - 1][i + 1]) }
+  const all = []; for (let r = 0; r < n; r++) for (let i = 0; i < n - r; i++) all.push(r + "," + i);
+  let hid = null;
+  for (let t = 0; t < 500; t++) {
+    const s = new Set(all.slice().sort(() => Math.random() - .5).slice(0, nh));
+    const base = [...s].filter(x => x.startsWith("0,")).length;
+    if (lvl === 3 && base < 2) continue;
+    if (lvl === 1 && base > 1) continue;
+    if (bzSolvable(n, s)) { hid = s; break }
+  }
+  if (!hid) hid = new Set(all.filter(x => !x.startsWith("0,")));
+  const up = bz && lvl > bz.lvl;
+  bz = { done, lvl, n, v, hid, inp: {}, sel: [...hid][0], marks: {}, msg: up ? ["info", L().bzUp] : null, solved: false };
+}
+function renderBonus(p) {
+  if (!bz) bzNew();
+  const b = el("div", "bonus");
+  b.appendChild(el("h3", "", L().bzT));
+  b.appendChild(el("p", "", L().bzIntro));
+  b.appendChild(el("span", "bzrank", `${L().bzRank[bz.lvl - 1]} · ${L().bzCount(bz.done)}`));
+  const w = el("div", "wall");
+  for (let r = bz.n - 1; r >= 0; r--) {
+    const row = el("div", "wrow");
+    for (let i = 0; i < bz.n - r; i++) {
+      const key = r + "," + i, h = bz.hid.has(key);
+      const c = el(h ? "button" : "div", "brick" + (h ? " hid" : "") + (h && bz.sel === key && !bz.solved ? " active" : "") + (bz.marks[key] ? " " + bz.marks[key] : ""), h ? (bz.inp[key] || "") : String(bz.v[r][i]));
+      if (h) { c.type = "button"; c.setAttribute("aria-label", "Stein " + (r + 1) + "." + (i + 1)); c.onclick = () => { if (!bz.solved) { bz.sel = key; render() } } }
+      row.appendChild(c);
+    }
+    w.appendChild(row);
+  }
+  b.appendChild(w);
+  if (!bz.solved) {
+    const kp = el("div", "keypad");
+    ["1","2","3","4","5","6","7","8","9","0"].forEach(x => { const k = el("button", "", x); k.type = "button"; k.onclick = () => { const s = bz.inp[bz.sel] || ""; if (s.length < 3) bz.inp[bz.sel] = s + x; delete bz.marks[bz.sel]; bz.msg = null; render() }; kp.appendChild(k) });
+    const del = el("button", "wide", "⌫"); del.type = "button"; del.setAttribute("aria-label", L().gateDel); del.onclick = () => { bz.inp[bz.sel] = (bz.inp[bz.sel] || "").slice(0, -1); delete bz.marks[bz.sel]; render() }; kp.appendChild(del);
+    b.appendChild(kp);
+  }
+  const act = el("div", "actions");
+  if (!bz.solved) {
+    const ck = el("button", "btn primary", L().bzCheck); ck.type = "button";
+    ck.onclick = () => {
+      const keys = [...bz.hid];
+      if (keys.some(k => !bz.inp[k])) { bz.msg = ["bad", L().bzEmpty]; render(); return }
+      bz.marks = {}; let ok = true;
+      keys.forEach(k => { const [r, i] = k.split(",").map(Number); const g = Number(bz.inp[k]) === bz.v[r][i]; bz.marks[k] = g ? "ok" : "bad"; if (!g) ok = false });
+      if (ok) { bz.solved = true; bz.done++; stats.stars++; save(); bz.msg = ["ok", L().bzOk] } else bz.msg = ["bad", L().bzBad];
+      render();
+    };
+    act.appendChild(ck);
+  } else { const nx = el("button", "btn good", L().bzNext); nx.type = "button"; nx.onclick = () => { bzNew(); render() }; act.appendChild(nx) }
+  b.appendChild(act);
+  if (bz.msg) b.appendChild(el("div", "msg " + bz.msg[0], bz.msg[1]));
+  p.appendChild(b);
+}
+/* ---- input ---- */
+function renderIntro() {
+  const p = el("section", "panel intro"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().inTitle));
+  const total = 6;
+  const dots = el("div", "dots"); for (let i = 0; i < total; i++) dots.appendChild(el("span", i === introStep ? "on" : "")); p.appendChild(dots);
+  const box = el("div", "introbox"); p.appendChild(box);
+  const way = lines => `<div class="way">${lines.map((l, i) => `<div>${l}</div>`).join("")}</div>`;
+  const items = L().in1items;
+  if (introStep === 0) box.innerHTML = `<h3>${L().in1h}</h3><p>${L().in1}</p><div class="tags">${items.map(([n, v]) => `<span class="tag">${n} ${v} €</span>`).join("")}</div><p><b>${L().in1q}</b></p>`;
+  if (introStep === 1) box.innerHTML = `<h3>${L().in2h}</h3><p>${L().in2}</p>` + way(["18 ≈ 20", "14 ≈ 10", "9 ≈ 10"]);
+  if (introStep === 2) box.innerHTML = `<h3>${L().in3h}</h3><p>${L().in3}</p>` + way(["18 → 20", "14 → <span class='ok'>20</span>", "9 → 10"]);
+  if (introStep === 3) box.innerHTML = `<h3>${L().in4h}</h3><p>${L().in4}</p>` + way(["20 + 20 + 10 = 50", "50 € ≤ 50 € ✓"]) + `<div class="rulebox"><b>${L().in4b}</b></div>`;
+  if (introStep === 4) box.innerHTML = `<h3>${L().in5h}</h3><p>${L().in5}</p>` + way(["18 + 14 + 9 = <span class='ok'>41</span>", `<span class="eq">≈ 50 ✓</span>`, `50 ${MINUS} 41 = 9`, `41 + 9 = 50 ✓`]);
+  if (introStep === 5) {
+    box.innerHTML = `<h3>${L().in6h}</h3><p>${L().in6}</p>`;
+    const ch = el("div", "choices");
+    L().in6opts.forEach(([s, ok], i) => { const b = el("button", "choice", s); b.type = "button"; if (introPick === i) b.classList.add(ok ? "ok" : "bad"); b.onclick = () => { introPick = i; render() }; ch.appendChild(b) });
+    box.appendChild(ch);
+    if (introPick !== null) { const ok = L().in6opts[introPick][1]; box.appendChild(el("div", "msg " + (ok ? "ok" : "bad"), ok ? L().in6ok : L().in6bad)) }
+  }
+  const nav = el("div", "stepnav");
+  const b1 = el("button", "btn", L().inBack); b1.type = "button"; b1.disabled = introStep === 0; b1.onclick = () => { introStep--; render() };
+  const b2 = el("button", "btn primary", introStep < total - 1 ? L().inNext : L().inGo); b2.type = "button"; b2.onclick = () => { if (introStep < total - 1) { introStep++; render() } else goTab(1) };
+  nav.append(b1, el("span", "count", `${introStep + 1} / ${total}`), b2); p.appendChild(nav);
+}
+
+/* ---- practice / experts ---- */
+/* Pflicht: erst 5 Aufgaben in Stufe orange, danach sind pink, lila und Experten frei wählbar */
+const MUST = 5, locked = () => stats.solved[0] < MUST;
+function renderPractice() {
+  if (locked() && level !== 1) { level = 1; save(); newTask() }
+  const lv = el("div", "levels");
+  [1, 2, 3].forEach(n => { const lk = n > 1 && locked(); const b = el("button", `lvl lvl${n}` + (lk ? " locked" : ""), `${L().lv[n - 1][0]}<small>${lk ? "🔒 " + L().lockShort(MUST) : L().lv[n - 1][1] + " · " + L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.disabled = lk; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
+  view.appendChild(lv);
+  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, stats.solved[0])));
+  renderTask();
+}
+function renderExpert() {
+  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, stats.solved[0]))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
+  const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
+  h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
+}
+/* Partnermodus: zwei Kinder an einem iPad, Rollenwechsel nach jeder Aufgabe */
+const SHOW_PARTNER = true;
+function renderPartner() {
+  if (!SHOW_PARTNER) { partner.on = false; return document.createDocumentFragment() }
+  const bar = el("div", "partner");
+  const who = el("div", "who", partner.on ? L().pTurn(pName(partner.turn), pName(1 - partner.turn)) : `<b>${L().pTitle}</b>`);
+  const btns = el("div", "pbtns");
+  const on = el("button", "seg", L().pOn); on.type = "button"; on.setAttribute("aria-pressed", !!partner.on); on.onclick = () => { partner.on = true; savePartner(); render() };
+  const off = el("button", "seg", L().pOff); off.type = "button"; off.setAttribute("aria-pressed", !partner.on); off.onclick = () => { partner.on = false; savePartner(); render() };
+  btns.append(on, off);
+  bar.append(who, btns);
+  return bar;
+}
+/* context box (word problem / basket) */
+function shopTable(b, B, extra) {
+  return `<table class="shop">${b.map(x => `<tr><td class="ic">${x.it.ic}</td><td>${esc(x.it[lang])}</td><td class="r">${eur(x.p)}</td></tr>`).join("")}${B !== undefined ? `<tr class="bud"><td class="ic">💶</td><td>${L().budget}</td><td class="r">${eur(B)}</td></tr>` : ""}</table>${extra || ""}`;
+}
+function ctxHTML() {
+  const t = task;
+  if (t.ctx === "book") return `<p class="word">${L().bookCtx[t.ctxKey](t.a, t.b)}<br><b style="font-size:1.25rem">${fmt(t.a)} ${t.kind === "add" ? "+" : MINUS} ${fmt(t.b)} ≈ ?</b></p>`;
+  if (t.ctx === "single") return `<p class="word">${L().iWhy1(t.nm, esc(lang === "de" ? t.it.acc || t.it.de : t.it[lang]), t.p, t.B)}</p>`;
+  if (t.ctx === "basket") return `<div class="word">${shopTable(t.b, t.B)}</div>`;
+  if (t.ctx === "basketU") return `<div class="word">${shopTable(t.b, t.B, `<span class="given">≈ ${L().ueberschlag}: ${eur(t.U)}</span>`)}</div>`;
+  if (t.ctx === "claim") return `<div class="word">${shopTable(t.b)}</div><span class="claimed">${L().claimed(t.nm, t.C)}</span>`;
+  if (t.ctx === "rest") return `<div class="word">${shopTable(t.b, undefined, `<p style="margin:8px 0 0">${L().iRest(t.nm, t.B)}</p>`)}</div>`;
+  if (t.ctx === "receipt") return `<div class="receipt"><div style="text-align:center;font-weight:700">${L().shop}</div><hr>${t.b.map(x => `<div class="r"><span>${esc(x.it[lang])}</span><span>${fmt(x.p)} €</span></div>`).join("")}<hr><div class="r tot"><span>${L().total.toUpperCase()}</span><span>${fmt(t.C)} €</span></div></div>`;
+  if (t.ctx === "plan" && pi > 0) { const s = STEP[t.lv]; return `<div class="word"><b>${L().planCtx[t.lv]}</b>${shopTable(t.b, t.B, pi > 2 ? `<span class="given">≈ ${L().ueberschlag}: ${eur(t.U)}</span>` : "")}</div>` }
+  return "";
+}
+function lineHTML(l, holeHtml, i) {
+  if (l.kind === "nround") return `${fmt(l.n)} ≈ ${holeHtml}`;
+  if (l.kind === "osum") return `${l.lab ? `<span class="lab">${L().labWOver}</span> ` : ""}${fmt(l.ra)} ${l.op === "add" ? "+" : MINUS} ${fmt(l.rb)} = ${holeHtml}`;
+  if (l.kind === "round") return `<span class="lab">${l.it.ic} ${esc(l.it[lang])}</span> ${eur(l.p)} → ${holeHtml} €`;
+  if (l.kind === "sum") return `${l.ups.map(fmt).join(" + ")} = ${holeHtml} €`;
+  if (l.kind === "rest") return `<span class="lab">${L().labRest}</span> ${fmt(l.B)} ${MINUS} ${fmt(l.S)} = ${holeHtml} €`;
+  if (l.kind === "probe") return `<span class="lab">${L().labProbe}</span> ${fmt(l.S)} + ${fmt(l.B - l.S)} = ${holeHtml} €`;
+}
+function stepsBlock(p) {
+  const P = ph(); const box = el("div", "steps");
+  P.lines.forEach((l, i) => {
+    if (i > lineIdx && !done) return;
+    const showDone = done || i < lineIdx;
+    const hole = showDone ? `<span class="done">${fmt(l.value)}</span>` : `<span class="ans active${badMark ? " bad" : ""}${revealed ? " sol" : ""}">${entry || "&nbsp;"}</span>`;
+    box.appendChild(el("div", "sline", lineHTML(l, hole, i)));
+  });
+  p.appendChild(box);
+  if (!done) keypad(p);
+}
+function keypad(p) {
+  const kp = el("div", "keypad");
+  [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => typeDigit(String(d)); kp.appendChild(b) });
+  const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => typeDigit(""); kp.appendChild(del);
+  p.appendChild(kp);
+}
+function choiceList(p, opts, onPick, fmtFn) {
+  const ch = el("div", "choices");
+  opts.forEach((o, i) => { const b = el("button", "choice", fmtFn(o)); b.type = "button"; if (task.picked === i) b.classList.add(o.ok ? "ok" : "bad"); if (task.badPicks && task.badPicks.includes(i)) b.classList.add("bad"); b.disabled = done; b.onclick = () => onPick(i); ch.appendChild(b) });
+  p.appendChild(ch);
+}
+/* grid (schriftliche Addition, wie im Rechenprofi) */
+function buildGrid(P, o) {
+  const W = P.W; const g = el("div", "cgrid"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
+  const add = (cls, txt, attrs = {}) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); for (const k in attrs) c.setAttribute(k, attrs[k]); g.appendChild(c); return c };
+  add("lab", "");
+  for (let p = W - 1; p >= 0; p--) { const c = add("lab", ABBR[p]); c.title = PLACES[lang][p]; if (o.hlP === p) c.classList.add("hl") }
+  P.nums.forEach((n, i) => { add("sign", i === 0 ? "" : "+"); for (let p = W - 1; p >= 0; p--) { const c = add("", p < len(n) ? dig(n, p) : ""); if (o.hlP === p) c.classList.add("hl") } });
+  const carries = []; P.cols.forEach(c => { carries[c.p + 1] = c.cout });
+  add("", "");
+  for (let p = W - 1; p >= 0; p--) {
+    if (p > 0 && !done) { const c = add("carry in", ent.carry[p], { tabindex: "0", "data-role": "carry", "data-p": p, role: "button", "aria-label": `${L().carryWord} ${PLACES[lang][p]}` }); if (active && active.role === "carry" && active.p === p) c.classList.add("active") }
+    else if (done && carries[p]) add("carry", carries[p]); else add("carry", "");
+  }
+  g.appendChild(el("div", "rule"));
+  add("", "");
+  for (let p = W - 1; p >= 0; p--) {
+    const rv = p < len(P.result) ? dig(P.result, p) : "";
+    if (done) { add(revealed ? "sol" : "", rv); continue }
+    const c = add("in", ent.res[p], { tabindex: "0", "data-role": "res", "data-p": p, role: "button", "aria-label": PLACES[lang][p] });
+    if (active && active.role === "res" && active.p === p) c.classList.add("active");
+    if (marks && marks[p]) c.classList.add(marks[p]);
+  }
+  return g;
+}
+function gridBlock(p) {
+  const P = ph(); const o = {};
+  if ((curLevel() === 1) && !done && active && active.role === "res" && active.p < P.W) { o.hlP = active.p; p.appendChild(el("p", "colhelp", L().colHelp(PLACES[lang][active.p]))) }
+  const box = el("div", "gridbox"); box.appendChild(buildGrid(P, o)); p.appendChild(box); box.addEventListener("click", onCellClick);
+  if (!done) keypad(p);
+}
+function instrText(P) {
+  const t = task;
+  switch (P.instr) {
+    case "why1": return ""; case "why2": return L().iWhy2;
+    case "over": return L().iOver(P.lines[0].s || STEP[t.lv || 1]);
+    case "decide": return L().iDecide; case "final": return L().iFinal; case "grid": return L().iGrid;
+    case "plaus2": return L().iPlaus2(t.nm, t.C, t.U);
+    case "rough1": return L().iRough1(task.U, task.E);
+    case "rough2": return L().iRough2;
+    case "rest": return lineIdx < 2 ? L().restHint(L().pl10[P.lines[0].pl]) : "";
+    case "book": return L().iBook(L().pl10[t.pl], t.lv);
+    case "receipt": return L().iReceipt; case "receipt2": return L().iReceipt2(t.U);
+  }
+  return "";
+}
+function renderTask() {
+  view.appendChild(renderPartner());
+  const lvl = curLevel(); const p = el("section", "panel"); view.appendChild(p);
+  const head = el("div", "taskhead");
+  const chip = el("span", "chip", lvl === 4 ? L().tabs[2] : L().lv[level - 1][0]); chip.style.setProperty("--c", lvl === 4 ? "var(--ink)" : `var(--${["orange", "pink", "purple"][level - 1]})`); if (lvl === 4) chip.style.color = "var(--paper)";
+  head.append(chip, el("h2", "", L().modes[task.mode])); head.lastChild.style.margin = "0"; p.appendChild(head);
+  if (guessWarn) { const g = el("div", "why guess", `<b class="h">✋ ${L().guessT}</b>${L().guessP}`); const gb = el("button", "btn primary", L().guessOk); gb.type = "button"; gb.onclick = () => { guessWarn = false; render() }; const r = el("div", "actions"); r.appendChild(gb); g.appendChild(r); p.appendChild(g) }
+  const P = done ? task.phases[task.phases.length - 1] : ph();
+  const t = task;
+  if (t.mode === "plaus" && pi === 0 && !done) p.appendChild(el("p", "instr", L().iPlaus(t.nm, t.C)));
+  if (P.type !== "select" && P.type !== "chips") { const c = ctxHTML(); if (c) p.appendChild(el("div", "", c)) }
+  if (P.type === "select") {
+    p.appendChild(el("p", "instr", L().iPlan(t.a, t.b2, t.B)));
+    p.appendChild(el("p", "word", `<b>${L().planCtx[t.lv]}</b> · ${L().budget}: <b>${eur(t.B)}</b>`));
+    const g = el("div", "prods");
+    ITEMS[t.lv].forEach((it, i) => { const b = el("button", "prod", `<span class="ic">${it.ic}</span><span>${esc(it[lang])}</span><b>${eur(it.p)}</b>`); b.type = "button"; b.setAttribute("aria-pressed", t.sel.includes(i)); b.onclick = () => { const k = t.sel.indexOf(i); if (k >= 0) t.sel.splice(k, 1); else t.sel.push(i); feedback = null; render() }; g.appendChild(b) });
+    p.appendChild(g);
+    p.appendChild(el("p", "", `<b>🛒 ${L().cart}:</b> ${t.sel.length ? t.sel.map(i => esc(ITEMS[t.lv][i][lang])).join(L().comma) : "–"}`));
+    const a = el("div", "actions"); const b = el("button", "btn primary", L().toOver); b.type = "button"; b.onclick = () => { if (t.sel.length < 3) { attempts; feedback = { cls: "bad", text: L().need3 }; render(); return } buildPlan(t); advance() }; a.appendChild(b); p.appendChild(a);
+  }
+  if (P.type === "chips") {
+    const w = el("p", "word");
+    L().wp[t.x](...t.args).split(/⟦([^⟧]+)⟧/).forEach((part, i) => {
+      if (i % 2 === 0) { w.appendChild(document.createTextNode(part)); return }
+      const b = el("button", "numchip", part); b.type = "button"; b.setAttribute("aria-pressed", t.sel.includes(part)); if (t.wrongSel.includes(part)) b.classList.add("wrong");
+      b.onclick = () => { const k = t.sel.indexOf(part); if (k >= 0) t.sel.splice(k, 1); else t.sel.push(part); t.wrongSel = []; render() }; w.appendChild(b);
+    });
+    p.appendChild(w); p.appendChild(el("p", "instr", L().iWp1));
+    const a = el("div", "actions"); const b = el("button", "btn primary", L().checkNums); b.type = "button"; b.onclick = checkNums; a.appendChild(b); p.appendChild(a);
+  }
+  if (t.mode === "wordpro" && pi > 0) {
+    const w = el("p", "word"); L().wp[t.x](...t.args).split(/⟦([^⟧]+)⟧/).forEach((part, i) => { if (i % 2 === 0) w.appendChild(document.createTextNode(part)); else { const s = el("b", "", part); if (t.need.includes(part)) s.style.color = "var(--focus)"; w.appendChild(s) } });
+    p.insertBefore(w, p.children[1]);
+  }
+  if (P.type === "lines" || P.type === "reasons") {
+    p.appendChild(el("p", "instr", P.type === "lines" ? L().iErr1(t.B) : L().iErr2));
+    const tl = el("div", "tomlines");
+    t.lines.forEach((l, i) => { const txt = i === 2 ? L()[l] : l; tl.appendChild(el("div", "tomline" + (P.type === "reasons" && i === t.first ? " mark" : ""), `<span class="lab">${L().line(i + 1)}</span><span>${txt}</span>`)) });
+    p.appendChild(tl);
+    if (P.type === "lines") { const a = el("div", "colbtns"); t.lines.forEach((l, i) => { const b = el("button", t.badLines.includes(i) ? "bad" : "", L().line(i + 1)); b.type = "button"; b.onclick = () => pickLine(i); a.appendChild(b) }); p.appendChild(a) }
+    else { const ch = el("div", "choices"); t.reasons.forEach(r => { const b = el("button", "choice", L().reasons[r]); b.type = "button"; if (t.badReasons.includes(r)) b.classList.add("bad"); b.onclick = () => pickReason(r); ch.appendChild(b) }); p.appendChild(ch) }
+  }
+  if (t.mode === "errpro" && pi === 2 && !done) p.insertBefore(el("p", "instr", L().iErr3), p.children[1]);
+  if (P.type === "steps" || P.type === "choice" || P.type === "grid") { const it = instrText(P); if (it) p.appendChild(el("p", "instr", it)) }
+  if (P.type === "steps") stepsBlock(p);
+  if (P.type === "grid") gridBlock(p);
+  if (P.type === "choice") choiceList(p, P.opts, pickChoice, o => o.key ? L()[o.key] : (typeof o.text === "function" ? o.text() : o.text));
+
+  const act = el("div", "actions");
+  const work = P.type === "steps" || P.type === "grid";
+  if (!done) {
+    const tb = el("button", "btn tip", L().tip + (tipLevel ? ` ${Math.min(tipLevel + 1, work ? 3 : 2)}` : "")); tb.type = "button"; tb.onclick = onTip; act.appendChild(tb);
+    if (work) { const cb = el("button", "btn primary", L().check); cb.type = "button"; cb.onclick = check; act.appendChild(cb) }
+    if (attempts >= 2 && work) { const sb = el("button", "btn", L().show); sb.type = "button"; sb.onclick = showSolution; act.appendChild(sb) }
+  } else {
+    const nb = el("button", "btn good", L().next); nb.type = "button"; nb.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; savePartner() } newTask(); render() }; act.appendChild(nb);
+  }
+  p.appendChild(act);
+  if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
+  if (done && task.final) p.appendChild(el("div", "", task.final()));
+  if (done && tab === 1 && level === 1 && stats.solved[0] === MUST && !stats.unlocked) {
+    stats.unlocked = true; save();
+    const u = el("div", "swap levelup", `<p><b>${L().unlockMsg(MUST)}</b></p>`), row = el("div", "actions");
+    const go = el("button", "btn primary", L().upGo(L().lv[1][1])); go.type = "button"; go.onclick = () => { level = 2; save(); newTask(); render(); window.scrollTo(0, 0) };
+    const st = el("button", "btn", L().unlockStay); st.type = "button"; st.onclick = () => { newTask(); render() };
+    row.append(go, st); u.appendChild(row); p.appendChild(u);
+  } else if (done && tab === 1 && !locked() && level < 3 && stats.streak[level - 1] >= 5) {
+    const a = L().lv[level - 1][1], b = L().lv[level][1], u = el("div", "swap levelup", `<p><b>${L().upMsg(stats.streak[level - 1], a, b)}</b></p>`), row = el("div", "actions");
+    const go = el("button", "btn primary", L().upGo(b)); go.type = "button"; go.onclick = () => { level++; save(); newTask(); render(); window.scrollTo(0, 0) };
+    const st = el("button", "btn", L().upStay); st.type = "button"; st.onclick = () => { stats.streak[level - 1] = 0; save(); render() };
+    row.append(go, st); u.appendChild(row); p.appendChild(u);
+  }
+  if (diag && !done) {
+    const w = el("div", "why", `<b class="h">${L().whyTitle}</b>${diag.text}`);
+    const cb = el("button", "linkbtn", L().cardBtn(diag.card + 1)); cb.type = "button"; cb.onclick = () => { showCard = !showCard; render() }; w.appendChild(cb);
+    if (showCard) { const [q, a] = L().cards[diag.card]; w.appendChild(el("div", "cardref", `<b>${q}</b><br>${a}`)) }
+    p.appendChild(w);
+  }
+  if (tipLevel > 0 && !done) p.appendChild(el("div", "tipcard", tipText()));
+  if (done && partner.on) p.appendChild(el("div", "swap", `<p>${L().pSwap(pName(partner.turn), pName(1 - partner.turn))}</p><p><b>${L().pDiscuss}</b> ${L().pPm[task.mode] || L().pPm.def}</p>`));
+}
+
+/* ======================= interaction ======================= */
+function onCellClick(e) { const c = e.target.closest(".cell.in"); if (!c || done) return; active = { role: c.dataset.role, p: Number(c.dataset.p) }; render() }
+function typeDigit(d) {
+  if (done) return; const P = ph();
+  if (P.type === "grid") {
+    if (!active) return; ent[active.role][active.p] = d; if (marks && active.role === "res") marks[active.p] = null;
+    if (d !== "") { if (active.role === "res" && active.p < P.W - 1) active = { role: "res", p: active.p + 1 }; else if (active.role === "carry") active = { role: "res", p: active.p } }
+    render(); return;
+  }
+  if (P.type !== "steps") return;
+  if (d === "") entry = entry.slice(0, -1); else if (entry.length < 6) entry += d; badMark = false; revealed = false; render();
+}
+document.addEventListener("keydown", e => {
+  if ((tab !== 1 && tab !== 2) || done || !task) return;
+  if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+  const P = ph(); if (!P || (P.type !== "steps" && P.type !== "grid")) return;
+  if (/^[0-9]$/.test(e.key)) { typeDigit(e.key); e.preventDefault() }
+  else if (e.key === "Backspace" || e.key === "Delete") { typeDigit(""); e.preventDefault() }
+  else if (e.key === "Enter" && !(e.target && e.target.tagName === "BUTTON")) { check(); e.preventDefault() }
+  else if (P.type === "grid" && e.key === "ArrowLeft" && active && active.role === "res" && active.p < P.W - 1) { active.p++; render() }
+  else if (P.type === "grid" && e.key === "ArrowRight" && active && active.role === "res" && active.p > 0) { active.p--; render() }
+});
+function success(msg) { done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; if (tab === 1) { if (attempts === 0 && !task.helped) stats.streak[level - 1]++; else stats.streak[level - 1] = 0 } act(true); save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
+function fail(text, d) { attempts++; act(false); badMark = true; feedback = { cls: "bad", text: text + (attempts >= 2 ? " " + L().bad2 : "") }; diag = d || null; showCard = false; render() }
+function check() {
+  if (done) return; const P = ph();
+  if (P.type === "steps") {
+    if (entry === "") { feedback = { cls: "bad", text: L().empty }; render(); return }
+    const l = P.lines[lineIdx]; const v = Number(entry);
+    if (v === l.value) {
+      badMark = false; diag = null; revealed = false; entry = ""; tipLevel = Math.min(tipLevel, 1);
+      if (lineIdx === P.lines.length - 1) { advance(P.lines.length > 1 ? L().stepOk.split("!")[0] + "!" : null); return }
+      lineIdx++; feedback = { cls: "ok", text: L().stepOk }; render(); return;
+    }
+    fail(L().bad, diagLine(l, v)); return;
+  }
+  if (P.type === "grid") {
+    if (ent.res.every(v => v === "")) { feedback = { cls: "bad", text: L().emptyGrid }; render(); return }
+    marks = {}; let allOk = true;
+    for (let p = 0; p < P.W; p++) { const exp = p < len(P.result) ? String(dig(P.result, p)) : null; const v = ent.res[p]; const ok = exp === null ? (v === "" || v === "0") : v === exp; if (exp !== null || v !== "") marks[p] = ok ? "ok" : "bad"; if (!ok) allOk = false }
+    if (allOk) { advance(P.U ? L().gridOk(P.result, P.U) : null); return }
+    attempts++; act(false); feedback = { cls: "bad", text: L().badGrid + (attempts >= 2 ? " " + L().bad2 : "") }; diag = diagGrid(P); showCard = false; render();
+  }
+}
+function pickChoice(i) {
+  const P = ph(), o = P.opts[i]; task.picked = i;
+  if (o.ok) {
+    if (o.replan) { task.phases = [{ type: "select" }]; pi = 0; initPhase(); feedback = { cls: "ok", text: L().planNo }; render(); return }
+    advance(P.okMsg ? P.okMsg() : null); return;
+  }
+  if (Date.now() - phaseT0 < 2000) guessScore++;
+  attempts++; act(false); task.badPicks.push(i); task.picked = null; feedback = { cls: "bad", text: o.bad ? o.bad() : L().bad }; render();
+}
+function checkNums() {
+  const t = task; const extra = t.sel.filter(x => !t.need.includes(x)); const missing = t.need.filter(x => !t.sel.includes(x));
+  if (extra.length) { attempts++; act(false); t.wrongSel = extra; feedback = { cls: "bad", text: L().numsExtra(extra[0]) }; render() }
+  else if (missing.length) { attempts++; act(false); feedback = { cls: "bad", text: L().numsMissing }; render() }
+  else advance(L().numsOk);
+}
+function pickLine(i) { if (i === task.first) advance(L().errLineOk(i + 1)); else { attempts++; act(false); if (!task.badLines.includes(i)) task.badLines.push(i); feedback = { cls: "bad", text: L().errLineBad }; render() } }
+function pickReason(r) { if (r === task.errType) advance(); else { attempts++; act(false); if (!task.badReasons.includes(r)) task.badReasons.push(r); feedback = { cls: "bad", text: L().reasonBad }; render() } }
+function showSolution() {
+  task.helped = true; if (tab === 1) { stats.streak[level - 1] = 0; save() }
+  const P = ph(); revealed = true;
+  if (P.type === "steps") { lineIdx = P.lines.length - 1 }
+  // solution ends the current work step; the task continues with the next phase
+  const wasLast = pi === task.phases.length - 1;
+  if (wasLast) { done = true; diag = null; feedback = { cls: "info", text: L().solShown }; stats.solved[curLevel() - 1]++; save(); render(); return }
+  const msg = P.type === "grid" ? `${L().solShown} ${eur(P.result)}` : `${L().solShown} ${P.lines.map(l => fmt(l.value)).join(" · ")}`;
+  pi++; initPhase(); feedback = { cls: "info", text: msg }; render();
+}
+/* ---- diagnosis ---- */
+function diagLine(l, v) {
+  if (l.kind === "round") {
+    if (v === down(l.p, l.s)) return { text: L().dDown(l.s), card: 2 };
+    if (v === l.p) return { text: L().dExactPrice, card: 1 };
+    if (v % l.s !== 0) return { text: L().dNotRound(l.s), card: 0 };
+    return { text: L().dRoundGen, card: 0 };
+  }
+  if (l.kind === "nround") {
+    const n = l.n, pl = l.pl;
+    if (v === down(n, pl) || v === up(n, pl)) return { text: L().dRoundDir, card: 0 };
+    if ([10, 100, 1000].some(q => q !== pl && v === Math.floor(n / q + .5) * q)) return { text: L().dPlace(L().pl10[pl]), card: 8 };
+    return { text: L().dRoundDir, card: 0 };
+  }
+  if (l.kind === "osum") return { text: v === l.exact ? L().dBookSum : L().dSumGen(`${fmt(l.ra)} ${l.op === "add" ? "+" : MINUS} ${fmt(l.rb)}`), card: 1 };
+  if (l.kind === "sum") { if (v === l.E) return { text: L().dSumExact, card: 3 }; return { text: L().dSumGen(l.ups.map(fmt).join(" + ")), card: 3 } }
+  if (l.kind === "rest") return { text: L().restBad(l.S, v, l.B), card: 6 };
+  if (l.kind === "probe") return { text: L().dProbe, card: 6 };
+  return null;
+}
+function diagGrid(P) {
+  const entered = Number(ent.res.slice().reverse().join("").replace(/\D/g, "")) || 0;
+  let pre = "";
+  if (P.U) { if (entered > P.U) pre = L().dOverBig(P.U) + "<br>"; else if (entered <= P.U - P.n * P.s) pre = L().dOverSmall(P.U) + "<br>" }
+  for (let p = 0; p < P.W; p++) {
+    const v = ent.res[p];
+    if (p >= len(P.result)) { if (v !== "" && v !== "0") return { text: pre + L().dLead, card: 7 }; continue }
+    const col = P.cols[p]; if (!col || v === String(col.r)) continue;
+    const pl = cap(PLACES[lang][p]); const n = v === "" ? null : Number(v);
+    if (n !== null && col.cin && n === (col.tot - col.cin) % 10) { const parts = [...col.ds.map(String), `${col.cin} (${L().carryWord})`].join(" + "); return { text: pre + L().dAddCarry(pl, parts, col.tot, col.r), card: 7 } }
+    return { text: pre + L().dGeneric(pl) + " " + colText(col), card: pre ? 5 : 7 };
+  }
+  return pre ? { text: pre, card: 5 } : null;
+}
+function colText(col) {
+  const pl = PLACES[lang][col.p], pln = PLACES[lang][col.p + 1] || "";
+  const parts = [...col.ds.map(String), ...(col.cin ? [`${col.cin} (${L().carryWord})`] : [])].join(" + ");
+  return L().colAdd(cap(pl), parts, col.tot, col.r, col.cout, pln);
+}
+/* ---- tips ---- */
+function onTip() {
+  const P = ph(); const work = P.type === "steps" || P.type === "grid"; const max = work ? 3 : 2;
+  if (tipLevel >= 3 && work) { reveal(); render(); return }
+  tipLevel = Math.min(tipLevel + 1, max); if (tipLevel === 3) reveal(); render();
+}
+function reveal() {
+  const P = ph(); task.helped = true;
+  if (P.type === "steps") { const l = P.lines[lineIdx]; if (!l) return; entry = String(l.value); revealed = true; badMark = false; diag = null; return }
+  if (P.type === "grid") {
+    const t = P.cols.find(c => ent.res[c.p] === "" || ent.res[c.p] !== String(c.r)); if (!t) return;
+    ent.res[t.p] = String(t.r); if (t.cout && t.p + 1 < P.W) ent.carry[t.p + 1] = String(t.cout); if (marks) marks[t.p] = null; diag = null;
+    active = { role: "res", p: Math.min(t.p + 1, P.W - 1) };
+  }
+}
+function tipText() {
+  const P = ph(); const t = task; let s = `<b>${L().tip}:</b> `;
+  if (P.type === "steps") {
+    const l = P.lines[lineIdx];
+    if (l.kind === "nround") { s += L().tipBook(L().pl10[l.pl]); if (tipLevel > 1) s += `<br><br>${task.mode === "book" ? L().tipBookPlace(Math.min(task.a, task.b), L().pl10[l.pl]) + "<br>" : ""}${L().tipBook2(l.n, down(l.n, l.pl), up(l.n, l.pl))}` }
+    if (l.kind === "osum") s += L().dBookSum;
+    if (l.kind === "round") { s += L().tipRound(l.s); if (tipLevel > 1) s += `<br><br>${L().tipRound2(l.p, down(l.p, l.s), up(l.p, l.s))}` }
+    if (l.kind === "sum") { s += L().tipSum(l.s); if (tipLevel > 1) { let acc = l.ups[0]; const st = []; for (let i = 1; i < l.ups.length; i++) { st.push(`${fmt(acc)} + ${fmt(l.ups[i])} = ${fmt(acc + l.ups[i])}`); acc += l.ups[i] } s += `<br><br>${L().tipSum2(st.slice(0, -1).concat(st.length ? [st[st.length - 1].replace(/= [\d ]+$/, "= ?")] : []).join(" · "))}` } }
+    if (l.kind === "rest") { s += L().tipRest; if (tipLevel > 1) s += `<br><br>${L().tipRest2(l.S, l.B)}` }
+    if (l.kind === "probe") s += L().tipProbe;
+  }
+  else if (P.type === "grid") { s += L().tipGrid; if (tipLevel > 1) { const c = P.cols.find(c => ent.res[c.p] === "" || ent.res[c.p] !== String(c.r)); if (c) s += `<br><br>${colText(c)}` } }
+  else if (P.type === "choice") {
+    if (P.instr === "why1" || P.instr === "why2") s += L().tipWhy + (tipLevel > 1 ? `<br><br>${L().cards[2][1]}` : "");
+    else if (P.instr === "decide") s += L().tipDecide;
+    else if (P.instr === "final") s += L().tipFinal;
+    else if (P.instr === "rough1") s += L().rough1Bad;
+    else if (P.instr === "rough2") s += L().rough2Bad;
+    else s += L().tipCan;
+  }
+  else if (P.type === "chips") s += L().tipNums;
+  else if (P.type === "lines" || P.type === "reasons") s += L().tipLines;
+  else if (P.type === "select") s += L().tipPlan;
+  if (tipLevel > 2) s += `<br><br><b>${L().tip3}</b>`;
+  return s;
+}
+
+/* ---- merk & cards ---- */
+function renderMerk() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().merkTitle));
+  const ol = el("ol"); L().merkRules.forEach(x => ol.appendChild(el("li", "", x))); const m = el("div", "rulebox"); m.appendChild(ol); p.appendChild(m);
+  const e = el("div", "section"); e.style.marginTop = "18px"; e.appendChild(el("h3", "", L().errTitle));
+  const list = el("div", "err"); L().errs.forEach(([t, x]) => list.appendChild(el("div", "erritem", `<span>${t}</span><span class="ex">${x}</span>`))); e.appendChild(list); p.appendChild(e);
+  const g = el("div", "section"); g.appendChild(el("h3", "", L().glossTitle));
+  const tbl = el("table", "gloss"); L().gloss.forEach(([a, b]) => tbl.appendChild(el("tr", "", `<td><b>${a}</b></td><td>${b}</td>`)));
+  const tw = el("div", ""); tw.style.overflowX = "auto"; tw.appendChild(tbl); g.appendChild(tw); p.appendChild(g);
+}
+function renderCards() {
+  const p = el("section", "panel"); view.appendChild(p);
+  p.appendChild(el("h2", "", L().cardsTitle));
+  const grid = el("div", "cards");
+  L().cards.forEach(([q, a], i) => {
+    const b = el("button", "fcard"); b.type = "button"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<div class="fin"><div class="face front"><span class="num">${i + 1}</span><span class="q">${q}</span><span class="hint">${L().tapHint}</span></div><div class="face back">${a}</div></div>`;
+    b.onclick = () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+    grid.appendChild(b);
+  });
+  p.appendChild(grid);
+}
+document.getElementById("langbtn").onclick = () => { lang = lang === "de" ? "tr" : "de"; save(); render() };
+/* Neu starten (wie im Kosten-Detektiv): erst tippen → „Wirklich alles löschen?“, innerhalb von 3,5 s nochmal tippen → alles löschen und neu laden */
+let resetArmed = false, resetTimer = null;
+function renderReset() { const b = document.getElementById("resetbtn"); b.textContent = resetArmed ? L().reset2 : L().reset; b.style.background = ""; b.style.borderColor = resetArmed ? "#E8892B" : ""; b.style.color = resetArmed ? "#FFD9B0" : "" }
+document.getElementById("resetbtn").onclick = () => {
+  if (!resetArmed) { resetArmed = true; renderReset(); clearTimeout(resetTimer); resetTimer = setTimeout(() => { resetArmed = false; renderReset() }, 3500); return }
+  try { ["up-stats", "up-level", "up-seq", "up-plan", "up-partner"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
+  location.reload();
+};
+render();
+</script>
+
+</body>
+</html>
