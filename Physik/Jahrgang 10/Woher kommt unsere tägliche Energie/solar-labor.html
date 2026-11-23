@@ -64,7 +64,7 @@ main{max-width:1360px;margin:0 auto;padding-block:16px;padding-left:max(16px,env
 @media (max-width:900px){.plot{position:static}}
 canvas{display:block;width:100%;border-radius:10px;touch-action:manipulation}
 html,body,button,input,select,textarea,label,a,.opt,.key,.stop{touch-action:manipulation}
-.views{display:grid;grid-template-columns:repeat(2,minmax(0,250px));justify-content:center;gap:14px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px}
 .view{display:flex;flex-direction:column;gap:4px;min-width:0}
 .view canvas{aspect-ratio:1/1;max-width:100%;background:var(--room)}
 .view small{font-size:13px;color:var(--ink-soft);text-align:center}
@@ -273,9 +273,9 @@ var st={station:0,done:[false,false,false,false,false,false],guess:null,grp:null
   res:{},tries:{},help:{},t0:null};
 
 /* ---------- Speicher ---------- */
-function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,grp:st.grp,pred:st.pred,pv:st.pv,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,s7:st.s7,res:st.res,tries:st.tries,help:st.help,tips:st.tips,early:st.early,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({station:st.station,done:st.done,guess:st.guess,grp:st.grp,pred:st.pred,pv:st.pv,s1:st.s1,s2:st.s2,s3:st.s3,s4:st.s4,s5:st.s5,s6:st.s6,s7:st.s7,res:st.res,tries:st.tries,help:st.help,tips:st.tips,early:st.early,errT:st.errT,t0:st.t0,saves:st.saves,remindOff:st.remindOff}));}catch(e){}}
 function load(){try{var x=JSON.parse(localStorage.getItem(KEY)||'null');if(!x)return;
-  ['station','guess','grp','pred','pv','res','tries','help','tips','early','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
+  ['station','guess','grp','pred','pv','res','tries','help','tips','early','errT','t0','saves','remindOff'].forEach(function(k){if(x[k]!=null)st[k]=x[k];});
   if(x.done){st.done=x.done;while(st.done.length<6)st.done.push(false);}
   ['s1','s2','s3','s4','s5','s6','s7'].forEach(function(k){if(x[k])st[k]=Object.assign(st[k],x[k]);});}catch(e){}}
 /* ---------- gemeinsame Bausteine (wie Regenbogen-Labor) ---------- */
@@ -304,13 +304,14 @@ function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.m
 /* Stationen-Weg */
 function unlocked(i){return i===0||st.done[i-1]||(!!STATIONS[i].pro&&APP.proAfter!=null&&!!st.done[APP.proAfter]);}
 /* Tipp-Karten: erst selbst probieren, dann gestuft helfen */
-function tipHTML(key,tips){st.tips=st.tips||{};var n=st.tips[key]||0,h=tips.slice(0,n).map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+':</b> '+t+'</p>';}).join('');
-  if(n<tips.length)h+='<div class="row"><button class="btn tip sm" type="button" data-tip="'+key+'">'+(n?'Nächste Tipp-Karte':'Tipp-Karte')+' ('+(n+1)+' von '+tips.length+')</button></div><p class="fb" id="tw_'+key+'"></p>';
-  return '<div class="tips">'+h+'</div>';}
-function bindTips(rr){Array.prototype.forEach.call(document.querySelectorAll('[data-tip]'),function(b){b.addEventListener('click',function(){var key=b.dataset.tip,t=st.tries[key],n=st.tips[key]||0;
-  if(!n&&!(t&&t.n>0)&&!b._warned){b._warned=true;var f=$('tw_'+key);if(f){f.className='fb bad';f.textContent='Probiert es zuerst noch einmal selbst! Die Tipp-Karte hilft, wenn ihr nach einem Versuch nicht weiterkommt.';}b.textContent='Tipp-Karte trotzdem zeigen';st.early=st.early||{};st.early[key]=true;save();return;}
-  st.tips[key]=n+1;save();rr();});});}
-function tipNudge(fb,key,ntips){var t=st.tries[key];if(fb&&t&&!t.ok&&t.n>=2&&!(st.tips[key]>0)&&ntips)fb.textContent+=' Nutzt jetzt die Tipp-Karte.';}
+function tipHTML(key){st.errT=st.errT||{};var L=st.errT[key]||[];return '<div class="tips" id="et_'+key+'">'+errCardsHTML(L)+'</div>';}
+function errCardsHTML(L){return L.map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+(L.length>1?' von '+L.length:'')+':</b> '+t+'</p>';}).join('');}
+/* nach dem Prüfen: eine Tipp-Karte pro Fehler, passend zur Lücke */
+function setErr(key,L){st.errT=st.errT||{};st.errT[key]=L;st.tips=st.tips||{};st.tips[key]=(st.tips[key]||0)+L.length;save();var el=$('et_'+key);if(el)el.innerHTML=errCardsHTML(L);}
+function clrErr(key){if(st.errT&&st.errT[key]){delete st.errT[key];save();}}
+function bindTips(){}
+function tipNudge(){}
+function needAll(fb,vals){if(vals.some(function(v){return v==null||v==='';})){fb.className='fb bad';fb.textContent='Füllt zuerst alle Lücken aus. Dann prüft die App.';return true;}return false;}
 function stNo(i){var n=0;for(var k=0;k<=i;k++)if(!STATIONS[k].pro)n++;return n;}
 function renderRoute(){var h='';STATIONS.forEach(function(s,i){var cls='stop'+(s.pro?' pro':'')+(i===st.station?' on':'')+(st.done[i]?' done':'');
     h+='<button type="button" class="'+cls+'" data-i="'+i+'"'+(unlocked(i)?'':' disabled')+'><span class="n">'+(st.done[i]?'✓':(s.pro?'★':stNo(i)))+'</span>'+s.name+'</button>';});
@@ -611,12 +612,16 @@ function paintPanel(c,x,y,w,h,f,mode,dust,big){var fr=Math.max(3,w*0.02),ix=x+fr
     var lit=!(sf>=0.999);c.fillStyle=lit?'#FFFFFF':'#F5B82E';c.font='bold '+Math.round(Math.min(cwi*0.42,ih*(big?0.3:0.5)))+'px '+ff();c.textAlign='center';c.textBaseline='middle';
     var ty=sf>0&&sf<0.999?iy+ih*(1-sf)/2:iy+ih/2;c.fillText(String(i+1),cx+cwi/2,ty);}}
 function renderSetupViews(){
-  $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Sonne)';$('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · Leistung in % der Referenz':'<b>Eure Messreihe</b>';
-  var A=vctx('cvA'),x=A.x,w=A.w,s=st.set;x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
-  var mw=w*0.9*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.46,mx=(w-mw)/2,my=w*0.2;
+  $('capB').innerHTML=st.grp?'<b>Eure Messreihe</b> · übrige Leistung in % der Referenz':'<b>Eure Messreihe</b>';
+  var A=vctx('cvA'),x=A.x,w=A.w;x.fillStyle='#F4F1EA';x.fillRect(0,0,w,w);
+  if(SK()==='s4'&&st.grp){famView(x,w);drawGraph();return;}
+  $('capA').innerHTML='<b>Modul von vorne</b> (aus Sicht der Sonne)';
+  var s=st.set,mw=w*0.9*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.46,mx=(w-mw)/2,my=w*0.2;
   paintPanel(x,mx,my,mw,mh,s.s/100,s.v,s.n,true);
-  var L1,L2;if(s.s>0&&!s.v){L1=s.s===100?'Zelle 1 ist ganz dunkel.':'Zelle 1 ist zu '+fmt(s.s,0)+' % dunkel.';L2='Zelle 2, 3 und 4 sind hell.';}
-  else if(s.s>0){L1='Jede Zelle ist ein Stück dunkel.';L2=s.s===100?'Zusammen so viel wie 1 Zelle.':'Zusammen '+fmt(s.s,0)+' % von 1 Zelle.';}
+  var isRef=s.s===0&&s.n===0&&s.h===1000&&s.a===0,L1,L2;
+  if(s.s>0&&!s.v){L1=s.s===100?'Zelle 1 ist ganz dunkel.':'Zelle 1 ist zu '+fmt(s.s,0)+' % dunkel.';L2='Zelle 2, 3 und 4 sind hell.';}
+  else if(s.s>0){L1='Jede Zelle ist zu ¼ dunkel.';L2=s.s===100?'Zusammen so viel wie 1 ganze Zelle.':'Zusammen '+fmt(s.s,0)+' % von 1 Zelle.';}
+  else if(isRef){L1='Referenz: beste Bedingungen';L2='alle Regler auf bestem Wert';}
   else{L1=s.n?valLabel('n',s.n):'Kein Schatten auf dem Modul.';L2='';}
   x.fillStyle='#0B1442';x.font='bold '+Math.round(w/18)+'px '+ff();x.textAlign='center';x.textBaseline='top';x.fillText(L1,w/2,w*0.05);
   x.fillStyle='#4E5677';x.font=Math.round(w/17)+'px '+ff();if(L2)x.fillText(L2,w/2,my+mh+w*0.04);
@@ -624,20 +629,42 @@ function renderSetupViews(){
   x.textAlign='center';x.font=Math.round(w/20)+'px '+ff();x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.92);
   drawGraph();
 }
+/* Station Auswerten: Situation von Familie K. statt des (leeren) Messaufbaus */
+function famView(x,w){var F=ff(),g=G(),v=rowVals(),fi=famIndex();
+  x.textAlign='center';x.textBaseline='top';
+  if(st.grp==='A'){$('capA').innerHTML='<b>Gleich viel Schatten, anders verteilt</b>';
+    var li=v.length-1,pw=w*0.42,ph=w*0.30,y0=w*0.20;
+    x.fillStyle='#0B1442';x.font='bold '+Math.round(w/19)+'px '+F;x.fillText('Gleich viel Schatten:',w/2,w*0.04);x.fillText('so viel wie 1 ganze Zelle',w/2,w*0.04+w/16);
+    [[w*0.05,0,'1 Zelle ganz dunkel',fi],[w*0.53,1,'jede Zelle zu ¼ dunkel',li]].forEach(function(c){
+      paintPanel(x,c[0],y0,pw,ph,1,c[1],0,false);
+      x.fillStyle='#4E5677';x.font=Math.round(w/24)+'px '+F;x.textAlign='center';x.fillText(c[2],c[0]+pw/2,y0+ph+w*0.03);
+      var q=pct(c[3]);x.fillStyle='#0B1442';x.font='bold '+Math.round(w/11)+'px '+F;x.fillText(isNaN(q)?'– %':fmt(q,0)+' %',c[0]+pw/2,y0+ph+w*0.10);
+      x.font=Math.round(w/24)+'px '+F;x.fillStyle='#4E5677';x.fillText('Leistung übrig',c[0]+pw/2,y0+ph+w*0.21);});
+    x.font=Math.round(w/20)+'px '+F;x.fillText('Die Zellen sind in Reihe geschaltet.',w/2,w*0.92);return;}
+  $('capA').innerHTML='<b>So ist es bei Familie K.</b>';
+  var s=valSet(g.p,g.famV),mw=w*0.9*Math.max(0.12,Math.cos(s.a*Math.PI/180)),mh=w*0.38,mx=(w-mw)/2,my=w*0.20;
+  paintPanel(x,mx,my,mw,mh,0,0,s.n,true);
+  if(s.h<1000){x.fillStyle='rgba(205,208,214,'+((1-s.h/1000)*0.85)+')';x.fillRect(mx,my,mw,mh);}
+  x.fillStyle='#0B1442';x.font='bold '+Math.round(w/19)+'px '+F;x.fillText('Bei Familie K.:',w/2,w*0.03);x.fillText(g.famLab,w/2,w*0.03+w/16);if(s.n>0){x.fillStyle='rgba(150,120,80,.75)';for(var d2=0;d2<60;d2++){var hx=fnv('fk'+d2*7);x.beginPath();x.arc(mx+mw*(0.03+0.94*parseInt(hx.slice(0,4),16)/65535),my+mh*(0.03+0.94*parseInt(hx.slice(4),16)/65535),w/150,0,Math.PI*2);x.fill();}x.fillStyle='#0B1442';}
+  var q=pct(fi);x.font='bold '+Math.round(w/11)+'px '+F;x.fillText(isNaN(q)?'– %':fmt(q,0)+' %',w/2,my+mh+w*0.06);
+  x.fillStyle='#4E5677';x.font=Math.round(w/20)+'px '+F;x.fillText('der Referenzleistung bleiben übrig',w/2,my+mh+w*0.18);}
 function drawGraph(){var B=vctx('cvB'),y=B.x,w=B.w;y.fillStyle='#FFFFFF';y.fillRect(0,0,w,w);var F=ff();
   if(!st.grp){y.fillStyle='#4E5677';y.font=Math.round(w/16)+'px '+F;y.textAlign='center';y.textBaseline='middle';y.fillText('Wählt zuerst eure Gruppe.',w/2,w/2);return;}
   var g=G(),vals=rowVals(),L=w*0.16,R=w*0.95,T=w*0.08,Bt=w*0.78;function Y(p){return Bt-(Math.min(120,p)/110)*(Bt-T);}
   y.strokeStyle='#E3E8F0';y.lineWidth=1;y.fillStyle='#4E5677';y.font=Math.round(w/22)+'px '+F;y.textAlign='right';y.textBaseline='middle';
   [0,25,50,75,100].forEach(function(p){y.beginPath();y.moveTo(L,Y(p));y.lineTo(R,Y(p));y.stroke();y.fillText(p+' %',L-4,Y(p));});
   var cat=g.p==='s',n=vals.length;
-  var xs=vals.map(function(v,i){if(cat)return L+(i+0.5)*(R-L)/n;var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);return L+(hi>lo?(v-lo)/(hi-lo):0)*(R-L)*0.9+(R-L)*0.05;});
+  var slot=cat?(R-L)/(n+0.6):0;var xs=vals.map(function(v,i){if(cat)return L+(i+0.5+(v===-1?0.6:0))*slot;var lo=Math.min.apply(null,vals),hi=Math.max.apply(null,vals);return L+(hi>lo?(v-lo)/(hi-lo):0)*(R-L)*0.9+(R-L)*0.05;});
   y.textAlign='center';y.textBaseline='top';y.fillStyle='#4E5677';
-  vals.forEach(function(v,i){var lab=g.p==='s'?(v===-1?'alle 4':fmt(v,0)+' %'):g.p==='n'?fmt(v,1):fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
-  y.fillText(g.p==='s'?'Schatten auf Zelle 1':g.p==='n'?'Staub in g/m²':g.p==='h'?'Sonnenlicht in W/m²':'Einfallswinkel in °',(L+R)/2,Bt+w*0.10);
+  if(cat){var SL={0:'kein',25:'¼',50:'½',100:'ganz'};vals.forEach(function(v,i){y.fillText(v===-1?'je ¼ auf':SL[v],xs[i],Bt+w*0.02);if(v===-1)y.fillText('allen 4',xs[i],Bt+w*0.065);});
+    var lastS=xs[vals.length-2];y.fillText('Zelle 1 im Schatten',(xs[0]+lastS)/2,Bt+w*0.10);y.textBaseline='top';y.fillText('Vergleich',xs[vals.length-1],T-w*0.06);
+    var dx=(lastS+xs[vals.length-1])/2;y.save();y.strokeStyle='#4E5677';y.setLineDash([w/80,w/80]);y.lineWidth=w/150;y.beginPath();y.moveTo(dx,T);y.lineTo(dx,Bt+w*0.14);y.stroke();y.restore();}
+  else{vals.forEach(function(v,i){var lab=g.p==='n'?fmt(v,1):fmt(v,0)+(g.p==='a'?'°':'');y.fillText(lab,xs[i],Bt+w*0.02);});
+  y.fillText(g.p==='n'?'Staub in g/m²':g.p==='h'?'Sonnenlicht in W/m²':'Einfallswinkel in °',(L+R)/2,Bt+w*0.10);}
   /* Vorhersage */
   var fi=vals.indexOf(g.famV);if(false){y.strokeStyle='#6B3FB0';y.lineWidth=w/150;y.setLineDash([w/50,w/80]);y.beginPath();y.moveTo(xs[fi]-w*0.06,Y(st.pred));y.lineTo(xs[fi]+w*0.06,Y(st.pred));y.stroke();y.setLineDash([]);y.fillStyle='#6B3FB0';y.textAlign='center';y.textBaseline='bottom';y.fillText('Vorhersage',xs[fi],Y(st.pred)-3);}
   var showP=true;var pts=vals.map(function(v,i){return (!showP||isNaN(pct(i)))?null:[xs[i],Y(pct(i)),pct(i)];});
-  if(cat){pts.forEach(function(p,i){if(!p)return;var bw=(R-L)/n*0.55;y.fillStyle=(i===st.row&&SK()==='s3')?'#E8892B':g.col;y.fillRect(p[0]-bw/2,p[1],bw,Bt-p[1]);y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/20)+'px '+F;y.fillText(fmt(p[2],0)+' %',p[0],p[1]-2);y.font=Math.round(w/22)+'px '+F;});}
+  if(cat){pts.forEach(function(p,i){if(!p)return;var bw=slot*0.55;y.fillStyle=(i===st.row&&SK()==='s3')?'#E8892B':(vals[i]===-1?'#5B6BA8':g.col);y.fillRect(p[0]-bw/2,p[1],bw,Bt-p[1]);y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/20)+'px '+F;y.fillText(fmt(p[2],0)+' %',p[0],p[1]-2);y.font=Math.round(w/22)+'px '+F;});}
   else{y.strokeStyle=g.col;y.lineWidth=w/120;y.beginPath();var first=true;pts.forEach(function(p){if(!p)return;if(first){y.moveTo(p[0],p[1]);first=false;}else y.lineTo(p[0],p[1]);});y.stroke();
     pts.forEach(function(p,i){if(!p)return;y.fillStyle=(i===st.row&&SK()==='s3')?'#E8892B':g.col;y.beginPath();y.arc(p[0],p[1],w/55,0,Math.PI*2);y.fill();y.fillStyle='#1A1F36';y.textAlign='center';y.textBaseline='bottom';y.font='bold '+Math.round(w/22)+'px '+F;y.fillText(fmt(p[2],0),p[0],p[1]-w/40);y.font=Math.round(w/22)+'px '+F;});}
   if(!pts.some(function(p){return p;})){y.fillStyle='#4E5677';y.textAlign='center';y.textBaseline='middle';y.fillText(showP?'Noch keine Messwerte':'Erscheint nach dem Anteil für Familie K.',(L+R)/2,T+(Bt-T)*0.2);}
@@ -782,7 +809,9 @@ function r3(){var s=st.s3,g=G(),vals=rowVals();ensureRows();
       uf.forEach(function(i){s.rows[i].U='';s.rows[i].I='';s.rows[i].P='';delete s.rows[i].set;});save();r3();var f2=$('fb3');f2.className='fb bad';
       f2.innerHTML='<b>Kein fairer Versuch!</b> Beim Ablesen in Zeile '+uf.map(function(i){return i+1;}).join(', ')+' habt ihr außer '+FDAT[g.p]+' auch '+ks.map(function(k){return FNAME[k];}).join(' und ')+' verändert. Dann weiß man nicht, was die Leistung verringert hat. Stellt alles andere auf die Referenz und messt diese Zeilen neu.';return;}
     var wm=idx.filter(function(i){return !rowOk(i);}),wp=idx.filter(function(i){return rowOk(i)&&!pOk(i);}),ok=!wm.length&&!wp.length;tryInc('s3meas',ok,wm.join(',')+'|'+wp.join(','));
-    if(ok){s.ok=true;finish(SI('s3'));save();r3();drawGraph();return;}
+    if(ok){clrErr('s3meas');s.ok=true;finish(SI('s3'));save();r3();drawGraph();return;}
+    var EL=[];wm.forEach(function(i){var r=s.rows[i],m=meas(rowSet(i)),uB=!uOk(num(r.U),m.U),iB=!iOk(num(r.I),m.I),lab=rowLabel(vals[i],i).replace(' (Referenz)','');EL.push('<b>Zeile '+(i+1)+'</b> ('+lab+'): '+(uB&&iB?'U und I passen':uB?'U passt':'I passt')+' nicht. Stellt euren Regler genau auf diesen Wert, alle anderen Regler auf den besten Wert, und lest neu ab. U hat eine Nachkommastelle, I zwei.');});
+    wp.forEach(function(i){var r=s.rows[i];EL.push('<b>Zeile '+(i+1)+'</b>: P stimmt nicht. Rechnet P = U · I = '+esc(r.U)+' · '+esc(r.I)+' mit dem Taschenrechner und rundet auf ganze Watt.');});setErr('s3meas',EL);
     var t=[];if(wm.length)t.push('Messwerte in Zeile '+wm.map(function(i){return i+1;}).join(', ')+' passen nicht. Stellt euren Faktor genau auf den Wert dieser Zeile, prüft alle anderen Regler und lest neu ab.');
     if(wp.length)t.push('P in Zeile '+wp.map(function(i){return i+1;}).join(', ')+' stimmt nicht. Rechnet P = U · I.');
     fb.className='fb bad';fb.textContent=t.join(' ')+' Die Tipp-Karten unten helfen euch.';tipNudge(fb,'s3meas',1);st.row=wm.concat(wp)[0];save();Array.prototype.forEach.call(document.querySelectorAll('[data-row]'),function(t,j){t.className=j===st.row?'cur':(rowDone(j)?'done':'');});updBubble();
@@ -831,10 +860,12 @@ function r4(){var s=st.s4,g=G(),f=famPct();
   $('task').innerHTML=head(SI('s4'),'Was zeigen eure Messwerte?')+'<p>Schaut auf euren Graphen rechts unten.</p>'+cmp+mc+sent+report+expl+after;
   mcBind('cmp',cmpQ,s,'cmp','s4tr',r4);
   if($('c4')&&!s.ok){KS.forEach(function(k){$('s_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});$('snum').addEventListener('input',function(){s.snum=this.value;if(s.badF)s.badF.num=false;this.className='num';save();});
-    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};KS.forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(!pctOk(v,famIndex()))bad.num=true;
+    $('c4').addEventListener('click',function(){var fb=$('fb4'),v=num(s.snum),bad={};if(needAll(fb,KS.map(function(k){return s[k];}).concat([s.snum])))return;KS.forEach(function(k){if(OKV[k].indexOf(s[k])<0)bad[k]=true;});if(!pctOk(v,famIndex()))bad.num=true;
       var ok=!Object.keys(bad).length;tryInc('s4sent',ok,[s.dir,s.snum,s.sch,s.str,s.brm].join('/'));
       var compose=function(){return SATZ0+', desto '+txt('dir')+' ist die Leistung. Bei Familie K. bleiben '+s.snum+' % der Referenzleistung übrig.'+(isA?' Die vier Zellen im Modul sind '+txt('sch')+'. Durch alle Zellen fließt deshalb '+txt('str')+'. Liefert eine Zelle weniger, '+txt('brm')+'.':'');};
-      if(ok){s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();return;}
+      if(ok){clrErr('s4sent');s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();return;}
+      var T4={dir:'<b>Lücke „desto …“:</b> Schaut auf euren Graphen. Gehen die Balken oder Punkte nach unten, wenn euer Faktor stärker wird?',num:(!isNaN(v)&&Math.abs(v-(100-f))<=1.5)?'<b>Zahl für Familie K.:</b> Ihr habt den Verlust eingetragen. Gesucht ist, wie viel übrig bleibt.':'<b>Zahl für Familie K.:</b> Schaut in die Tabelle von Station 2, Zeile „(Familie K.)“, Spalte „Anteil“.',sch:'<b>Wie sind die Zellen verbunden?</b> Schaut auf das Bild des Moduls: Die Zellen hängen hintereinander wie Glieder einer Kette.',str:'<b>Strom in den Zellen:</b> In einer Reihenschaltung gibt es nur einen Weg für den Strom. Was gilt dann für die Stromstärke in jeder Zelle?',brm:'<b>Was macht die dunkle Zelle?</b> Sie lässt kaum Strom durch. Alle Zellen liegen im selben Stromkreis hintereinander. Wen betrifft das also?'};
+      setErr('s4sent',['dir','num','sch','str','brm'].filter(function(k){return bad[k];}).map(function(k){return T4[k];}));
       s.badF=bad;save();KS.forEach(function(k){$('s_'+k).className=bad[k]?'bad':'';});$('snum').className='num'+(bad.num?' bad':'');
       var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt noch nicht.':n+' Lücken stimmen noch nicht.')+' Sie sind rot markiert.'+(bad.num&&!isNaN(v)&&Math.abs(v-(100-f))<=1.5?' Bei der Zahl habt ihr den Verlust eingetragen, gefragt ist, wie viel übrig bleibt.':'');
       tipNudge(fb,'s4sent',1);showHelp(fb,'s4sent',function(){s.dir='k';s.snum=fmt(f,0);s.sch='r';s.str='d';s.brm='a';s.badF={};s.sent=compose();s.ok=true;finish(SI('s4'));save();r4();});});}
@@ -868,10 +899,13 @@ function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   $('task').innerHTML=head(SI('s5'),'Erklärt '+VNOM[st.grp]+' die '+FAMW+' W?')+(st.s3.ok?'':'<p class="note">Messt zuerst in Station 2 eure Messreihe.</p>')+intro+q+vgl+box+after;
   if($('c5')){['cmp','can','chg'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
     $('t_pw').addEventListener('input',function(){s.pw=this.value;if(s.badF)s.badF.pw=false;this.className='num';save();});
-    $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}
+    $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}if(needAll(fb,[s.pw,s.cmp,s.can,s.chg]))return;
       var v=num(s.pw),bad={};if(!pwOk(v,fi))bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;if(s.chg!==EMOK[st.grp])bad.chg=true;
       var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can,s.chg].join('/'));
-      if(ok){s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
+      if(ok){clrErr('s5');s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
+      var CH={A:'Den Schatten wirft der Nachbarbalkon. Schaut auf die Halterung am Geländer im Bild.',B:'Der Staub liegt auf dem Modul. Was macht man mit einer schmutzigen Scheibe?',C:'Dunst ist Wetter. Kann Familie K. das Wetter ändern?',D:'Die Halterung am Geländer lässt sich neigen. Wie stünde das Modul am besten zur Sonne?'};
+      var T5={pw:'<b>Leistung P:</b> Schaut in eure Tabelle von Station 2, Zeile „(Familie K.)“, Spalte P in W.',cmp:'<b>Vergleich mit '+FAMW+' W:</b> Ist eure Zahl nur etwas größer als '+FAMW+' W oder mehr als doppelt so groß?',can:'<b>Wie viel erklärt euer Faktor?</b> Liegt euer Wert nah an '+FAMW+' W, erklärt euer Faktor fast alles. Ist er viel größer, muss noch etwas anderes die Leistung verringern.',chg:'<b>Kann Familie K. das ändern?</b> '+CH[st.grp]};
+      setErr('s5',['pw','cmp','can','chg'].filter(function(k){return bad[k];}).map(function(k){return T5[k];}));
       s.badF=bad;save();['cmp','can','chg'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
       var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt noch nicht.':n+' Lücken stimmen noch nicht.')+' Sie sind rot markiert.'+(bad.pw?' Die Leistung P steht in eurer Tabelle in der Zeile „(Familie K.)“.':'');
       tipNudge(fb,'s5',1);showHelp(fb,'s5',function(){s.pw=fmt(P,0);s.cmp=a.cmp;s.can=a.can;s.chg=EMOK[st.grp];s.badF={};s.ok=true;finish(SI('s5'));save();r5();});});}
@@ -987,42 +1021,51 @@ function r7(){var s=st.s7,own=st.grp;
     fb.className='fb bad';fb.textContent='Noch nicht passend: '+Object.keys(bad).map(function(k){return FAMR[k];}).join(', ')+'. Schaut noch einmal an die Tafel.';tipNudge(fb,'s7tab',1);
     showHelp(fb,'s7tab',function(){GKEYS.forEach(function(k){s.tab[k]=fmt(s7model(k),0);});s.badT={};s.tabOk=true;save();r7();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-r7]'),function(e){e.addEventListener('change',function(){s.rk[e.dataset.r7]=e.value;e.className='';save();});});
-  if($('c7r'))$('c7r').addEventListener('click',function(){var fb=$('fb7r'),vals={};GKEYS.forEach(function(k){vals[k]=num(s.tab[k]);});
+  if($('c7r'))$('c7r').addEventListener('click',function(){var fb=$('fb7r'),vals={};if(needAll(fb,[1,2,3,4].map(function(n){return s.rk[n];})))return;GKEYS.forEach(function(k){vals[k]=num(s.tab[k]);});
     var order=GKEYS.slice().sort(function(a,b){return vals[a]-vals[b];}),bad={};
     [1,2,3,4].forEach(function(n){var c=s.rk[n];if(!c||vals[c]!==vals[order[n-1]])bad[n]=true;});
     var used={};[1,2,3,4].forEach(function(n){if(used[s.rk[n]])bad[n]=true;used[s.rk[n]]=1;});
     var ok=!Object.keys(bad).length;tryInc('s7rank',ok,[1,2,3,4].map(function(n){return s.rk[n]||'-';}).join(''));
-    if(ok){s.badR={};s.rkOk=true;save();r7();return;}
+    if(ok){clrErr('s7rank');s.badR={};s.rkOk=true;save();r7();return;}
+    var dup=Object.keys(used).length<4;setErr('s7rank',Object.keys(bad).map(function(n){return '<b>Platz '+n+':</b> '+(n==='1'?'Hier steht die Ursache, bei der am wenigsten übrig bleibt (kleinster Wert in der Spalte „übrig in %“).':n==='4'?'Hier steht die Ursache, bei der am meisten übrig bleibt (größter Wert).':'Hier steht der '+n+'.-kleinste Wert aus der Spalte „übrig in %“.')+(dup?' Achtung: Jede Ursache darf nur einmal vorkommen.':'');}));
     s.badR=bad;save();Object.keys(bad).forEach(function(n){document.querySelector('[data-r7="'+n+'"]').className='bad';});
     fb.className='fb bad';fb.textContent=(Object.keys(bad).length===1?'Ein Platz stimmt':'Einige Plätze stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(fb,'s7rank',1);
     showHelp(fb,'s7rank',function(){order.forEach(function(k,i){s.rk[i+1]=k;});s.badR={};s.rkOk=true;save();r7();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-f7]'),function(e){e.addEventListener('change',function(){s.rf[e.dataset.f7]=e.value;e.className='';save();});});
-  if($('c7f'))$('c7f').addEventListener('click',function(){var fb=$('fb7f'),bad={};RFS.forEach(function(x,i){if(s.rf[i]!==x.a)bad[i]=true;});
+  if($('c7f'))$('c7f').addEventListener('click',function(){var fb=$('fb7f'),bad={};if(needAll(fb,RFS.map(function(x,i){return s.rf[i];})))return;RFS.forEach(function(x,i){if(s.rf[i]!==x.a)bad[i]=true;});
     var ok=!Object.keys(bad).length;tryInc('s7rf',ok,RFS.map(function(x,i){return s.rf[i]||'-';}).join(''));
-    if(ok){s.badF={};s.rfOk=true;save();r7();return;}
+    if(ok){clrErr('s7rf');s.badF={};s.rfOk=true;save();r7();return;}
+    var TRF=['Schaut in die Tabelle oben: Wie viel % bleiben übrig, wenn eine ganze Zelle im Schatten liegt?','Eine Zelle ist nur ¼ der Fläche. Aber wie viel % bleiben übrig? Denkt an die Reihenschaltung.','Wie viel % bleiben bei 2 g/m² Staub übrig? Ist das ein deutlicher Verlust?','70 % des Lichts kommen an. Vergleicht mit dem Wert für Dunst in der Tabelle oben.','Welche Ursache lässt in der Tabelle oben am meisten Leistung übrig?','Denkt an die Meldung „Kein fairer Versuch“ beim Messen: Wann kam sie?'];
+    setErr('s7rf',Object.keys(bad).map(function(i){return '<b>Aussage '+(+i+1)+':</b> '+TRF[i];}));
     s.badF=bad;save();Object.keys(bad).forEach(function(i){document.querySelector('[data-f7="'+i+'"]').className='bad';});
     var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Entscheidung stimmt':n+' Entscheidungen stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(fb,'s7rf',1);
     showHelp(fb,'s7rf',function(){RFS.forEach(function(x,i){s.rf[i]=x.a;});s.badF={};s.rfOk=true;save();r7();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-m7]'),function(e){e.addEventListener('change',function(){s.ms[e.dataset.m7]=e.value;e.className='';save();});});
-  if($('c7m'))$('c7m').addEventListener('click',function(){var fb=$('fb7m'),bad={};Object.keys(MSOK).forEach(function(k){if(MSOK[k].indexOf(s.ms[k])<0)bad[k]=true;});
+  if($('c7m'))$('c7m').addEventListener('click',function(){var fb=$('fb7m'),bad={};if(needAll(fb,Object.keys(MSOK).map(function(k){return s.ms[k];})))return;Object.keys(MSOK).forEach(function(k){if(MSOK[k].indexOf(s.ms[k])<0)bad[k]=true;});
     var ok=!Object.keys(bad).length;tryInc('s7ms',ok,Object.keys(MSOK).map(function(k){return s.ms[k]||'-';}).join(''));
-    if(ok){s.badM={};s.msOk=true;save();r7();return;}
+    if(ok){clrErr('s7ms');s.badM={};s.msOk=true;save();r7();return;}
+    var TMS={m1:'<b>Erste Lücke:</b> Schaut auf Platz 1 eurer Rangfolge.',m2:'<b>Zweite Lücke:</b> Wie sind die Zellen im Modul verbunden? Denkt an das Ergebnis von Gruppe A.',m3:'<b>Dritte Lücke:</b> In einer Reihe fließt durch alle Zellen derselbe Strom. Bremst die dunkle Zelle also nur sich selbst?'};
+    setErr('s7ms',Object.keys(TMS).filter(function(k){return bad[k];}).map(function(k){return TMS[k];}));
     s.badM=bad;save();Object.keys(bad).forEach(function(k){document.querySelector('[data-m7="'+k+'"]').className='bad';});
     var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt':n+' Lücken stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(fb,'s7ms',1);
     showHelp(fb,'s7ms',function(){Object.keys(MSOK).forEach(function(k){s.ms[k]=MSOK[k][0];});s.badM={};s.msOk=true;save();r7();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-e7]'),function(e){e.addEventListener('change',function(){s.em[e.dataset.e7]=e.value;e.className='';save();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-o7]'),function(e){e.addEventListener('change',function(){s.eo[e.dataset.o7]=e.value;e.className='';save();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-b7]'),function(e){e.addEventListener('change',function(){s.eb[e.dataset.b7]=e.value;e.className='';save();});});
-  if($('c7e'))$('c7e').addEventListener('click',function(){var fb=$('fb7e'),bad={};GKEYS.forEach(function(k){if(s.em[k]!==EMOK[k])bad['e'+k]=true;});['v','p','a'].forEach(function(k,i){if(s.eo[i+1]!==k)bad['o'+(i+1)]=true;});
+  if($('c7e'))$('c7e').addEventListener('click',function(){var fb=$('fb7e'),bad={};if(needAll(fb,GKEYS.map(function(k){return s.em[k];}).concat([s.eo[1],s.eo[2],s.eo[3],s.eb.w,s.eb.d])))return;GKEYS.forEach(function(k){if(s.em[k]!==EMOK[k])bad['e'+k]=true;});['v','p','a'].forEach(function(k,i){if(s.eo[i+1]!==k)bad['o'+(i+1)]=true;});
     if(s.eb.w!=='s')bad.bw=true;if(s.eb.d!=='n')bad.bd=true;var ok=!Object.keys(bad).length;
     tryInc('s7em',ok,GKEYS.map(function(k){return s.em[k]||'-';}).join('')+'/'+[1,2,3].map(function(n){return s.eo[n]||'-';}).join('')+'/'+(s.eb.w||'-')+(s.eb.d||'-'));
-    if(ok){s.badE={};s.emOk=true;s.fix={};save();r7();draw();return;}
+    if(ok){clrErr('s7em');s.badE={};s.emOk=true;s.fix={};save();r7();draw();return;}
+    var TEM={eA:'<b>A · Schatten:</b> Der Nachbarbalkon wirft den Schatten. Die Halterung am Geländer ist verschiebbar.',eB:'<b>B · Staub:</b> Staub liegt auf dem Modul. Was macht man mit einer schmutzigen Scheibe?',eC:'<b>C · Dunst:</b> Dunst ist Wetter. Kann Familie K. das Wetter ändern?',eD:'<b>D · Winkel:</b> Die Halterung lässt sich neigen. Was hilft gegen einen schrägen Einfallswinkel?',o1:'<b>Schritt 1:</b> Welche Ursache steht auf Platz 1 eurer Rangfolge? Die Maßnahme dagegen kommt zuerst.',o2:'<b>Schritt 2:</b> Nehmt die nächste Ursache aus eurer Rangfolge, die Familie K. selbst ändern kann.',o3:'<b>Schritt 3:</b> Die Maßnahme, die noch übrig ist.',bw:'<b>Begründung:</b> Warum kommt das Verschieben zuerst? Schaut auf Platz 1 eurer Rangfolge.',bd:'<b>Dunst:</b> Schaut auf eure Antwort zu C in Teil a).'};
+    setErr('s7em',['eA','eB','eC','eD','o1','o2','o3','bw','bd'].filter(function(k){return bad[k];}).map(function(k){return TEM[k];}));
     s.badE=bad;save();r7();var f2=$('fb7e'),n=Object.keys(bad).length;f2.className='fb bad';f2.textContent=(n===1?'Eine Auswahl stimmt':n+' Auswahlen stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(f2,'s7em',1);
     showHelp(f2,'s7em',function(){GKEYS.forEach(function(k){s.em[k]=EMOK[k];});s.eo={1:'v',2:'p',3:'a'};s.eb={w:'s',d:'n'};s.badE={};s.emOk=true;s.fix={};save();r7();draw();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-x7]'),function(b){b.addEventListener('click',function(){s.fix=s.fix||{};s.fix[b.dataset.x7]=!s.fix[b.dataset.x7];s.tried=true;save();r7();draw();});});
   Array.prototype.forEach.call(document.querySelectorAll('[data-v7]'),function(e){e.addEventListener('change',function(){s.fv[e.dataset.v7]=e.value;e.className='';save();});});
-  if($('c7v'))$('c7v').addEventListener('click',function(){var bad={};Object.keys(FVOK).forEach(function(k){if(s.fv[k]!==FVOK[k])bad[k]=true;});var ok=!Object.keys(bad).length;
-    tryInc('s7fv',ok,['f1','f2','f3'].map(function(k){return s.fv[k]||'-';}).join(''));if(ok){s.badV={};s.fvOk=true;save();r7();return;}
+  if($('c7v'))$('c7v').addEventListener('click',function(){var bad={};if(needAll($('fb7v'),['f1','f2','f3'].map(function(k){return s.fv[k];})))return;Object.keys(FVOK).forEach(function(k){if(s.fv[k]!==FVOK[k])bad[k]=true;});var ok=!Object.keys(bad).length;
+    tryInc('s7fv',ok,['f1','f2','f3'].map(function(k){return s.fv[k]||'-';}).join(''));if(ok){clrErr('s7fv');s.badV={};s.fvOk=true;save();r7();return;}
+    var TFV={f1:'<b>Erste Lücke:</b> Bei einem fairen Versuch verändert man nur eine einzige Sache. Wie viele Größen habt ihr verstellt?',f2:'<b>Zweite Lücke:</b> Was habt ihr mit den anderen Reglern gemacht? Denkt an die Meldung „Kein fairer Versuch“.',f3:'<b>Dritte Lücke:</b> So habt ihr P in jeder Zeile der Messtabelle ausgerechnet.'};
+    setErr('s7fv',['f1','f2','f3'].filter(function(k){return bad[k];}).map(function(k){return TFV[k];}));
     s.badV=bad;save();r7();var fb=$('fb7v'),n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt':n+' Lücken stimmen')+' noch nicht. Sie sind rot markiert.';tipNudge(fb,'s7fv',1);
     showHelp(fb,'s7fv',function(){s.fv={f1:'e',f2:'g',f3:'m'};s.badV={};s.fvOk=true;save();r7();});});
   if($('c7ab'))$('c7ab').addEventListener('click',function(){s.abOk=true;finish(SI('s7'));save();r7();});
@@ -1054,8 +1097,8 @@ function resText(){
   L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
   var tt=triesLines(L,TL,'s6');
   var tk=Object.keys(st.tips||{}),tn=tk.reduce(function(a,k){return a+st.tips[k];},0);
-  L.push('  Tipp-Karten genutzt: '+(tn?tn+' ('+tk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return (x?x[1]:k)+': '+st.tips[k];}).join('; ')+')':'keine'));
-  var ek=Object.keys(st.early||{});L.push('  Tipp-Karte vor dem ersten Versuch angetippt: '+(ek.length?ek.length+'-mal':'nein'));
+  L.push('  Tipp-Karten angezeigt (eine pro Fehler): '+(tn?tn+' ('+tk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return (x?x[1]:k)+': '+st.tips[k];}).join('; ')+')':'keine'));
+  
   L.push('');
   L.push('ERGEBNISSE SICHERN (nach der Tafel)');
   L.push('  Gestartet: '+(st.s7.gate?'ja':'nein')+(st.s7.codeTries?' (falscher Startcode: '+st.s7.codeTries+'×)':'')+' · Klassenwerte: '+GKEYS.map(function(k){return k+' '+(st.s7.tab[k]||'–')+' %';}).join(', ')+(st.s7.tabOk?' ✓':''));
