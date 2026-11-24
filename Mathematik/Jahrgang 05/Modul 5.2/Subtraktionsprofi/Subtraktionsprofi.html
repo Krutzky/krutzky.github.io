@@ -51,6 +51,7 @@ button:focus-visible,.cell:focus-visible{outline:3px solid var(--focus);outline-
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 2px 0 var(--line)}
 .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .lvl{border:2px solid var(--c);background:var(--surface);border-radius:12px;padding:8px 6px;text-align:center;font-family:var(--f-head);font-weight:500;line-height:1.2}
+.lvl.locked{opacity:.55;cursor:not-allowed}
 .lvl small{display:block;font-family:var(--f-body);font-weight:400;font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .lvl[aria-pressed="true"]{background:var(--c);color:#fff}
 .lvl[aria-pressed="true"] small{color:#fff}
@@ -308,6 +309,26 @@ h2,h3,.lvl,.btn,.taskhead h2{font-family:var(--f-head)}
 .colsteps{display:grid;gap:6px;margin:8px 0;font-variant-numeric:tabular-nums}
 .colsteps div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px}
 .colsteps b{color:var(--focus)}
+.choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
+.choice:disabled{cursor:default;opacity:1}
+.ans.ok{border-style:solid;border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.bonus{margin-top:18px;border:3px solid var(--orange);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--orange) 7%,var(--surface))}
+.bonus h3{margin:0 0 4px;font-family:var(--f-head)}
+.bzrank{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;padding:3px 12px;font-weight:700;margin:4px 0 8px}
+.wall{display:flex;flex-direction:column;align-items:center;gap:6px;margin:12px 0 4px}
+.wrow{display:flex;gap:6px}
+.brick{width:68px;height:48px;border-radius:8px;border:2px solid #B9542A;background:#F6D9C6;font-size:1.35rem;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:center}
+.brick.hid{background:var(--surface);border-style:dashed;border-color:var(--muted);cursor:pointer}
+.brick.hid.active{border:3px solid var(--focus)}
+.brick.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
+.brick.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
+.choice:disabled{cursor:default;opacity:1}
+/* iPad: kein Zoom durch Doppeltippen; Zoomen mit zwei Fingern bleibt möglich und lässt sich zurücksetzen */
+html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+button,a,.cell,.choice{touch-action:manipulation}
+#zoomfix{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;display:none;align-items:center;gap:6px;padding:12px 18px;border-radius:999px;border:0;background:#1C2A4A;color:#fff;font:600 1.05rem system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#zoomfix.on{display:flex}
 </style>
 </head>
 <body>
@@ -342,7 +363,7 @@ const T = {
   de: {
     title: "Subtraktionsprofi −", sub: "Mehrere Subtrahenden schriftlich subtrahieren", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
     tabs: ["Input", "Üben", "Experten", "Ergebnisse sichern", "Merkzettel", "Tippkarten"],
-    lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]], solvedN: n => `${n} gelöst`,
+    lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]], solvedN: n => `${n} gelöst`, lockShort: n => `nach ${n} Aufgaben in orange`, lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`, lockGo: "Zu Stufe orange", unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`, unlockGo: "Zu Stufe pink", unlockStay: "In orange weiterrechnen",
     modes: { klammer: "Was bleibt übrig?", direct: "Direkt subtrahieren", word: "Textaufgabe", compare: "Welcher Weg ist schneller?", errpro: "Fehlersuche für Profis", big: "Drei Subtrahenden" },
     xTitle: "Expertenaufgaben", xIntro: "Schwierige Aufgaben für Profis: Fehler finden, drei Subtrahenden und knifflige Textaufgaben.", xSolved: n => `${n} Expertenaufgaben gelöst`,
     pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pA: "Partner A", pB: "Partner B",
@@ -385,9 +406,9 @@ const T = {
     in5h: "Vergleich", in5: "Beide Wege ergeben 290. Der direkte Weg braucht nur eine Rechnung. Er ist effizienter. Mit der Probe prüfst du: 290 + 317 + 245 = 852 ✓",
     in5r: "a − b − c = a − (b + c). Direkt: In jeder Spalte die unteren Ziffern mit Übertrag addieren und bis zur oberen Ziffer ergänzen.",
     in6h: "Teste dich!", in6: "Berechne 643 − 218 − 175.", in6opts: [["250", true], ["260", false], ["350", false]], in6ok: "Richtig! 8 + 5 = 13 → 0, Übertrag 1. 1 + 7 + 1 = 9 → 5, Übertrag 1. 2 + 1 + 1 = 4 → 2. Jetzt kannst du üben.", in6bad: "Noch nicht. Denk an die Überträge: Einer 8 + 5 = 13, Zehner 1 + 7 + 1.",
-    svTitle: "Ergebnisse sichern: Was bleibt übrig?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr tippt. Eure Lehrkraft kommt zu euch und hört zu.",
+    svTitle: "Ergebnisse sichern: Was bleibt übrig?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr abgebt. Eure Lehrkraft kommt zu euch und hört zu.",
     gateH: "Stopp! Erst die Tafel, dann diese Station.", gateP: "Hier sichert ihr zu zweit, was ihr an der Tafel gemeinsam besprochen habt.",
-    gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, schreibt sie den <b>Startcode</b> an die Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen",
+    gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, zeigt sie den <b>Startcode</b> an der Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen",
     gateWait: "Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: weiter bei „Üben“ oder „Experten“.",
     svP1: "Teil 1: Die Regeln", svP2: "Teil 2: Eine Aufgabe zum Schluss", svTask: "Berechnet direkt: <b>643 − 218 − 175</b>",
     svQ: [["a − b − c hat denselben Wert wie …", ["a − (b + c)", "a − (b − c)", "a − b + c"], 0, "Wer zweimal etwas wegnimmt, nimmt insgesamt die Summe weg."],
@@ -405,6 +426,19 @@ const T = {
     svTalk: "<b>Person 1</b> erklärt: Warum ist a − b − c dasselbe wie a − (b + c)?<br><b>Person 2</b> erklärt: Wie rechnest du beim direkten Verfahren in einer Spalte?<br>Benutzt dabei die Wörter <b>Subtrahend</b>, <b>Übertrag</b>, <b>ergänzen</b> und <b>Differenz</b>.",
     svStarts: "Satzanfänge: „Wenn ich zweimal etwas wegnehme, …“ · „In jeder Spalte addiere ich zuerst …“",
     svTalkBtn: "Wir haben es uns gegenseitig erklärt", svTalkDone: "✓ Ihr habt es euch gegenseitig erklärt.",
+ svWrong: "Falsch.", svSubmit: "Abgeben", svLockHint: "Besprecht eure Lösungen. Nach dem Abgeben könnt ihr nichts mehr ändern.", svAnswered: (n, t) => `${n} von ${t} Aufgaben bearbeitet`, svResult: (n, t) => `Ergebnis: ${n} von ${t} richtig`,
+    svRetryIntro: "Zu euren Fehlern kommen jetzt neue Aufgaben. Bearbeitet alle und gebt dann ab. Erst danach seht ihr, was richtig ist.", svRetryT: "Nachübung", svRetryDone: "Nachübung geschafft: Alle Fehler sind ausgebessert.", svMore: "Noch nicht alles richtig. Hier kommen neue Aufgaben, diesmal mit Tipp.", svRoundRes: (n, t) => `Nachübung: ${n} von ${t} richtig`, svExpl: "Erklärung", svRight: "Richtig ist:",
+    svGridExpl: "Der erste Fehler steckt in dieser Spalte:", svGridTip: "Beginne bei den Einern. Addiere in jeder Spalte die unteren Ziffern und den Übertrag. Ergänze dann bis zur oberen Ziffer. Die Zehnerziffer ist der neue Übertrag.",
+    svTermExpl: "Am Anfang ist der ganze Betrag da. Davon werden beide Beträge weggenommen.", svTermTip: "Was ist am Anfang da? Was wird weggenommen?",
+    svResExpl: "Rechnet direkt schriftlich und denkt an die Überträge.", svResTip: "Schreibt die Zahlen stellengerecht untereinander und rechnet direkt: erst die unteren Ziffern addieren, dann ergänzen.",
+    svProbeExpl: (r, s, sum, a) => `Probe: Ergebnis + alle Subtrahenden. ${r} + ${s} = ${sum}.` + (a !== undefined && sum !== a ? ` Es kommt nicht ${a} heraus: Dann stimmt das Ergebnis nicht.` : ""), svProbeTip: "Addiert das Ergebnis und alle Subtrahenden. Es muss der Minuend herauskommen.",
+    svProbeNote: (s, a) => `Eure Probe ergibt ${s} und nicht ${a}. Das zeigt: Das Ergebnis oben stimmt nicht.`,
+    svTermGiven: "Term:", svProbeQ: "Rechnet die Probe:", svTermQ: "Welcher Term passt?",
+    svWT: [(a, b, c) => `Ein Verein hat <b>${a} €</b> in der Kasse. Er bezahlt <b>${b} €</b> für Trikots und <b>${c} €</b> für Bälle. Wie viel Geld bleibt übrig?`,
+      (a, b, c) => `Eine Schule hat <b>${a} €</b> für die Klassenfahrt gesammelt. Sie bezahlt <b>${b} €</b> für den Bus und <b>${c} €</b> für die Jugendherberge. Wie viel Geld bleibt übrig?`,
+      (a, b, c) => `Ein Kino nimmt am Sonntag <b>${a} €</b> ein. Davon gehen <b>${b} €</b> an den Filmverleih und <b>${c} €</b> an das Personal. Wie viel Geld bleibt übrig?`],
+    svWresN: "Es bleiben",
+  bzT: "🧱 Bonus: Zahlenmauern", bzIntro: "Schon fertig? Dann knackt die Zahlenmauern! Jeder Stein ist die Summe der beiden Steine direkt darunter. Tippt einen leeren Stein an und gebt die Zahl ein.", bzCheck: "Prüfen", bzNext: "Nächste Mauer", bzOk: "Geschafft! Die Mauer steht. ⭐", bzBad: "Noch nicht ganz. Die roten Steine stimmen nicht.", bzEmpty: "Füllt zuerst alle leeren Steine aus.", bzCount: n => `Geschaffte Mauern: ${n}`, bzRank: ["Mauer-Lehrling", "Mauer-Profi", "Mauer-Meister"], bzUp: "Neue Stufe! Die Mauern werden größer.",
     svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svShow: "Zeigt euer iPad eurer Lehrkraft.", svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
     merkTitle: "Merkzettel",
     merkRules: ["Zweimal wegnehmen ist dasselbe wie einmal die Summe wegnehmen: a − b − c = a − (b + c).", "Schreibe alle Zahlen stellengerecht untereinander: oben der Minuend, darunter die Subtrahenden.", "Beginne bei den Einern. Addiere in jeder Spalte die unteren Ziffern und den Übertrag.", "Ergänze bis zur oberen Ziffer. Reicht das nicht, ergänze bis zur nächsten Zahl mit dieser Endziffer, zum Beispiel bis 12 oder 22. Die Zehnerziffer davon ist der Übertrag.", "Der Übertrag kann auch 2 sein.", "Probe: Ergebnis + alle Subtrahenden = Minuend.", "Direkt rechnen ist effizienter als schrittweise: eine Rechnung statt zwei."],
@@ -423,7 +457,7 @@ const T = {
   tr: {
     title: "Çıkarma ustası −", sub: "Birden fazla çıkanı alt alta çıkarma", other: "Deutsch", reset: "Yeniden başla", reset2: "Gerçekten her şey silinsin mi?",
     tabs: ["Giriş", "Alıştırma", "Uzman", "Sonuçları pekiştir", "Not kâğıdı", "İpucu kartları"],
-    lv: [["1. seviye", "turuncu"], ["2. seviye", "pembe"], ["3. seviye", "mor"]], solvedN: n => `${n} çözüldü`,
+    lv: [["1. seviye", "turuncu"], ["2. seviye", "pembe"], ["3. seviye", "mor"]], solvedN: n => `${n} çözüldü`, lockShort: n => `turuncuda ${n} sorudan sonra`, lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`, lockGo: "Turuncu seviyeye git", unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`, unlockGo: "Pembe seviyeye geç", unlockStay: "Turuncuda devam et",
     modes: { klammer: "Geriye ne kalır?", direct: "Doğrudan çıkar", word: "Problem", compare: "Hangi yol daha hızlı?", errpro: "Uzmanlar için hata arama", big: "Üç çıkan" },
     xTitle: "Uzman soruları", xIntro: "Uzmanlar için zor sorular: hata bul, üç çıkan ve zor problemler.", xSolved: n => `${n} uzman sorusu çözüldü`,
     pTitle: "İkili çalışma", pOn: "İki kişi", pOff: "Tek başına", pA: "A kişisi", pB: "B kişisi",
@@ -466,9 +500,9 @@ const T = {
     in5h: "Karşılaştırma", in5: "İki yol da 290 verir. Doğrudan yol sadece bir işlem gerektirir. Daha verimlidir. Sağlama ile kontrol edersin: 290 + 317 + 245 = 852 ✓",
     in5r: "a − b − c = a − (b + c). Doğrudan: Her sütunda alttaki rakamları eldeyle topla ve üstteki rakama tamamla.",
     in6h: "Kendini dene!", in6: "643 − 218 − 175 işlemini hesapla.", in6opts: [["250", true], ["260", false], ["350", false]], in6ok: "Doğru! 8 + 5 = 13 → 0, elde 1. 1 + 7 + 1 = 9 → 5, elde 1. 2 + 1 + 1 = 4 → 2. Şimdi alıştırma yapabilirsin.", in6bad: "Henüz değil. Eldeleri düşün: birler 8 + 5 = 13, onlar 1 + 7 + 1.",
-    svTitle: "Sonuçları pekiştir: Geriye ne kalır?", svIntro: "İki kişi bir iPad ile çalışın. Dokunmadan önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.",
+    svTitle: "Sonuçları pekiştir: Geriye ne kalır?", svIntro: "İki kişi bir iPad ile çalışın. Teslim etmeden önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.",
     gateH: "Dur! Önce tahta, sonra bu bölüm.", gateP: "Burada tahtada birlikte konuştuklarınızı iki kişi olarak pekiştiriyorsunuz.",
-    gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtaya yazar. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil",
+    gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtada gösterir. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil",
     gateWait: "Bu henüz başlama kodu değil. Öğretmeninizin işaretini bekleyin. O zamana kadar „Alıştırma“ veya „Uzman“ ile devam edin.",
     svP1: "1. Bölüm: Kurallar", svP2: "2. Bölüm: Son bir soru", svTask: "Doğrudan hesaplayın: <b>643 − 218 − 175</b>",
     svQ: [["a − b − c şununla aynı değere sahiptir …", ["a − (b + c)", "a − (b − c)", "a − b + c"], 0, "İki kez bir şey çıkaran, toplamda ikisinin toplamını çıkarır."],
@@ -486,6 +520,19 @@ const T = {
     svTalk: "<b>1. kişi</b> açıklar: a − b − c neden a − (b + c) ile aynıdır?<br><b>2. kişi</b> açıklar: Doğrudan yöntemde bir sütunda nasıl hesaplarsın?<br>Şu kelimeleri kullanın: <b>çıkan (Subtrahend)</b>, <b>elde (Übertrag)</b>, <b>tamamlamak (ergänzen)</b>, <b>fark (Differenz)</b>.",
     svStarts: "Cümle başlangıçları: „İki kez bir şey çıkarırsam …“ · „Her sütunda önce … toplarım.“",
     svTalkBtn: "Birbirimize açıkladık", svTalkDone: "✓ Birbirinize açıkladınız.",
+ svWrong: "Yanlış.", svSubmit: "Teslim et", svLockHint: "Çözümlerinizi konuşun. Teslim ettikten sonra hiçbir şey değiştiremezsiniz.", svAnswered: (n, t) => `${n} / ${t} soru yapıldı`, svResult: (n, t) => `Sonuç: ${n} / ${t} doğru`,
+    svRetryIntro: "Hatalarınız için şimdi yeni sorular geliyor. Hepsini yapın, sonra teslim edin. Neyin doğru olduğunu ancak o zaman görürsünüz.", svRetryT: "Ek alıştırma", svRetryDone: "Ek alıştırma tamam: Bütün hatalar düzeltildi.", svMore: "Henüz hepsi doğru değil. İşte yeni sorular, bu sefer ipucuyla.", svRoundRes: (n, t) => `Ek alıştırma: ${n} / ${t} doğru`, svExpl: "Açıklama", svRight: "Doğrusu:",
+    svGridExpl: "İlk hata bu sütunda:", svGridTip: "Birlerden başla. Her sütunda alttaki rakamları ve eldeyi topla. Sonra üstteki rakama tamamla. Onlar basamağı yeni eldedir.",
+    svTermExpl: "Başta bütün tutar var. Ondan iki tutar da çıkarılıyor.", svTermTip: "Başta ne var? Ne çıkarılıyor?",
+    svResExpl: "Doğrudan yazılı hesaplayın ve eldeleri unutmayın.", svResTip: "Sayıları basamaklarına göre alt alta yazın ve doğrudan hesaplayın: önce alttaki rakamları toplayın, sonra tamamlayın.",
+    svProbeExpl: (r, s, sum, a) => `Sağlama: sonuç + bütün çıkanlar. ${r} + ${s} = ${sum}.` + (a !== undefined && sum !== a ? ` ${a} çıkmıyor: O zaman sonuç yanlış.` : ""), svProbeTip: "Sonucu ve bütün çıkanları toplayın. Eksilen çıkmalı.",
+    svProbeNote: (s, a) => `Sağlamanız ${a} değil, ${s} çıkıyor. Bu gösteriyor ki: Yukarıdaki sonuç yanlış.`,
+    svTermGiven: "İfade:", svProbeQ: "Sağlamayı hesaplayın:", svTermQ: "Hangi ifade uyuyor?",
+    svWT: [(a, b, c) => `Bir kulübün kasasında <b>${a} €</b> var. Formalara <b>${b} €</b>, toplara <b>${c} €</b> ödüyor. Geriye ne kadar para kalır?`,
+      (a, b, c) => `Bir okul sınıf gezisi için <b>${a} €</b> topladı. Otobüse <b>${b} €</b>, gençlik yurduna <b>${c} €</b> ödüyor. Geriye ne kadar para kalır?`,
+      (a, b, c) => `Bir sinema pazar günü <b>${a} €</b> kazanıyor. Bunun <b>${b} €</b>'su film dağıtımcısına, <b>${c} €</b>'su personele gidiyor. Geriye ne kadar para kalır?`],
+    svWresN: "Geriye kalan",
+  bzT: "🧱 Bonus: Sayı duvarları", bzIntro: "Bitirdiniz mi? O zaman sayı duvarlarını çözün! Her taş, hemen altındaki iki taşın toplamıdır. Boş bir taşa dokunun ve sayıyı girin.", bzCheck: "Kontrol et", bzNext: "Sonraki duvar", bzOk: "Başardınız! Duvar tamam. ⭐", bzBad: "Henüz tam değil. Kırmızı taşlar yanlış.", bzEmpty: "Önce bütün boş taşları doldurun.", bzCount: n => `Tamamlanan duvarlar: ${n}`, bzRank: ["Duvar çırağı", "Duvar kalfası", "Duvar ustası"], bzUp: "Yeni seviye! Duvarlar büyüyor.",
     svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svShow: "iPad'inizi öğretmeninize gösterin.", svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
     merkTitle: "Not kâğıdı",
     merkRules: ["İki kez çıkarmak, toplamı bir kez çıkarmakla aynıdır: a − b − c = a − (b + c).", "Bütün sayıları basamaklarına göre alt alta yaz: üstte eksilen, altta çıkanlar.", "Birlerden başla. Her sütunda alttaki rakamları ve eldeyi topla.", "Üstteki rakama tamamla. Yetmiyorsa, bu son rakamla biten bir sonraki sayıya tamamla, örneğin 12'ye veya 22'ye. Onun onlar basamağı eldedir.", "Elde 2 de olabilir.", "Sağlama: sonuç + bütün çıkanlar = eksilen.", "Doğrudan hesaplamak adım adım hesaplamaktan daha verimlidir: iki yerine bir işlem."],
@@ -641,60 +688,117 @@ function staticGrid(P, o = {}) {
 }
 
 /* ---- ergebnisse sichern ---- */
-let svPick = {}, svFirst = {}, svGate = false, svNo = false, svTalk = false, svCode = "";
-/* Rechenaufgaben der Sicherung (wie in einer Klassenarbeit) */
+let svGate = false, svNo = false, svCode = "";
+/* Rechenaufgaben der Sicherung (wie in einer Klassenarbeit): erst alles bearbeiten, dann abgeben, dann Rückmeldung */
 const SV_GRIDS = [[643, [218, 175]], [5372, [1486, 2095]], [7405, [2368, 1759]]];
-const svG = SV_GRIDS.map(([a, subs]) => ({ P: calcMulti(a, subs), ent: { res: {}, carry: {} }, marks: null, done: false, tries: 0 }));
-let svActive = { i: 0, role: "res", p: 0 }, svNum = { res: { v: "", ok: false, bad: false }, probe: { v: "", ok: false, bad: false } }, svNumActive = "res";
-function svGridBlock(i) {
-  const G = svG[i], P = G.P, W = P.W, box = el("div", "section");
-  box.appendChild(el("p", "", `<b>${String.fromCharCode(97 + i)})</b> ${fmt(P.a)} ${P.subs.map(x => MINUS + " " + fmt(x)).join(" ")}`));
-  const g = el("div", "cgrid multi"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
-  const add = (cls, txt, attrs = {}) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); for (const k in attrs) c.setAttribute(k, attrs[k]); g.appendChild(c); return c };
-  add("lab", ""); for (let p = W - 1; p >= 0; p--) add("lab", ABBR[lang][p]);
-  add("sign", ""); for (let p = W - 1; p >= 0; p--) add("", dig(P.a, p));
-  P.subs.forEach(s => { add("sign", MINUS); for (let p = W - 1; p >= 0; p--) add("sub", p < len(s) ? dig(s, p) : "") });
-  const isAct = (role, p) => svActive.i === i && svActive.role === role && svActive.p === p;
-  add("", "");
-  for (let p = W - 1; p >= 0; p--) {
-    if (p > 0 && !G.done) { const c = add("carry in", G.ent.carry[p] === undefined ? "" : G.ent.carry[p], { "data-role": "carry", "data-p": p, role: "button", tabindex: "0" }); if (isAct("carry", p)) c.classList.add("active"); if (G.marks && G.marks["c" + p]) c.classList.add(G.marks["c" + p]) }
-    else add("carry", p > 0 && P.cols[p].cin ? P.cols[p].cin : "");
-  }
-  g.appendChild(el("div", "rule"));
-  add("", "");
-  const lead = len(P.result);
-  for (let p = W - 1; p >= 0; p--) {
-    if (G.done) { add("", p < lead ? dig(P.result, p) : ""); continue }
-    const c = add("in", G.ent.res[p] === undefined ? "" : G.ent.res[p], { "data-role": "res", "data-p": p, role: "button", tabindex: "0" }); if (isAct("res", p)) c.classList.add("active"); if (G.marks && G.marks["r" + p]) c.classList.add(G.marks["r" + p]);
-  }
-  const gb = el("div", "gridbox"); gb.appendChild(g); box.appendChild(gb);
-  if (!G.done) {
-    gb.addEventListener("click", e => { const c = e.target.closest(".cell.in"); if (!c) return; svActive = { i, role: c.dataset.role, p: Number(c.dataset.p) }; render() });
-    if (svActive.i === i) {
-      const kp = el("div", "keypad"); [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => svType(String(d)); kp.appendChild(b) });
-      const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => svType(""); kp.appendChild(del); box.appendChild(kp);
+let svSub = false, svRounds = [], svT1 = null, svAct = null;
+const mkGrid = (a, subs, label) => ({ k: "grid", P: calcMulti(a, subs), ent: { res: {}, carry: {} }, label });
+const mkW = () => { const { a, subs } = genNums(2); return { a, s: subs.slice(0, 2), tpl: rnd(0, 2) } };
+const wText = W => W.tpl === "pool" ? L().svWt : L().svWT[W.tpl](fmt(W.a), fmt(W.s[0]), fmt(W.s[1]));
+const wRes = W => W.a - W.s[0] - W.s[1];
+function svInit() {
+  if (svT1) return;
+  const W = { a: 1250, s: [487, 368], tpl: "pool" }, res = { k: "res", W, v: "" };
+  svT1 = SV_GRIDS.map(([a, subs], i) => mkGrid(a, subs, String.fromCharCode(97 + i) + ")")).concat([{ k: "term", W, perm: [0, 1, 2], pick: null }, res, { k: "probe", W, v: "", resT: res }]);
+}
+function svNewTask(t) {
+  if (t.k === "grid") { const lv = t.P.W <= 3 ? 1 : 2, { a, subs } = genNums(lv, 2); return mkGrid(a, subs.slice(0, 2), "") }
+  const W = mkW();
+  if (t.k === "term") return { k: "term", W, perm: shuffle([0, 1, 2]), pick: null };
+  if (t.k === "res") return { k: "res", W, v: "" };
+  return { k: "probe", W, v: "", given: wRes(W) };
+}
+function svFilled(t) {
+  if (t.k === "grid") { for (let p = 0; p < Math.max(1, t.P.W - 1); p++) if (t.ent.res[p] === undefined) return false; return true }
+  if (t.k === "term") return t.pick !== null;
+  return t.v !== "";
+}
+function svGrade(t) {
+  if (t.k === "grid") {
+    const P = t.P, lead = len(P.result), m = {}; let bad = null;
+    for (let p = 0; p < P.W; p++) {
+      const got = t.ent.res[p], ok = p < lead ? got === P.cols[p].r : (got === undefined || got === 0); m["r" + p] = ok ? "ok" : "bad"; if (!ok && bad === null) bad = p;
+      if (p > 0) { const wc = P.cols[p].cin, gc = t.ent.carry[p] === undefined ? 0 : t.ent.carry[p]; if (t.ent.carry[p] !== undefined || wc) m["c" + p] = gc === wc ? "ok" : "bad"; if (gc !== wc && bad === null) bad = p }
     }
-    const a = el("div", "actions"), cb = el("button", "btn primary", L().svCheck); cb.type = "button"; cb.onclick = () => svCheck(i); a.appendChild(cb); box.appendChild(a);
-    if (G.marks) { box.appendChild(el("div", "msg bad", L().svGridBad)); if (G.tries >= 2 && G.hint !== undefined) box.appendChild(el("div", "colsteps", `<div>${L().svGridHint} ${colText(P.cols[G.hint])}</div>`)) }
-  } else box.appendChild(el("div", "msg ok", L().svGridOk));
-  return box;
+    return { ok: bad === null, marks: m, bad };
+  }
+  if (t.k === "term") return { ok: t.perm[t.pick] === 0 };
+  if (t.k === "res") return { ok: Number(t.v) === wRes(t.W) };
+  const base = t.given !== undefined ? t.given : Number(t.resT.v);
+  return { ok: Number(t.v) === base + t.W.s[0] + t.W.s[1] };
 }
 function svType(d) {
-  const G = svG[svActive.i]; if (G.done) return; const W = G.P.W, p = svActive.p;
-  if (svActive.role === "res") { if (d === "") delete G.ent.res[p]; else G.ent.res[p] = Number(d); if (d !== "" && p + 1 < W) svActive = { i: svActive.i, role: "carry", p: p + 1 } }
-  else { if (d === "") delete G.ent.carry[p]; else G.ent.carry[p] = Number(d); if (d !== "") svActive = { i: svActive.i, role: "res", p } }
-  G.marks = null; render();
-}
-function svCheck(i) {
-  const G = svG[i], P = G.P, lead = len(P.result), m = {}; let bad = null;
-  for (let p = 0; p < P.W; p++) {
-    const got = G.ent.res[p], ok = p < lead ? got === P.cols[p].r : (got === undefined || got === 0); m["r" + p] = ok ? "ok" : "bad"; if (!ok && bad === null) bad = p;
-    if (p > 0) { const wc = P.cols[p].cin, gc = G.ent.carry[p] === undefined ? 0 : G.ent.carry[p]; if (G.ent.carry[p] !== undefined || wc) m["c" + p] = gc === wc ? "ok" : "bad"; if (gc !== wc && bad === null) bad = p }
-  }
-  const ok = bad === null; if (!(("g" + i) in svFirst)) svFirst["g" + i] = ok;
-  if (ok) { G.done = true; G.marks = null; const nx = svG.findIndex(x => !x.done); if (nx >= 0) svActive = { i: nx, role: "res", p: 0 } }
-  else { G.tries++; G.marks = m; G.hint = bad }
+  if (!svAct) return; const t = svAct.t;
+  if (t.k !== "grid") { if (d === "") t.v = t.v.slice(0, -1); else if (t.v.length < 5) t.v += d; render(); return }
+  const W = t.P.W, p = svAct.p;
+  if (svAct.role === "res") { if (d === "") delete t.ent.res[p]; else t.ent.res[p] = Number(d); if (d !== "" && p + 1 < W) svAct = { t, role: "carry", p: p + 1 } }
+  else { if (d === "") delete t.ent.carry[p]; else t.ent.carry[p] = Number(d); if (d !== "") svAct = { t, role: "res", p } }
   render();
+}
+function svKeypad() {
+  const kp = el("div", "keypad"); [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(x => { const b = el("button", "", x); b.type = "button"; b.onclick = () => svType(String(x)); kp.appendChild(b) });
+  const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => svType(""); kp.appendChild(del); return kp;
+}
+function svExplBox(html) { return el("div", "why", `<b class="h">${L().svExpl}</b>${html}`) }
+function svTaskBox(t, locked, showTip, withCtx) {
+  const box = el("div", "section"), g8 = locked ? svGrade(t) : null;
+  if (t.k === "grid") {
+    const P = t.P, W = P.W;
+    box.appendChild(el("p", "", `<b>${t.label ? t.label + " " : ""}${fmt(P.a)} ${P.subs.map(x => MINUS + " " + fmt(x)).join(" ")}</b>`));
+    if (showTip) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${L().svGridTip}`));
+    const g = el("div", "cgrid multi"); g.style.gridTemplateColumns = `repeat(${W + 1},var(--cell))`;
+    const add = (cls, txt, attrs = {}) => { const c = el("div", "cell " + (cls || ""), txt === undefined ? "" : String(txt)); for (const k in attrs) c.setAttribute(k, attrs[k]); g.appendChild(c); return c };
+    add("lab", ""); for (let p = W - 1; p >= 0; p--) add("lab", ABBR[lang][p]);
+    add("sign", ""); for (let p = W - 1; p >= 0; p--) add("", dig(P.a, p));
+    P.subs.forEach(s => { add("sign", MINUS); for (let p = W - 1; p >= 0; p--) add("sub", p < len(s) ? dig(s, p) : "") });
+    const act = (role, p) => !locked && svAct && svAct.t === t && svAct.role === role && svAct.p === p;
+    add("", "");
+    for (let p = W - 1; p >= 0; p--) {
+      if (p > 0) { const c = add("carry in", t.ent.carry[p] === undefined ? "" : t.ent.carry[p], { "data-role": "carry", "data-p": p, role: "button", tabindex: "0" }); if (act("carry", p)) c.classList.add("active"); if (g8 && g8.marks["c" + p]) c.classList.add(g8.marks["c" + p]) }
+      else add("carry", "");
+    }
+    g.appendChild(el("div", "rule")); add("", "");
+    for (let p = W - 1; p >= 0; p--) { const c = add("in", t.ent.res[p] === undefined ? "" : t.ent.res[p], { "data-role": "res", "data-p": p, role: "button", tabindex: "0" }); if (act("res", p)) c.classList.add("active"); if (g8) c.classList.add(g8.marks["r" + p]) }
+    const gb = el("div", "gridbox"); gb.appendChild(g); box.appendChild(gb);
+    if (!locked) { gb.addEventListener("click", e => { const c = e.target.closest(".cell.in"); if (!c) return; svAct = { t, role: c.dataset.role, p: Number(c.dataset.p) }; render() }); if (svAct && svAct.t === t) box.appendChild(svKeypad()) }
+    else if (!g8.ok) box.appendChild(svExplBox(`${L().svGridExpl}<div class="colsteps"><div>${colText(P.cols[g8.bad])}</div></div><b>${L().svRight}</b> ${fmt(P.a)} ${P.subs.map(x => MINUS + " " + fmt(x)).join(" ")} = ${fmt(P.result)}`));
+  } else {
+    const Wd = t.W, r = wRes(Wd), sTxt = fmt(Wd.s[0]) + " + " + fmt(Wd.s[1]);
+    if (withCtx !== "r1" && t.k !== "probe") box.appendChild(el("p", "word", wText(Wd)));
+    if (t.k === "term") {
+      box.appendChild(el("p", "", `<b>${L().svTermQ}</b>`));
+      if (showTip) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${L().svTermTip}`));
+      const opts = [`${fmt(Wd.a)} ${MINUS} ${fmt(Wd.s[0])} ${MINUS} ${fmt(Wd.s[1])}`, `${fmt(Wd.a)} ${MINUS} ${fmt(Wd.s[0])} + ${fmt(Wd.s[1])}`, `${fmt(Wd.s[0])} + ${fmt(Wd.s[1])} ${MINUS} ${fmt(Wd.a)}`];
+      const ch = el("div", "choices");
+      t.perm.forEach((oi, k) => { const b = el("button", "choice", opts[oi]); b.type = "button";
+        if (!locked) { if (t.pick === k) b.classList.add("sel"); b.onclick = () => { t.pick = k; render() } }
+        else { b.disabled = true; if (oi === 0) b.classList.add("ok"); else if (t.pick === k) b.classList.add("bad") }
+        ch.appendChild(b) });
+      box.appendChild(ch);
+      if (locked && !g8.ok) box.appendChild(svExplBox(`${L().svTermExpl}<br><b>${L().svRight}</b> ${opts[0]}`));
+    } else {
+      const isAct = !locked && svAct && svAct.t === t, cls = "ans" + (isAct ? " active" : "") + (locked ? (g8.ok ? " ok" : " bad") : "");
+      let line;
+      if (t.k === "res") {
+        if (showTip) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${L().svResTip}`));
+        line = `<span class="lab">${withCtx === "r1" ? L().svWres : L().svWresN}</span> <span class="${cls}" data-f="1" role="button" tabindex="0">${t.v || "&nbsp;"}</span> ${L().svEuro}`;
+      } else {
+        const base = t.given !== undefined ? fmt(t.given) : (t.resT.v ? fmt(Number(t.resT.v)) : "▢");
+        if (t.given !== undefined) box.appendChild(el("p", "", `${fmt(Wd.a)} ${MINUS} ${fmt(Wd.s[0])} ${MINUS} ${fmt(Wd.s[1])} = ${fmt(t.given)}<br><b>${L().svProbeQ}</b>`));
+        if (showTip) box.appendChild(el("div", "tipcard", `<b>${L().tip}:</b> ${L().svProbeTip}`));
+        line = `<span class="lab">${L().svWprobe}</span> ${base} + ${sTxt} = <span class="${cls}" data-f="1" role="button" tabindex="0">${t.v || "&nbsp;"}</span> ${L().svEuro}`;
+      }
+      const st = el("div", "steps", `<div class="sline">${line}</div>`); box.appendChild(st);
+      if (!locked) { st.querySelector("[data-f]").onclick = () => { svAct = { t }; render() }; if (isAct) box.appendChild(svKeypad()) }
+      else if (!g8.ok) {
+        if (t.k === "res") box.appendChild(svExplBox(`${L().svResExpl}<br><b>${L().svRight}</b> ${fmt(Wd.a)} ${MINUS} ${fmt(Wd.s[0])} ${MINUS} ${fmt(Wd.s[1])} = ${fmt(r)} ${L().svEuro}`));
+        else { const base2 = t.given !== undefined ? t.given : Number(t.resT.v); box.appendChild(svExplBox(L().svProbeExpl(fmt(base2), sTxt, fmt(base2 + Wd.s[0] + Wd.s[1]), t.given !== undefined ? undefined : fmt(Wd.a)))) }
+      }
+    }
+  }
+  if (locked) box.insertBefore(el("div", "msg " + (g8.ok ? "ok" : "bad"), g8.ok ? "✓ " + L().svOk : "✗ " + L().svWrong), box.querySelector(".why"));
+  if (locked && g8.ok && t.k === "probe" && t.resT) { const s2 = Number(t.resT.v) + t.W.s[0] + t.W.s[1]; if (s2 !== t.W.a) box.appendChild(el("div", "msg info", L().svProbeNote(fmt(s2), fmt(t.W.a)))) }
+  return box;
 }
 function renderSave() {
   const Q = L().svQ, p = el("section", "panel intro"); view.appendChild(p);
@@ -713,45 +817,106 @@ function renderSave() {
     p.appendChild(g); return;
   }
   p.appendChild(el("h2", "", L().svTitle)); p.appendChild(el("p", "", L().svIntro));
+  svInit();
+  const submitBox = (tasks, go) => { const n = tasks.filter(svFilled).length, f = el("div", "rulebox"); f.appendChild(el("p", "", `<b>${L().svAnswered(n, tasks.length)}</b><br>${L().svLockHint}`)); const row = el("div", "actions"), sb = el("button", "btn primary", L().svSubmit); sb.type = "button"; sb.disabled = n < tasks.length; sb.onclick = go; row.appendChild(sb); f.appendChild(row); return f };
+  const scrollTo = sel => setTimeout(() => { const x = document.querySelectorAll(sel); if (x.length) x[x.length - 1].scrollIntoView({ behavior: "smooth", block: "start" }) }, 30);
   /* Teil 1: drei Aufgaben in Rechenkästchen */
   p.appendChild(el("h3", "", L().svR)); p.appendChild(el("p", "instr", L().svRi));
-  SV_GRIDS.forEach((g, i) => p.appendChild(svGridBlock(i)));
+  svT1.slice(0, 3).forEach(t => p.appendChild(svTaskBox(t, svSub, false, false)));
   /* Teil 2: Textaufgabe mit Term, Ergebnis und Probe */
   p.appendChild(el("h3", "", L().svW)); p.appendChild(el("p", "word", L().svWt));
-  const tb = el("div", "section"); tb.appendChild(el("p", "", `<b>${L().svWq}</b>`));
-  const ch = el("div", "choices"), tOk = svPick.term === 0;
-  L().svWopts.forEach((o, k) => { const b = el("button", "choice", o); b.type = "button"; if (svPick.term === k) b.classList.add(k === 0 ? "ok" : "bad"); if (tOk) b.disabled = true; b.onclick = () => { if (!("term" in svFirst)) svFirst.term = k === 0; svPick.term = k; render() }; ch.appendChild(b) });
-  tb.appendChild(ch); if (svPick.term !== undefined) tb.appendChild(el("div", "msg " + (tOk ? "ok" : "bad"), tOk ? L().svOk : L().svWbad)); p.appendChild(tb);
-  if (tOk) {
-    const nb = el("div", "section");
-    const fld = (key, pre, post) => { const st = svNum[key], cls = "ans" + (svNumActive === key && !st.ok ? " active" : "") + (st.ok ? " sol" : st.bad ? " bad" : ""); return `<div class="sline"><span class="lab">${pre}</span> <span class="${cls}" data-sv="${key}" role="button" tabindex="0">${st.v || "&nbsp;"}</span> ${post}</div>` };
-    nb.innerHTML = `<div class="steps">${fld("res", L().svWres, L().svEuro)}${svNum.res.ok ? fld("probe", `${L().svWprobe} 395 + 487 + 368 =`, L().svEuro) : ""}</div>`;
-    nb.querySelectorAll("[data-sv]").forEach(x => x.onclick = () => { svNumActive = x.dataset.sv; render() });
-    const cur = svNum[svNumActive];
-    if (cur && !cur.ok) {
-      const kp = el("div", "keypad"); [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach(d => { const b = el("button", "", d); b.type = "button"; b.onclick = () => { if (cur.v.length < 5) cur.v += d; cur.bad = false; render() }; kp.appendChild(b) });
-      const del = el("button", "wide", L().del); del.type = "button"; del.onclick = () => { cur.v = cur.v.slice(0, -1); cur.bad = false; render() }; kp.appendChild(del); nb.appendChild(kp);
-      const a = el("div", "actions"), cb = el("button", "btn primary", L().svCheck); cb.type = "button"; cb.onclick = () => { const want = svNumActive === "res" ? "395" : "1250"; const ok = cur.v === want; if (!(svNumActive in svFirst)) svFirst[svNumActive] = ok; if (ok) { cur.ok = true; if (svNumActive === "res") svNumActive = "probe" } else cur.bad = true; render() }; a.appendChild(cb); nb.appendChild(a);
-      if (cur.bad) nb.appendChild(el("div", "msg bad", L().svWnumBad));
-    }
-    if (svNum.res.ok && svNum.probe.ok) nb.appendChild(el("div", "msg ok", `${L().svWnumOk} ${L().svWans}`));
-    p.appendChild(nb);
+  svT1.slice(3).forEach(t => p.appendChild(svTaskBox(t, svSub, false, "r1")));
+  if (!svSub) { p.appendChild(submitBox(svT1, () => { svSub = true; svAct = null; const w = svT1.filter(t => !svGrade(t).ok); svRounds = w.length ? [{ tasks: w.map(svNewTask), sub: false }] : []; render(); scrollTo(".svres") })); return }
+  const nOk = svT1.filter(t => svGrade(t).ok).length;
+  const res = el("div", "rulebox svres"); res.innerHTML = `<b>${L().svResult(nOk, svT1.length)}</b>` + (svRounds.length ? `<p>${L().svRetryIntro}</p>` : ""); p.appendChild(res);
+  for (let ri = 0; ri < svRounds.length; ri++) {
+    const R = svRounds[ri];
+    p.appendChild(el("h3", "", L().svRetryT + (ri ? " " + (ri + 1) : "")));
+    if (ri) p.appendChild(el("p", "", L().svMore));
+    R.tasks.forEach(t => p.appendChild(svTaskBox(t, R.sub, ri > 0 && !R.sub, false)));
+    if (!R.sub) { p.appendChild(submitBox(R.tasks, () => { R.sub = true; svAct = null; const w = R.tasks.filter(t => !svGrade(t).ok); if (w.length) svRounds.push({ tasks: w.map(svNewTask), sub: false }); render(); scrollTo(".rres") })); return }
+    const okR = R.tasks.filter(t => svGrade(t).ok).length;
+    p.appendChild(el("div", "msg " + (okR === R.tasks.length ? "ok" : "info") + " rres", L().svRoundRes(okR, R.tasks.length)));
   }
-  /* Teil 3: kurz erklären */
-  p.appendChild(el("h3", "", L().svP3));
-  const t = el("div", "rulebox"); t.innerHTML = `<p>${L().svTalk}</p><p class="starts">${L().svStarts}</p>`;
-  if (svTalk) t.appendChild(el("div", "msg ok", L().svTalkDone));
-  else { const b = el("button", "btn primary", L().svTalkBtn); b.type = "button"; b.onclick = () => { svTalk = true; render() }; t.appendChild(b) }
-  p.appendChild(t);
-  const items = SV_GRIDS.length + 3, okN = SV_GRIDS.filter((g, i) => svG[i].done).length + (tOk ? 1 : 0) + (svNum.res.ok ? 1 : 0) + (svNum.probe.ok ? 1 : 0);
-  const total = items + 1, doneN = okN + (svTalk ? 1 : 0);
-  if (doneN === total) {
-    const n = Object.values(svFirst).filter(Boolean).length, r = el("div", "rulebox svdone");
-    r.innerHTML = `<b>✓ ${L().svDone}</b><p>${L().svFirst(n, items)}</p><p>${L().svShow}</p>`;
-    const b = el("button", "btn primary", L().svMerk); b.type = "button"; b.onclick = () => goTab(4); r.appendChild(b); p.appendChild(r);
-  } else p.appendChild(el("div", "msg info", L().svOpen(doneN, total)));
+  const r = el("div", "rulebox svdone");
+  r.innerHTML = `<b>✓ ${L().svDone}</b><p>${L().svFirst(nOk, svT1.length)}</p>${svRounds.length ? `<p>${L().svRetryDone}</p>` : ""}`;
+  const b = el("button", "btn primary", L().svMerk); b.type = "button"; b.onclick = () => goTab(4); r.appendChild(b); p.appendChild(r);
+  renderBonus(p);
 }
 
+/* ---- Bonus nach der Sicherung: Zahlenmauern (endlos, drei Stufen) ---- */
+let bz = null;
+function bzSolvable(n, hid) {
+  const k = []; for (let r = 0; r < n; r++) { k.push([]); for (let i = 0; i < n - r; i++) k[r].push(!hid.has(r + "," + i)) }
+  let ch = true;
+  while (ch) { ch = false;
+    for (let r = 1; r < n; r++) for (let i = 0; i < n - r; i++) {
+      const a = k[r - 1][i], b = k[r - 1][i + 1], c = k[r][i];
+      if (!c && a && b) { k[r][i] = true; ch = true }
+      if (c && a && !b) { k[r - 1][i + 1] = true; ch = true }
+      if (c && !a && b) { k[r - 1][i] = true; ch = true }
+    } }
+  return k.every(row => row.every(Boolean));
+}
+function bzNew() {
+  const done = bz ? bz.done : 0, lvl = Math.min(3, 1 + Math.floor(done / 2));
+  const n = lvl === 1 ? 3 : 4, lo = [1, 2, 5][lvl - 1], hi = [20, 25, 30][lvl - 1], nh = [3, 5, 6][lvl - 1];
+  const v = [[]]; for (let i = 0; i < n; i++) v[0].push(rnd(lo, hi));
+  for (let r = 1; r < n; r++) { v.push([]); for (let i = 0; i < n - r; i++) v[r].push(v[r - 1][i] + v[r - 1][i + 1]) }
+  const all = []; for (let r = 0; r < n; r++) for (let i = 0; i < n - r; i++) all.push(r + "," + i);
+  let hid = null;
+  for (let t = 0; t < 500; t++) {
+    const s = new Set(all.slice().sort(() => Math.random() - .5).slice(0, nh));
+    const base = [...s].filter(x => x.startsWith("0,")).length;
+    if (lvl === 3 && base < 2) continue;
+    if (lvl === 1 && base > 1) continue;
+    if (bzSolvable(n, s)) { hid = s; break }
+  }
+  if (!hid) hid = new Set(all.filter(x => !x.startsWith("0,")));
+  const up = bz && lvl > bz.lvl;
+  bz = { done, lvl, n, v, hid, inp: {}, sel: [...hid][0], marks: {}, msg: up ? ["info", L().bzUp] : null, solved: false };
+}
+function renderBonus(p) {
+  if (!bz) bzNew();
+  const b = el("div", "bonus");
+  b.appendChild(el("h3", "", L().bzT));
+  b.appendChild(el("p", "", L().bzIntro));
+  b.appendChild(el("span", "bzrank", `${L().bzRank[bz.lvl - 1]} · ${L().bzCount(bz.done)}`));
+  const w = el("div", "wall");
+  for (let r = bz.n - 1; r >= 0; r--) {
+    const row = el("div", "wrow");
+    for (let i = 0; i < bz.n - r; i++) {
+      const key = r + "," + i, h = bz.hid.has(key);
+      const c = el(h ? "button" : "div", "brick" + (h ? " hid" : "") + (h && bz.sel === key && !bz.solved ? " active" : "") + (bz.marks[key] ? " " + bz.marks[key] : ""), h ? (bz.inp[key] || "") : String(bz.v[r][i]));
+      if (h) { c.type = "button"; c.setAttribute("aria-label", "Stein " + (r + 1) + "." + (i + 1)); c.onclick = () => { if (!bz.solved) { bz.sel = key; render() } } }
+      row.appendChild(c);
+    }
+    w.appendChild(row);
+  }
+  b.appendChild(w);
+  if (!bz.solved) {
+    const kp = el("div", "keypad");
+    ["1","2","3","4","5","6","7","8","9","0"].forEach(x => { const k = el("button", "", x); k.type = "button"; k.onclick = () => { const s = bz.inp[bz.sel] || ""; if (s.length < 3) bz.inp[bz.sel] = s + x; delete bz.marks[bz.sel]; bz.msg = null; render() }; kp.appendChild(k) });
+    const del = el("button", "wide", "⌫"); del.type = "button"; del.setAttribute("aria-label", L().gateDel); del.onclick = () => { bz.inp[bz.sel] = (bz.inp[bz.sel] || "").slice(0, -1); delete bz.marks[bz.sel]; render() }; kp.appendChild(del);
+    b.appendChild(kp);
+  }
+  const act = el("div", "actions");
+  if (!bz.solved) {
+    const ck = el("button", "btn primary", L().bzCheck); ck.type = "button";
+    ck.onclick = () => {
+      const keys = [...bz.hid];
+      if (keys.some(k => !bz.inp[k])) { bz.msg = ["bad", L().bzEmpty]; render(); return }
+      bz.marks = {}; let ok = true;
+      keys.forEach(k => { const [r, i] = k.split(",").map(Number); const g = Number(bz.inp[k]) === bz.v[r][i]; bz.marks[k] = g ? "ok" : "bad"; if (!g) ok = false });
+      if (ok) { bz.solved = true; bz.done++; stats.stars++; save(); bz.msg = ["ok", L().bzOk] } else bz.msg = ["bad", L().bzBad];
+      render();
+    };
+    act.appendChild(ck);
+  } else { const nx = el("button", "btn good", L().bzNext); nx.type = "button"; nx.onclick = () => { bzNew(); render() }; act.appendChild(nx) }
+  b.appendChild(act);
+  if (bz.msg) b.appendChild(el("div", "msg " + bz.msg[0], bz.msg[1]));
+  p.appendChild(b);
+}
 /* ---- input ---- */
 function renderIntro() {
   const p = el("section", "panel intro"); view.appendChild(p);
@@ -780,12 +945,17 @@ function renderIntro() {
 }
 
 /* ---- practice / experts ---- */
+const MUST = 5, locked = () => stats.solved[0] < MUST;
 function renderPractice() {
+  if (locked() && level !== 1) { level = 1; save(); newTask() }
   const lv = el("div", "levels");
-  [1, 2, 3].forEach(n => { const b = el("button", `lvl lvl${n}`, `${L().lv[n - 1][0]}<small>${L().lv[n - 1][1]} · ${L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
-  view.appendChild(lv); renderTask();
+  [1, 2, 3].forEach(n => { const lk = n > 1 && locked(); const b = el("button", `lvl lvl${n}` + (lk ? " locked" : ""), `${L().lv[n - 1][0]}<small>${lk ? "🔒 " + L().lockShort(MUST) : L().lv[n - 1][1] + " · " + L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.disabled = lk; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
+  view.appendChild(lv);
+  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, stats.solved[0])));
+  renderTask();
 }
 function renderExpert() {
+  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, stats.solved[0]))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
   const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
   h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
 }
@@ -885,6 +1055,13 @@ function renderTask() {
   } else { const nb = el("button", "btn good", L().next); nb.type = "button"; nb.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } newTask(); render() }; act.appendChild(nb) }
   p.appendChild(act);
   if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
+  if (done && tab === 1 && level === 1 && stats.solved[0] === MUST && !stats.unlocked) {
+    stats.unlocked = true; save();
+    const u = el("div", "swap levelup", `<p><b>${L().unlockMsg(MUST)}</b></p>`), row = el("div", "actions");
+    const go = el("button", "btn primary", L().unlockGo); go.type = "button"; go.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } level = 2; save(); newTask(); render(); window.scrollTo(0, 0) };
+    const st = el("button", "btn", L().unlockStay); st.type = "button"; st.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } newTask(); render() };
+    row.append(go, st); u.appendChild(row); p.appendChild(u);
+  }
   if (diag && !done) {
     const w = el("div", "why", `<b class="h">${L().whyTitle}</b>${diag.text}`);
     const cb = el("button", "linkbtn", L().cardBtn(diag.card + 1)); cb.type = "button"; cb.onclick = () => { showCard = !showCard; render() }; w.appendChild(cb);
@@ -976,6 +1153,19 @@ document.getElementById("resetbtn").onclick = () => {
 };
 render();
 
+</script>
+<button id="zoomfix" type="button" aria-label="Normale Größe">🔍 Normale Größe</button>
+<script>
+(function () {
+  const vm = document.querySelector('meta[name="viewport"]'), base = vm ? vm.getAttribute("content") : "width=device-width, initial-scale=1";
+  const btn = document.getElementById("zoomfix"), vv = window.visualViewport;
+  function label() { try { btn.textContent = (typeof lang !== "undefined" && lang === "tr") ? "🔍 Normal boyut" : "🔍 Normale Größe" } catch (e) { } }
+  function check() { const z = vv ? vv.scale : 1; btn.classList.toggle("on", z > 1.05); if (vv && z > 1.05) { btn.style.transform = `scale(${1 / z})`; btn.style.transformOrigin = "100% 100%" } else btn.style.transform = ""; label() }
+  function reset() { if (vm) { vm.setAttribute("content", "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1"); setTimeout(() => { vm.setAttribute("content", base); check() }, 400) } setTimeout(check, 450) }
+  btn.addEventListener("click", reset);
+  if (vv) { vv.addEventListener("resize", check); vv.addEventListener("scroll", check) }
+  check();
+})();
 </script>
 </body>
 </html>
