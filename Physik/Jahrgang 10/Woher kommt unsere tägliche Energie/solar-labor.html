@@ -890,25 +890,25 @@ function s5sentence(){var g=G(),fi=famIndex(),P=rowP(fi),q=pct(fi),n=VNOM[st.grp
 function r5(){var s=st.s5,g=G(),fi=famIndex(),P=rowP(fi),a=s5ans();
   function dd(k){var bad=s.badF&&s.badF[k];return '<select id="t_'+k+'" class="'+(bad?'bad':'')+'"'+(s.ok?' disabled':'')+'><option value="">bitte wählen</option>'+DD5[k].map(function(o){return '<option value="'+o[0]+'"'+(s[k]===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
   var intro='<p>Familie K. misst heute nur <b>'+FAMW+' W</b>. Unter optimalen Bedingungen wären es etwa 380 W. Am Balkon wirken alle vier Ursachen gleichzeitig. Jetzt prüft ihr mit euren Messwerten: Wie viel davon erklärt '+VNOM[st.grp]+'?</p>';
-  var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt den Wert aus eurer Tabelle ein und wählt in jeder Lücke aus.</p><p class="lsatz">'+BEI[st.grp]+' (wie bei Familie K.) liefert unser Modul P = <input class="num'+(s.badF&&s.badF.pw?' bad':'')+'" id="t_pw" inputmode="decimal" value="'+esc(s.pw||'')+'"'+(s.ok?' disabled':'')+'> W. Das ist '+dd('cmp')+' '+FAMW+' W. Also erklärt '+VNOM[st.grp]+' '+dd('can')+' der geringen Leistung von Familie K.</p><p class="lsatz">Kann Familie K. das ändern? '+dd('chg')+'</p>'+
+  var q='<div class="q"><p><b>Eure Schlussfolgerung:</b> Tragt den Wert aus eurer Tabelle ein und wählt in jeder Lücke aus.</p><p class="lsatz">'+BEI[st.grp]+' (wie bei Familie K.) liefert unser Modul P = <input class="num'+(s.badF&&s.badF.pw?' bad':'')+'" id="t_pw" inputmode="decimal" value="'+esc(s.pw||'')+'"'+(s.ok?' disabled':'')+'> W. Das ist '+dd('cmp')+' '+FAMW+' W. Also erklärt '+VNOM[st.grp]+' '+dd('can')+' der geringen Leistung von Familie K.</p>'+
     (s.ok?'':'<div class="row"><button class="btn pri" type="button" id="c5">Einloggen und prüfen</button></div>')+'<p class="fb" id="fb5"></p>'+(s.ok?'':tipHTML('s5',TIPS.s5))+'</div>';
   var hit=st.pv.can===(a.can==='j'?0:1);
   var vgl=s.ok?'<div class="q"><p><b>Und eure Vorhersage?</b> Ihr hattet gewählt: „'+pvTxt(2,st.grp)+'“</p><p class="fb '+(hit?'ok':'')+'" style="display:block">'+(hit?'Eure Vorhersage passt zu euren Messwerten.':'Eure Messwerte zeigen etwas anderes als eure Vorhersage. Das ist kein Fehler: Genau dafür messen wir.')+'</p></div>':'';
-  var box=s.ok?'<div class="merk"><h3>Für das Klassengespräch</h3><p><b>Schlussfolgerung Gruppe '+st.grp+' ('+g.name+'):</b> '+s5sentence()+'</p><p><b>Kann Familie K. das ändern?</b> '+DD5.chg.filter(function(o){return o[0]===EMOK[st.grp];})[0][1]+'.</p><p class="muted" style="margin:6px 0 0">Schreibt diese Schlussfolgerung und die Antwort auf euer Gruppen-AB (Aufgabe 2) und stellt sie im Klassengespräch vor.'+(a.can==='j'?' Erklärt dabei, warum eine einzige Zelle so viel ausmacht.':' Überlegt: Welche Ursache macht dann den größten Teil aus?')+'</p></div>':'';
+  var box=s.ok?'<div class="merk"><h3>Für das Klassengespräch</h3><p><b>Schlussfolgerung Gruppe '+st.grp+' ('+g.name+'):</b> '+s5sentence()+'</p><p class="muted" style="margin:6px 0 0">Schreibt diese Schlussfolgerung und die Antwort auf euer Gruppen-AB (Aufgabe 2) und stellt sie im Klassengespräch vor.'+(a.can==='j'?' Erklärt dabei, warum eine einzige Zelle so viel ausmacht.':' Überlegt: Welche Ursache macht dann den größten Teil aus?')+'</p></div>':'';
   var after=s.ok?'<p class="win"><b>Fertig!</b> Ihr seid bereit für das Klassengespräch.</p>'+saveCTA(true)+'<p class="muted">Nach dem Klassengespräch an der Tafel geht es mit <b>Station 5: Ergebnisse sichern</b> weiter. Noch Zeit bis dahin? Dann weiter mit dem Profi-Zusatz ★ (Profi-Blatt bei eurer Lehrkraft).</p><div class="row"><button class="btn sec" type="button" id="toPro">Zum Profi-Zusatz ★ →</button></div>':'';
   $('task').innerHTML=head(SI('s5'),'Erklärt '+VNOM[st.grp]+' die '+FAMW+' W?')+(st.s3.ok?'':'<p class="note">Messt zuerst in Station 2 eure Messreihe.</p>')+intro+q+vgl+box+after;
-  if($('c5')){['cmp','can','chg'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
+  if($('c5')){['cmp','can'].forEach(function(k){$('t_'+k).addEventListener('change',function(){s[k]=this.value;if(s.badF)s.badF[k]=false;this.className='';save();});});
     $('t_pw').addEventListener('input',function(){s.pw=this.value;if(s.badF)s.badF.pw=false;this.className='num';save();});
-    $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}if(needAll(fb,[s.pw,s.cmp,s.can,s.chg]))return;
-      var v=num(s.pw),bad={};if(!pwOk(v,fi))bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;if(s.chg!==EMOK[st.grp])bad.chg=true;
-      var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can,s.chg].join('/'));
+    $('c5').addEventListener('click',function(){var fb=$('fb5');if(!st.s3.ok){fb.className='fb bad';fb.textContent='Messt zuerst eure Messreihe in Station 2.';return;}if(needAll(fb,[s.pw,s.cmp,s.can]))return;
+      var v=num(s.pw),bad={};if(!pwOk(v,fi))bad.pw=true;if(s.cmp!==a.cmp)bad.cmp=true;if(s.can!==a.can)bad.can=true;
+      var ok=!Object.keys(bad).length;tryInc('s5',ok,[s.pw,s.cmp,s.can].join('/'));
       if(ok){clrErr('s5');s.badF={};s.ok=true;finish(SI('s5'));save();r5();draw();return;}
       var CH={A:'Den Schatten wirft der Nachbarbalkon. Schaut auf die Halterung am Geländer im Bild.',B:'Der Staub liegt auf dem Modul. Was macht man mit einer schmutzigen Scheibe?',C:'Dunst ist Wetter. Kann Familie K. das Wetter ändern?',D:'Die Halterung am Geländer lässt sich neigen. Wie stünde das Modul am besten zur Sonne?'};
       var T5={pw:'<b>Leistung P:</b> Schaut in eure Tabelle von Station 2, Zeile „(Familie K.)“, Spalte P in W.',cmp:'<b>Vergleich mit '+FAMW+' W:</b> Ist eure Zahl nur etwas größer als '+FAMW+' W oder mehr als doppelt so groß?',can:'<b>Wie viel erklärt euer Faktor?</b> Liegt euer Wert nah an '+FAMW+' W, erklärt euer Faktor fast alles. Ist er viel größer, muss noch etwas anderes die Leistung verringern.',chg:'<b>Kann Familie K. das ändern?</b> '+CH[st.grp]};
-      setErr('s5',['pw','cmp','can','chg'].filter(function(k){return bad[k];}).map(function(k){return T5[k];}));
-      s.badF=bad;save();['cmp','can','chg'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
+      setErr('s5',['pw','cmp','can'].filter(function(k){return bad[k];}).map(function(k){return T5[k];}));
+      s.badF=bad;save();['cmp','can'].forEach(function(k){$('t_'+k).className=bad[k]?'bad':'';});$('t_pw').className='num'+(bad.pw?' bad':'');
       var n=Object.keys(bad).length;fb.className='fb bad';fb.textContent=(n===1?'Eine Lücke stimmt noch nicht.':n+' Lücken stimmen noch nicht.')+' Sie sind rot markiert.'+(bad.pw?' Die Leistung P steht in eurer Tabelle in der Zeile „(Familie K.)“.':'');
-      tipNudge(fb,'s5',1);showHelp(fb,'s5',function(){s.pw=fmt(P,0);s.cmp=a.cmp;s.can=a.can;s.chg=EMOK[st.grp];s.badF={};s.ok=true;finish(SI('s5'));save();r5();});});}
+      tipNudge(fb,'s5',1);showHelp(fb,'s5',function(){s.pw=fmt(P,0);s.cmp=a.cmp;s.can=a.can;s.badF={};s.ok=true;finish(SI('s5'));save();r5();});});}
   if($('toPro'))$('toPro').addEventListener('click',function(){go(SI('s6'));});
   bindTips(r5);bindCTA();
 }
@@ -953,8 +953,7 @@ var RFS=[{g:'A',t:'Liegt eine ganze Zelle im Schatten, bleibt fast keine Leistun
   {g:'A',t:'Schatten auf einer Zelle ist harmlos, weil er nur ein Viertel der Fläche abdeckt.',a:'f',fix:'Schatten auf einer Zelle ist sehr schlimm: Die Zellen sind in Reihe geschaltet, die verschattete Zelle bremst den Strom im ganzen Modul.'},
   {g:'B',t:'Schon eine dünne Staubschicht verringert die Leistung deutlich.',a:'r'},
   {g:'C',t:'Bei leichtem Dunst kommen 70 % des Lichts an. Dann bleiben auch genau 70 % der Leistung übrig.',a:'f',fix:'Bei 70 % Licht bleibt nur etwa die Hälfte der Leistung übrig (ca. 54 %). Die Leistung sinkt stärker als das Licht.'},
-  {g:'D',t:'Der Einfallswinkel von 30° verringert die Leistung bei Familie K. am wenigsten.',a:'r'},
-  {g:'',t:'Bei einem fairen Versuch verändert man nur eine Größe. Alle anderen bleiben gleich.',a:'r'}];
+  {g:'D',t:'Der Einfallswinkel von 30° verringert die Leistung bei Familie K. am wenigsten.',a:'r'}];
 var MSD={m1:[['a','der Schatten auf einer Zelle'],['b','der Staub'],['c','der Dunst'],['d','der Einfallswinkel von 30°']],
   m2:[['r','in Reihe geschaltet'],['p','parallel geschaltet']],
   m3:[['g','den Strom im ganzen Modul'],['s','nur sich selbst']]};
@@ -1004,7 +1003,7 @@ function r7(){var s=st.s7,own=st.grp;
     var sel=function(attr,key,opts,val,bad,dis){return '<select '+attr+'="'+key+'" class="'+(bad?'bad':'')+'"'+(dis?' disabled':'')+'><option value="">bitte wählen</option>'+opts.map(function(o){return '<option value="'+o[0]+'"'+(val===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';};
     var B=s.badE||{};
     em='<div class="q"><p><span class="task-step">5. Empfehlung für Familie K.</span> Am Balkon wirken alle vier Ursachen gleichzeitig. Deshalb zeigt das Handy nur '+FAMW+' W.</p><p><b>a) Kann Familie K. die Ursache selbst ändern? Wie?</b></p>'+
-      GKEYS.map(function(k){if(k===own&&st.s5.ok&&!s.em[k])s.em[k]=EMOK[k];return '<div class="ctlrow"><span>'+k+' · '+FAMR[k].toUpperCase()+(k===own?' ★ (habt ihr schon)':'')+'</span>'+sel('data-e7',k,EMO,s.em[k],B['e'+k],s.emOk||(k===own&&st.s5.ok))+'</div>';}).join('')+
+      GKEYS.map(function(k){return '<div class="ctlrow"><span>'+k+' · '+FAMR[k].toUpperCase()+(k===own?' ★ (eure Ursache)':'')+'</span>'+sel('data-e7',k,EMO,s.em[k],B['e'+k],s.emOk)+'</div>';}).join('')+
       '<p><b>b) In welcher Reihenfolge sollte Familie K. vorgehen?</b></p>'+[1,2,3].map(function(n){return '<div class="ctlrow"><span>SCHRITT '+n+'</span>'+sel('data-o7',n,[['v',MASS.v],['p',MASS.p],['a',MASS.a]],s.eo[n],B['o'+n],s.emOk)+'</div>';}).join('')+
       '<p><b>c) Begründet.</b></p><p class="lsatz">Familie K. sollte zuerst das Modul verschieben, weil '+sel('data-b7','w',EMB.w,s.eb.w,B.bw,s.emOk)+'. Gegen den Dunst '+sel('data-b7','d',EMB.d,s.eb.d,B.bd,s.emOk)+'.</p>'+
       (s.emOk?'<p class="fb ok" style="display:block">Richtig! Zuerst das, was am meisten bringt und was Familie K. selbst ändern kann.</p>'+abBox('d',AB3.d):'<div class="row"><button class="btn pri" type="button" id="c7e">Einloggen und prüfen</button></div><p class="fb" id="fb7e"></p>'+tipHTML('s7em',['Nur das Wetter kann Familie K. nicht ändern. Gegen Staub hilft Putzen, gegen den Winkel hilft Ausrichten.','Reihenfolge: Die Maßnahme gegen die Ursache, die am wenigsten Leistung übrig lässt, kommt zuerst (eure Rangfolge aus Schritt 2).']))+'</div>';
