@@ -155,6 +155,8 @@ input.num:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill
 select:disabled{opacity:1!important;color:#1A1F36!important;-webkit-text-fill-color:#1A1F36;background-color:#E8F5E9!important;border-color:#2E7D32!important}
 select.bad{border-color:#b42318!important;background-color:#fde3e3!important}
 .lsatz{font-size:17px;line-height:2.1}
+.deck{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.hint.tk{border:2px solid var(--pro);background:var(--pro-soft);border-style:solid}
 .lsatz .ctlrow{margin-bottom:8px;line-height:1.4}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -252,7 +254,35 @@ function bindSlider(id,get,set,step,min,max){function u(v){v=Math.max(min,Math.m
 /* Stationen-Weg */
 function unlocked(i){var k=STATIONS[i].key;if(i===0)return true;if(k==='s7'||k==='s8')return !!st.done[SI('s6')];return !!st.done[i-1];}
 function tipHTML(key){var L=(st.errT||{})[key]||[];return '<div class="tips" id="et_'+key+'">'+errCardsHTML(L)+'</div>';}
-function errCardsHTML(L){return L.map(function(t,i){return '<p class="hint tipcard"><b>Tipp-Karte '+(i+1)+(L.length>1?' von '+L.length:'')+':</b> '+t+'</p>';}).join('');}
+function errCardsHTML(L){return L.map(function(t,i){return '<p class="hint tipcard"><b>Hinweis zu eurem Fehler'+(L.length>1?' ('+(i+1)+' von '+L.length+')':'')+':</b> '+t+'</p>';}).join('');}
+/* Tipp-Karten: selbst ziehen, gestuft (erst ein Denkanstoß, zuletzt fast die Lösung) */
+var TIPS={
+  g_lab:['Schaut im Buch auf S. 279, Bild 3. Dort seht ihr den Weg vom Chromosom zur DNA.','Je weiter ihr zoomt, desto kleiner werden die Teile: Zellkern → Chromosom → … → kleinster Baustein.','Grüne Kügelchen mit einem Faden darum = Chromatinfaden. Gedrehte Strickleiter = Doppelhelix.'],
+  nuk:['Zoomt auf Stufe 6 und lest die drei Beschriftungen im Bild.','Ein Nukleotid enthält genau eine Base, nicht alle vier.'],
+  s3build:['Jede Base hat genau ein passendes Gegenstück. Schaut rechts unten auf den Basen-Schlüssel.','Spitze passt in Kerbe: A ↔ T. Wölbung passt in Mulde: G ↔ C.','Geht Position für Position vor: Steht oben T, gehört unten A hin. Steht oben C, gehört unten G hin.'],
+  pair:['Probiert es im Bild aus: Setzt gegenüber von A einmal G ein. Passen die Formen?','Das Buch vergleicht die Basenpaare mit Schlüssel und Schloss (S. 279).'],
+  holm:['Die Sprossen liegen in der Mitte der Leiter, die Seiten außen.','Schaut auf die lila Fünfecke (Zucker) und die gelben Kreise (P = Phosphorsäure).'],
+  s4tab:['Jedes A in der DNA hat ein T als Partner. Was bedeutet das für die Anteile von A und T?','Alle vier Anteile zusammen ergeben 100 %. Rechts unten seht ihr die Summe.','Beispiel Mensch: A = 31 %, also auch T = 31 %. Für G und C bleiben 100 % − 62 % = 38 %, also je 19 %.'],
+  g_chg:['Vergleicht in der Tabelle Spalte für Spalte: Welche Werte sind in jeder Zeile gleich?','Denkt an Station 3: Welche Basen bilden zusammen eine Sprosse?'],
+  s5build:['Öffnet die DNA zuerst ganz: Regler auf 6.','Jeder alte Strang ist die Vorlage. Gegenüber von A gehört T, gegenüber von G gehört C, wie in Station 3.','Der neue Strang oben bekommt dieselben Basen wie der alte Strang unten, der neue Strang unten dieselben wie der alte oben.'],
+  rid:['Lest Doppelstrang 1 und Doppelstrang 2 rechts unten Buchstabe für Buchstabe.','Vergleicht mit dem ursprünglichen Doppelstrang: oben TACGGA, unten ATGCCT.'],
+  rold:['Lila Rand = alter Strang, oranger Rand = neuer Strang. Schaut, welche Ränder in einem Doppelstrang vorkommen.'],
+  g_rep:['Lest im Buch auf S. 281 den Text „Replikation der DNA“.','Schaut auf das Bild „Chromosom“ links unten: Wie sieht es nach dem Kopieren aus?'],
+  who:['Setzt im Steuerpult den Haken bei „Unterschiede zur Spur markieren“.','Gesucht ist die Person, bei der alle 8 Basen mit der Spur übereinstimmen.'],
+  g_dna:['Alle Menschen haben die vier Basen A, T, G und C. Was ist dann bei jedem Menschen anders?','Denkt an Station 5: Was passiert mit der DNA vor jeder Zellteilung, und wie sehen die Kopien aus?'],
+  g_time:['Buch S. 280, Bild 4: Dort steht bei jeder Entdeckung die Jahreszahl.','Die Jahre in der richtigen Reihenfolge: 1869 – 1950 – 1951 – 1953 – 1983.'],
+  pd:['Vergleicht in Station 3 den gegebenen Strang (TACGGATC) mit eurem Strang (ATGCCTAG). Sind sie gleich?'],
+  s7calc:['Ein Basenpaar besteht aus zwei Basen, eine in jedem Strang.','Zu jeder Base gehört genau ein Nukleotid. Also: Zahl der Basenpaare · 2.'],
+  pm:['Schaut links unten: Haben die Maisbausteine verschiedene Formen?','Vergleicht mit rechts unten: Bei echten Basen passen die Formen nur paarweise zusammen.'],
+  g_bau:['Stellt euch das Modell aus Station 3 vor: oben ein Strang, unten ein Strang, dazwischen die Basen.','Lest eure Merksätze im Heft aus den Stationen 3 und 4.'],
+  s8rf:['Nehmt euer Heft: Dort stehen eure Merksätze aus den Stationen.','Drei Aussagen sind richtig, drei sind falsch.'],
+  g_rpl:['Denkt an Station 5: der Regler „DNA öffnen“ und die beiden Kopien.'],
+  g_lf:['Lest eure Antwort auf die Leitfrage aus Station 6 noch einmal.']};
+function deckInner(key){var L=TIPS[key]||[],n=Math.min(L.length,(st.tipOpen||{})[key]||0);
+  var h=L.slice(0,n).map(function(t,i){return '<p class="hint tk"><b>🃏 Tipp-Karte '+(i+1)+' von '+L.length+':</b> '+t+'</p>';}).join('');
+  if(n<L.length)h+='<div class="row"><button type="button" class="btn tip" data-deck="'+key+'">🃏 '+(n?'Nächste Tipp-Karte ziehen ('+(n+1)+' von '+L.length+')':'Tipp-Karte ziehen')+'</button></div>';return h;}
+function tipDeck(key){return TIPS[key]?'<div class="deck" id="dk_'+key+'">'+deckInner(key)+'</div>':'';}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-deck]');if(!b)return;var k=b.dataset.deck;st.tipOpen=st.tipOpen||{};st.tipOpen[k]=(st.tipOpen[k]||0)+1;save();var d=$('dk_'+k);if(d)d.innerHTML=deckInner(k);});
 function setErr(key,L){st.errT=st.errT||{};st.errT[key]=L;st.tips=st.tips||{};st.tips[key]=(st.tips[key]||0)+L.length;save();var el=$('et_'+key);if(el)el.innerHTML=errCardsHTML(L);}
 function clrErr(key){if(st.errT&&st.errT[key]){delete st.errT[key];save();}}
 function needAll(fb,vals){if(vals.some(function(v){return v==null||v==='';})){fb.className='fb bad';fb.textContent='Füllt zuerst alle Lücken aus. Dann prüft die App.';return true;}return false;}
@@ -281,7 +311,7 @@ function bindMC(id,ans,key,okMsg,badMsgs,onOk,store){var box=document.querySelec
   else if(!lock)Array.prototype.forEach.call(box.children,function(b){b.addEventListener('click',function(){evalJ(+b.dataset.j);});});}
 function showFb(id,ok,msg){var f=$('fb_'+id);if(f){f.className='fb '+(ok?'ok':'bad');f.textContent=msg;}}
 function mcBind(id,Q,obj,field,key,rerender){bindMC(id,Q.a,key,Q.ok,Q.bad,function(){if(!obj[field+'Ok']){obj[field+'Ok']=true;save();rerender();showFb(id,true,Q.ok);}},function(j){obj[field]=j;});if(obj[field+'Ok'])showFb(id,true,Q.ok);}
-function mcQ(id,Q){return mcHTML(id,Q.q,Q.o,st.mc[id],Q.a);}
+function mcQ(id,Q){var h=mcHTML(id,Q.q,Q.o,st.mc[id],Q.a);return st.mc[id+'Ok']?h:h.replace(/<\/div>$/,tipDeck(id)+'</div>');}
 function mcB(id,Q,key,rer){mcBind(id,Q,st.mc,id,key,rer);}
 function mcTxt(id,Q){var v=st.mc[id];return v==null?'(nicht bearbeitet)':strip(Q.o[v])+(v===Q.a?'  ✓':'  ✗');}
 
@@ -290,7 +320,7 @@ function G0(id){st.g=st.g||{};return st.g[id]||(st.g[id]={v:{},bad:{},ok:false})
 function gapKeys(text){var a=[];text.replace(/\{(\w+)\}/g,function(m,k){a.push(k);return m;});return a;}
 function gapSel(id,k,opts,dis){var g=G0(id),v=g.v[k];return '<select data-gp="'+id+'" data-gk="'+k+'" class="'+(g.bad[k]?'bad':'')+'"'+(dis?' disabled':'')+'><option value="">bitte wählen</option>'+opts.map(function(o){return '<option value="'+o[0]+'"'+(v===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';}
 function gapHTML(id,text,O,btn){var g=G0(id);var h='<div class="lsatz">'+text.replace(/\{(\w+)\}/g,function(m,k){return gapSel(id,k,O.opts[k],g.ok);})+'</div>';
-  if(!g.ok)h+='<div class="row"><button class="btn pri" type="button" id="gb_'+id+'">'+(btn||'Einloggen und prüfen')+'</button></div><p class="fb" id="fbg_'+id+'"></p>'+tipHTML('g_'+id);
+  if(!g.ok)h+='<div class="row"><button class="btn pri" type="button" id="gb_'+id+'">'+(btn||'Einloggen und prüfen')+'</button></div><p class="fb" id="fbg_'+id+'"></p>'+tipHTML('g_'+id)+tipDeck('g_'+id);
   return h;}
 function gapBind(id,text,O,onOk){var g=G0(id),ks=gapKeys(text);
   Array.prototype.forEach.call(document.querySelectorAll('[data-gp="'+id+'"]'),function(e){e.addEventListener('change',function(){g.v[e.dataset.gk]=e.value;g.bad[e.dataset.gk]=false;e.className='';save();});});
@@ -663,7 +693,7 @@ function updS3(){var e=$('s3st');if(e)e.innerHTML=s3status();}
 function r3(){var s=st.s3;
   var h=head(2,'Die DNA aus der Spur nachbauen')+'<p>Das Labor hat aus der Spur einen kurzen DNA-Abschnitt gelesen. Oben seht ihr einen Strang. <b>Baut den zweiten Strang:</b> Tippt im Bild auf eine Lücke und wählt im Steuerpult die passende Base. Achtet auf die Form der Enden.</p>'+
     '<p class="note" id="s3st">'+s3status()+'</p>'+
-    (s.ok?'<p class="fb ok">Alle Basenpaare passen! Euer Strang ist komplementär zum gegebenen Strang.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Basenpaare prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3build'));
+    (s.ok?'<p class="fb ok">Alle Basenpaare passen! Euer Strang ist komplementär zum gegebenen Strang.</p>':'<div class="row"><button class="btn pri" type="button" id="c3">Basenpaare prüfen</button></div><p class="fb" id="fb3"></p>'+tipHTML('s3build')+tipDeck('s3build'));
   if(s.ok)h+=mcQ('pair',QPAIR);
   if(st.mc.pairOk)h+=mcQ('holm',QHOLM);
   if(st.done[2])h+='<div class="merk"><h3>Bau der DNA</h3><p>Die DNA ist wie eine gedrehte Strickleiter gebaut: die <span class="k">Doppelhelix</span>. Die Seiten bestehen aus <span class="k">Zucker und Phosphorsäure</span>, die Sprossen aus den <span class="k">Basenpaaren</span> A–T und G–C.</p><p class="muted" style="margin:6px 0 0">Stellt im Steuerpult die Ansicht „Doppelhelix“ ein. Übertragt den Merksatz in euer Heft.</p></div><p class="win"><b>Gebaut!</b> Jetzt wertet ihr echte Messwerte aus.</p><div class="row">'+nextBtn(2)+'</div>';
@@ -689,7 +719,7 @@ function r4(){var s=st.s4,dis=s.ok?' disabled':'';
     return '<td><input class="num'+(s.bad[k]?' bad':'')+'" data-ch="'+k+'" inputmode="decimal" value="'+esc(s.t[k]||'')+'"'+dis+'></td>';}).join('')+'</tr>';}).join('');
   var h=head(3,'Was zeigen Chargaffs Messwerte?')+'<p>Der Forscher Erwin Chargaff hat 1950 gemessen, wie groß der Anteil jeder Base in der DNA verschiedener Lebewesen ist. Von jedem Lebewesen ist ein Wert bekannt. <b>Ergänzt die fehlenden Anteile in %</b> (Buch S. 278, M1). Denkt an die Basenpaare aus Station 3. Der Taschenrechner hilft.</p>'+
     '<div class="tw"><table class="mt"><thead><tr><th>Lebewesen</th><th>Adenin<small>A in %</small></th><th>Thymin<small>T in %</small></th><th>Guanin<small>G in %</small></th><th>Cytosin<small>C in %</small></th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-    (s.ok?'<p class="fb ok">Alle Anteile stimmen! Übertragt die Tabelle in euer Heft.</p>':'<div class="row"><button class="btn pri" type="button" id="c4">Tabelle prüfen</button></div><p class="fb" id="fb4"></p>'+tipHTML('s4tab'));
+    (s.ok?'<p class="fb ok">Alle Anteile stimmen! Übertragt die Tabelle in euer Heft.</p>':'<div class="row"><button class="btn pri" type="button" id="c4">Tabelle prüfen</button></div><p class="fb" id="fb4"></p>'+tipHTML('s4tab')+tipDeck('s4tab'));
   if(s.ok)h+='<div class="q"><p><b>Was zeigt die Tabelle?</b> Wählt in jeder Lücke aus.</p>'+gapHTML('chg',CHG_T,CHG_O)+'</div>';
   if(st.done[3])h+='<div class="merk"><h3>Chargaff-Regel</h3><p>In der DNA gibt es immer <span class="k">gleich viel A wie T</span> und <span class="k">gleich viel G wie C</span>, weil sie Basenpaare bilden. Die Anteile unterscheiden sich aber von Lebewesen zu Lebewesen.</p></div><p class="win"><b>Ausgewertet!</b> Jetzt kopiert ihr die DNA, so wie es eine Zelle vor der Teilung tut.</p><div class="row">'+nextBtn(3)+'</div>';
   $('task').innerHTML=h;
@@ -720,7 +750,7 @@ function msg5(t){var f=$('fb5');if(f){f.className='fb bad';f.textContent=t;}}
 function r5(){var s=st.s5;
   var h=head(4,'Wie wird die DNA kopiert?')+'<p>Bevor sich eine Zelle teilt, wird ihre DNA <b>verdoppelt</b>. So erhält jede Tochterzelle dieselbe Erbinformation. Das nennt man <b>Replikation</b> (Buch S. 281).</p><ol style="margin:0;padding-left:1.2em"><li>Öffnet die DNA mit dem Regler wie einen Reißverschluss.</li><li>Ihr übernehmt die Arbeit des Enzyms <b>DNA-Polymerase</b>: Tippt auf eine Lücke in einem neuen (orangen) Strang und wählt die passende Base.</li></ol>'+
     '<p class="note" id="s5st">'+s5status()+'</p>'+
-    (s.ok?'<p class="fb ok">Kopiert! Aus einem Doppelstrang sind zwei geworden.</p>':'<div class="row"><button class="btn pri" type="button" id="c5">Neue Stränge prüfen</button></div><p class="fb" id="fb5"></p>'+tipHTML('s5build'));
+    (s.ok?'<p class="fb ok">Kopiert! Aus einem Doppelstrang sind zwei geworden.</p>':'<div class="row"><button class="btn pri" type="button" id="c5">Neue Stränge prüfen</button></div><p class="fb" id="fb5"></p>'+tipHTML('s5build')+tipDeck('s5build'));
   if(s.ok)h+=mcQ('rid',QRID);
   if(st.mc.ridOk)h+=mcQ('rold',QROLD);
   if(st.mc.roldOk)h+='<div class="q"><p><b>Wann und womit wird kopiert?</b> Wählt in jeder Lücke aus.</p>'+gapHTML('rep',REP_T,REP_O)+'</div>';
@@ -769,7 +799,7 @@ var QMOD={q:'Im Buch (S. 280, M2) ist die DNA aus Maisbausteinen gebaut (Bild li
 function r7(){var s=st.s7;
   var h=head(SI('s7'),'Für Profis: Geschichte, Modelle und große Zahlen')+'<div class="q"><p><span class="task-step">1. Zeitstrahl.</span> Bringt die Entdeckungen in die richtige Reihenfolge (Buch S. 280, Bild 4).</p>'+gapHTML('time',TIME_T,TIME_O)+(G0('time').ok?'<p class="fb ok">Richtig geordnet! Der Zeitstrahl steht jetzt im Bild.</p>':'')+'</div>';
   if(G0('time').ok)h+=mcQ('pd',QD);
-  if(st.mc.pdOk)h+='<div class="q"><p><span class="task-step">3. Große Zahlen.</span> Die DNA in einer menschlichen Körperzelle hat etwa <b>3 Milliarden Basenpaare</b>. Aus wie vielen Nukleotiden besteht sie?</p><div class="row"><input class="num'+(s.calcOk?' ok':'')+'" id="pcalc" inputmode="decimal" value="'+esc(s.calc)+'"'+(s.calcOk?' disabled':'')+'><span>Milliarden Nukleotide</span>'+(s.calcOk?'':'<button class="btn pri" type="button" id="c7c">Prüfen</button>')+'</div><p class="fb" id="fb7c"></p>'+(s.calcOk?'':tipHTML('s7calc'))+'</div>';
+  if(st.mc.pdOk)h+='<div class="q"><p><span class="task-step">3. Große Zahlen.</span> Die DNA in einer menschlichen Körperzelle hat etwa <b>3 Milliarden Basenpaare</b>. Aus wie vielen Nukleotiden besteht sie?</p><div class="row"><input class="num'+(s.calcOk?' ok':'')+'" id="pcalc" inputmode="decimal" value="'+esc(s.calc)+'"'+(s.calcOk?' disabled':'')+'><span>Milliarden Nukleotide</span>'+(s.calcOk?'':'<button class="btn pri" type="button" id="c7c">Prüfen</button>')+'</div><p class="fb" id="fb7c"></p>'+(s.calcOk?'':tipHTML('s7calc')+tipDeck('s7calc'))+'</div>';
   if(s.calcOk)h+=mcQ('pm',QMOD);
   if(st.mc.pmOk)h+='<p class="note"><b>Gut zu wissen:</b> Echte DNA-Tests vergleichen nicht nur 8 Basen, sondern viele Stellen der DNA, an denen sich Menschen besonders stark unterscheiden. Nur eineiige Zwillinge haben dieselbe DNA.</p><p class="win"><b>Profi!</b> Bringt euer Wissen in das Klassengespräch ein.</p>'+saveCTA(true);
   h+='<p class="muted">Nach dem Klassengespräch an der Tafel geht es mit <b>Station 7: Ergebnisse sichern</b> weiter.</p>';
@@ -824,7 +854,7 @@ function r8(){var s=st.s8,i8=SI('s8');
   if(gb.ok){h+='<div class="q"><p><span class="task-step">2. Auf Richtigkeit prüfen.</span> Stimmen diese Aussagen? Entscheidet für jede: richtig oder falsch.</p>'+
     RFS.map(function(x,i){var bad=s.badF&&s.badF[i];return '<div class="rfrow"><p>'+x.t+'</p><select data-f8="'+i+'" class="'+(bad?'bad':'')+'"'+(s.rfOk?' disabled':'')+'><option value="">bitte wählen</option><option value="r"'+(s.rf[i]==='r'?' selected':'')+'>richtig</option><option value="f"'+(s.rf[i]==='f'?' selected':'')+'>falsch</option></select>'+
       (s.rfOk&&x.fix?'<p class="fix"><b>So stimmt es:</b> '+x.fix+'</p>':'')+'</div>';}).join('')+
-    (s.rfOk?'<p class="fb ok" style="display:block">Alles geprüft! Die falschen Aussagen sind jetzt verbessert.</p>':'<div class="row"><button class="btn pri" type="button" id="c8f">Einloggen und prüfen</button></div><p class="fb" id="fb8f"></p>'+tipHTML('s8rf'))+'</div>';}
+    (s.rfOk?'<p class="fb ok" style="display:block">Alles geprüft! Die falschen Aussagen sind jetzt verbessert.</p>':'<div class="row"><button class="btn pri" type="button" id="c8f">Einloggen und prüfen</button></div><p class="fb" id="fb8f"></p>'+tipHTML('s8rf')+tipDeck('s8rf'))+'</div>';}
   if(s.rfOk)h+='<div class="q"><p><span class="task-step">3. Replikation.</span> Ergänzt den Merksatz.</p>'+gapHTML('rpl',RPL_T,RPL_O)+(gr.ok?abBox('b',gapText('rpl',RPL_T,RPL_O,true)):'')+'</div>';
   if(gr.ok)h+='<div class="q"><p><span class="task-step">4. Antwort auf die Leitfrage.</span> Wie kann ein DNA-Test einen Täter überführen?</p>'+gapHTML('lf',LF_T,LF_O)+(gl.ok?abBox('c',gapText('lf',LF_T,LF_O,true)):'')+'</div>';
   if(gl.ok)h+=s.abOk?'<p class="win"><b>Gesichert!</b> In eurem Heft stehen jetzt der Bau der DNA, die Replikation und die Antwort auf die Leitfrage.</p>'+saveCTA(true):
@@ -880,14 +910,16 @@ function resText(){var r=st.res||{},d=new Date(),L=[],ok=function(b){return b?' 
   L.push('VERSUCHE (wie oft geprüft bzw. eine Antwort gewählt wurde, bis es richtig war)');
   var tt=triesLines(L,TL,PRO);
   var tk=Object.keys(st.tips||{}),tn=tk.reduce(function(a,k){return a+st.tips[k];},0);
-  L.push('  Tipp-Karten angezeigt (eine pro Fehler): '+(tn?tn+' ('+tk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return (x?x[1]:k)+': '+st.tips[k];}).join('; ')+')':'keine'));
+  L.push('  Hinweise nach Fehlern angezeigt: '+(tn?tn+' ('+tk.map(function(k){var x=TL.filter(function(t){return t[0]===k;})[0];return (x?x[1]:k)+': '+st.tips[k];}).join('; ')+')':'keine'));
+  var DK={nuk:'s2nuk',pair:'s3pair',holm:'s3holm',rid:'s5ident',rold:'s5old',who:'s6who',pd:'s7d',pm:'s7mod'},to=st.tipOpen||{},tok=Object.keys(to),tsum=tok.reduce(function(a,k){return a+to[k];},0);
+  L.push('  Tipp-Karten selbst gezogen: '+(tsum?tsum+' ('+tok.map(function(k){var x=TL.filter(function(t){return t[0]===(DK[k]||k);})[0];return (x?x[1]:k)+': '+to[k];}).join('; ')+')':'keine'));
   L.push('');
   L.push('ERGEBNISSE SICHERN (nach der Tafel)');
   L.push('  Gestartet: '+(st.s8.gate?'ja':'nein')+(st.s8.codeTries?' (falscher Startcode: '+st.s8.codeTries+'×)':'')+' · Bau der DNA: '+(G0('bau').ok?'✓':'–')+' · Richtig/falsch: '+(st.s8.rfOk?'✓':'–')+' · Replikation: '+(G0('rpl').ok?'✓':'–')+' · Leitfrage: '+(G0('lf').ok?'✓':'–')+' · Heft übertragen: '+(st.s8.abOk?'ja':'nein'));
   L.push('');
   L.push('PROFI-ZUSATZ ★');
   L.push('  Zeitstrahl: '+(G0('time').ok?'✓':'–')+' · Aussage D: '+mcTxt('pd',QD)+' · Nukleotide: '+(st.s7.calc||'–')+' Mrd.'+ok(st.s7.calcOk)+' · Modellkritik: '+mcTxt('pm',QMOD));
-  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,pv:st.pv,strand:st.s3.b.join(''),chg:st.s4.t,rep:{t:st.s5.t.join(''),b:st.s5.b.join('')},mc:st.mc,g:Object.keys(st.g||{}).reduce(function(a,k){a[k]=st.g[k].ok;return a;},{}),tries:st.tries,tips:st.tips||{},help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
+  var data={v:1,name:r.name||'',klasse:r.klasse||'',ts:Date.now(),done:st.done,pv:st.pv,strand:st.s3.b.join(''),chg:st.s4.t,rep:{t:st.s5.t.join(''),b:st.s5.b.join('')},mc:st.mc,g:Object.keys(st.g||{}).reduce(function(a,k){a[k]=st.g[k].ok;return a;},{}),tries:st.tries,tips:st.tips||{},tipOpen:st.tipOpen||{},help:tt.help,mins:tt.mins,resets:resets(),cur:st.station,saves:(st.saves||0)+1};
   var json=JSON.stringify(data);
   L.push('');L.push('Die beiden folgenden Zeilen sind für die Auswertung. Bitte nicht verändern.');
   L.push('#DATEN '+json);L.push('#PRUEF '+fnv('DL-v1|'+json));
