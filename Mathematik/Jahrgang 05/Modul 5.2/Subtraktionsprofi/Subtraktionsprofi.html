@@ -652,7 +652,7 @@ let task = null, pi = 0, ent = null, active = null, marks = null, attempts = 0, 
 function save() { store.set("sp-stats", stats); store.set("sp-level", level); store.set("sp-lang", lang) }
 const curLevel = () => tab === 2 ? 4 : level;
 const ph = () => task.phases[pi];
-function newTask() { task = makeTask(curLevel()); task.promptIdx = rnd(0, 3); attempts = 0; done = false; feedback = null; diag = null; pi = 0; initPhase() }
+function newTask() { justUnlocked = false; task = makeTask(curLevel()); task.promptIdx = rnd(0, 3); attempts = 0; done = false; feedback = null; diag = null; pi = 0; initPhase() }
 function initPhase() { const P = ph(); tipLevel = 0; marks = null; active = null; revealed = false; task.picked = null; task.badPicks = []; if (P.type === "grid") { ent = { res: [], carry: [] }; active = { role: "res", p: 0 } } }
 function advance(msg) { if (pi < task.phases.length - 1) { pi++; initPhase(); feedback = msg ? { cls: "ok", text: msg } : null; render() } else success(msg) }
 const saved = {};
@@ -945,17 +945,20 @@ function renderIntro() {
 }
 
 /* ---- practice / experts ---- */
-const MUST = 5, locked = () => stats.solved[0] < MUST;
+/* Pflicht: 5 Aufgaben in Stufe orange. Eigener Zähler, damit alte Spielstände die Sperre nicht aufheben */
+const MUST = 5; let must = store.get("sp-must5", 0); const locked = () => must < MUST;
+function countMust() { if (tab === 1 && level === 1 && must < MUST) { must++; store.set("sp-must5", must); if (must === MUST) justUnlocked = true } }
+let justUnlocked = false;
 function renderPractice() {
   if (locked() && level !== 1) { level = 1; save(); newTask() }
   const lv = el("div", "levels");
   [1, 2, 3].forEach(n => { const lk = n > 1 && locked(); const b = el("button", `lvl lvl${n}` + (lk ? " locked" : ""), `${L().lv[n - 1][0]}<small>${lk ? "🔒 " + L().lockShort(MUST) : L().lv[n - 1][1] + " · " + L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.disabled = lk; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
   view.appendChild(lv);
-  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, stats.solved[0])));
+  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, must)));
   renderTask();
 }
 function renderExpert() {
-  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, stats.solved[0]))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
+  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, must))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
   const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
   h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
 }
@@ -1055,8 +1058,7 @@ function renderTask() {
   } else { const nb = el("button", "btn good", L().next); nb.type = "button"; nb.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } newTask(); render() }; act.appendChild(nb) }
   p.appendChild(act);
   if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
-  if (done && tab === 1 && level === 1 && stats.solved[0] === MUST && !stats.unlocked) {
-    stats.unlocked = true; save();
+  if (done && tab === 1 && justUnlocked) {
     const u = el("div", "swap levelup", `<p><b>${L().unlockMsg(MUST)}</b></p>`), row = el("div", "actions");
     const go = el("button", "btn primary", L().unlockGo); go.type = "button"; go.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } level = 2; save(); newTask(); render(); window.scrollTo(0, 0) };
     const st = el("button", "btn", L().unlockStay); st.type = "button"; st.onclick = () => { if (partner.on) { partner.turn = 1 - partner.turn; store.set("sp-partner", partner) } newTask(); render() };
@@ -1085,7 +1087,7 @@ function colText(c) {
   const parts = c.ds.join(" + ") + (c.cin ? L().carryIn(c.cin) : "");
   return L().colText(PLACES[lang][c.p], parts, c.s, c.target, c.r, c.cout);
 }
-function success(msg) { done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
+function success(msg) { countMust(); done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
 function check() {
   const P = ph().P; marks = {}; let firstBad = null, carryBad = null;
   const lead = len(P.result);
@@ -1109,7 +1111,7 @@ function pickChoice(i) {
 }
 function pickCol(q) { if (q === task.errCol) advance(L().errColOk); else { attempts++; if (!task.badCols.includes(q)) task.badCols.push(q); feedback = { cls: "bad", text: L().errColBad }; render() } }
 function pickReason(r) { if (r === task.errType) advance(L().reasonOk); else { attempts++; if (!task.badReasons.includes(r)) task.badReasons.push(r); feedback = { cls: "bad", text: L().reasonBad }; render() } }
-function showSolution() { const P = ph().P; revealed = true; done = true; diag = null; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "info", text: P.cols.map(colText).join("<br>") }; render() }
+function showSolution() { countMust(); const P = ph().P; revealed = true; done = true; diag = null; stats.solved[curLevel() - 1]++; save(); feedback = { cls: "info", text: P.cols.map(colText).join("<br>") }; render() }
 function onTip() { tipLevel = Math.min(tipLevel + 1, 2); render() }
 function tipText() {
   const P = ph().P;
@@ -1148,7 +1150,7 @@ let resetArmed = false, resetTimer = null;
 function renderReset() { const b = document.getElementById("resetbtn"); b.textContent = resetArmed ? L().reset2 : L().reset; b.style.borderColor = resetArmed ? "#E8892B" : ""; b.style.color = resetArmed ? "#FFD9B0" : "" }
 document.getElementById("resetbtn").onclick = () => {
   if (!resetArmed) { resetArmed = true; renderReset(); clearTimeout(resetTimer); resetTimer = setTimeout(() => { resetArmed = false; renderReset() }, 3500); return }
-  try { ["sp-stats", "sp-level", "sp-seq", "sp-partner"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
+  try { ["sp-stats", "sp-level", "sp-seq", "sp-partner", "sp-must5"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
   location.reload();
 };
 render();

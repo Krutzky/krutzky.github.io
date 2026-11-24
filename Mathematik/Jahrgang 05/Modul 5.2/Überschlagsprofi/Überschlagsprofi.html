@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Überschlagsprofi</title>
+<title>Rundungsprofi</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
@@ -248,6 +248,12 @@ h1 .br{color:var(--focus)}
 .way{display:grid;gap:4px;justify-content:center;font-size:clamp(1.1rem,4.4vw,1.5rem);font-weight:700;font-variant-numeric:tabular-nums;margin:8px 0}
 .way .eq{color:var(--muted)}
 .way .ok{color:var(--ok)}
+.way .bad{color:var(--carry)}
+/* iPad: kein Zoom durch Doppeltippen; Zoomen mit zwei Fingern bleibt möglich und lässt sich zurücksetzen */
+html,body{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+button,a,.cell,.choice,.tag,.card,.brick{touch-action:manipulation}
+#zoomfix{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;display:none;align-items:center;gap:6px;padding:12px 18px;border-radius:999px;border:0;background:var(--ink);color:var(--paper);font:600 1.05rem var(--f-body);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#zoomfix.on{display:flex}
 .tags{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0}
 .tag{background:#FFD34D;color:#3A2A00;border-radius:6px 14px 14px 6px;padding:4px 14px;font-weight:700;font-variant-numeric:tabular-nums}
 .sentence{margin-top:12px;border:2px solid var(--ok);background:var(--okbg);border-radius:14px;padding:12px 14px}
@@ -345,17 +351,17 @@ const ABBR = ["E","Z","H","T","ZT","HT"];
 /* ======================= data ======================= */
 const NAMES = ["Lena","Murat","Elif","Jonas","Mia","Ben","Emre","Sophie","Can","Hannah","Leon","Ayla","Noah","Zeynep","Paul","Amira","Tim","Lea","Yusuf","Emma"];
 const ITEMS = {
- 1: [{de:"Springseil",acc:"ein Springseil",tr:"Atlama ipi",ic:"🪢",p:8},{de:"Kartenspiel",acc:"ein Kartenspiel",tr:"İskambil kağıdı",ic:"🃏",p:6},{de:"Straßenkreide",acc:"Straßenkreide",tr:"Tebeşir seti",ic:"🖍️",p:9},
-     {de:"Frisbee",acc:"ein Frisbee",tr:"Frizbi",ic:"🥏",p:17},{de:"Jonglierbälle",acc:"Jonglierbälle",tr:"Jonglör topları",ic:"🤹",p:16},{de:"Fußball",acc:"einen Fußball",tr:"Futbol topu",ic:"⚽",p:19},
-     {de:"Federball-Set",acc:"ein Federball-Set",tr:"Badminton seti",ic:"🏸",p:26},{de:"Basketball",acc:"einen Basketball",tr:"Basketbol topu",ic:"🏀",p:27},{de:"Tischtennis-Set",acc:"ein Tischtennis-Set",tr:"Masa tenisi seti",ic:"🏓",p:36},
-     {de:"Kegelspiel",acc:"ein Kegelspiel",tr:"Bowling seti",ic:"🎳",p:38}],
- 2: [{de:"Sitzsack",acc:"einen Sitzsack",tr:"Puf koltuk",ic:"🛋️",p:89},{de:"Leselampe",acc:"eine Leselampe",tr:"Okuma lambası",ic:"💡",p:47},{de:"Teppich",acc:"einen Teppich",tr:"Halı",ic:"🧶",p:119},
-     {de:"Bücherregal",acc:"ein Bücherregal",tr:"Kitaplık",ic:"📚",p:149},{de:"Pflanzen",acc:"Pflanzen",tr:"Saksı bitkileri",ic:"🪴",p:36},{de:"Lesesessel",acc:"einen Lesesessel",tr:"Okuma koltuğu",ic:"🪑",p:189},
-     {de:"Bücherpaket",acc:"ein Bücherpaket",tr:"Kitap paketi",ic:"📦",p:238},{de:"Kuschelkissen",acc:"Kuschelkissen",tr:"Yastık seti",ic:"🧸",p:56},{de:"Pinnwand",acc:"eine Pinnwand",tr:"Mantar pano",ic:"📌",p:58},
+ 1: [{de:"Springseil",acc:"ein Springseil",tr:"Atlama ipi",ic:"🪢",p:8},{de:"Kartenspiel",acc:"ein Kartenspiel",tr:"İskambil kağıdı",ic:"🃏",p:12},{de:"Straßenkreide",acc:"Straßenkreide",tr:"Tebeşir seti",ic:"🖍️",p:9},
+     {de:"Frisbee",acc:"ein Frisbee",tr:"Frizbi",ic:"🥏",p:13},{de:"Jonglierbälle",acc:"Jonglierbälle",tr:"Jonglör topları",ic:"🤹",p:16},{de:"Fußball",acc:"einen Fußball",tr:"Futbol topu",ic:"⚽",p:19},
+     {de:"Federball-Set",acc:"ein Federball-Set",tr:"Badminton seti",ic:"🏸",p:24},{de:"Basketball",acc:"einen Basketball",tr:"Basketbol topu",ic:"🏀",p:27},{de:"Tischtennis-Set",acc:"ein Tischtennis-Set",tr:"Masa tenisi seti",ic:"🏓",p:31},
+     {de:"Kegelspiel",acc:"ein Kegelspiel",tr:"Bowling seti",ic:"🎳",p:32}],
+ 2: [{de:"Sitzsack",acc:"einen Sitzsack",tr:"Puf koltuk",ic:"🛋️",p:84},{de:"Leselampe",acc:"eine Leselampe",tr:"Okuma lambası",ic:"💡",p:42},{de:"Teppich",acc:"einen Teppich",tr:"Halı",ic:"🧶",p:113},
+     {de:"Bücherregal",acc:"ein Bücherregal",tr:"Kitaplık",ic:"📚",p:149},{de:"Pflanzen",acc:"Pflanzen",tr:"Saksı bitkileri",ic:"🪴",p:33},{de:"Lesesessel",acc:"einen Lesesessel",tr:"Okuma koltuğu",ic:"🪑",p:189},
+     {de:"Bücherpaket",acc:"ein Bücherpaket",tr:"Kitap paketi",ic:"📦",p:238},{de:"Kuschelkissen",acc:"Kuschelkissen",tr:"Yastık seti",ic:"🧸",p:52},{de:"Pinnwand",acc:"eine Pinnwand",tr:"Mantar pano",ic:"📌",p:58},
      {de:"Vorhang",acc:"einen Vorhang",tr:"Perde",ic:"🪟",p:78}],
- 3: [{de:"Beamer",acc:"einen Beamer",tr:"Projeksiyon cihazı",ic:"📽️",p:1279},{de:"Leinwand",acc:"eine Leinwand",tr:"Projeksiyon perdesi",ic:"🎞️",p:389},{de:"Laptop",acc:"einen Laptop",tr:"Dizüstü bilgisayar",ic:"💻",p:879},
+ 3: [{de:"Beamer",acc:"einen Beamer",tr:"Projeksiyon cihazı",ic:"📽️",p:1279},{de:"Leinwand",acc:"eine Leinwand",tr:"Projeksiyon perdesi",ic:"🎞️",p:329},{de:"Laptop",acc:"einen Laptop",tr:"Dizüstü bilgisayar",ic:"💻",p:839},
      {de:"Dokumentenkamera",acc:"eine Dokumentenkamera",tr:"Belge kamerası",ic:"📷",p:359},{de:"Tablet-Koffer",acc:"einen Tablet-Koffer",tr:"Tablet dolabı",ic:"🧳",p:2479},{de:"Lautsprecher",acc:"einen Lautsprecher",tr:"Hoparlör",ic:"🔊",p:769},
-     {de:"Drucker",acc:"einen Drucker",tr:"Yazıcı",ic:"🖨️",p:459},{de:"Hocker-Set",acc:"ein Hocker-Set",tr:"Tabure seti",ic:"🪑",p:276},{de:"Mikrofon-Set",acc:"ein Mikrofon-Set",tr:"Mikrofon seti",ic:"🎤",p:194},
+     {de:"Drucker",acc:"einen Drucker",tr:"Yazıcı",ic:"🖨️",p:429},{de:"Hocker-Set",acc:"ein Hocker-Set",tr:"Tabure seti",ic:"🪑",p:276},{de:"Mikrofon-Set",acc:"ein Mikrofon-Set",tr:"Mikrofon seti",ic:"🎤",p:142},
      {de:"Whiteboard",acc:"ein Whiteboard",tr:"Beyaz tahta",ic:"📋",p:1568}]
 };
 const STEP = {1:10, 2:10, 3:100};
@@ -364,17 +370,17 @@ const PLAN = {1:[100,80], 2:[500,400], 3:[4000,3000]};
 /* ======================= texts ======================= */
 const T = {
 de: {
-  title: 'Überschlagsprofi ≈', sub: "Überschlag und Probe beim Einkaufen", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
+  title: 'Rundungsprofi', sub: "Auf- und abrunden beim Einkaufen", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
   tabs: ["Input", "Üben", "Experten", "Ergebnisse sichern", "Merkzettel", "Tippkarten"],
   lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]],
   solvedN: n => `${n} gelöst`, upMsg: (n, a, b) => `Stark! ${n} Aufgaben hintereinander in Stufe ${a} richtig gerechnet. Probiert jetzt Stufe ${b}!`, lockShort: n => `nach ${n} Aufgaben in orange`, lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`, lockGo: "Zu Stufe orange", unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`, unlockStay: "In orange weiterrechnen", guessT: "Stopp – nicht raten!", guessP: "Ihr antwortet sehr schnell oder probiert nur aus. Raten führt nicht zum Ziel: So lernt ihr nichts für die Klassenarbeit. Lest die Aufgabe genau, rechnet zuerst und antwortet dann. Jede und jeder ist selbst für das eigene Lernen verantwortlich.", guessOk: "Verstanden", svFast: "Das ging sehr schnell. Habt ihr jede Antwort wirklich gerechnet und besprochen? Raten führt nicht zum Ziel. Prüft eure Antworten noch einmal.", svFastGo: "Wir haben alles geprüft – abgeben", upGo: b => `Zu Stufe ${b}`, upStay: "Noch hier bleiben",
   bzT: "🧱 Bonus: Zahlenmauern", bzIntro: "Schon fertig? Dann knackt die Zahlenmauern! Jeder Stein ist die Summe der beiden Steine direkt darunter. Tippt einen leeren Stein an und gebt die Zahl ein.", bzCheck: "Prüfen", bzNext: "Nächste Mauer", bzOk: "Geschafft! Die Mauer steht. ⭐", bzBad: "Noch nicht ganz. Die roten Steine stimmen nicht.", bzEmpty: "Füllt zuerst alle leeren Steine aus.", bzCount: n => `Geschaffte Mauern: ${n}`, bzRank: ["Mauer-Lehrling", "Mauer-Profi", "Mauer-Meister"], bzUp: "Neue Stufe! Die Mauern werden größer.",
-  modes: { book: "Überschlag wie im Buch", why: "Wie rundest du?", over: "Überschlag beim Einkaufen", exact: "Genau rechnen und prüfen", plaus: "Kann das stimmen?", plan: "Reicht unser Geld?", rest: "Wechselgeld und Probe",
+  modes: { book: "Ungefähr rechnen", diff: "Unterschied beobachten", why: "Warum aufrunden?", over: "Aufrunden beim Einkaufen", exact: "Genau rechnen und prüfen", plaus: "Kann das stimmen?", plan: "Reicht unser Geld?", rest: "Wechselgeld und Probe",
            errpro: "Fehlersuche für Profis", wordpro: "Zahlen aus dem Text", receipt: "Kassenbon-Detektiv", restpro: "Wechselgeld-Profi", rough: "Warum so grob?" },
   zahl: s => s === 100 ? "Hunderterzahl" : "Zehnerzahl", stelle: s => s === 100 ? "Hunderter" : "Zehner",
-  budget: "Budget", total: "Summe", ueberschlag: "Überschlag", exact: "genau",
+  budget: "Budget", total: "Summe", ueberschlag: "Aufgerundete Summe", exact: "genau",
   check: "Prüfen", tip: "Tipp", next: "Nächste Aufgabe", show: "Lösung zeigen", del: "Löschen", go: "Weiter",
-  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Überschlagsprofi.", "Richtig! Weiter so."],
+  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Rundungsprofi.", "Richtig! Weiter so."],
   stepOk: "Richtig! Weiter mit der nächsten Zeile.",
   bad: "Noch nicht ganz. Prüfe diesen Schritt noch einmal.",
   badGrid: "Noch nicht ganz. Die rot markierten Kästchen stimmen nicht. Prüfe diese Spalten noch einmal.",
@@ -384,14 +390,26 @@ de: {
   tip3: "Tipp 3: Dieser Schritt wird dir vorgemacht. Rechne danach allein weiter.",
   whyTitle: "Warum stimmt das nicht?", cardBtn: n => `Tippkarte ${n} ansehen`,
   /* instructions */
-  iWhy1: (nm, it, p, B) => `<b>${nm}</b> hat <b>${eur(B)}</b> und möchte ${it} für <b>${eur(p)}</b> kaufen. ${nm} will sicher wissen, ob das Geld reicht. Welche Zahl nimmt ${nm} für den Überschlag?`,
-  iWhy2: "Warum rundet man so? Wähle die passende Begründung.",
-  why: ["Wenn ich aufrunde, weiß ich sicher, ob mein Geld reicht.", "Beim Abrunden ist die Zahl kleiner, dann kann ich mehr kaufen.", "Man muss immer abrunden, wenn die Ziffer kleiner als 5 ist."],
-  whyBad1: d => `Normales Runden ergibt ${eur(d)}. Willst du sicher wissen, ob das Geld reicht, rechnest du aber lieber etwas zu viel als zu wenig. Sonst reicht das Geld an der Kasse vielleicht nicht.`,
-  whyBad2: "Die Begründung passt nicht. Was passiert an der Kasse, wenn du zu wenig gerechnet hast?",
-  whySent: (nm, p, u) => `${nm} rundet ${eur(p)} auf ${eur(u)} auf, weil man dann sicher weiß, ob das Geld reicht.`,
-  iOver: s => `💶 <b>Budget-Regel:</b> Du willst sicher wissen, ob das Geld reicht. Darum rundest du hier jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} <b>auf</b>. Addiere dann im Kopf.`,
-  iBook: (pl, lv) => lv === 3 ? `Überschlage wie im Buch: Runde normal an der größten Stelle der kleinsten Zahl. Rechne dann im Kopf.` : `Überschlage wie im Buch: Runde beide Zahlen <b>normal</b> auf ${pl}. Rechne dann im Kopf.`,
+  iDiff1: "Schritt 1: Runde jeden Preis nach der Rundungsregel und addiere. Welche Summe kommt heraus?",
+  iDiff2: "Schritt 2: Runde jetzt jeden Preis auf und addiere. Welche Summe kommt heraus?",
+  iDiff3: E => `Schritt 4: Genau sind es ${eur(E)}. Welche Summe liegt immer über dem echten Preis?`,
+  iDiffGrid: "Schritt 3: Rechne den genauen Preis schriftlich.",
+  diff3o: ["Die aufgerundete Summe", "Die Summe nach der Rundungsregel", "Beide Summen"],
+  diffBad1: "Rundungsregel: Schau auf die Ziffer rechts von der Rundungsstelle. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.",
+  diffBad2: "Jeden Preis aufrunden heißt: Du nimmst immer die nächstgrößere glatte Zahl, auch wenn die Rundungsregel bei 1, 2, 3 oder 4 abrunden würde.",
+  diffBad3: "Vergleiche beide Summen mit dem genauen Preis. Welche Summe kann auch darunter liegen?",
+  diffSent: (Rs, U, E) => `Rundungsregel: ${eur(Rs)} liegt ${Rs < E ? "unter" : "über"} dem echten Preis von ${eur(E)}. Aufgerundet: ${eur(U)} liegt darüber. Die aufgerundete Summe liegt immer über dem echten Preis. Darum runde ich jeden Preis auf, wenn ich sicher wissen will, ob mein Geld reicht.`,
+  whyClaim: (nm, ds, D) => `${nm} rundet nach der Rundungsregel ab: <b>${ds} = ${eur(D)}</b>. ${nm} sagt: „Das Geld reicht sicher!“`,
+  iWhy1: nm => `Hat ${nm} recht? Was ist das Problem?`,
+  iWhy2: nm => `Wie muss ${nm} runden, um schnell im Kopf sicher zu prüfen, ob das Geld reicht?`,
+  why: [nm => `${nm} hat abgerundet. Die gerundete Summe ist kleiner als der echte Preis. Vielleicht reicht das Geld nicht.`, nm => `${nm} hat sich beim Addieren verrechnet.`, nm => `Es gibt kein Problem. Mit der Rundungsregel weiß man immer sicher, ob das Geld reicht.`],
+  whyBad: [() => "", (nm, D) => `Rechne nach: Die gerundeten Preise ergeben wirklich ${eur(D)}. Das Problem liegt beim Runden. Ist jeder Preis größer oder kleiner geworden?`, (nm, D) => `Schau auf die Preise: Jeder Preis wurde kleiner gemacht. Dann rechnet ${nm} zu wenig. Was passiert an der Kasse?`],
+  whyBadDown: "Nach der Rundungsregel wird hier abgerundet. Damit rechnest du zu wenig, und das Geld reicht an der Kasse vielleicht nicht.",
+  whyUp: x => `Jeden Preis aufrunden: ${x}`, whyRule: x => `Nach der Rundungsregel: ${x}`,
+  whyOk2: "Richtig! Jeder Preis ist aufgerundet. Jetzt liegt das Ergebnis immer über dem echten Preis.",
+  whySent: (nm, ps, E, B) => `Genau gerechnet kostet der Einkauf ${ps.map(eur).join(" + ")} = ${eur(E)}. Das ist mehr als ${eur(B)}: Das Geld reicht nicht! Will ich sicher wissen, ob mein Geld reicht, runde ich jeden Preis auf.`,
+  iOver: s => `💶 <b>Sicher entscheiden:</b> Du willst wissen, ob das Geld sicher reicht. Darum rundest du jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} <b>auf</b>, auch wenn die Rundungsregel abrunden würde. Addiere dann im Kopf.`,
+  iBook: (pl, lv) => lv === 3 ? `Rechne ungefähr: Runde nach der Rundungsregel an der größten Stelle der kleineren Zahl. Rechne dann im Kopf.` : `Rechne ungefähr: Runde beide Zahlen nach der <b>Rundungsregel</b> auf ${pl}. Rechne dann im Kopf.`,
   bookCtx: {
     add1: (a, b) => `🎬 Im Kino waren am Samstag ${fmt(a)} Besucher und am Sonntag ${fmt(b)} Besucher. Wie viele waren es <b>ungefähr</b> zusammen?`,
     add2: (a, b) => `🎟️ Beim Schulfest verkauft die 5a ${fmt(a)} Lose, die 5b verkauft ${fmt(b)} Lose. Wie viele Lose sind es <b>ungefähr</b>?`,
@@ -402,58 +420,58 @@ de: {
   dRoundDir: "Schau auf die Ziffer rechts von der Rundungsstelle: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.",
   dPlace: pl => `Du hast an der falschen Stelle gerundet. Hier rundest du auf ${pl}.`,
   dBookSum: "Rechne mit den gerundeten Zahlen im Kopf. Den genauen Wert brauchst du hier nicht.",
-  tipBook: pl => `Runde normal auf ${pl}: Schau auf die Ziffer rechts daneben. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.`,
+  tipBook: pl => `Runde nach der Rundungsregel auf ${pl}: Schau auf die Ziffer rechts daneben. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.`,
   tipBookPlace: (n, pl) => `Die kleinere Zahl ist ${fmt(n)}. Ihre größte Stelle sind die ${pl}. Darum rundest du beide Zahlen auf ${pl}.`,
   tipBook2: (n, a, b) => `${fmt(n)} liegt zwischen ${fmt(a)} und ${fmt(b)}. Welche Zahl ist näher?`,
-  labWOver: "Überschlag:",
-  iRough1: (U, E) => `Der Überschlag war ${eur(U)}, genau sind es nur ${eur(E)}. Warum ist der Überschlag hier so viel größer?`,
-  rough1: ["Weil wir jeden Preis fast um 10 € aufgerundet haben.", "Weil wir beim Addieren einen Fehler gemacht haben.", "Weil ein Überschlag immer doppelt so groß ist."],
+  labWOver: "Ungefähr:",
+  iRough1: (U, E) => `Die aufgerundete Summe war ${eur(U)}, genau sind es nur ${eur(E)}. Warum ist der Unterschied hier so groß?`,
+  rough1: ["Weil wir jeden Preis fast um 10 € aufgerundet haben.", "Weil wir beim Addieren einen Fehler gemacht haben.", "Weil beim Aufrunden immer das Doppelte herauskommt."],
   rough1Bad: "Schau dir die Preise an: 21 € wird zu 30 €. Wie viel kommt bei jedem Preis dazu?",
-  iRough2: "Ist der Überschlag trotzdem nützlich?",
-  rough2: ["Ja. Er zeigt sicher, dass der Einkauf nicht teurer ist. Ist es knapp, rechne ich genau.", "Nein. Bei solchen Preisen sollte man nie überschlagen.", "Ja. Der Überschlag ist immer der genaue Preis."],
-  rough2Bad: "Denk an die Budget-Regel: Was weißt du sicher, wenn du aufgerundet hast?",
+  iRough2: "Hilft das Aufrunden trotzdem?",
+  rough2: ["Ja. Es zeigt sicher, dass der Einkauf nicht teurer ist. Ist es knapp, rechne ich genau.", "Nein. Bei solchen Preisen sollte man nie runden.", "Ja. Die aufgerundete Summe ist immer der genaue Preis."],
+  rough2Bad: "Was weißt du sicher, wenn du jeden Preis aufgerundet hast?",
   roughKey: "Profi-Wissen",
-  roughSent: "Bei Preisen wie 21 € oder 31 € macht das Aufrunden viel aus. Der Überschlag ist dann grob, aber trotzdem sicher: Der echte Preis ist nie höher. Wird es knapp, rechnest du genau.",
-  restHint: pl => `Überschlag zuerst: Runde den Preis normal auf ${pl} und rechne im Kopf.`,
-  iDecide: "Was zeigt dein Überschlag?",
-  decSure: "Das Geld reicht sicher.", decExact: "Der Überschlag ist größer als das Budget. Ich muss genau rechnen.",
-  decSureBad: (U, B) => `Der Überschlag (${eur(U)}) ist nicht größer als das Budget (${eur(B)}). Du hast aufgerundet, also ist der genaue Preis noch kleiner. Das Geld reicht sicher.`,
-  decExactBad: (U, B) => `Der Überschlag (${eur(U)}) ist größer als das Budget (${eur(B)}). Ob es trotzdem reicht, zeigt nur die genaue Rechnung.`,
+  roughSent: "Bei Preisen wie 21 € oder 31 € macht das Aufrunden viel aus. Die aufgerundete Summe ist dann grob, aber trotzdem sicher: Der echte Preis ist nie höher. Wird es knapp, rechnest du genau.",
+  restHint: pl => `Zuerst ungefähr: Runde den Preis nach der Rundungsregel auf ${pl} und rechne im Kopf.`,
+  iDecide: "Was zeigt die aufgerundete Summe?",
+  decSure: "Das Geld reicht sicher.", decExact: "Die aufgerundete Summe ist größer als das Budget. Ich muss genau rechnen.",
+  decSureBad: (U, B) => `Die aufgerundete Summe (${eur(U)}) ist nicht größer als das Budget (${eur(B)}). Der genaue Preis ist noch kleiner. Das Geld reicht sicher.`,
+  decExactBad: (U, B) => `Die aufgerundete Summe (${eur(U)}) ist größer als das Budget (${eur(B)}). Ob es trotzdem reicht, zeigt nur die genaue Rechnung.`,
   decSureOk: (U, B) => `Richtig! ${eur(U)} ist nicht mehr als ${eur(B)}. Das Geld reicht sicher.`,
   decExactOk: (U, B) => `Richtig! ${eur(U)} ist mehr als ${eur(B)}. Jetzt hilft nur genaues Rechnen.`,
   iGrid: "Rechne den genauen Preis schriftlich. Tippe auf ein Kästchen und gib die Ziffer ein. Überträge darfst du in die kleinen roten Kästchen schreiben.",
   iFinal: "Reicht das Geld?", decYes: "Ja, das Geld reicht.", decNo: "Nein, das Geld reicht nicht.",
   finYesBad: (E, B) => `${eur(E)} ist nicht mehr als ${eur(B)}. Das Geld reicht.`,
   finNoBad: (E, B) => `${eur(E)} ist mehr als ${eur(B)}. Das Geld reicht nicht.`,
-  gridOk: (E, U) => `Richtig: ${eur(E)}. Das passt zum Überschlag ${eur(U)}.`,
-  iPlaus: (nm, C) => `<b>${nm}</b> hat genau gerechnet und <b>${eur(C)}</b> herausbekommen. Mach zuerst den Überschlag.`,
-  iPlaus2: (nm, C, U) => `Dein Überschlag: ${eur(U)}. Kann ${nm}s Ergebnis ${eur(C)} stimmen?`,
+  gridOk: (E, U) => `Richtig: ${eur(E)}. Das passt: Es liegt etwas unter der aufgerundeten Summe ${eur(U)}.`,
+  iPlaus: (nm, C) => `<b>${nm}</b> hat genau gerechnet und <b>${eur(C)}</b> herausbekommen. Runde zuerst jeden Preis auf und addiere.`,
+  iPlaus2: (nm, C, U) => `Deine aufgerundete Summe: ${eur(U)}. Kann das Ergebnis von ${nm} (${eur(C)}) stimmen?`,
   canYes: "Das kann stimmen.", canNo: "Das kann nicht stimmen.",
-  plBig: (C, U) => `${eur(C)} ist größer als der Überschlag ${eur(U)}. Weil du aufgerundet hast, muss das genaue Ergebnis kleiner sein. Das kann nicht stimmen.`,
-  plSmall: (C, U) => `${eur(C)} ist viel kleiner als der Überschlag ${eur(U)}. So viel kann das Aufrunden nicht ausmachen. Das kann nicht stimmen.`,
-  plFits: (C, U) => `${eur(C)} liegt knapp unter dem Überschlag ${eur(U)}. Das passt.`,
-  plNoOk: "Gut erkannt! Der Überschlag hat den Fehler entdeckt. Rechne jetzt richtig.",
-  plYesOk: "Richtig! Das Ergebnis passt zum Überschlag.",
-  claimed: (nm, C) => `${nm}s Ergebnis: ${eur(C)}`,
+  plBig: (C, U) => `${eur(C)} ist größer als die aufgerundete Summe ${eur(U)}. Das genaue Ergebnis muss aber kleiner sein. Das kann nicht stimmen.`,
+  plSmall: (C, U) => `${eur(C)} ist viel kleiner als die aufgerundete Summe ${eur(U)}. So viel kann das Aufrunden nicht ausmachen. Das kann nicht stimmen.`,
+  plFits: (C, U) => `${eur(C)} liegt knapp unter der aufgerundeten Summe ${eur(U)}. Das passt.`,
+  plNoOk: "Gut erkannt! Das Aufrunden hat den Fehler entdeckt. Rechne jetzt richtig.",
+  plYesOk: "Richtig! Das Ergebnis passt zur aufgerundeten Summe.",
+  claimed: (nm, C) => `Ergebnis von ${nm}: ${eur(C)}`,
   iPlan: (a, b, B) => `${a} und ${b} dürfen für die Klasse einkaufen. Sie haben <b>${eur(B)}</b>. Tippt im Prospekt mindestens 3 Sachen an.`,
   planCtx: { 1: "Neue Pausenspiele für die 5a", 2: "Eine Leseecke für die 5a", 3: "Ein neuer Medienraum für die Schule" },
-  cart: "Einkaufskorb", need3: "Wählt mindestens 3 Sachen aus.", toOver: "Weiter zum Überschlag",
+  cart: "Einkaufskorb", need3: "Wählt mindestens 3 Sachen aus.", toOver: "Weiter zum Aufrunden",
   planNo: "Richtig erkannt: Das Geld reicht nicht. Nehmt etwas heraus oder tauscht es aus und plant neu.",
   portfolio: "Für euer Portfolio",
-  planSent: (items, U, E, B) => `Wir kaufen ${items}. Unser Überschlag: ${eur(U)}. Genau kostet es ${eur(E)}. ${eur(E)} ist nicht mehr als ${eur(B)}, also reicht unser Geld.`,
+  planSent: (items, U, E, B) => `Wir kaufen ${items}. Aufgerundet: ${eur(U)}. Genau kostet es ${eur(E)}. ${eur(E)} ist nicht mehr als ${eur(B)}, also reicht unser Geld.`,
   and: " und ", comma: ", ",
-  iRest: (nm, B) => `<b>${nm}</b> bezahlt mit <b>${eur(B)}</b>. Überschlage zuerst, wie viel Wechselgeld ${nm} ungefähr bekommt. Rechne es dann genau aus und mach die Probe mit der Umkehraufgabe.`,
+  iRest: (nm, B) => `<b>${nm}</b> bezahlt mit <b>${eur(B)}</b>. Runde zuerst und rechne im Kopf, wie viel Wechselgeld ${nm} ungefähr bekommt. Rechne es dann genau aus und mach die Probe mit der Umkehraufgabe.`,
   labRest: "Wechselgeld:", labProbe: "Probe:",
   /* experts */
   xTitle: "Expertenaufgaben",
   xIntro: "Schwierige Aufgaben für Profis: Fehler finden, Zahlen aus Texten herauslesen, Kassenbons prüfen, Wechselgeld mit Probe und „Warum so grob?“.",
   xSolved: n => `${n} Expertenaufgaben gelöst`,
-  iErr1: (B) => `Tom hat einen Überschlag gemacht. Budget: ${eur(B)}. In welcher Zeile steckt der erste Fehler?`,
+  iErr1: (B) => `Tom hat jeden Preis aufgerundet und entschieden. Budget: ${eur(B)}. In welcher Zeile steckt der erste Fehler?`,
   line: n => `Zeile ${n}`, errLineBad: "In dieser Zeile stimmt es noch. Rechne selbst nach und vergleiche.", errLineOk: n => `Richtig! Der erste Fehler steckt in Zeile ${n}.`,
   iErr2: "Was hat Tom falsch gemacht?",
   reasons: { down: "Er hat einen Preis abgerundet statt aufgerundet.", sum: "Er hat sich beim Addieren verrechnet.", dec: "Er hat falsch entschieden, ob das Geld reicht." },
   reasonBad: "Das passt nicht. Vergleiche Toms Zeile genau mit deiner eigenen Rechnung.",
-  iErr3: "Gut erkannt! Mach den Überschlag jetzt richtig.",
+  iErr3: "Gut erkannt! Runde jetzt selbst jeden Preis auf und entscheide.",
   tomSure: "Das Geld reicht sicher.", tomExact: "Ich muss genau rechnen.",
   iWp1: "Lies genau. Tippe alle Zahlen an, die du zum Rechnen brauchst. Achtung: Nicht jede Zahl ist wichtig!",
   checkNums: "Zahlen prüfen", numsMissing: "Dir fehlt noch eine wichtige Zahl. Lies die Frage noch einmal.",
@@ -463,19 +481,19 @@ de: {
     x2: (k, d, B, a, b, c) => `Familie Demir fährt in ⟦${k}⟧ Tagen in den Urlaub. Sie hat ⟦${fmt(B)}⟧ € für Ausrüstung. Das Zelt kostet ⟦${fmt(a)}⟧ €, die Schlafsäcke ⟦${fmt(b)}⟧ € und die Kühlbox ⟦${fmt(c)}⟧ €. Der Laden hat bis ⟦${d}⟧ Uhr geöffnet. Reicht das Geld?`,
     x3: (k, d, B, a, b, c) => `Der Förderverein hat ⟦${fmt(B)}⟧ € für ⟦${k}⟧ Klassen. Er kauft einen Beamer für ⟦${fmt(a)}⟧ €, einen Laptop für ⟦${fmt(b)}⟧ € und Lautsprecher für ⟦${fmt(c)}⟧ €. Die Lieferung dauert ⟦${d}⟧ Tage. Reicht das Geld?`
   },
-  iReceipt: "Stimmt die Summe auf dem Kassenbon? Mach zuerst den Überschlag.",
-  iReceipt2: U => `Dein Überschlag: ${eur(U)}. Stimmt die Summe auf dem Kassenbon?`,
+  iReceipt: "Stimmt die Summe auf dem Kassenbon? Runde zuerst jeden Preis auf und addiere.",
+  iReceipt2: U => `Deine aufgerundete Summe: ${eur(U)}. Stimmt die Summe auf dem Kassenbon?`,
   recYes: "Die Summe stimmt.", recNo: "Die Summe stimmt nicht.", shop: "Schulmarkt",
   restBad: (S, v, B) => `Mach die Probe: ${fmt(S)} + ${fmt(v)} = ${fmt(S + v)}. Das ist nicht ${fmt(B)}.`,
   /* diagnosis */
   dDown: s => `Du hast abgerundet. Für eine sichere Entscheidung rundest du jeden Preis <b>auf</b>, auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"}.`,
-  dExactPrice: "Das ist der genaue Preis. Für den Überschlag brauchst du eine glatte Zahl.",
+  dExactPrice: "Das ist der genaue Preis. Hier brauchst du eine glatte Zahl.",
   dNotRound: s => `Das ist keine glatte ${s === 100 ? "Hunderterzahl" : "Zehnerzahl"}.`,
   dRoundGen: "Welche glatte Zahl kommt direkt nach dem Preis?",
-  dSumExact: "Das ist der genaue Preis. Für den Überschlag addierst du die gerundeten Zahlen.",
+  dSumExact: "Das ist der genaue Preis. Addiere die gerundeten Zahlen.",
   dSumGen: parts => `Addiere noch einmal Schritt für Schritt: ${parts}.`,
-  dOverBig: U => `Dein Ergebnis ist größer als der Überschlag (${eur(U)}). Das kann nicht stimmen, denn du hast aufgerundet.`,
-  dOverSmall: U => `Dein Ergebnis ist viel kleiner als der Überschlag (${eur(U)}). Hast du einen Übertrag oder einen Preis vergessen?`,
+  dOverBig: U => `Dein Ergebnis ist größer als die aufgerundete Summe (${eur(U)}). Das kann nicht stimmen.`,
+  dOverSmall: U => `Dein Ergebnis ist viel kleiner als die aufgerundete Summe (${eur(U)}). Hast du einen Übertrag oder einen Preis vergessen?`,
   dAddCarry: (pl, parts, tot, r) => `${pl}: Du hast den Übertrag vergessen. Richtig ist ${parts} = ${tot}, also ${r}.`,
   dGeneric: pl => `${pl}: Hier hast du dich verrechnet. So geht es:`,
   dLead: "Vorne steht eine Ziffer zu viel oder es fehlt eine. Wie viele Stellen muss das Ergebnis haben?",
@@ -484,13 +502,14 @@ de: {
   colHelp: pl => `Jetzt bist du in der <b>${pl}-Spalte</b>.`,
   carryWord: "Übertrag",
   /* tips */
-  tipRound: s => `Budget-Regel: Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} auf.`,
-  tipRound2: (p, a, b) => `${fmt(p)} liegt zwischen ${fmt(a)} und ${fmt(b)}. Beim Aufrunden nimmst du die größere Zahl.`,
+  tipRound: s => `Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf den nächsten ${s === 100 ? "Hunderter" : "Zehner"} auf, auch wenn die Rundungsregel abrunden würde.`,
+  tipRound2: (p, a, b) => `${fmt(p)} liegt zwischen ${fmt(a)} und ${fmt(b)}. Du willst sicher sein, also nimmst du die größere Zahl ${fmt(b)}, auch wenn die Rundungsregel abrunden würde.`,
   tipSum: s => `Addiere die gerundeten Zahlen im Kopf. Rechne mit den ${s === 100 ? "Hundertern" : "Zehnern"}.`,
   tipSum2: parts => `Schritt für Schritt: ${parts}`,
-  tipDecide: "Vergleiche den aufgerundeten Überschlag mit dem Budget. Überschlag ≤ Budget: Das Geld reicht sicher. Überschlag > Budget: genau rechnen.",
+  tipDecide: "Vergleiche die aufgerundete Summe mit dem Budget. Nicht größer als das Budget: Das Geld reicht sicher. Größer: genau rechnen.",
   tipFinal: "Vergleiche den genauen Preis mit dem Budget.",
-  tipCan: "Prüfregel: Das genaue Ergebnis ist nicht größer als der aufgerundete Überschlag, aber nur ein bisschen kleiner.",
+  tipCan: "Prüfregel: Das genaue Ergebnis ist nie größer als die aufgerundete Summe. Es ist aber auch nicht viel kleiner: pro Preis höchstens 9 € (beim Runden auf Hunderter höchstens 99 €).",
+  tipDiff: "Rundungsregel: 0 bis 4 abrunden, 5 bis 9 aufrunden. Aufrunden: Jeder Preis wird größer. Was heißt das für die Summe?",
   tipWhy: "Was passiert an der Kasse, wenn du zu wenig gerechnet hast?",
   tipRest: "Wechselgeld = bezahlter Betrag − Preis. Du kannst auch ergänzen: Preis + ? = bezahlter Betrag.",
   tipRest2: (S, B) => `${fmt(S)} + ? = ${fmt(B)}`,
@@ -504,68 +523,68 @@ de: {
   pTurn: (a, b) => `<b>${a}</b> rechnet. <b>${b}</b> schaut zu, prüft mit und hilft beim Erklären.`,
   pSwap: (a, b) => `Wechsel! Jetzt rechnet <b>${b}</b>. Vorher erklärt <b>${a}</b> kurz den Rechenweg.`,
   pDiscuss: "Besprecht zusammen:",
-  pPm: { why: "Warum rundet man hier auf? Erklärt es euch gegenseitig.", over: "Reicht das Geld sicher? Woran seht ihr das?", exact: "Passt das genaue Ergebnis zum Überschlag? Woran seht ihr das?", book: "Wann habt ihr abgerundet, wann aufgerundet? Erklärt die Rundungsregel.", plaus: "Woran habt ihr erkannt, ob das Ergebnis stimmen kann?", plan: "Wie habt ihr entschieden, ob euer Geld reicht?", rest: "Wie habt ihr die Probe gemacht?", def: "Erklärt euch gegenseitig euren Rechenweg." },
-  pPrompts: ["Wie habt ihr gerundet? Warum auf?", "Reicht das Geld sicher? Woran seht ihr das?", "Passt das genaue Ergebnis zum Überschlag?", "Erklärt die Prüfregel mit eigenen Worten.", "Macht zusammen die Probe.", "Wo im Alltag hilft euch ein Überschlag?"],
+  pPm: { why: "Warum rundet man hier auf? Erklärt es euch gegenseitig.", over: "Reicht das Geld sicher? Woran seht ihr das?", exact: "Passt das genaue Ergebnis zur aufgerundeten Summe? Woran seht ihr das?", diff: "Welche Summe liegt unter, welche über dem echten Preis? Warum?", book: "Wann habt ihr abgerundet, wann aufgerundet? Erklärt die Rundungsregel.", plaus: "Woran habt ihr erkannt, ob das Ergebnis stimmen kann?", plan: "Wie habt ihr entschieden, ob euer Geld reicht?", rest: "Wie habt ihr die Probe gemacht?", def: "Erklärt euch gegenseitig euren Rechenweg." },
+  pPrompts: ["Wie habt ihr gerundet? Warum auf?", "Reicht das Geld sicher? Woran seht ihr das?", "Passt das genaue Ergebnis zur aufgerundeten Summe?", "Erklärt die Prüfregel mit eigenen Worten.", "Macht zusammen die Probe.", "Wo im Alltag hilft euch das Aufrunden?"],
   /* input */
-  inTitle: "Überschlag und Probe beim Einkaufen",
+  inTitle: "Auf- und abrunden beim Einkaufen",
   inNext: "Weiter", inBack: "Zurück", inGo: "Jetzt üben",
-  in1h: "Reicht Elifs Geld?", in1: "Elif hat 50 €. Sie möchte für die Pause einkaufen:", in1q: "Reicht ihr Geld? Elif will es schnell wissen, ohne genau zu rechnen.",
-  in1items: [["Frisbee", 18], ["Jonglierbälle", 14], ["Springseil", 9]],
-  in2h: "Schritt 1: Runden", in2: "Mit gerundeten Werten rechnest du schnell im Kopf. Das nennt man „das Ergebnis überschlagen“. Das Zeichen ≈ bedeutet „ungefähr gleich“. Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.",
-  in3h: "Soll das Geld sicher reichen? Dann aufrunden!", in3: "Für ein ungefähres Ergebnis reicht normales Runden. Beim Einkaufen mit festem Budget gibt es aber einen Trick: Rundet Elif 14 € auf 10 € ab, rechnet sie zu wenig. Dann reicht das Geld an der Kasse vielleicht nicht. Darum rundet sie jeden Preis <b>auf</b>:",
-  in4h: "Schritt 2: Der Überschlag", in4: "Elif addiert die gerundeten Preise im Kopf und vergleicht mit ihrem Geld:", in4b: "50 € ist nicht mehr als 50 €. Das Geld reicht sicher.",
-  in5h: "Schritt 3: Genau rechnen und prüfen", in5: "Elif rechnet genau und prüft mit dem Überschlag. 41 € ist etwas kleiner als 50 €. Das passt! Sie bezahlt mit einem 50-€-Schein. Zum Schluss rechnet sie das Wechselgeld aus und macht die Probe mit der Umkehraufgabe:",
-  in6h: "Teste dich!", in6: "Ben hat 30 €. Er kauft einen Ball für 19 € und Kreide für 7 €. Mit welchem Überschlag weiß Ben sicher, ob sein Geld reicht?",
-  in6opts: [["20 + 10 = 30", true], ["20 + 7 = 27", false], ["10 + 10 = 20", false]],
-  in6ok: "Richtig! Beide Preise aufgerundet: 30 € reicht sicher. Jetzt kannst du üben.", in6bad: "Noch nicht. Runde beide Preise auf den nächsten Zehner auf.",
+  in1h: "Reicht Mias Geld?", in1: "Mia darf 100 € aus der Klassenkasse ausgeben. Sie möchte kaufen:", in1q: "Reicht das Geld? Mia will es schnell im Kopf herausfinden.",
+  in1items: [["Wasserpistole", 34], ["Puzzle", 33], ["Kreisel-Set", 35]],
+  in2h: "Schritt 1: Runden mit der Rundungsregel", in2: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden. Das Zeichen ≈ bedeutet „ungefähr gleich“. Mia rundet und addiert im Kopf:", in2b: "100 € ist nicht mehr als 100 €. Mia denkt: Das Geld reicht!",
+  in3h: "An der Kasse", in3: "Die Kasse zeigt aber:", in3b: "Das Geld reicht nicht! Mia hat 34 € und 33 € abgerundet. Ihre gerundete Summe (100 €) liegt unter dem echten Preis (102 €).",
+  in4h: "Sicher entscheiden: jeden Preis aufrunden", in4: "Soll das Geld sicher reichen, rundet Mia jeden Preis auf. Dann liegt das Ergebnis immer über dem echten Preis.", in4b: "120 € ist mehr als 100 €. Mia muss genau rechnen: 102 € > 100 €. Das Geld reicht nicht.",
+  in5h: "Entscheiden, genau rechnen, prüfen", in5: "Elif hat 50 € und kauft für 18 €, 14 € und 9 €. Sie rundet jeden Preis auf. 50 € ist nicht mehr als 50 €: Das Geld reicht sicher. Zur Kontrolle rechnet sie genau. 41 € liegt etwas unter 50 €. Das passt! Zum Schluss rechnet sie das Wechselgeld aus und macht die Probe:",
+  in6h: "Teste dich!", in6: "Noah hat 50 €. Er kauft einen Ball für 23 € und Kreide für 14 €. Wie muss Noah runden, um schnell im Kopf sicher zu prüfen, ob sein Geld reicht?",
+  in6opts: [["Nach der Rundungsregel: 20 + 10 = 30", false], ["Jeden Preis aufrunden: 30 + 20 = 50", true]],
+  in6ok: "Richtig! Beide Preise aufgerundet: 50 € ist nicht mehr als 50 €. Das Geld reicht sicher. Jetzt kannst du üben.", in6bad: "Noch nicht. Nach der Rundungsregel werden 23 € und 14 € abgerundet. Dann rechnest du zu wenig. Runde jeden Preis auf.",
   /* merk */
-  svTitle: "Ergebnisse sichern: Reicht mein Geld?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr abgebt. Eure Lehrkraft kommt zu euch und hört zu.", gateH: "Stopp! Erst die Tafel, dann diese Station.", gateP: "Hier sichert ihr zu zweit, was ihr an der Tafel gemeinsam besprochen habt.", gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, zeigt sie den <b>Startcode</b> an der Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen", gateWait: "Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: weiter bei „Üben“ oder „Experten“.", svP3: "Teil 3: Erklärt es euch gegenseitig", svTalk: "<b>Person 1</b> erklärt: Warum rundet man jeden Preis auf, wenn man sicher wissen will, ob das Geld reicht?<br><b>Person 2</b> erklärt: Was macht ihr, wenn der Überschlag größer ist als das Budget?<br>Benutzt dabei die Wörter <b>Überschlag</b>, <b>aufrunden</b>, <b>Budget</b> und <b>genau rechnen</b>.", svStarts: "Satzanfänge: „Wir runden auf, weil …“ · „Wenn der Überschlag größer ist als das Budget, …“", svTalkBtn: "Wir haben es uns gegenseitig erklärt", svTalkDone: "✓ Ihr habt es euch gegenseitig erklärt.", svP1: "Teil 1: Die Regeln", svP2: "Teil 2: Zwei Einkäufe", svShopA: "Lea kauft ein Frisbee (13 €), Straßenkreide (22 €) und ein Springseil (8 €).", svShop: "Jonas hat <b>70 €</b>. Er möchte einen Fußball (19 €), Jonglierbälle (16 €) und ein Kartenspiel (12 €) kaufen.",
-  svQ: [["Will ich sicher wissen, ob mein Budget reicht, runde ich jeden Preis …", ["auf.", "ab."], 0, "Beim Abrunden rechnest du zu wenig. Dann reicht das Geld an der Kasse vielleicht nicht."],
-   ["Ist der aufgerundete Überschlag kleiner als das Budget oder gleich groß, …", ["reicht das Geld sicher.", "muss ich genau rechnen."], 0, "Du hast aufgerundet. Der echte Preis ist nie höher als der Überschlag."],
-   ["Ist der aufgerundete Überschlag größer als das Budget, …", ["reicht das Geld nicht.", "muss ich genau rechnen."], 1, "Nicht so schnell! Der echte Preis ist kleiner als der Überschlag. Vielleicht reicht das Geld trotzdem."],
+  svTitle: "Ergebnisse sichern: Reicht mein Geld?", svIntro: "Arbeitet zu zweit an einem iPad. Besprecht jede Antwort, bevor ihr abgebt. Eure Lehrkraft kommt zu euch und hört zu.", gateH: "Stopp! Erst die Tafel, dann diese Station.", gateP: "Hier sichert ihr zu zweit, was ihr an der Tafel gemeinsam besprochen habt.", gateQ: "Wartet auf das Startsignal eurer Lehrkraft. Wenn die Sicherung an der Tafel fertig ist, zeigt sie den <b>Startcode</b> an der Tafel. Gebt ihn hier ein.", gateCode: "Startcode", gateGo: "Sicherung starten", gateDel: "Löschen", gateWait: "Das ist noch nicht der Startcode. Wartet auf das Startsignal eurer Lehrkraft. Bis dahin: weiter bei „Üben“ oder „Experten“.", svP3: "Teil 3: Erklärt es euch gegenseitig", svTalk: "<b>Person 1</b> erklärt: Warum rundet man jeden Preis auf, wenn man sicher wissen will, ob das Geld reicht?<br><b>Person 2</b> erklärt: Was macht ihr, wenn die aufgerundete Summe größer ist als das Budget?<br>Benutzt dabei die Wörter <b>aufrunden</b>, <b>abrunden</b>, <b>Budget</b> und <b>genau rechnen</b>.", svStarts: "Satzanfänge: „Wir runden auf, weil …“ · „Wenn die aufgerundete Summe größer ist als das Budget, …“", svTalkBtn: "Wir haben es uns gegenseitig erklärt", svTalkDone: "✓ Ihr habt es euch gegenseitig erklärt.", svP1: "Teil 1: Die Regeln", svP2: "Teil 2: Zwei Einkäufe", svShopA: "Lea kauft ein Frisbee (13 €), Straßenkreide (22 €) und ein Springseil (8 €).", svShop: "Jonas hat <b>70 €</b>. Er möchte einen Fußball (19 €), Jonglierbälle (16 €) und ein Kartenspiel (12 €) kaufen.",
+  svQ: [["Will ich sicher wissen, ob mein Geld reicht, runde ich jeden Preis …", ["auf.", "ab."], 0, "Beim Abrunden rechnest du zu wenig. Dann reicht das Geld an der Kasse vielleicht nicht."],
+   ["Ist die aufgerundete Summe kleiner als das Budget oder gleich groß, …", ["reicht das Geld sicher.", "muss ich genau rechnen."], 0, "Du hast aufgerundet. Der echte Preis ist nie höher als die aufgerundete Summe."],
+   ["Ist die aufgerundete Summe größer als das Budget, …", ["reicht das Geld nicht.", "muss ich genau rechnen."], 1, "Nicht so schnell! Der echte Preis ist kleiner als die aufgerundete Summe. Vielleicht reicht das Geld trotzdem."],
    ["Wie viel kostet Leas Einkauf ungefähr?", ["20 + 30 + 10 = 60 €", "10 + 20 + 10 = 40 €", "13 + 22 + 8 = 43 €"], 1, "Für ein ungefähres Ergebnis gilt die Rundungsregel: 13 ≈ 10 und 22 ≈ 20 (abrunden), 8 ≈ 10 (aufrunden)."],
-   ["Mit welchem Überschlag weiß Jonas sicher, ob sein Geld reicht?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "19 + 16 + 12 = 47 €"], 1, "Für eine sichere Entscheidung rundest du jeden Preis auf, auch 12 € auf 20 €. 50 € ist nach der Rundungsregel gerundet, 47 € ist genau gerechnet."],
-   ["Was zeigt der aufgerundete Überschlag?", ["Das Geld reicht sicher.", "Jonas muss genau rechnen.", "Das Geld reicht nicht."], 0, "60 € ist nicht mehr als 70 €. Das Geld reicht sicher."],
+   ["Wie muss Jonas runden, um schnell im Kopf sicher zu prüfen, ob sein Geld reicht?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "10 + 10 + 10 = 30 €"], 1, "Für eine sichere Entscheidung rundest du jeden Preis auf, auch 12 € auf 20 €. 50 € ist nach der Rundungsregel gerundet, 30 € ist alles abgerundet."],
+   ["Was zeigt die aufgerundete Summe?", ["Das Geld reicht sicher.", "Jonas muss genau rechnen.", "Das Geld reicht nicht."], 0, "60 € ist nicht mehr als 70 €. Das Geld reicht sicher."],
    ["Tim rundet für ein ungefähres Ergebnis nach der Rundungsregel. Welche Rundung ist richtig?", ["35 € ≈ 30 €", "43 € ≈ 50 €", "37 € ≈ 40 €"], 2, "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden. Also 35 € ≈ 40 € und 43 € ≈ 40 €."]],
   svWrong: "Falsch.", svSubmit: "Abgeben", svLockHint: "Besprecht eure Antworten. Nach dem Abgeben könnt ihr nichts mehr ändern.", svAnswered: (n, t) => `${n} von ${t} Fragen beantwortet`, svResult: (n, t) => `Ergebnis: ${n} von ${t} richtig`, svRetryIntro: "Zu euren Fehlern kommen jetzt neue Aufgaben. Beantwortet alle und gebt dann ab. Erst danach seht ihr, was richtig ist.", svRetryT: "Nachübung", svRetryDone: "Nachübung geschafft: Alle Fehler sind ausgebessert.", svMore: "Noch nicht alles richtig. Hier kommen neue Aufgaben, diesmal mit Tipp.", svRoundRes: (n, t) => `Nachübung: ${n} von ${t} richtig`, svExpl: "Erklärung", svRight: "Richtig ist:",
-  sv2: { c0: B => `Du hast ${B} €. Du willst sicher wissen, ob dein Geld reicht.`, s0: p => `Wie rundest du den Preis ${p} € für den Überschlag?`, h0: "Für eine sichere Entscheidung rundest du jeden Preis auf, auch wenn die Einerziffer kleiner als 5 ist.",
+  sv2: { c0: (nm, B, ps, ds, D) => `${nm} hat ${B} € und kauft Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}. ${nm} rundet nach der Rundungsregel: ${ds} = ${D} €. ${nm} sagt: „Das Geld reicht sicher!“`, s0: nm => `Hat ${nm} recht?`, o0: [nm => `Nein. ${nm} hat abgerundet und rechnet zu wenig. Hier reicht das Geld nicht.`, (D, B) => `Ja. ${D} € ist nicht mehr als ${B} €.`], h0: "Will man sicher wissen, ob das Geld reicht, rundet man jeden Preis auf, auch wenn die Einerziffer kleiner als 5 ist. Abgerundet rechnet man zu wenig.",
    sure: "Das Geld reicht sicher.", exact: "Ich muss genau rechnen.", no: "Das Geld reicht nicht.",
-   c1: (o, B) => `Dein aufgerundeter Überschlag ist ${o} €. Du hast ${B} €.`, s1: "Was stimmt?", hDec: "Vergleiche: Aufgerundeter Überschlag ≤ Budget → Das Geld reicht sicher. Aufgerundeter Überschlag > Budget → genau rechnen, denn der echte Preis ist kleiner.",
-   c3: ps => `Du kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s3: "Wie viel kostet der Einkauf ungefähr?", h3: "Für „ungefähr“ gilt die Rundungsregel: Einerziffer 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden.",
-   c4: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s4: "Welcher Überschlag zeigt sicher, ob dein Geld reicht?", h4: "Für eine sichere Entscheidung rundest du jeden Preis auf die nächste Zehnerzahl auf.",
-   c5: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s5: "Was zeigt der aufgerundete Überschlag?", h5: e => `Aufgerundeter Überschlag: ${e}.`, c6: "Für ein ungefähres Ergebnis rundest du nach der Rundungsregel.", s6: "Welche Rundung ist richtig?", h6: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden." },
-   svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svShow: "Zeigt euer iPad eurer Lehrkraft.", svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
+   c1: (o, B) => `Deine aufgerundete Summe ist ${o} €. Du hast ${B} €.`, s1: "Was stimmt?", hDec: "Vergleiche: Aufgerundete Summe ≤ Budget → Das Geld reicht sicher. Aufgerundete Summe > Budget → genau rechnen, denn der echte Preis ist kleiner.",
+   c3: ps => `Du kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s3: "Wie viel kostet der Einkauf ungefähr?", h3: "Für „ungefähr“ gilt die Rundungsregel: Einerziffer 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden.",
+   c4: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s4: "Wie musst du runden, um schnell im Kopf sicher zu prüfen, ob dein Geld reicht?", h4: "Für eine sichere Entscheidung rundest du jeden Preis auf die nächstgrößere Zehnerzahl auf, auch wenn die Rundungsregel abrunden würde.",
+   c5: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s5: "Was zeigt die aufgerundete Summe?", h5: e => `Aufgerundete Summe: ${e}.`, c6: "Für ein ungefähres Ergebnis rundest du nach der Rundungsregel.", s6: "Welche Rundung ist richtig?", h6: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden." },
+   svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
   merkTitle: "Merkzettel",
-  merkRules: ["Überschlag: Runde die Zahlen und rechne im Kopf. Das Zeichen ≈ heißt „ungefähr gleich“.", "Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.", "Runde an der größten Stelle der kleinsten Zahl. Beispiel: 358 + 47 → beide auf Zehner: 360 + 50 = 410.", "💶 Budget-Regel: Willst du sicher wissen, ob dein Geld reicht, rundest du jeden Preis <b>auf</b>. Für ein ungefähres Ergebnis gilt die Rundungsregel.", "Aufgerundeter Überschlag ≤ Budget: Das Geld reicht sicher. Aufgerundeter Überschlag > Budget: genau rechnen.", "Prüfregel: Das genaue Ergebnis ist nicht größer als der aufgerundete Überschlag, aber nur ein bisschen kleiner.", "Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag.", "Mehr dazu im Buch auf Seite 34."],
+  merkRules: ["Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden. Das Zeichen ≈ heißt „ungefähr gleich“.", "Wie viel ungefähr? Runde nach der Rundungsregel und rechne im Kopf. Das Ergebnis kann über oder unter dem echten Preis liegen.", "💶 Reicht mein Geld sicher? Runde jeden Preis <b>auf</b>, auch wenn die Rundungsregel abrunden würde. Dann liegt das Ergebnis immer über dem echten Preis.", "Aufgerundete Summe ≤ Budget: Das Geld reicht sicher. Aufgerundete Summe > Budget: genau rechnen.", "Prüfregel: Das genaue Ergebnis ist nie größer als die aufgerundete Summe. Es ist aber auch nicht viel kleiner: pro Preis höchstens 9 € (beim Runden auf Hunderter höchstens 99 €).", "Runde an der größten Stelle der kleineren Zahl. Beispiel: 358 + 47 → beide auf Zehner: 360 + 50 = 410.", "Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag.", "Mehr dazu im Buch auf Seite 34."],
   errTitle: "Typische Fehler",
-  errs: [["Abgerundet statt aufgerundet", "Budget 50 €: 14 € → <s>10 €</s> → richtig 20 €"], ["Genaue Preise statt gerundeter", "Überschlag: <s>18 + 14 + 9</s> → richtig 20 + 20 + 10"], ["Übertrag vergessen", "18 + 14 + 9 = <s>31</s> → richtig 41"], ["Ergebnis größer als der Überschlag", "Überschlag 50, Ergebnis <s>61</s> → kann nicht stimmen"], ["Wechselgeld ohne Probe", "50 − 41 = <s>19</s>, Probe: 41 + 19 = 60 → richtig 9"]],
+  errs: [["Abgerundet statt aufgerundet", "Budget 50 €: 14 € → <s>10 €</s> → richtig 20 €"], ["Genaue Preise statt gerundeter", "Aufrunden: <s>18 + 14 + 9</s> → richtig 20 + 20 + 10"], ["Übertrag vergessen", "18 + 14 + 9 = <s>31</s> → richtig 41"], ["Ergebnis größer als die aufgerundete Summe", "Aufgerundet 50, Ergebnis <s>61</s> → kann nicht stimmen"], ["Wechselgeld ohne Probe", "50 − 41 = <s>19</s>, Probe: 41 + 19 = 60 → richtig 9"]],
   glossTitle: "Fachbegriffe",
-  gloss: [["Überschlagsrechnung (kurz: Überschlag)", "ungefähres Ergebnis mit gerundeten Werten"], ["≈", "ungefähr gleich"], ["runden / aufrunden", "eine Zahl durch eine glatte Zahl ersetzen / nach oben runden"], ["Budget", "das Geld, das man ausgeben kann"], ["Probe", "Kontrolle mit der Umkehraufgabe"], ["Umkehraufgabe", "die Aufgabe rückwärts, z. B. 41 + 9 = 50 zu 50 − 41 = 9"], ["Wechselgeld", "Geld, das man an der Kasse zurückbekommt"], ["Summand + Summand = Wert der Summe", "Addition"]],
+  gloss: [["abrunden", "zur nächstkleineren glatten Zahl runden, z. B. 34 → 30"], ["aufrunden", "zur nächstgrößeren glatten Zahl runden, z. B. 36 → 40; soll das Geld sicher reichen, auch 34 → 40"], ["≈", "ungefähr gleich"], ["aufgerundete Summe", "Summe, wenn jeder Preis aufgerundet wurde"], ["Budget", "das Geld, das man ausgeben kann"], ["Probe", "Kontrolle mit der Umkehraufgabe"], ["Umkehraufgabe", "die Aufgabe rückwärts, z. B. 41 + 9 = 50 zu 50 − 41 = 9"], ["Wechselgeld", "Geld, das man an der Kasse zurückbekommt"], ["Summand + Summand = Wert der Summe", "Addition"]],
   cardsTitle: "Tippkarten", tapHint: "Tippe zum Umdrehen",
   cards: [
     ["Wie runde ich?", "Schau auf die Ziffer rechts von der Rundungsstelle. 0 bis 4: abrunden. 5 bis 9: aufrunden. Beispiel: 34 ≈ 30, 36 ≈ 40."],
-    ["Was ist ein Überschlag?", "Ein ungefähres Ergebnis mit gerundeten Zahlen. Du rechnest es schnell im Kopf aus."],
+    ["Wann runde ich nach der Rundungsregel?", "Wenn du ungefähr wissen willst, wie viel etwas kostet. Das Ergebnis kann dann über oder unter dem echten Preis liegen."],
     ["Warum runde ich bei festem Budget auf?", "Wenn du aufrundest, rechnest du eher zu viel als zu wenig. So weißt du sicher, ob dein Geld an der Kasse reicht."],
-    ["Wie rechne ich den Überschlag?", "Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf. Addiere dann die glatten Zahlen im Kopf: 40 + 40 + 30 = 110."],
-    ["Reicht das Geld sicher?", "Ist der aufgerundete Überschlag nicht größer als das Budget, reicht das Geld sicher. Ist er größer, musst du genau rechnen."],
-    ["Passt mein Ergebnis?", "Das genaue Ergebnis ist kleiner als der aufgerundete Überschlag oder gleich groß, aber nur ein bisschen kleiner. Sonst hast du dich verrechnet."],
+    ["Wie rechne ich die aufgerundete Summe?", "Willst du sicher wissen, ob das Geld reicht, rundest du jeden Preis auf. Addiere dann die glatten Zahlen im Kopf: 40 + 40 + 30 = 110."],
+    ["Reicht das Geld sicher?", "Ist die aufgerundete Summe nicht größer als das Budget, reicht das Geld sicher. Ist sie größer, musst du genau rechnen."],
+    ["Passt mein Ergebnis?", "Das genaue Ergebnis ist nie größer als die aufgerundete Summe und pro Preis höchstens 9 € kleiner. Sonst hast du dich verrechnet."],
     ["Wie mache ich die Probe?", "Wechselgeld = bezahlter Betrag − Preis. Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag. Beispiel: 100 − 81 = 19, Probe: 19 + 81 = 100 ✓"],
     ["Schriftlich addieren", "Zahlen stellengerecht untereinander. Rechts bei den Einern anfangen. Spaltensumme 10 oder mehr: Einer hinschreiben, Zehner als Übertrag in die nächste Spalte."],
     ["Auf welche Stelle runde ich?", "Schau dir die kleinere Zahl an. Auf ihre größte Stelle rundest du beide Zahlen. 358 + 47: 47 hat Zehner, also 360 + 50."]
   ]
 },
 tr: {
-  title: 'Tahmin Ustası ≈', sub: "Alışverişte tahmini hesap ve sağlama", other: "Deutsch", reset: "Yeniden başla", reset2: "Her şey silinsin mi?",
+  title: 'Yuvarlama Ustası', sub: "Alışverişte aşağı ve yukarı yuvarlama", other: "Deutsch", reset: "Yeniden başla", reset2: "Her şey silinsin mi?",
   tabs: ["Giriş", "Alıştırma", "Uzman", "Sonuçları pekiştir", "Not kâğıdı", "İpucu kartları"],
   lv: [["Seviye 1", "turuncu"], ["Seviye 2", "pembe"], ["Seviye 3", "mor"]],
   solvedN: n => `${n} çözüldü`, upMsg: (n, a, b) => `Harika! ${a} seviyesinde art arda ${n} soru doğru hesaplandı. Şimdi ${b} seviyesini deneyin!`, lockShort: n => `turuncuda ${n} sorudan sonra`, lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`, lockGo: "Turuncu seviyeye git", unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`, unlockStay: "Turuncuda devam et", guessT: "Dur – tahmin etme!", guessP: "Çok hızlı cevap veriyorsunuz ya da sadece deniyorsunuz. Tahmin etmek hedefe götürmez: Böyle sınav için bir şey öğrenemezsiniz. Soruyu dikkatlice okuyun, önce hesaplayın, sonra cevap verin. Herkes kendi öğrenmesinden kendisi sorumludur.", guessOk: "Anladım", svFast: "Bu çok hızlı oldu. Her cevabı gerçekten hesapladınız ve konuştunuz mu? Tahmin etmek hedefe götürmez. Cevaplarınızı bir daha kontrol edin.", svFastGo: "Hepsini kontrol ettik – teslim et", upGo: b => `${b} seviyesine geç`, upStay: "Burada kalmaya devam et",
   bzT: "🧱 Bonus: Sayı duvarları", bzIntro: "Bitirdiniz mi? O zaman sayı duvarlarını çözün! Her taş, hemen altındaki iki taşın toplamıdır. Boş bir taşa dokunun ve sayıyı girin.", bzCheck: "Kontrol et", bzNext: "Sonraki duvar", bzOk: "Başardınız! Duvar tamam. ⭐", bzBad: "Henüz tam değil. Kırmızı taşlar yanlış.", bzEmpty: "Önce bütün boş taşları doldurun.", bzCount: n => `Tamamlanan duvarlar: ${n}`, bzRank: ["Duvar çırağı", "Duvar kalfası", "Duvar ustası"], bzUp: "Yeni seviye! Duvarlar büyüyor.",
-  modes: { book: "Kitaptaki gibi tahmini hesap", why: "Nasıl yuvarlarsın?", over: "Alışverişte tahmini hesap", exact: "Tam hesapla ve kontrol et", plaus: "Bu doğru olabilir mi?", plan: "Paramız yeter mi?", rest: "Para üstü ve sağlama",
+  modes: { book: "Yaklaşık hesapla", diff: "Farkı gözlemle", why: "Neden yukarı yuvarlanır?", over: "Alışverişte yukarı yuvarlama", exact: "Tam hesapla ve kontrol et", plaus: "Bu doğru olabilir mi?", plan: "Paramız yeter mi?", rest: "Para üstü ve sağlama",
            errpro: "Uzmanlar için hata arama", wordpro: "Metindeki sayılar", receipt: "Fiş dedektifi", restpro: "Para üstü ustası", rough: "Neden bu kadar kaba?" },
   zahl: s => s === 100 ? "yüzlük sayı" : "onluk sayı", stelle: s => s === 100 ? "yüzlük" : "onluk",
-  budget: "Bütçe", total: "Toplam", ueberschlag: "Tahmini hesap", exact: "tam",
+  budget: "Bütçe", total: "Toplam", ueberschlag: "Yukarı yuvarlanmış toplam", exact: "tam",
   check: "Kontrol et", tip: "İpucu", next: "Sonraki soru", show: "Çözümü göster", del: "Sil", go: "İleri",
-  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir tahmin ustasısın.", "Doğru! Böyle devam et."],
+  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir yuvarlama ustasısın.", "Doğru! Böyle devam et."],
   stepOk: "Doğru! Sonraki satıra geç.",
   bad: "Henüz tam değil. Bu adımı bir daha kontrol et.",
   badGrid: "Henüz tam değil. Kırmızı işaretli kutular yanlış. Bu sütunları bir daha kontrol et.",
@@ -574,14 +593,26 @@ tr: {
   solShown: "İşte çözüm. Kendi hesabınla karşılaştır.",
   tip3: "3. ipucu: Bu adım sana gösteriliyor. Sonra tek başına devam et.",
   whyTitle: "Neden yanlış?", cardBtn: n => `${n}. ipucu kartına bak`,
-  iWhy1: (nm, it, p, B) => `<b>${nm}</b> adlı öğrencinin <b>${eur(B)}</b> parası var ve <b>${eur(p)}</b> tutan ${it} almak istiyor. Paranın kesin yetip yetmeyeceğini bilmek istiyor. Tahmini hesap için hangi sayıyı alır?`,
-  iWhy2: "Neden böyle yuvarlanır? Uygun gerekçeyi seç.",
-  why: ["Yukarı yuvarlarsam, paramın yetip yetmeyeceğini kesin bilirim.", "Aşağı yuvarlarsam sayı küçülür, daha çok şey alabilirim.", "Rakam 5'ten küçükse her zaman aşağı yuvarlamak gerekir."],
-  whyBad1: d => `Normal yuvarlama ${eur(d)} verir. Ama paranın kesin yetip yetmeyeceğini bilmek istiyorsan, biraz fazla hesaplamak daha iyidir. Yoksa kasada para yetmeyebilir.`,
-  whyBad2: "Gerekçe uymuyor. Az hesaplarsan kasada ne olur?",
-  whySent: (nm, p, u) => `${nm}, ${eur(p)} fiyatını ${eur(u)} olarak yukarı yuvarlar, çünkü böylece paranın yetip yetmeyeceği kesin bilinir.`,
-  iOver: s => `💶 <b>Bütçe kuralı:</b> Paranın yetip yetmeyeceğini kesin bilmek istiyorsun. Bu yüzden burada her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} <b>yukarı</b> yuvarlarsın. Sonra aklından topla.`,
-  iBook: (pl, lv) => lv === 3 ? `Kitaptaki gibi tahmin et: En küçük sayının en büyük basamağına göre normal yuvarla. Sonra aklından hesapla.` : `Kitaptaki gibi tahmin et: İki sayıyı da <b>normal</b> olarak ${pl} yuvarla. Sonra aklından hesapla.`,
+  iDiff1: "1. adım: Her fiyatı yuvarlama kuralıyla yuvarla ve topla. Hangi toplam çıkar?",
+  iDiff2: "2. adım: Şimdi her fiyatı yukarı yuvarla ve topla. Hangi toplam çıkar?",
+  iDiff3: E => `4. adım: Tam fiyat ${eur(E)}. Hangi toplam her zaman gerçek fiyatın üstündedir?`,
+  iDiffGrid: "3. adım: Tam fiyatı alt alta hesapla.",
+  diff3o: ["Yukarı yuvarlanmış toplam", "Yuvarlama kuralıyla bulunan toplam", "İki toplam da"],
+  diffBad1: "Yuvarlama kuralı: Yuvarlanacak basamağın sağındaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.",
+  diffBad2: "Her fiyatı yukarı yuvarlamak demek: Her zaman bir sonraki büyük yuvarlak sayıyı alırsın, yuvarlama kuralı 1, 2, 3 ya da 4'te aşağı yuvarlasa bile.",
+  diffBad3: "İki toplamı tam fiyatla karşılaştır. Hangisi altında da kalabilir?",
+  diffSent: (Rs, U, E) => `Yuvarlama kuralı: ${eur(Rs)}, gerçek fiyatın (${eur(E)}) ${Rs < E ? "altında" : "üstünde"}. Yukarı yuvarlanmış: ${eur(U)}, üstünde. Yukarı yuvarlanmış toplam her zaman gerçek fiyatın üstündedir. Bu yüzden paramın kesin yetip yetmediğini bilmek istersem her fiyatı yukarı yuvarlarım.`,
+  whyClaim: (nm, ds, D) => `${nm} yuvarlama kuralına göre aşağı yuvarlıyor: <b>${ds} = ${eur(D)}</b>. ${nm} diyor ki: „Para kesin yeter!“`,
+  iWhy1: nm => `${nm} haklı mı? Sorun ne?`,
+  iWhy2: nm => `${nm}, paranın kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalı?`,
+  why: [nm => `${nm} aşağı yuvarladı. Yuvarlanmış toplam gerçek fiyattan küçük. Belki para yetmez.`, nm => `${nm} toplarken yanlış hesapladı.`, nm => `Sorun yok. Yuvarlama kuralıyla paranın yetip yetmediği her zaman kesin bilinir.`],
+  whyBad: [() => "", (nm, D) => `Kontrol et: Yuvarlanmış fiyatların toplamı gerçekten ${eur(D)}. Sorun yuvarlamada. Her fiyat büyüdü mü, küçüldü mü?`, (nm, D) => `Fiyatlara bak: Her fiyat küçültüldü. O zaman ${nm} az hesaplar. Kasada ne olur?`],
+  whyBadDown: "Yuvarlama kuralına göre burada aşağı yuvarlanır. Böylece az hesaplarsın ve kasada para yetmeyebilir.",
+  whyUp: x => `Her fiyatı yukarı yuvarla: ${x}`, whyRule: x => `Yuvarlama kuralına göre: ${x}`,
+  whyOk2: "Doğru! Her fiyat yukarı yuvarlandı. Artık sonuç her zaman gerçek fiyatın üstünde.",
+  whySent: (nm, ps, E, B) => `Tam hesaplanınca alışveriş ${ps.map(eur).join(" + ")} = ${eur(E)} tutuyor. Bu ${eur(B)} tutarından fazla: Para yetmiyor! Paramın yetip yetmeyeceğini kesin bilmek istersem her fiyatı yukarı yuvarlarım.`,
+  iOver: s => `💶 <b>Kesin karar:</b> Paranın kesin yetip yetmeyeceğini bilmek istiyorsun. Bu yüzden her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} <b>yukarı</b> yuvarlarsın, yuvarlama kuralı aşağı yuvarlasa bile. Sonra aklından topla.`,
+  iBook: (pl, lv) => lv === 3 ? `Yaklaşık hesapla: Küçük sayının en büyük basamağına göre yuvarlama kuralıyla yuvarla. Sonra aklından hesapla.` : `Yaklaşık hesapla: İki sayıyı da <b>yuvarlama kuralıyla</b> ${pl} yuvarla. Sonra aklından hesapla.`,
   bookCtx: {
     add1: (a, b) => `🎬 Sinemaya cumartesi ${fmt(a)}, pazar ${fmt(b)} kişi geldi. Toplam <b>yaklaşık</b> kaç kişi geldi?`,
     add2: (a, b) => `🎟️ Okul şenliğinde 5a ${fmt(a)}, 5b ${fmt(b)} piyango bileti satıyor. <b>Yaklaşık</b> kaç bilet satıldı?`,
@@ -592,57 +623,57 @@ tr: {
   dRoundDir: "Yuvarlanacak basamağın sağındaki rakama bak: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı.",
   dPlace: pl => `Yanlış basamağa yuvarladın. Burada ${pl} yuvarlarsın.`,
   dBookSum: "Yuvarlanmış sayılarla aklından hesapla. Burada tam değere gerek yok.",
-  tipBook: pl => `Normal olarak ${pl} yuvarla: Sağdaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.`,
+  tipBook: pl => `Yuvarlama kuralıyla ${pl} yuvarla: Sağdaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.`,
   tipBookPlace: (n, pl) => `Küçük sayı ${fmt(n)}. En büyük basamağına göre iki sayıyı da ${pl} yuvarlarsın.`,
   tipBook2: (n, a, b) => `${fmt(n)}, ${fmt(a)} ile ${fmt(b)} arasında. Hangisine daha yakın?`,
-  labWOver: "Tahmin:",
-  iRough1: (U, E) => `Tahmin ${eur(U)} idi, tam fiyat ise sadece ${eur(E)}. Tahmin burada neden bu kadar büyük?`,
-  rough1: ["Çünkü her fiyatı neredeyse 10 € yukarı yuvarladık.", "Çünkü toplarken hata yaptık.", "Çünkü tahmin her zaman iki kat büyüktür."],
+  labWOver: "Yaklaşık:",
+  iRough1: (U, E) => `Yukarı yuvarlanmış toplam ${eur(U)} idi, tam fiyat ise sadece ${eur(E)}. Fark burada neden bu kadar büyük?`,
+  rough1: ["Çünkü her fiyatı neredeyse 10 € yukarı yuvarladık.", "Çünkü toplarken hata yaptık.", "Çünkü yukarı yuvarlayınca her zaman iki katı çıkar."],
   rough1Bad: "Fiyatlara bak: 21 €, 30 € oluyor. Her fiyata ne kadar ekleniyor?",
-  iRough2: "Tahmin yine de işe yarar mı?",
-  rough2: ["Evet. Alışverişin daha pahalı olmadığını kesin gösterir. Sınırdaysa tam hesaplarım.", "Hayır. Böyle fiyatlarda asla tahmin yapılmamalı.", "Evet. Tahmin her zaman tam fiyattır."],
-  rough2Bad: "Bütçe kuralını düşün: Yukarı yuvarladığında neyi kesin bilirsin?",
+  iRough2: "Yukarı yuvarlamak yine de işe yarar mı?",
+  rough2: ["Evet. Alışverişin daha pahalı olmadığını kesin gösterir. Sınırdaysa tam hesaplarım.", "Hayır. Böyle fiyatlarda asla yuvarlanmamalı.", "Evet. Yukarı yuvarlanmış toplam her zaman tam fiyattır."],
+  rough2Bad: "Her fiyatı yukarı yuvarladığında neyi kesin bilirsin?",
   roughKey: "Uzman bilgisi",
-  roughSent: "21 € ya da 31 € gibi fiyatlarda yukarı yuvarlamak çok şey değiştirir. Tahmin o zaman kabadır ama yine de güvenlidir: Gerçek fiyat asla daha yüksek değildir. Sınırdaysa tam hesaplarsın.",
-  restHint: pl => `Önce tahmin: Fiyatı normal olarak ${pl} yuvarla ve aklından hesapla.`,
-  iDecide: "Tahmini hesabın ne gösteriyor?",
-  decSure: "Para kesin yeter.", decExact: "Tahmini toplam bütçeden büyük. Tam hesap yapmalıyım.",
-  decSureBad: (U, B) => `Tahmini toplam (${eur(U)}) bütçeden (${eur(B)}) büyük değil. Yukarı yuvarladığın için tam fiyat daha da küçük. Para kesin yeter.`,
-  decExactBad: (U, B) => `Tahmini toplam (${eur(U)}) bütçeden (${eur(B)}) büyük. Yine de yetip yetmeyeceğini sadece tam hesap gösterir.`,
+  roughSent: "21 € ya da 31 € gibi fiyatlarda yukarı yuvarlamak çok şey değiştirir. Yukarı yuvarlanmış toplam o zaman kabadır ama yine de güvenlidir: Gerçek fiyat asla daha yüksek değildir. Sınırdaysa tam hesaplarsın.",
+  restHint: pl => `Önce yaklaşık: Fiyatı yuvarlama kuralıyla ${pl} yuvarla ve aklından hesapla.`,
+  iDecide: "Yukarı yuvarlanmış toplam ne gösteriyor?",
+  decSure: "Para kesin yeter.", decExact: "Yukarı yuvarlanmış toplam bütçeden büyük. Tam hesap yapmalıyım.",
+  decSureBad: (U, B) => `Yukarı yuvarlanmış toplam (${eur(U)}) bütçeden (${eur(B)}) büyük değil. Tam fiyat daha da küçük. Para kesin yeter.`,
+  decExactBad: (U, B) => `Yukarı yuvarlanmış toplam (${eur(U)}) bütçeden (${eur(B)}) büyük. Yine de yetip yetmeyeceğini sadece tam hesap gösterir.`,
   decSureOk: (U, B) => `Doğru! ${eur(U)}, ${eur(B)} tutarından fazla değil. Para kesin yeter.`,
   decExactOk: (U, B) => `Doğru! ${eur(U)}, ${eur(B)} tutarından fazla. Şimdi tam hesap gerekli.`,
   iGrid: "Tam fiyatı alt alta hesapla. Bir kutuya dokun ve rakamı yaz. Eldeleri (Übertrag) küçük kırmızı kutulara yazabilirsin.",
   iFinal: "Para yeter mi?", decYes: "Evet, para yeter.", decNo: "Hayır, para yetmez.",
   finYesBad: (E, B) => `${eur(E)}, ${eur(B)} tutarından fazla değil. Para yeter.`,
   finNoBad: (E, B) => `${eur(E)}, ${eur(B)} tutarından fazla. Para yetmez.`,
-  gridOk: (E, U) => `Doğru: ${eur(E)}. Bu, tahmini hesap ${eur(U)} ile uyuşuyor.`,
-  iPlaus: (nm, C) => `<b>${nm}</b> tam hesap yaptı ve <b>${eur(C)}</b> buldu. Önce tahmini hesap yap.`,
-  iPlaus2: (nm, C, U) => `Tahmini hesabın: ${eur(U)}. ${nm} adlı öğrencinin sonucu ${eur(C)} doğru olabilir mi?`,
+  gridOk: (E, U) => `Doğru: ${eur(E)}. Bu uyuyor: Yukarı yuvarlanmış toplamın (${eur(U)}) biraz altında.`,
+  iPlaus: (nm, C) => `<b>${nm}</b> tam hesap yaptı ve <b>${eur(C)}</b> buldu. Önce her fiyatı yukarı yuvarla ve topla.`,
+  iPlaus2: (nm, C, U) => `Yukarı yuvarlanmış toplamın: ${eur(U)}. ${nm} adlı öğrencinin sonucu ${eur(C)} doğru olabilir mi?`,
   canYes: "Doğru olabilir.", canNo: "Doğru olamaz.",
-  plBig: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinden büyük. Yukarı yuvarladığın için tam sonuç daha küçük olmalı. Doğru olamaz.`,
-  plSmall: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinden çok küçük. Yukarı yuvarlama bu kadar fark yapamaz. Doğru olamaz.`,
-  plFits: (C, U) => `${eur(C)}, tahmini hesap ${eur(U)} değerinin biraz altında. Bu uyuyor.`,
-  plNoOk: "İyi buldun! Tahmini hesap hatayı buldu. Şimdi doğru hesapla.",
-  plYesOk: "Doğru! Sonuç tahmini hesaba uyuyor.",
+  plBig: (C, U) => `${eur(C)}, yukarı yuvarlanmış toplam ${eur(U)} değerinden büyük. Tam sonuç daha küçük olmalı. Doğru olamaz.`,
+  plSmall: (C, U) => `${eur(C)}, yukarı yuvarlanmış toplam ${eur(U)} değerinden çok küçük. Yukarı yuvarlama bu kadar fark yapamaz. Doğru olamaz.`,
+  plFits: (C, U) => `${eur(C)}, yukarı yuvarlanmış toplam ${eur(U)} değerinin biraz altında. Bu uyuyor.`,
+  plNoOk: "İyi buldun! Yukarı yuvarlama hatayı buldu. Şimdi doğru hesapla.",
+  plYesOk: "Doğru! Sonuç yukarı yuvarlanmış toplama uyuyor.",
   claimed: (nm, C) => `${nm} adlı öğrencinin sonucu: ${eur(C)}`,
   iPlan: (a, b, B) => `${a} ve ${b} sınıf için alışveriş yapabilir. <b>${eur(B)}</b> paraları var. Broşürden en az 3 ürüne dokunun.`,
   planCtx: { 1: "5a için yeni teneffüs oyunları", 2: "5a için bir okuma köşesi", 3: "Okul için yeni bir medya odası" },
-  cart: "Alışveriş sepeti", need3: "En az 3 ürün seçin.", toOver: "Tahmini hesaba geç",
+  cart: "Alışveriş sepeti", need3: "En az 3 ürün seçin.", toOver: "Yukarı yuvarlamaya geç",
   planNo: "Doğru: Para yetmiyor. Bir ürünü çıkarın ya da değiştirin ve yeniden planlayın.",
   portfolio: "Portfolyonuz için",
-  planSent: (items, U, E, B) => `${items} alıyoruz. Tahmini hesabımız: ${eur(U)}. Tam fiyat: ${eur(E)}. ${eur(E)}, ${eur(B)} tutarından fazla değil, yani paramız yeter.`,
+  planSent: (items, U, E, B) => `${items} alıyoruz. Yukarı yuvarlanmış: ${eur(U)}. Tam fiyat: ${eur(E)}. ${eur(E)}, ${eur(B)} tutarından fazla değil, yani paramız yeter.`,
   and: " ve ", comma: ", ",
-  iRest: (nm, B) => `<b>${nm}</b> <b>${eur(B)}</b> ile ödüyor. Önce yaklaşık ne kadar para üstü alacağını tahmin et. Sonra tam hesapla ve ters işlemle sağlama yap.`,
+  iRest: (nm, B) => `<b>${nm}</b> <b>${eur(B)}</b> ile ödüyor. Önce yuvarla ve yaklaşık ne kadar para üstü alacağını aklından hesapla. Sonra tam hesapla ve ters işlemle sağlama yap.`,
   labRest: "Para üstü:", labProbe: "Sağlama:",
   xTitle: "Uzman soruları",
   xIntro: "Ustalar için zor sorular: hataları bul, metinden sayıları çıkar, fişleri kontrol et ve sağlamayla para üstünü hesapla.",
   xSolved: n => `${n} uzman sorusu çözüldü`,
-  iErr1: (B) => `Tom tahmini hesap yaptı. Bütçe: ${eur(B)}. İlk hata hangi satırda?`,
+  iErr1: (B) => `Tom her fiyatı yukarı yuvarladı ve karar verdi. Bütçe: ${eur(B)}. İlk hata hangi satırda?`,
   line: n => `${n}. satır`, errLineBad: "Bu satır doğru. Kendin hesapla ve karşılaştır.", errLineOk: n => `Doğru! İlk hata ${n}. satırda.`,
   iErr2: "Tom neyi yanlış yaptı?",
   reasons: { down: "Bir fiyatı yukarı yerine aşağı yuvarlamış.", sum: "Toplarken yanlış hesaplamış.", dec: "Paranın yetip yetmeyeceğine yanlış karar vermiş." },
   reasonBad: "Bu uymuyor. Tom'un satırını kendi hesabınla dikkatlice karşılaştır.",
-  iErr3: "İyi buldun! Şimdi tahmini hesabı doğru yap.",
+  iErr3: "İyi buldun! Şimdi her fiyatı kendin yukarı yuvarla ve karar ver.",
   tomSure: "Para kesin yeter.", tomExact: "Tam hesap yapmalıyım.",
   iWp1: "Dikkatlice oku. Hesaplamak için gereken tüm sayılara dokun. Dikkat: Her sayı önemli değil!",
   checkNums: "Sayıları kontrol et", numsMissing: "Önemli bir sayı eksik. Soruyu tekrar oku.",
@@ -652,18 +683,18 @@ tr: {
     x2: (k, d, B, a, b, c) => `Demir ailesi ⟦${k}⟧ gün sonra tatile gidiyor. Kamp malzemesi için ⟦${fmt(B)}⟧ € ayırdılar. Çadır ⟦${fmt(a)}⟧ €, uyku tulumları ⟦${fmt(b)}⟧ €, soğutucu çanta ⟦${fmt(c)}⟧ €. Mağaza saat ⟦${d}⟧'e kadar açık. Para yeter mi?`,
     x3: (k, d, B, a, b, c) => `Okul derneğinin ⟦${k}⟧ sınıf için ⟦${fmt(B)}⟧ € parası var. ⟦${fmt(a)}⟧ € projeksiyon cihazı, ⟦${fmt(b)}⟧ € dizüstü bilgisayar ve ⟦${fmt(c)}⟧ € hoparlör alıyor. Teslimat ⟦${d}⟧ gün sürüyor. Para yeter mi?`
   },
-  iReceipt: "Fişteki toplam doğru mu? Önce tahmini hesap yap.",
-  iReceipt2: U => `Tahmini hesabın: ${eur(U)}. Fişteki toplam doğru mu?`,
+  iReceipt: "Fişteki toplam doğru mu? Önce her fiyatı yukarı yuvarla ve topla.",
+  iReceipt2: U => `Yukarı yuvarlanmış toplamın: ${eur(U)}. Fişteki toplam doğru mu?`,
   recYes: "Toplam doğru.", recNo: "Toplam yanlış.", shop: "Okul marketi",
   restBad: (S, v, B) => `Sağlama yap: ${fmt(S)} + ${fmt(v)} = ${fmt(S + v)}. Bu ${fmt(B)} değil.`,
   dDown: s => `Aşağı yuvarlamışsın. Kesin karar için her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} <b>yukarı</b> yuvarlarsın.`,
-  dExactPrice: "Bu tam fiyat. Tahmini hesap için yuvarlak bir sayı gerekir.",
+  dExactPrice: "Bu tam fiyat. Burada yuvarlak bir sayı gerekir.",
   dNotRound: s => `Bu yuvarlak bir ${s === 100 ? "yüzlük sayı" : "onluk sayı"} değil.`,
   dRoundGen: "Fiyattan hemen sonra gelen yuvarlak sayı hangisi?",
-  dSumExact: "Bu tam fiyat. Tahmini hesap için yuvarlanmış sayıları topla.",
+  dSumExact: "Bu tam fiyat. Yuvarlanmış sayıları topla.",
   dSumGen: parts => `Adım adım tekrar topla: ${parts}.`,
-  dOverBig: U => `Sonucun tahmini hesaptan (${eur(U)}) büyük. Bu doğru olamaz, çünkü yukarı yuvarladın.`,
-  dOverSmall: U => `Sonucun tahmini hesaptan (${eur(U)}) çok küçük. Bir eldeyi ya da bir fiyatı unuttun mu?`,
+  dOverBig: U => `Sonucun yukarı yuvarlanmış toplamdan (${eur(U)}) büyük. Bu doğru olamaz.`,
+  dOverSmall: U => `Sonucun yukarı yuvarlanmış toplamdan (${eur(U)}) çok küçük. Bir eldeyi ya da bir fiyatı unuttun mu?`,
   dAddCarry: (pl, parts, tot, r) => `${pl}: Eldeyi unutmuşsun. Doğrusu ${parts} = ${tot}, yani ${r}.`,
   dGeneric: pl => `${pl}: Burada yanlış hesaplamışsın. Doğrusu şöyle:`,
   dLead: "Başta fazladan bir rakam var ya da bir rakam eksik. Sonuç kaç basamaklı olmalı?",
@@ -671,13 +702,14 @@ tr: {
   colAdd: (pl, parts, tot, r, c, next) => c ? `${pl}: ${parts} = ${tot}. ${r} yaz, ${c} elde olarak ${next} sütununa geçer.` : `${pl}: ${parts} = ${tot}. ${tot} yaz.`,
   colHelp: pl => `Şimdi <b>${pl} sütunundasın</b>.`,
   carryWord: "elde",
-  tipRound: s => `Bütçe kuralı: Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} yukarı yuvarlarsın.`,
-  tipRound2: (p, a, b) => `${fmt(p)}, ${fmt(a)} ile ${fmt(b)} arasında. Yukarı yuvarlarken büyük sayıyı alırsın.`,
+  tipRound: s => `Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı bir sonraki ${s === 100 ? "yüzlüğe" : "onluğa"} yukarı yuvarlarsın, yuvarlama kuralı aşağı yuvarlasa bile.`,
+  tipRound2: (p, a, b) => `${fmt(p)}, ${fmt(a)} ile ${fmt(b)} arasında. Kesin olmak istiyorsun, bu yüzden büyük sayıyı (${fmt(b)}) alırsın, yuvarlama kuralı aşağı yuvarlasa bile.`,
   tipSum: s => `Yuvarlanmış sayıları aklından topla. ${s === 100 ? "Yüzlüklerle" : "Onluklarla"} hesapla.`,
   tipSum2: parts => `Adım adım: ${parts}`,
-  tipDecide: "Yukarı yuvarlanmış tahmini hesabı bütçeyle karşılaştır. Tahmin ≤ bütçe: Para kesin yeter. Tahmin > bütçe: Tam hesapla.",
+  tipDecide: "Yukarı yuvarlanmış toplamı bütçeyle karşılaştır. Bütçeden büyük değilse: Para kesin yeter. Büyükse: Tam hesapla.",
   tipFinal: "Tam fiyatı bütçeyle karşılaştır.",
-  tipCan: "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış tahmini hesaptan büyük değildir, ama sadece biraz küçüktür.",
+  tipCan: "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış toplamdan asla büyük değildir. Ama çok da küçük değildir: fiyat başına en fazla 9 € (yüzlüğe yuvarlarken en fazla 99 €).",
+  tipDiff: "Yuvarlama kuralı: 0–4 aşağı, 5–9 yukarı. Yukarı yuvarlayınca her fiyat büyür. Bu toplam için ne demek?",
   tipWhy: "Az hesaplarsan kasada ne olur?",
   tipRest: "Para üstü = ödenen para − fiyat. Tamamlayarak da bulabilirsin: fiyat + ? = ödenen para.",
   tipRest2: (S, B) => `${fmt(S)} + ? = ${fmt(B)}`,
@@ -690,49 +722,49 @@ tr: {
   pTurn: (a, b) => `<b>${a}</b> hesaplıyor. <b>${b}</b> izliyor, kontrol ediyor ve açıklamaya yardım ediyor.`,
   pSwap: (a, b) => `Değişin! Şimdi <b>${b}</b> hesaplıyor. Önce <b>${a}</b> hesaplama yolunu kısaca anlatıyor.`,
   pDiscuss: "Birlikte konuşun:",
-  pPm: { why: "Burada neden yukarı yuvarlanıyor? Birbirinize açıklayın.", over: "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", exact: "Tam sonuç tahmini hesaba uyuyor mu? Bunu nereden anlıyorsunuz?", book: "Ne zaman aşağı, ne zaman yukarı yuvarladınız? Yuvarlama kuralını açıklayın.", plaus: "Sonucun doğru olup olamayacağını nereden anladınız?", plan: "Paranızın yetip yetmeyeceğine nasıl karar verdiniz?", rest: "Sağlamayı nasıl yaptınız?", def: "Hesaplama yolunuzu birbirinize açıklayın." },
-  pPrompts: ["Nasıl yuvarladınız? Neden yukarı?", "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", "Tam sonuç tahmini hesaba uyuyor mu?", "Kontrol kuralını kendi sözlerinizle açıklayın.", "Sağlamayı birlikte yapın.", "Günlük hayatta tahmini hesap size nerede yardım eder?"],
-  inTitle: "Alışverişte tahmini hesap ve sağlama",
+  pPm: { why: "Burada neden yukarı yuvarlanıyor? Birbirinize açıklayın.", over: "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", exact: "Tam sonuç yukarı yuvarlanmış toplama uyuyor mu? Bunu nereden anlıyorsunuz?", diff: "Hangi toplam gerçek fiyatın altında, hangisi üstünde? Neden?", book: "Ne zaman aşağı, ne zaman yukarı yuvarladınız? Yuvarlama kuralını açıklayın.", plaus: "Sonucun doğru olup olamayacağını nereden anladınız?", plan: "Paranızın yetip yetmeyeceğine nasıl karar verdiniz?", rest: "Sağlamayı nasıl yaptınız?", def: "Hesaplama yolunuzu birbirinize açıklayın." },
+  pPrompts: ["Nasıl yuvarladınız? Neden yukarı?", "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", "Tam sonuç yukarı yuvarlanmış toplama uyuyor mu?", "Kontrol kuralını kendi sözlerinizle açıklayın.", "Sağlamayı birlikte yapın.", "Günlük hayatta yukarı yuvarlamak size nerede yardım eder?"],
+  inTitle: "Alışverişte aşağı ve yukarı yuvarlama",
   inNext: "İleri", inBack: "Geri", inGo: "Alıştırmaya başla",
-  in1h: "Elif'in parası yeter mi?", in1: "Elif'in 50 € parası var. Teneffüs için alışveriş yapmak istiyor:", in1q: "Parası yeter mi? Elif bunu tam hesaplamadan hızlıca öğrenmek istiyor.",
-  in1items: [["Frizbi", 18], ["Jonglör topları", 14], ["Atlama ipi", 9]],
-  in2h: "1. adım: Yuvarlama", in2: "Yuvarlak sayılarla akıldan daha hızlı hesaplanır. Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı yuvarla. 5, 6, 7, 8, 9 → yukarı yuvarla.",
-  in3h: "Para kesin yetmeli mi? O zaman yukarı yuvarla!", in3: "Yaklaşık bir sonuç için normal yuvarlama yeterli. Ama sabit bütçeyle alışverişte bir püf noktası var: Elif 14 €'yu 10 €'ya aşağı yuvarlarsa az hesaplar. O zaman kasada para yetmeyebilir. Bu yüzden her fiyatı <b>yukarı</b> yuvarlar:",
-  in4h: "2. adım: Tahmini hesap", in4: "Elif yuvarlanmış fiyatları aklından toplar ve parasıyla karşılaştırır:", in4b: "50 €, 50 €'dan fazla değil. Para kesin yeter.",
-  in5h: "3. adım: Tam hesapla ve kontrol et", in5: "Elif tam hesaplar ve tahmini hesapla kontrol eder. 41 €, 50 €'dan biraz küçük. Bu uyuyor! 50 €'luk banknotla öder. En sonda para üstünü hesaplar ve ters işlemle sağlama yapar:",
-  in6h: "Kendini dene!", in6: "Ben'in 30 € parası var. 19 €'ya bir top ve 7 €'ya tebeşir alıyor. Hangi tahmini hesapla Ben parasının yetip yetmeyeceğini kesin bilir?",
-  in6opts: [["20 + 10 = 30", true], ["20 + 7 = 27", false], ["10 + 10 = 20", false]],
-  in6ok: "Doğru! İki fiyat da yukarı yuvarlandı: 30 € kesin yeter. Şimdi alıştırma yapabilirsin.", in6bad: "Henüz değil. İki fiyatı da bir sonraki onluğa yukarı yuvarla.",
-  svTitle: "Sonuçları pekiştir: Param yeter mi?", svIntro: "İki kişi bir iPad ile çalışın. Teslim etmeden önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.", gateH: "Dur! Önce tahta, sonra bu bölüm.", gateP: "Burada tahtada birlikte konuştuklarınızı iki kişi olarak pekiştiriyorsunuz.", gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtada gösterir. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil", gateWait: "Bu henüz başlama kodu değil. Öğretmeninizin işaretini bekleyin. O zamana kadar „Alıştırma“ veya „Uzman“ ile devam edin.", svP3: "3. Bölüm: Birbirinize açıklayın", svTalk: "<b>1. kişi</b> açıklar: Paranın kesin yetip yetmeyeceğini bilmek istediğimizde neden her fiyatı yukarı yuvarlarız?<br><b>2. kişi</b> açıklar: Tahmini hesap bütçeden büyükse ne yaparsınız?<br>Şu kelimeleri kullanın: <b>tahmini hesap (Überschlag)</b>, <b>yukarı yuvarlamak (aufrunden)</b>, <b>bütçe (Budget)</b>, <b>tam hesaplamak (genau rechnen)</b>.", svStarts: "Cümle başlangıçları: „Yukarı yuvarlıyoruz, çünkü …“ · „Tahmini hesap bütçeden büyükse …“", svTalkBtn: "Birbirimize açıkladık", svTalkDone: "✓ Birbirinize açıkladınız.", svP1: "1. Bölüm: Kurallar", svP2: "2. Bölüm: İki alışveriş", svShopA: "Lea bir frizbi (13 €), tebeşir seti (22 €) ve bir atlama ipi (8 €) alıyor.", svShop: "Jonas'ın <b>70 €</b> parası var. Bir futbol topu (19 €), jonglör topları (16 €) ve bir iskambil kağıdı (12 €) almak istiyor.",
-  svQ: [["Bütçemin yetip yetmeyeceğini kesin bilmek istersem, her fiyatı …", ["yukarı yuvarlarım.", "aşağı yuvarlarım."], 0, "Aşağı yuvarlarsan az hesaplarsın. O zaman kasada para yetmeyebilir."],
-   ["Yukarı yuvarlanmış tahmini hesap bütçeden küçük veya bütçeye eşitse …", ["para kesin yeter.", "tam hesap yapmalıyım."], 0, "Yukarı yuvarladın. Gerçek fiyat asla tahmini hesaptan büyük değildir."],
-   ["Yukarı yuvarlanmış tahmini hesap bütçeden büyükse …", ["para yetmez.", "tam hesap yapmalıyım."], 1, "Acele etme! Gerçek fiyat tahmini hesaptan küçüktür. Belki para yine de yeter."],
+  in1h: "Mia'nın parası yeter mi?", in1: "Mia sınıf kasasından 100 € harcayabilir. Şunları almak istiyor:", in1q: "Para yeter mi? Mia bunu aklından hızlıca bulmak istiyor.",
+  in1items: [["Su tabancası", 34], ["Yapboz", 33], ["Topaç seti", 35]],
+  in2h: "1. adım: Yuvarlama kuralıyla yuvarla", in2: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı. ≈ işareti „yaklaşık olarak eşit“ demek. Mia yuvarlar ve aklından toplar:", in2b: "100 €, 100 €'dan fazla değil. Mia düşünüyor: Para yeter!",
+  in3h: "Kasada", in3: "Ama kasa şunu gösteriyor:", in3b: "Para yetmiyor! Mia 34 € ve 33 €'yu aşağı yuvarladı. Yuvarlanmış toplam (100 €) gerçek fiyatın (102 €) altında.",
+  in4h: "Kesin karar: her fiyatı yukarı yuvarla", in4: "Para kesin yetsin diye Mia her fiyatı yukarı yuvarlar. O zaman sonuç her zaman gerçek fiyatın üstündedir.", in4b: "120 €, 100 €'dan fazla. Mia tam hesaplamalı: 102 € > 100 €. Para yetmiyor.",
+  in5h: "Karar ver, tam hesapla, kontrol et", in5: "Elif'in 50 € parası var ve 18 €, 14 € ve 9 €'luk şeyler alıyor. Her fiyatı yukarı yuvarlar. 50 €, 50 €'dan fazla değil: Para kesin yeter. Kontrol için tam hesaplar. 41 €, 50 €'nun biraz altında. Uyuyor! Sonunda para üstünü hesaplar ve sağlama yapar:",
+  in6h: "Kendini dene!", in6: "Noah'nın 50 € parası var. 23 €'ya bir top ve 14 €'ya tebeşir alıyor. Parasının kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalı?",
+  in6opts: [["Yuvarlama kuralına göre: 20 + 10 = 30", false], ["Her fiyatı yukarı yuvarla: 30 + 20 = 50", true]],
+  in6ok: "Doğru! İki fiyat da yukarı yuvarlandı: 50 €, 50 €'dan fazla değil. Para kesin yeter. Şimdi alıştırma yapabilirsin.", in6bad: "Henüz değil. Yuvarlama kuralına göre 23 € ve 14 € aşağı yuvarlanır. O zaman az hesaplarsın. Her fiyatı yukarı yuvarla.",
+  svTitle: "Sonuçları pekiştir: Param yeter mi?", svIntro: "İki kişi bir iPad ile çalışın. Teslim etmeden önce her cevabı konuşun. Öğretmeniniz yanınıza gelip dinleyecek.", gateH: "Dur! Önce tahta, sonra bu bölüm.", gateP: "Burada tahtada birlikte konuştuklarınızı iki kişi olarak pekiştiriyorsunuz.", gateQ: "Öğretmeninizin başlama işaretini bekleyin. Tahtadaki çalışma bitince öğretmeniniz <b>başlama kodunu</b> tahtada gösterir. Kodu buraya girin.", gateCode: "Başlama kodu", gateGo: "Pekiştirmeyi başlat", gateDel: "Sil", gateWait: "Bu henüz başlama kodu değil. Öğretmeninizin işaretini bekleyin. O zamana kadar „Alıştırma“ veya „Uzman“ ile devam edin.", svP3: "3. Bölüm: Birbirinize açıklayın", svTalk: "<b>1. kişi</b> açıklar: Paranın kesin yetip yetmeyeceğini bilmek istediğimizde neden her fiyatı yukarı yuvarlarız?<br><b>2. kişi</b> açıklar: Yukarı yuvarlanmış toplam bütçeden büyükse ne yaparsınız?<br>Şu kelimeleri kullanın: <b>yukarı yuvarlamak (aufrunden)</b>, <b>aşağı yuvarlamak (abrunden)</b>, <b>bütçe (Budget)</b>, <b>tam hesaplamak (genau rechnen)</b>.", svStarts: "Cümle başlangıçları: „Yukarı yuvarlıyoruz, çünkü …“ · „Yukarı yuvarlanmış toplam bütçeden büyükse …“", svTalkBtn: "Birbirimize açıkladık", svTalkDone: "✓ Birbirinize açıkladınız.", svP1: "1. Bölüm: Kurallar", svP2: "2. Bölüm: İki alışveriş", svShopA: "Lea bir frizbi (13 €), tebeşir seti (22 €) ve bir atlama ipi (8 €) alıyor.", svShop: "Jonas'ın <b>70 €</b> parası var. Bir futbol topu (19 €), jonglör topları (16 €) ve bir iskambil kağıdı (12 €) almak istiyor.",
+  svQ: [["Paramın yetip yetmeyeceğini kesin bilmek istersem, her fiyatı …", ["yukarı yuvarlarım.", "aşağı yuvarlarım."], 0, "Aşağı yuvarlarsan az hesaplarsın. O zaman kasada para yetmeyebilir."],
+   ["Yukarı yuvarlanmış toplam bütçeden küçük veya bütçeye eşitse …", ["para kesin yeter.", "tam hesap yapmalıyım."], 0, "Yukarı yuvarladın. Gerçek fiyat asla yukarı yuvarlanmış toplamdan büyük değildir."],
+   ["Yukarı yuvarlanmış toplam bütçeden büyükse …", ["para yetmez.", "tam hesap yapmalıyım."], 1, "Acele etme! Gerçek fiyat yukarı yuvarlanmış toplamdan küçüktür. Belki para yine de yeter."],
    ["Lea'nın alışverişi yaklaşık kaç euro tutar?", ["20 + 30 + 10 = 60 €", "10 + 20 + 10 = 40 €", "13 + 22 + 8 = 43 €"], 1, "Yaklaşık bir sonuç için yuvarlama kuralı geçerlidir: 13 ≈ 10 ve 22 ≈ 20 (aşağı yuvarla), 8 ≈ 10 (yukarı yuvarla)."],
-   ["Hangi tahmini hesapla Jonas parasının yetip yetmeyeceğini kesin bilir?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "19 + 16 + 12 = 47 €"], 1, "Kesin karar için her fiyatı yukarı yuvarlarsın, 12 €'yu da 20 €'ya. 50 € yuvarlama kuralına göre, 47 € tam hesap."],
-   ["Yukarı yuvarlanmış tahmini hesap ne gösteriyor?", ["Para kesin yeter.", "Jonas tam hesap yapmalı.", "Para yetmez."], 0, "60 €, 70 €'dan fazla değil. Para kesin yeter."],
+   ["Jonas, parasının kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalı?", ["20 + 20 + 10 = 50 €", "20 + 20 + 20 = 60 €", "10 + 10 + 10 = 30 €"], 1, "Kesin karar için her fiyatı yukarı yuvarlarsın, 12 €'yu da 20 €'ya. 50 € yuvarlama kuralına göre, 30 € hepsi aşağı yuvarlanmış."],
+   ["Yukarı yuvarlanmış toplam ne gösteriyor?", ["Para kesin yeter.", "Jonas tam hesap yapmalı.", "Para yetmez."], 0, "60 €, 70 €'dan fazla değil. Para kesin yeter."],
    ["Tim yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlıyor. Hangi yuvarlama doğru?", ["35 € ≈ 30 €", "43 € ≈ 50 €", "37 € ≈ 40 €"], 2, "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı. Yani 35 € ≈ 40 € ve 43 € ≈ 40 €."]],
   svWrong: "Yanlış.", svSubmit: "Teslim et", svLockHint: "Cevaplarınızı konuşun. Teslim ettikten sonra hiçbir şey değiştiremezsiniz.", svAnswered: (n, t) => `${n} / ${t} soru cevaplandı`, svResult: (n, t) => `Sonuç: ${n} / ${t} doğru`, svRetryIntro: "Hatalarınız için şimdi yeni sorular geliyor. Hepsini cevaplayın, sonra teslim edin. Neyin doğru olduğunu ancak o zaman görürsünüz.", svRetryT: "Ek alıştırma", svRetryDone: "Ek alıştırma tamam: Bütün hatalar düzeltildi.", svMore: "Henüz hepsi doğru değil. İşte yeni sorular, bu sefer ipucuyla.", svRoundRes: (n, t) => `Ek alıştırma: ${n} / ${t} doğru`, svExpl: "Açıklama", svRight: "Doğrusu:",
-  sv2: { c0: B => `${B} € paran var. Paranın kesin yetip yetmeyeceğini bilmek istiyorsun.`, s0: p => `Tahmini hesap için ${p} € fiyatını nasıl yuvarlarsın?`, h0: "Kesin karar için her fiyatı yukarı yuvarlarsın, birler basamağı 5'ten küçük olsa bile.",
+  sv2: { c0: (nm, B, ps, ds, D) => `${nm} adlı öğrencinin ${B} € parası var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyor. Yuvarlama kuralına göre yuvarlıyor: ${ds} = ${D} €. Diyor ki: „Para kesin yeter!“`, s0: nm => `${nm} haklı mı?`, o0: [nm => `Hayır. ${nm} aşağı yuvarladı ve az hesaplıyor. Burada para yetmiyor.`, (D, B) => `Evet. ${D} €, ${B} €'dan fazla değil.`], h0: "Paranın yetip yetmeyeceğini kesin bilmek için her fiyat yukarı yuvarlanır, birler basamağı 5'ten küçük olsa bile. Aşağı yuvarlayan az hesaplar.",
    sure: "Para kesin yeter.", exact: "Tam hesaplamam gerekir.", no: "Para yetmez.",
-   c1: (o, B) => `Yukarı yuvarlanmış tahmini hesabın ${o} €. ${B} € paran var.`, s1: "Hangisi doğru?", hDec: "Karşılaştır: Yukarı yuvarlanmış tahmin ≤ bütçe → Para kesin yeter. Yukarı yuvarlanmış tahmin > bütçe → tam hesapla, çünkü gerçek fiyat daha küçüktür.",
-   c3: ps => `${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s3: "Alışveriş yaklaşık kaç euro tutar?", h3: "„Yaklaşık“ için yuvarlama kuralı geçerlidir: birler basamağı 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı.",
-   c4: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s4: "Hangi tahmini hesap paranın yetip yetmediğini kesin gösterir?", h4: "Kesin karar için her fiyatı bir sonraki onluğa yukarı yuvarlarsın.",
-   c5: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s5: "Yukarı yuvarlanmış tahmini hesap ne gösteriyor?", h5: e => `Yukarı yuvarlanmış tahmin: ${e}.`, c6: "Yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlarsın.", s6: "Hangi yuvarlama doğru?", h6: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı." },
-   svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svShow: "iPad'inizi öğretmeninize gösterin.", svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
+   c1: (o, B) => `Yukarı yuvarlanmış toplamın ${o} €. ${B} € paran var.`, s1: "Hangisi doğru?", hDec: "Karşılaştır: Yukarı yuvarlanmış toplam ≤ bütçe → Para kesin yeter. Yukarı yuvarlanmış toplam > bütçe → tam hesapla, çünkü gerçek fiyat daha küçüktür.",
+   c3: ps => `${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s3: "Alışveriş yaklaşık kaç euro tutar?", h3: "„Yaklaşık“ için yuvarlama kuralı geçerlidir: birler basamağı 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı.",
+   c4: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s4: "Paranın kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalısın?", h4: "Kesin karar için her fiyatı bir sonraki büyük onluğa yukarı yuvarlarsın, yuvarlama kuralı aşağı yuvarlasa bile.",
+   c5: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s5: "Yukarı yuvarlanmış toplam ne gösteriyor?", h5: e => `Yukarı yuvarlanmış toplam: ${e}.`, c6: "Yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlarsın.", s6: "Hangi yuvarlama doğru?", h6: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı." },
+   svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
   merkTitle: "Not kâğıdı",
-  merkRules: ["Tahmini hesap: Sayıları yuvarla ve aklından hesapla. ≈ işareti „yaklaşık olarak eşit“ demek.", "Yuvarlama kuralı: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı.", "En küçük sayının en büyük basamağına göre yuvarla. Örnek: 358 + 47 → ikisi de onluğa: 360 + 50 = 410.", "💶 Bütçe kuralı: Paranın yetip yetmeyeceğini kesin bilmek istiyorsan her fiyatı <b>yukarı</b> yuvarlarsın. Yaklaşık bir sonuç için yuvarlama kuralı geçerlidir.", "Yukarı yuvarlanmış tahmin ≤ bütçe: Para kesin yeter. Yukarı yuvarlanmış tahmin > bütçe: Tam hesapla.", "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış tahmini hesaptan büyük değildir, ama sadece biraz küçüktür.", "Ters işlemle sağlama: fiyat + para üstü = ödenen para.", "Daha fazlası kitapta, sayfa 34'te."],
+  merkRules: ["Yuvarlama kuralı: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı. ≈ işareti „yaklaşık olarak eşit“ demek.", "Yaklaşık ne kadar? Yuvarlama kuralıyla yuvarla ve aklından hesapla. Sonuç gerçek fiyatın üstünde ya da altında olabilir.", "💶 Param kesin yeter mi? Her fiyatı <b>yukarı</b> yuvarla, yuvarlama kuralı aşağı yuvarlasa bile. O zaman sonuç her zaman gerçek fiyatın üstündedir.", "Yukarı yuvarlanmış toplam ≤ bütçe: Para kesin yeter. Yukarı yuvarlanmış toplam > bütçe: Tam hesapla.", "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış toplamdan asla büyük değildir. Ama çok da küçük değildir: fiyat başına en fazla 9 € (yüzlüğe yuvarlarken en fazla 99 €).", "Küçük sayının en büyük basamağına göre yuvarla. Örnek: 358 + 47 → ikisi de onluğa: 360 + 50 = 410.", "Ters işlemle sağlama: fiyat + para üstü = ödenen para.", "Daha fazlası kitapta, sayfa 34'te."],
   errTitle: "Sık yapılan hatalar",
-  errs: [["Yukarı yerine aşağı yuvarlanmış", "Bütçe 50 €: 14 € → <s>10 €</s> → doğrusu 20 €"], ["Yuvarlanmış yerine tam fiyatlar", "Tahmin: <s>18 + 14 + 9</s> → doğrusu 20 + 20 + 10"], ["Elde unutulmuş", "18 + 14 + 9 = <s>31</s> → doğrusu 41"], ["Sonuç tahminden büyük", "Tahmin 50, sonuç <s>61</s> → doğru olamaz"], ["Sağlamasız para üstü", "50 − 41 = <s>19</s>, sağlama: 41 + 19 = 60 → doğrusu 9"]],
+  errs: [["Yukarı yerine aşağı yuvarlanmış", "Bütçe 50 €: 14 € → <s>10 €</s> → doğrusu 20 €"], ["Yuvarlanmış yerine tam fiyatlar", "Yukarı yuvarlama: <s>18 + 14 + 9</s> → doğrusu 20 + 20 + 10"], ["Elde unutulmuş", "18 + 14 + 9 = <s>31</s> → doğrusu 41"], ["Sonuç yukarı yuvarlanmış toplamdan büyük", "Yukarı yuvarlanmış 50, sonuç <s>61</s> → doğru olamaz"], ["Sağlamasız para üstü", "50 − 41 = <s>19</s>, sağlama: 41 + 19 = 60 → doğrusu 9"]],
   glossTitle: "Terimler (Almanca – Türkçe)",
-  gloss: [["Überschlagsrechnung (Überschlag)", "tahmini hesap (yuvarlanmış sayılarla)"], ["≈", "yaklaşık olarak eşit"], ["runden / aufrunden", "yuvarlamak / yukarı yuvarlamak"], ["Budget", "bütçe: harcanabilecek para"], ["Probe", "sağlama (ters işlemle kontrol)"], ["Umkehraufgabe", "ters işlem, ör. 41 + 9 = 50 ↔ 50 − 41 = 9"], ["Wechselgeld", "para üstü"], ["Summand + Summand = Wert der Summe", "toplanan + toplanan = toplam"]],
+  gloss: [["abrunden", "aşağı yuvarlamak, ör. 34 → 30"], ["aufrunden", "yukarı yuvarlamak, ör. 36 → 40; para kesin yetsin diye 34 → 40 de"], ["≈", "yaklaşık olarak eşit"], ["aufgerundete Summe", "yukarı yuvarlanmış toplam"], ["Budget", "bütçe: harcanabilecek para"], ["Probe", "sağlama (ters işlemle kontrol)"], ["Umkehraufgabe", "ters işlem, ör. 41 + 9 = 50 ↔ 50 − 41 = 9"], ["Wechselgeld", "para üstü"], ["Summand + Summand = Wert der Summe", "toplanan + toplanan = toplam"]],
   cardsTitle: "İpucu kartları", tapHint: "Çevirmek için dokun",
   cards: [
     ["Nasıl yuvarlarım?", "Yuvarlanacak basamağın sağındaki rakama bak. 0–4: aşağı yuvarla. 5–9: yukarı yuvarla. Örnek: 34 ≈ 30, 36 ≈ 40."],
-    ["Tahmini hesap nedir?", "Yuvarlanmış sayılarla bulunan yaklaşık sonuç. Aklından hızlıca hesaplarsın."],
+    ["Yuvarlama kuralını ne zaman kullanırım?", "Bir şeyin yaklaşık ne kadar tuttuğunu bilmek istediğinde. Sonuç gerçek fiyatın üstünde ya da altında olabilir."],
     ["Sabit bütçede neden yukarı yuvarlarım?", "Yukarı yuvarlarsan az değil, biraz fazla hesaplarsın. Böylece paranın kasada yetip yetmeyeceğini kesin bilirsin."],
-    ["Tahmini hesabı nasıl yaparım?", "Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı yukarı yuvarla. Sonra yuvarlak sayıları aklından topla: 40 + 40 + 30 = 110."],
-    ["Para kesin yeter mi?", "Yukarı yuvarlanmış tahmini hesap bütçeden büyük değilse para kesin yeter. Büyükse tam hesaplaman gerekir."],
-    ["Sonucum uyuyor mu?", "Tam sonuç yukarı yuvarlanmış tahmini hesaptan küçük ya da ona eşittir, ama sadece biraz küçüktür. Değilse yanlış hesaplamışsın."],
+    ["Yukarı yuvarlanmış toplamı nasıl bulurum?", "Paranın kesin yetip yetmeyeceğini bilmek istiyorsan her fiyatı yukarı yuvarla. Sonra yuvarlak sayıları aklından topla: 40 + 40 + 30 = 110."],
+    ["Para kesin yeter mi?", "Yukarı yuvarlanmış toplam bütçeden büyük değilse para kesin yeter. Büyükse tam hesaplaman gerekir."],
+    ["Sonucum uyuyor mu?", "Tam sonuç yukarı yuvarlanmış toplamdan asla büyük değildir ve fiyat başına en fazla 9 € küçüktür. Değilse yanlış hesaplamışsın."],
     ["Sağlama nasıl yapılır?", "Para üstü = ödenen para − fiyat. Sağlama: fiyat + para üstü = ödenen para. Bu doğruysa doğru hesaplamışsın."],
     ["Alt alta toplama", "Sayıları basamaklarına göre alt alta yaz. Sağdan, birlerden başla. Sütun toplamı 10 veya fazlaysa birleri yaz, onluğu elde olarak bir sonraki sütuna geçir."],
     ["Hangi basamağa yuvarlarım?", "Küçük sayıya bak. İki sayıyı da onun en büyük basamağına yuvarlarsın. 358 + 47: 47'nin onlukları var, yani 360 + 50."]
@@ -760,7 +792,7 @@ function calcAdd(nums) {
 /* realistic price around the catalog price, never a round number */
 const rem = (p, s) => (p % s) / (s / 10); /* digit right of the rounding place */
 function price(lv, it, near) { const s = STEP[lv]; let p, g = 0; do { p = rnd(Math.max(3, Math.round(it.p * .75)), Math.round(it.p * 1.3)); g++ } while ((p % s === 0 || (lv === 3 && p % 10 === 0) || (near && rem(p, s) < 5)) && g < 400); if (p % s === 0) p += s / 2 + 3; return p }
-function basket(lv, n, near = true) { return shuffle(ITEMS[lv].slice()).slice(0, n).map(it => ({ it, p: price(lv, it, near) })) }
+function basket(lv, n, near = false) { return shuffle(ITEMS[lv].slice()).slice(0, n).map(it => ({ it, p: price(lv, it, near) })) }
 const inWindow = (C, U, n, s) => C <= U && C > U - n * s;
 function claim(b, E, U, s, lv) {
   if (Math.random() < .4) return E;
@@ -790,11 +822,11 @@ const finalPhase = (E, B) => ({ type: "choice", instr: "final", opts: [{ key: "d
 const gridPhase = (nums, U, n, s) => ({ type: "grid", instr: "grid", nums, U, n, s });
 
 /* ======================= generators ======================= */
-const CYCLE = { 1: ["why", "over", "exact", "book", "plaus", "plan"], 2: ["why", "over", "exact", "book", "plaus", "plan", "rest"], 3: ["why", "over", "exact", "book", "plaus", "plan", "rest"] };
+const CYCLE = { 1: ["why", "over", "exact", "diff", "plaus", "book", "plan"], 2: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"], 3: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"] };
 function makeTask(level) {
   if (level === 4) return makeExpert();
   const seq = store.get("up-seq", { 1: 0, 2: 0, 3: 0 }); const m = CYCLE[level][seq[level] % CYCLE[level].length]; seq[level]++; store.set("up-seq", seq);
-  return ({ book: makeBook, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest })[m](level);
+  return ({ book: makeBook, diff: makeDiff, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest })[m](level);
 }
 const nround = (n, pl) => Math.floor(n / pl + .5) * pl;
 function makeBook(lv) {
@@ -810,23 +842,51 @@ function makeBook(lv) {
   return { mode: "book", lv, kind, a, b, pl, ctxKey: kind + pick(["1", "2"]), ctx: "book",
     phases: [{ type: "steps", instr: "book", lines: [{ kind: "nround", n: a, pl, value: ra }, { kind: "nround", n: b, pl, value: rb }, { kind: "osum", op: kind, ra, rb, exact: kind === "add" ? a + b : a - b, value: val }] }] };
 }
+/* Preis, bei dem normales Runden abrundet (Ziffer rechts der Rundungsstelle 1–4) */
+function priceLow(lv, it) { const s = STEP[lv], lo = Math.max(s + 1, Math.round(it.p * .7)), hi = Math.max(lo + s, Math.round(it.p * 1.3)); let p, g = 0; do { p = rnd(lo, hi); g++ } while ((rem(p, s) < 1 || rem(p, s) >= 5 || (lv === 3 && p % 10 === 0)) && g < 500); return p }
+/* Warum aufrunden? Ein Kind rundet nach der Rundungsregel ab und meint, das Geld reiche sicher. In Wahrheit reicht es nicht. */
 function makeWhy(lv) {
-  const s = STEP[lv]; let it, p, g = 0;
-  do { it = pick(ITEMS[lv]); p = price(lv, it); g++ } while ((((p % s) / (s / 10)) >= 5 || p % s === 0 || p < s) && g < 500);
-  const u = up(p, s), d = down(p, s), B = u + s * rnd(1, 4), nm = pick(NAMES);
+  const s = STEP[lv]; let b, D, E, g = 0;
+  do { b = shuffle(ITEMS[lv].filter(it => it.p > s).slice()).slice(0, 3).map(it => ({ it, p: priceLow(lv, it) })); D = sum(b.map(x => down(x.p, s))); E = sum(b.map(x => x.p)); g++ }
+  while (g < 200 && (b.some(x => rem(x.p, s) < 1 || rem(x.p, s) >= 5 || x.p <= s) || new Set(b.map(x => x.p)).size < 3));
+  const B = E > D + s && Math.random() < .5 ? D + s : D, U = sum(b.map(x => up(x.p, s))), nm = pick(NAMES);
+  const ds = b.map(x => down(x.p, s)), us = b.map(x => up(x.p, s)), ex = a => a.map(fmt).join(" + ");
   return {
-    mode: "why", nm, it, p, B, u, d, ctx: "single",
+    mode: "why", nm, b, B, D, E, U, ds, ctx: "why",
     phases: [
-      { type: "choice", instr: "why1", opts: shuffle([{ text: eur(d), ok: false, bad: () => L().whyBad1(d) }, { text: eur(u), ok: true }]) },
-      { type: "choice", instr: "why2", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().why[i], ok: i === 0, bad: () => L().whyBad2 }))) }
+      { type: "choice", instr: "why1", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().why[i](nm), ok: i === 0, bad: () => L().whyBad[i](nm, D) }))) },
+      { type: "choice", instr: "why2", opts: shuffle([
+        { text: () => L().whyUp(`${ex(us)} = ${eur(U)}`), ok: true },
+        { text: () => L().whyRule(`${ex(ds)} = ${eur(D)}`), ok: false, bad: () => L().whyBadDown }]), okMsg: () => L().whyOk2 },
+      decidePhase(U, B)
     ],
-    final: () => `<div class="sentence"><b class="h">${L().portfolio}</b>${L().whySent(nm, p, u)}</div>`
+    final: () => `<div class="sentence"><b class="h">${L().portfolio}</b>${L().whySent(nm, b.map(x => x.p), E, B)}</div>`
+  };
+}
+/* Unterschied beobachten: Rundungsregel und Aufrunden am selben Einkauf vergleichen (wie im Unterricht) */
+function makeDiff(lv) {
+  const s = STEP[lv], n = lv === 1 ? 2 : 3; let b, Rs, U, E, D, g = 0;
+  const below = lv === 1 || Math.random() < .7;
+  do { b = basket(lv, n); Rs = sum(b.map(x => nround(x.p, s))); U = sum(b.map(x => up(x.p, s))); D = sum(b.map(x => down(x.p, s))); E = sum(b.map(x => x.p)); g++ }
+  while (g < 400 && (Rs === U || Rs === D || Rs === E || (below ? Rs > E : Rs < E) || b.some(x => x.p % 10 === 0)));
+  const ex = a => a.map(fmt).join(" + "), rs = b.map(x => nround(x.p, s)), us = b.map(x => up(x.p, s)), dsx = b.map(x => down(x.p, s));
+  return {
+    mode: "diff", lv, b, Rs, U, E, ctx: "basketN",
+    phases: [
+      { type: "choice", instr: "diff1", opts: shuffle([{ text: `${ex(rs)} = ${eur(Rs)}`, ok: true }, { text: `${ex(us)} = ${eur(U)}`, ok: false, bad: () => L().diffBad1 }, ...(D !== U ? [{ text: `${ex(dsx)} = ${eur(D)}`, ok: false, bad: () => L().diffBad1 }] : [])]) },
+      { type: "choice", instr: "diff2", opts: shuffle([{ text: `${ex(us)} = ${eur(U)}`, ok: true }, { text: `${ex(rs)} = ${eur(Rs)}`, ok: false, bad: () => L().diffBad2 }, ...(D !== Rs ? [{ text: `${ex(dsx)} = ${eur(D)}`, ok: false, bad: () => L().diffBad2 }] : [])]) },
+      gridPhase(b.map(x => x.p), U, b.length, s),
+      { type: "choice", instr: "diff3", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().diff3o[i], ok: i === 0, bad: () => L().diffBad3 }))) }
+    ],
+    final: () => `<div class="sentence"><b class="h">${L().portfolio}</b>${L().diffSent(Rs, U, E)}</div>`
   };
 }
 function makeOver(lv) {
   const s = STEP[lv], b = basket(lv, lv === 1 ? 2 : 3), U = sum(b.map(x => up(x.p, s)));
   const B = Math.random() < .5 ? U + s * rnd(0, 2) : Math.max(s, U - s * rnd(1, 2));
-  return { mode: "over", b, B, U, nm: pick(NAMES), ctx: "basket", phases: [overPhase(b, s), decidePhase(U, B)] };
+  const E = sum(b.map(x => x.p)), ph = [overPhase(b, s), decidePhase(U, B)];
+  if (U > B) ph.push(gridPhase(b.map(x => x.p), U, b.length, s), finalPhase(E, B));
+  return { mode: "over", b, B, U, E, nm: pick(NAMES), ctx: "basket", phases: ph };
 }
 function makeExact(lv) {
   const s = STEP[lv], b = basket(lv, lv === 1 ? 2 : 3), E = sum(b.map(x => x.p)), U = sum(b.map(x => up(x.p, s)));
@@ -917,7 +977,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 const pName = i => { const n = (i === 0 ? partner.a : partner.b) || ""; return n.trim() ? esc(n.trim()) : (i === 0 ? L().pA : L().pB) };
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 const ph = () => task.phases[pi];
-function newTask() { task = makeTask(curLevel()); task.promptIdx = rnd(0, 5); attempts = 0; done = false; feedback = null; pi = 0; initPhase() }
+function newTask() { justUnlocked = false; task = makeTask(curLevel()); task.promptIdx = rnd(0, 5); attempts = 0; done = false; feedback = null; pi = 0; initPhase() }
 /* Raten erkennen: sehr schnelle Antworten und schnelle Fehler hintereinander */
 let phaseT0 = Date.now(), lastAct = 0, guessScore = 0, guessWarn = false;
 function act(ok) {
@@ -1036,11 +1096,11 @@ let svSub = false, svRounds = [], svT0 = 0, svFastAsk = false;
 function svP(lo) { let p; do { p = rnd(11, 49) } while (!lo.includes(p % 10)); return p }
 function svGen(i) {
  const lowD = [1, 2, 3, 4], anyD = [1, 2, 3, 4, 6, 7, 8, 9];
- if (i === 0) { const p = svP(lowD); return { p, B: up(p, 10) + 10 * rnd(1, 3), perm: shuffle([0, 1]) } }
+ if (i === 0) { let ps; do { ps = [svP(lowD), svP(lowD), svP(lowD)] } while (new Set(ps).size < 3); const D = ps.reduce((s, x) => s + down(x, 10), 0); return { ps, D, B: D, nm: pick(NAMES), perm: shuffle([0, 1]) } }
  if (i === 1) { const o = 10 * rnd(5, 9); return { o, B: o + 10 * rnd(0, 2), perm: shuffle([0, 1, 2]) } }
  if (i === 2) { const o = 10 * rnd(6, 9); return { o, B: o - 10 * rnd(1, 2), perm: shuffle([0, 1, 2]) } }
  if (i === 3) { const ps = shuffle([svP(lowD), svP(lowD), svP(anyD)]); return { ps, perm: shuffle([0, 1, 2]) } }
- if (i === 4) { const ps = shuffle([svP(lowD), svP(anyD), svP(anyD)]); return { ps, B: ps.reduce((s, x) => s + up(x, 10), 0) + 10 * rnd(0, 2), perm: shuffle([0, 1, 2]) } }
+ if (i === 4) { const ps = shuffle([svP(lowD), svP([6, 7, 8, 9]), svP(anyD)]); return { ps, B: ps.reduce((s, x) => s + up(x, 10), 0) + 10 * rnd(0, 2), perm: shuffle([0, 1, 2]) } }
  if (i === 6) { let a, b, c; do { a = 10 * rnd(1, 4) + 5; b = 10 * rnd(1, 4) + rnd(1, 4); c = 10 * rnd(1, 4) + pick([1, 2, 3, 4, 6, 7, 8, 9]) } while (c === a || c === b); return { a, b, c, perm: shuffle([0, 1, 2]) } }
  const ps = [svP(anyD), svP(anyD), svP(lowD)], o = ps.reduce((s, x) => s + up(x, 10), 0), sure = Math.random() < .5;
  return { ps, B: sure ? o + 10 * rnd(0, 1) : o - 10 * rnd(1, 2), perm: shuffle([0, 1, 2]) };
@@ -1048,11 +1108,11 @@ function svGen(i) {
 function svBuild(t) {
  const R = L().sv2, d = t.d, i = t.qi, P = (opts, ok) => ({ opts: d.perm.map(k => opts[k]), ok: d.perm.indexOf(ok) });
  const rr = x => Math.round(x / 10) * 10, U = ps => ps.map(x => up(x, 10)), sum = a => a.reduce((s, x) => s + x, 0), ex = a => `${a.join(" + ")} = ${sum(a)} €`;
- if (i === 0) return { ctx: R.c0(d.B), stem: R.s0(d.p), ...P([eur(up(d.p, 10)), eur(down(d.p, 10))], 0), hint: R.h0 };
+ if (i === 0) return { ctx: R.c0(d.nm, d.B, d.ps, d.ps.map(x => down(x, 10)).join(" + "), d.D), stem: R.s0(d.nm), ...P([R.o0[0](d.nm), R.o0[1](d.D, d.B)], 0), hint: R.h0 };
  const dec = [R.sure, R.exact, R.no];
  if (i === 1 || i === 2) return { ctx: R.c1(d.o, d.B), stem: R.s1, ...P(dec, d.o <= d.B ? 0 : 1), hint: R.hDec };
  if (i === 3) return { ctx: R.c3(d.ps), stem: R.s3, ...P([ex(d.ps.map(rr)), ex(U(d.ps)), ex(d.ps)], 0), hint: R.h3 };
- if (i === 4) return { ctx: R.c4(d.B, d.ps), stem: R.s4, ...P([ex(U(d.ps)), ex(d.ps.map(rr)), ex(d.ps)], 0), hint: R.h4 };
+ if (i === 4) return { ctx: R.c4(d.B, d.ps), stem: R.s4, ...P([ex(U(d.ps)), ex(d.ps.map(rr)), ex(d.ps.map(x => down(x, 10)))], 0), hint: R.h4 };
  if (i === 6) return { ctx: R.c6, stem: R.s6, ...P([`${d.c} € ≈ ${rr(d.c)} €`, `${d.a} € ≈ ${d.a - 5} €`, `${d.b} € ≈ ${up(d.b, 10)} €`], 0), hint: R.h6 };
  return { ctx: R.c5(d.B, d.ps), stem: R.s5, ...P(dec, sum(U(d.ps)) <= d.B ? 0 : 1), hint: R.hDec + " " + R.h5(ex(U(d.ps))) };
 }
@@ -1139,10 +1199,10 @@ function renderIntro() {
   const way = lines => `<div class="way">${lines.map((l, i) => `<div>${l}</div>`).join("")}</div>`;
   const items = L().in1items;
   if (introStep === 0) box.innerHTML = `<h3>${L().in1h}</h3><p>${L().in1}</p><div class="tags">${items.map(([n, v]) => `<span class="tag">${n} ${v} €</span>`).join("")}</div><p><b>${L().in1q}</b></p>`;
-  if (introStep === 1) box.innerHTML = `<h3>${L().in2h}</h3><p>${L().in2}</p>` + way(["18 ≈ 20", "14 ≈ 10", "9 ≈ 10"]);
-  if (introStep === 2) box.innerHTML = `<h3>${L().in3h}</h3><p>${L().in3}</p>` + way(["18 → 20", "14 → <span class='ok'>20</span>", "9 → 10"]);
-  if (introStep === 3) box.innerHTML = `<h3>${L().in4h}</h3><p>${L().in4}</p>` + way(["20 + 20 + 10 = 50", "50 € ≤ 50 € ✓"]) + `<div class="rulebox"><b>${L().in4b}</b></div>`;
-  if (introStep === 4) box.innerHTML = `<h3>${L().in5h}</h3><p>${L().in5}</p>` + way(["18 + 14 + 9 = <span class='ok'>41</span>", `<span class="eq">≈ 50 ✓</span>`, `50 ${MINUS} 41 = 9`, `41 + 9 = 50 ✓`]);
+  if (introStep === 1) box.innerHTML = `<h3>${L().in2h}</h3><p>${L().in2}</p>` + way(["34 ≈ 30", "33 ≈ 30", "35 ≈ 40", "30 + 30 + 40 = 100"]) + `<div class="rulebox"><b>${L().in2b}</b></div>`;
+  if (introStep === 2) box.innerHTML = `<h3>${L().in3h}</h3><p>${L().in3}</p>` + way(["34 + 33 + 35 = <span class='bad'>102</span>", "102 € > 100 €"]) + `<div class="rulebox"><b>${L().in3b}</b></div>`;
+  if (introStep === 3) box.innerHTML = `<h3>${L().in4h}</h3><p>${L().in4}</p>` + way(["34 → <span class='ok'>40</span>", "33 → <span class='ok'>40</span>", "35 → <span class='ok'>40</span>", "40 + 40 + 40 = 120"]) + `<div class="rulebox"><b>${L().in4b}</b></div>`;
+  if (introStep === 4) box.innerHTML = `<h3>${L().in5h}</h3><p>${L().in5}</p>` + way(["20 + 20 + 10 = 50", "50 € ≤ 50 € ✓", "18 + 14 + 9 = <span class='ok'>41</span>", `50 ${MINUS} 41 = 9`, `41 + 9 = 50 ✓`]);
   if (introStep === 5) {
     box.innerHTML = `<h3>${L().in6h}</h3><p>${L().in6}</p>`;
     const ch = el("div", "choices");
@@ -1158,17 +1218,19 @@ function renderIntro() {
 
 /* ---- practice / experts ---- */
 /* Pflicht: erst 5 Aufgaben in Stufe orange, danach sind pink, lila und Experten frei wählbar */
-const MUST = 5, locked = () => stats.solved[0] < MUST;
+const MUST = 5; let must = store.get("up-must5", 0); const locked = () => must < MUST;
+let justUnlocked = false;
+function countMust() { if (tab === 1 && level === 1 && must < MUST) { must++; store.set("up-must5", must); if (must === MUST) justUnlocked = true } }
 function renderPractice() {
   if (locked() && level !== 1) { level = 1; save(); newTask() }
   const lv = el("div", "levels");
   [1, 2, 3].forEach(n => { const lk = n > 1 && locked(); const b = el("button", `lvl lvl${n}` + (lk ? " locked" : ""), `${L().lv[n - 1][0]}<small>${lk ? "🔒 " + L().lockShort(MUST) : L().lv[n - 1][1] + " · " + L().solvedN(stats.solved[n - 1])}</small>`); b.type = "button"; b.disabled = lk; b.setAttribute("aria-pressed", level === n); b.onclick = () => { level = n; save(); newTask(); render() }; lv.appendChild(b) });
   view.appendChild(lv);
-  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, stats.solved[0])));
+  if (locked()) view.appendChild(el("div", "msg info lockinfo", L().lockInfo(MUST, must)));
   renderTask();
 }
 function renderExpert() {
-  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, stats.solved[0]))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
+  if (locked()) { const p = el("section", "panel"); p.appendChild(el("h2", "", L().xTitle)); p.appendChild(el("p", "", L().lockInfo(MUST, must))); const b = el("button", "btn primary", L().lockGo); b.type = "button"; b.onclick = () => goTab(1); const r = el("div", "actions"); r.appendChild(b); p.appendChild(r); view.appendChild(p); return }
   const h = el("div", "xhead"); h.appendChild(el("h2", "", L().xTitle));
   h.appendChild(el("p", "", `${L().xIntro} · <b>${L().xSolved(stats.solved[3])}</b>`)); view.appendChild(h); renderTask();
 }
@@ -1192,13 +1254,14 @@ function shopTable(b, B, extra) {
 function ctxHTML() {
   const t = task;
   if (t.ctx === "book") return `<p class="word">${L().bookCtx[t.ctxKey](t.a, t.b)}<br><b style="font-size:1.25rem">${fmt(t.a)} ${t.kind === "add" ? "+" : MINUS} ${fmt(t.b)} ≈ ?</b></p>`;
-  if (t.ctx === "single") return `<p class="word">${L().iWhy1(t.nm, esc(lang === "de" ? t.it.acc || t.it.de : t.it[lang]), t.p, t.B)}</p>`;
+  if (t.ctx === "why") return `<div class="word">${shopTable(t.b, t.B)}</div><span class="claimed">${L().whyClaim(t.nm, t.ds.map(fmt).join(" + "), t.D)}</span>`;
   if (t.ctx === "basket") return `<div class="word">${shopTable(t.b, t.B)}</div>`;
-  if (t.ctx === "basketU") return `<div class="word">${shopTable(t.b, t.B, `<span class="given">≈ ${L().ueberschlag}: ${eur(t.U)}</span>`)}</div>`;
+  if (t.ctx === "basketN") return `<div class="word">${shopTable(t.b)}</div>`;
+  if (t.ctx === "basketU") return `<div class="word">${shopTable(t.b, t.B, `<span class="given">${L().ueberschlag}: ${eur(t.U)}</span>`)}</div>`;
   if (t.ctx === "claim") return `<div class="word">${shopTable(t.b)}</div><span class="claimed">${L().claimed(t.nm, t.C)}</span>`;
   if (t.ctx === "rest") return `<div class="word">${shopTable(t.b, undefined, `<p style="margin:8px 0 0">${L().iRest(t.nm, t.B)}</p>`)}</div>`;
   if (t.ctx === "receipt") return `<div class="receipt"><div style="text-align:center;font-weight:700">${L().shop}</div><hr>${t.b.map(x => `<div class="r"><span>${esc(x.it[lang])}</span><span>${fmt(x.p)} €</span></div>`).join("")}<hr><div class="r tot"><span>${L().total.toUpperCase()}</span><span>${fmt(t.C)} €</span></div></div>`;
-  if (t.ctx === "plan" && pi > 0) { const s = STEP[t.lv]; return `<div class="word"><b>${L().planCtx[t.lv]}</b>${shopTable(t.b, t.B, pi > 2 ? `<span class="given">≈ ${L().ueberschlag}: ${eur(t.U)}</span>` : "")}</div>` }
+  if (t.ctx === "plan" && pi > 0) { const s = STEP[t.lv]; return `<div class="word"><b>${L().planCtx[t.lv]}</b>${shopTable(t.b, t.B, pi > 2 ? `<span class="given">${L().ueberschlag}: ${eur(t.U)}</span>` : "")}</div>` }
   return "";
 }
 function lineHTML(l, holeHtml, i) {
@@ -1264,9 +1327,10 @@ function gridBlock(p) {
 function instrText(P) {
   const t = task;
   switch (P.instr) {
-    case "why1": return ""; case "why2": return L().iWhy2;
+    case "why1": return L().iWhy1(task.nm); case "why2": return L().iWhy2(task.nm);
+    case "diff1": return L().iDiff1; case "diff2": return L().iDiff2; case "diff3": return L().iDiff3(task.E);
     case "over": return L().iOver(P.lines[0].s || STEP[t.lv || 1]);
-    case "decide": return L().iDecide; case "final": return L().iFinal; case "grid": return L().iGrid;
+    case "decide": return L().iDecide; case "final": return L().iFinal; case "grid": return task.mode === "diff" ? L().iDiffGrid + " " + L().iGrid : L().iGrid;
     case "plaus2": return L().iPlaus2(t.nm, t.C, t.U);
     case "rough1": return L().iRough1(task.U, task.E);
     case "rough2": return L().iRough2;
@@ -1336,8 +1400,7 @@ function renderTask() {
   p.appendChild(act);
   if (feedback) p.appendChild(el("div", "msg " + feedback.cls, feedback.text));
   if (done && task.final) p.appendChild(el("div", "", task.final()));
-  if (done && tab === 1 && level === 1 && stats.solved[0] === MUST && !stats.unlocked) {
-    stats.unlocked = true; save();
+  if (done && tab === 1 && justUnlocked) {
     const u = el("div", "swap levelup", `<p><b>${L().unlockMsg(MUST)}</b></p>`), row = el("div", "actions");
     const go = el("button", "btn primary", L().upGo(L().lv[1][1])); go.type = "button"; go.onclick = () => { level = 2; save(); newTask(); render(); window.scrollTo(0, 0) };
     const st = el("button", "btn", L().unlockStay); st.type = "button"; st.onclick = () => { newTask(); render() };
@@ -1380,7 +1443,7 @@ document.addEventListener("keydown", e => {
   else if (P.type === "grid" && e.key === "ArrowLeft" && active && active.role === "res" && active.p < P.W - 1) { active.p++; render() }
   else if (P.type === "grid" && e.key === "ArrowRight" && active && active.role === "res" && active.p > 0) { active.p--; render() }
 });
-function success(msg) { done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; if (tab === 1) { if (attempts === 0 && !task.helped) stats.streak[level - 1]++; else stats.streak[level - 1] = 0 } act(true); save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
+function success(msg) { countMust(); done = true; diag = null; stats.stars += attempts === 0 && tipLevel === 0 ? 2 : 1; stats.solved[curLevel() - 1]++; if (tab === 1) { if (attempts === 0 && !task.helped) stats.streak[level - 1]++; else stats.streak[level - 1] = 0 } act(true); save(); feedback = { cls: "ok", text: msg || pick(L().ok) }; render() }
 function fail(text, d) { attempts++; act(false); badMark = true; feedback = { cls: "bad", text: text + (attempts >= 2 ? " " + L().bad2 : "") }; diag = d || null; showCard = false; render() }
 function check() {
   if (done) return; const P = ph();
@@ -1425,7 +1488,7 @@ function showSolution() {
   if (P.type === "steps") { lineIdx = P.lines.length - 1 }
   // solution ends the current work step; the task continues with the next phase
   const wasLast = pi === task.phases.length - 1;
-  if (wasLast) { done = true; diag = null; feedback = { cls: "info", text: L().solShown }; stats.solved[curLevel() - 1]++; save(); render(); return }
+  if (wasLast) { countMust(); done = true; diag = null; feedback = { cls: "info", text: L().solShown }; stats.solved[curLevel() - 1]++; save(); render(); return }
   const msg = P.type === "grid" ? `${L().solShown} ${eur(P.result)}` : `${L().solShown} ${P.lines.map(l => fmt(l.value)).join(" · ")}`;
   pi++; initPhase(); feedback = { cls: "info", text: msg }; render();
 }
@@ -1496,7 +1559,8 @@ function tipText() {
   }
   else if (P.type === "grid") { s += L().tipGrid; if (tipLevel > 1) { const c = P.cols.find(c => ent.res[c.p] === "" || ent.res[c.p] !== String(c.r)); if (c) s += `<br><br>${colText(c)}` } }
   else if (P.type === "choice") {
-    if (P.instr === "why1" || P.instr === "why2") s += L().tipWhy + (tipLevel > 1 ? `<br><br>${L().cards[2][1]}` : "");
+    if (P.instr === "diff1" || P.instr === "diff2" || P.instr === "diff3") s += L().tipDiff;
+    else if (P.instr === "why1" || P.instr === "why2") s += L().tipWhy + (tipLevel > 1 ? `<br><br>${L().cards[2][1]}` : "");
     else if (P.instr === "decide") s += L().tipDecide;
     else if (P.instr === "final") s += L().tipFinal;
     else if (P.instr === "rough1") s += L().rough1Bad;
@@ -1539,11 +1603,28 @@ let resetArmed = false, resetTimer = null;
 function renderReset() { const b = document.getElementById("resetbtn"); b.textContent = resetArmed ? L().reset2 : L().reset; b.style.background = ""; b.style.borderColor = resetArmed ? "#E8892B" : ""; b.style.color = resetArmed ? "#FFD9B0" : "" }
 document.getElementById("resetbtn").onclick = () => {
   if (!resetArmed) { resetArmed = true; renderReset(); clearTimeout(resetTimer); resetTimer = setTimeout(() => { resetArmed = false; renderReset() }, 3500); return }
-  try { ["up-stats", "up-level", "up-seq", "up-plan", "up-partner"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
+  try { ["up-stats", "up-level", "up-seq", "up-plan", "up-partner", "up-must5"].forEach(k => localStorage.removeItem(k)) } catch (e) { }
   location.reload();
 };
 render();
 </script>
 
+<button id="zoomfix" type="button" aria-label="Normale Größe">🔍 Normale Größe</button>
+<script>
+/* Zoom zurücksetzen: Erscheint, sobald die Seite vergrößert ist. Ein Tipp stellt die normale Größe wieder her. */
+(function () {
+  const vm = document.querySelector('meta[name="viewport"]'), base = vm ? vm.getAttribute("content") : "width=device-width, initial-scale=1";
+  const btn = document.getElementById("zoomfix"), vv = window.visualViewport;
+  function label() { try { btn.textContent = (typeof lang !== "undefined" && lang === "tr") ? "🔍 Normal boyut" : "🔍 Normale Größe" } catch (e) { } }
+  function check() { const z = vv ? vv.scale : 1; btn.classList.toggle("on", z > 1.05); if (vv && z > 1.05) { btn.style.transform = `scale(${1 / z})`; btn.style.transformOrigin = "100% 100%" } else btn.style.transform = ""; label() }
+  function reset() {
+    if (vm) { vm.setAttribute("content", "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1"); setTimeout(() => { vm.setAttribute("content", base); check() }, 400) }
+    window.scrollTo(0, window.scrollY); setTimeout(check, 450);
+  }
+  btn.addEventListener("click", reset);
+  if (vv) { vv.addEventListener("resize", check); vv.addEventListener("scroll", check) }
+  check();
+})();
+</script>
 </body>
 </html>
