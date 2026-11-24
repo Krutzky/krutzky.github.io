@@ -104,14 +104,15 @@
 
 <script>
   /* =========================================================
-     EINE STARTSEITE FÜR ALLE APPS (Mathe + Physik)
+     EINE STARTSEITE FÜR ALLE APPS (Mathe + Physik + Biologie)
      Adresse: https://krutzky.github.io  (Repo „krutzky.github.io“)
      Dieser QR-Code führt zu allen Apps. Oben stehen die Fächer
      „Mathematik“ und „Physik“, darunter wie gewohnt Jahrgänge,
      Themen und Ordner.
 
      HIER BEARBEITEN: Für jede neue App eine Zeile ergänzen –
-     Mathe-Apps in MATHE_APPS, Physik-Apps in PHYSIK_APPS.
+     Mathe-Apps in MATHE_APPS, Physik-Apps in PHYSIK_APPS,
+     Biologie-Apps in BIOLOGIE_APPS.
      - jahrgang: z. B. "Jahrgang 7" (muss in den JAHRGAENGE des Fachs stehen).
               Weglassen = Thema steht direkt in der Fach-Übersicht.
      - thema: Überschrift (z. B. Modul oder Unterrichtseinheit)
@@ -204,10 +205,18 @@
     // { jahrgang: "Jahrgang 7", thema: "Wie kann man Lichtstrahlen beeinflussen?", nr: 6, titel: "Name der nächsten App", info: "", datei: "" },
   ];
 
+  /* ---------------- BIOLOGIE ---------------- */
+  const BIOLOGIE_JAHRGAENGE = ["Jahrgang 10"];
+
+  const BIOLOGIE_APPS = [
+    { jahrgang: "Jahrgang 10", nr: 1, titel: "DNA-Labor", info: "Wie kann ein DNA-Test einen Täter überführen?", datei: "Jahrgang%2010/dna-labor.html" },
+  ];
+
   /* ===== Ab hier nichts ändern ===== */
   const FAECHER = [
     { name: "Mathematik", jahrgaenge: MATHE_JAHRGAENGE, apps: MATHE_APPS, pfad: "Mathematik/" },
     { name: "Physik", jahrgaenge: PHYSIK_JAHRGAENGE, apps: PHYSIK_APPS, pfad: "Physik/" },
+    { name: "Biologie", jahrgaenge: BIOLOGIE_JAHRGAENGE, apps: BIOLOGIE_APPS, pfad: "Biologie/" },
   ];
 
   const liste = document.getElementById("liste");
