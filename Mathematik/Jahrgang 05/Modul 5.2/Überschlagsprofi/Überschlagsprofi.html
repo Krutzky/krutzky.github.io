@@ -318,6 +318,7 @@ h2,h3,.lvl,.btn,.taskhead h2{font-family:var(--f-head)}
 .brick.hid.active{border:3px solid var(--focus)}
 .brick.bad{background:var(--badbg);border-color:var(--carry);border-style:solid;color:var(--carry)}
 .brick.ok{background:var(--okbg);border-color:var(--ok);border-style:solid;color:var(--ok)}
+.rulestrip{display:grid;gap:4px;margin:0 0 12px;padding:8px 12px;border-radius:10px;background:var(--blue-soft,#DCE8F7);font-size:.95rem;line-height:1.35}
 .choice.sel{border-color:var(--focus);background:color-mix(in srgb,var(--focus) 12%,var(--surface));font-weight:700}
 .choice:disabled{cursor:default;opacity:1}
 </style>
@@ -375,7 +376,7 @@ de: {
   lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]],
   solvedN: n => `${n} gelöst`, upMsg: (n, a, b) => `Stark! ${n} Aufgaben hintereinander in Stufe ${a} richtig gerechnet. Probiert jetzt Stufe ${b}!`, lockShort: n => `nach ${n} Aufgaben in orange`, lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`, lockGo: "Zu Stufe orange", unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`, unlockStay: "In orange weiterrechnen", guessT: "Stopp – nicht raten!", guessP: "Ihr antwortet sehr schnell oder probiert nur aus. Raten führt nicht zum Ziel: So lernt ihr nichts für die Klassenarbeit. Lest die Aufgabe genau, rechnet zuerst und antwortet dann. Jede und jeder ist selbst für das eigene Lernen verantwortlich.", guessOk: "Verstanden", svFast: "Das ging sehr schnell. Habt ihr jede Antwort wirklich gerechnet und besprochen? Raten führt nicht zum Ziel. Prüft eure Antworten noch einmal.", svFastGo: "Wir haben alles geprüft – abgeben", upGo: b => `Zu Stufe ${b}`, upStay: "Noch hier bleiben",
   bzT: "🧱 Bonus: Zahlenmauern", bzIntro: "Schon fertig? Dann knackt die Zahlenmauern! Jeder Stein ist die Summe der beiden Steine direkt darunter. Tippt einen leeren Stein an und gebt die Zahl ein.", bzCheck: "Prüfen", bzNext: "Nächste Mauer", bzOk: "Geschafft! Die Mauer steht. ⭐", bzBad: "Noch nicht ganz. Die roten Steine stimmen nicht.", bzEmpty: "Füllt zuerst alle leeren Steine aus.", bzCount: n => `Geschaffte Mauern: ${n}`, bzRank: ["Mauer-Lehrling", "Mauer-Profi", "Mauer-Meister"], bzUp: "Neue Stufe! Die Mauern werden größer.",
-  modes: { book: "Ungefähr rechnen", diff: "Unterschied beobachten", why: "Warum aufrunden?", over: "Aufrunden beim Einkaufen", exact: "Genau rechnen und prüfen", plaus: "Kann das stimmen?", plan: "Reicht unser Geld?", rest: "Wechselgeld und Probe",
+  modes: { book: "Ungefähr rechnen", diff: "Unterschied beobachten", why: "Warum aufrunden?", over: "Aufrunden beim Einkaufen", exact: "Genau rechnen und prüfen", plaus: "Kann das stimmen?", plan: "Reicht unser Geld?", pick: "Drei Sachen aussuchen", rest: "Wechselgeld und Probe",
            errpro: "Fehlersuche für Profis", wordpro: "Zahlen aus dem Text", receipt: "Kassenbon-Detektiv", restpro: "Wechselgeld-Profi", rough: "Warum so grob?" },
   zahl: s => s === 100 ? "Hunderterzahl" : "Zehnerzahl", stelle: s => s === 100 ? "Hunderter" : "Zehner",
   budget: "Budget", total: "Summe", ueberschlag: "Aufgerundete Summe", exact: "genau",
@@ -399,7 +400,8 @@ de: {
   diffBad2: "Jeden Preis aufrunden heißt: Du nimmst immer die nächstgrößere glatte Zahl, auch wenn die Rundungsregel bei 1, 2, 3 oder 4 abrunden würde.",
   diffBad3: "Vergleiche beide Summen mit dem genauen Preis. Welche Summe kann auch darunter liegen?",
   diffSent: (Rs, U, E) => `Rundungsregel: ${eur(Rs)} liegt ${Rs < E ? "unter" : "über"} dem echten Preis von ${eur(E)}. Aufgerundet: ${eur(U)} liegt darüber. Die aufgerundete Summe liegt immer über dem echten Preis. Darum runde ich jeden Preis auf, wenn ich sicher wissen will, ob mein Geld reicht.`,
-  whyClaim: (nm, ds, D) => `${nm} rundet nach der Rundungsregel ab: <b>${ds} = ${eur(D)}</b>. ${nm} sagt: „Das Geld reicht sicher!“`,
+  whyClaim: (nm, ds, D) => `${nm} rundet nach der Rundungsregel. Dabei wird jeder Preis abgerundet: <b>${ds} = ${eur(D)}</b>. ${nm} sagt: „Das Geld reicht sicher!“`,
+  rrBox: d => `📏 <b>Rundungsregel</b> (für „ungefähr“): Schau auf die ${d}. 0, 1, 2, 3, 4 → abrunden · 5, 6, 7, 8, 9 → aufrunden.`, arBox: z => `💶 <b>Jeden Preis aufrunden</b> (für „Reicht das Geld sicher?“): immer zur nächstgrößeren ${z}, auch bei 1, 2, 3, 4.`, rrD: { 10: "Einer", 100: "Zehner", 1000: "Hunderter" }, arZ: { 10: "Zehnerzahl", 100: "Hunderterzahl" },
   iWhy1: nm => `Hat ${nm} recht? Was ist das Problem?`,
   iWhy2: nm => `Wie muss ${nm} runden, um schnell im Kopf sicher zu prüfen, ob das Geld reicht?`,
   why: [nm => `${nm} hat abgerundet. Die gerundete Summe ist kleiner als der echte Preis. Vielleicht reicht das Geld nicht.`, nm => `${nm} hat sich beim Addieren verrechnet.`, nm => `Es gibt kein Problem. Mit der Rundungsregel weiß man immer sicher, ob das Geld reicht.`],
@@ -453,6 +455,15 @@ de: {
   plNoOk: "Gut erkannt! Das Aufrunden hat den Fehler entdeckt. Rechne jetzt richtig.",
   plYesOk: "Richtig! Das Ergebnis passt zur aufgerundeten Summe.",
   claimed: (nm, C) => `Ergebnis von ${nm}: ${eur(C)}`,
+  pkI: (a, b, B, n) => `${a} und ${b} haben <b>${eur(B)}</b>. Sucht <b>3 Sachen</b> aus, für die das Geld <b>sicher</b> reicht. Findet <b>${n} verschiedene Möglichkeiten</b>.`,
+  pkSure: "Das Geld reicht sicher.", pkSwap: "Nicht sicher. Wir tauschen etwas aus.",
+  pkSureBad: (U, B) => `Schaut noch einmal: Aufgerundet sind es ${eur(U)}. Das ist mehr als ${eur(B)}. So reicht das Geld nicht sicher.`,
+  pkSwapBad: (U, B) => `Schaut noch einmal: Aufgerundet sind es ${eur(U)}. Das ist nicht mehr als ${eur(B)}. Das Geld reicht also sicher.`,
+  pkSwapOk: (U, B) => `Richtig! Aufgerundet ${eur(U)} ist mehr als ${eur(B)}. Sicher reicht es nicht. Tauscht eine Sache aus und probiert es noch einmal.`,
+  pkMore: (U, B, k, n) => `Richtig! Aufgerundet ${eur(U)} ist nicht mehr als ${eur(B)}. Das Geld reicht sicher. Ihr habt ${k} von ${n} Möglichkeiten. Findet noch eine andere!`,
+  pkGo: "Weiter zum Aufrunden", pkNeed: "Wählt genau 3 Sachen aus.", pkFull: "Ihr habt schon 3 Sachen. Tippt zuerst eine Sache an, um sie herauszunehmen.", pkDup: "Diese Möglichkeit habt ihr schon gefunden. Sucht eine andere!",
+  pkFound: (k, n) => `Gefunden: ${k} von ${n}`, pkTip: "Tippt 3 Sachen an. Rundet jeden Preis im Kopf auf und addiert. Ist die Summe nicht mehr als das Geld, das ihr habt, reicht es sicher. Nehmt eher günstige Sachen.",
+  pkSent: (list, B) => `Mit ${eur(B)} reicht das Geld sicher für ${list}. Wir haben jeden Preis aufgerundet. War die Summe nicht größer als ${eur(B)}, reicht das Geld sicher.`,
   iPlan: (a, b, B) => `${a} und ${b} dürfen für die Klasse einkaufen. Sie haben <b>${eur(B)}</b>. Tippt im Prospekt mindestens 3 Sachen an.`,
   planCtx: { 1: "Neue Pausenspiele für die 5a", 2: "Eine Leseecke für die 5a", 3: "Ein neuer Medienraum für die Schule" },
   cart: "Einkaufskorb", need3: "Wählt mindestens 3 Sachen aus.", toOver: "Weiter zum Aufrunden",
@@ -519,11 +530,11 @@ de: {
   tipLines: "Rechne selbst Zeile für Zeile und vergleiche mit Tom.",
   tipPlan: "Tippt ein Produkt an, um es in den Korb zu legen. Noch einmal tippen nimmt es wieder heraus.",
   /* partner */
-  pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pNames: "Namen", pA: "Partner A", pB: "Partner B",
+  pTitle: "Partnerarbeit", pOn: "Zu zweit", pOff: "Allein", pNames: "Namen", pNamePh: "Vorname", pA: "Partner A", pB: "Partner B",
   pTurn: (a, b) => `<b>${a}</b> rechnet. <b>${b}</b> schaut zu, prüft mit und hilft beim Erklären.`,
   pSwap: (a, b) => `Wechsel! Jetzt rechnet <b>${b}</b>. Vorher erklärt <b>${a}</b> kurz den Rechenweg.`,
   pDiscuss: "Besprecht zusammen:",
-  pPm: { why: "Warum rundet man hier auf? Erklärt es euch gegenseitig.", over: "Reicht das Geld sicher? Woran seht ihr das?", exact: "Passt das genaue Ergebnis zur aufgerundeten Summe? Woran seht ihr das?", diff: "Welche Summe liegt unter, welche über dem echten Preis? Warum?", book: "Wann habt ihr abgerundet, wann aufgerundet? Erklärt die Rundungsregel.", plaus: "Woran habt ihr erkannt, ob das Ergebnis stimmen kann?", plan: "Wie habt ihr entschieden, ob euer Geld reicht?", rest: "Wie habt ihr die Probe gemacht?", def: "Erklärt euch gegenseitig euren Rechenweg." },
+  pPm: { why: "Warum rundet man hier auf? Erklärt es euch gegenseitig.", over: "Reicht das Geld sicher? Woran seht ihr das?", exact: "Passt das genaue Ergebnis zur aufgerundeten Summe? Woran seht ihr das?", diff: "Welche Summe liegt unter, welche über dem echten Preis? Warum?", book: "Wann habt ihr abgerundet, wann aufgerundet? Erklärt die Rundungsregel.", plaus: "Woran habt ihr erkannt, ob das Ergebnis stimmen kann?", plan: "Wie habt ihr entschieden, ob euer Geld reicht?", pick: "Wie habt ihr gemerkt, ob drei Sachen sicher in euer Geld passen?", rest: "Wie habt ihr die Probe gemacht?", def: "Erklärt euch gegenseitig euren Rechenweg." },
   pPrompts: ["Wie habt ihr gerundet? Warum auf?", "Reicht das Geld sicher? Woran seht ihr das?", "Passt das genaue Ergebnis zur aufgerundeten Summe?", "Erklärt die Prüfregel mit eigenen Worten.", "Macht zusammen die Probe.", "Wo im Alltag hilft euch das Aufrunden?"],
   /* input */
   inTitle: "Auf- und abrunden beim Einkaufen",
@@ -579,7 +590,7 @@ tr: {
   lv: [["Seviye 1", "turuncu"], ["Seviye 2", "pembe"], ["Seviye 3", "mor"]],
   solvedN: n => `${n} çözüldü`, upMsg: (n, a, b) => `Harika! ${a} seviyesinde art arda ${n} soru doğru hesaplandı. Şimdi ${b} seviyesini deneyin!`, lockShort: n => `turuncuda ${n} sorudan sonra`, lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`, lockGo: "Turuncu seviyeye git", unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`, unlockStay: "Turuncuda devam et", guessT: "Dur – tahmin etme!", guessP: "Çok hızlı cevap veriyorsunuz ya da sadece deniyorsunuz. Tahmin etmek hedefe götürmez: Böyle sınav için bir şey öğrenemezsiniz. Soruyu dikkatlice okuyun, önce hesaplayın, sonra cevap verin. Herkes kendi öğrenmesinden kendisi sorumludur.", guessOk: "Anladım", svFast: "Bu çok hızlı oldu. Her cevabı gerçekten hesapladınız ve konuştunuz mu? Tahmin etmek hedefe götürmez. Cevaplarınızı bir daha kontrol edin.", svFastGo: "Hepsini kontrol ettik – teslim et", upGo: b => `${b} seviyesine geç`, upStay: "Burada kalmaya devam et",
   bzT: "🧱 Bonus: Sayı duvarları", bzIntro: "Bitirdiniz mi? O zaman sayı duvarlarını çözün! Her taş, hemen altındaki iki taşın toplamıdır. Boş bir taşa dokunun ve sayıyı girin.", bzCheck: "Kontrol et", bzNext: "Sonraki duvar", bzOk: "Başardınız! Duvar tamam. ⭐", bzBad: "Henüz tam değil. Kırmızı taşlar yanlış.", bzEmpty: "Önce bütün boş taşları doldurun.", bzCount: n => `Tamamlanan duvarlar: ${n}`, bzRank: ["Duvar çırağı", "Duvar kalfası", "Duvar ustası"], bzUp: "Yeni seviye! Duvarlar büyüyor.",
-  modes: { book: "Yaklaşık hesapla", diff: "Farkı gözlemle", why: "Neden yukarı yuvarlanır?", over: "Alışverişte yukarı yuvarlama", exact: "Tam hesapla ve kontrol et", plaus: "Bu doğru olabilir mi?", plan: "Paramız yeter mi?", rest: "Para üstü ve sağlama",
+  modes: { book: "Yaklaşık hesapla", diff: "Farkı gözlemle", why: "Neden yukarı yuvarlanır?", over: "Alışverişte yukarı yuvarlama", exact: "Tam hesapla ve kontrol et", plaus: "Bu doğru olabilir mi?", plan: "Paramız yeter mi?", pick: "Üç ürün seç", rest: "Para üstü ve sağlama",
            errpro: "Uzmanlar için hata arama", wordpro: "Metindeki sayılar", receipt: "Fiş dedektifi", restpro: "Para üstü ustası", rough: "Neden bu kadar kaba?" },
   zahl: s => s === 100 ? "yüzlük sayı" : "onluk sayı", stelle: s => s === 100 ? "yüzlük" : "onluk",
   budget: "Bütçe", total: "Toplam", ueberschlag: "Yukarı yuvarlanmış toplam", exact: "tam",
@@ -602,7 +613,8 @@ tr: {
   diffBad2: "Her fiyatı yukarı yuvarlamak demek: Her zaman bir sonraki büyük yuvarlak sayıyı alırsın, yuvarlama kuralı 1, 2, 3 ya da 4'te aşağı yuvarlasa bile.",
   diffBad3: "İki toplamı tam fiyatla karşılaştır. Hangisi altında da kalabilir?",
   diffSent: (Rs, U, E) => `Yuvarlama kuralı: ${eur(Rs)}, gerçek fiyatın (${eur(E)}) ${Rs < E ? "altında" : "üstünde"}. Yukarı yuvarlanmış: ${eur(U)}, üstünde. Yukarı yuvarlanmış toplam her zaman gerçek fiyatın üstündedir. Bu yüzden paramın kesin yetip yetmediğini bilmek istersem her fiyatı yukarı yuvarlarım.`,
-  whyClaim: (nm, ds, D) => `${nm} yuvarlama kuralına göre aşağı yuvarlıyor: <b>${ds} = ${eur(D)}</b>. ${nm} diyor ki: „Para kesin yeter!“`,
+  whyClaim: (nm, ds, D) => `${nm} yuvarlama kuralına göre yuvarlıyor. Böylece her fiyat aşağı yuvarlanıyor: <b>${ds} = ${eur(D)}</b>. ${nm} diyor ki: „Para kesin yeter!“`,
+  rrBox: d => `📏 <b>Yuvarlama kuralı</b> („yaklaşık“ için): ${d} basamağına bak. 0, 1, 2, 3, 4 → aşağı · 5, 6, 7, 8, 9 → yukarı.`, arBox: z => `💶 <b>Her fiyatı yukarı yuvarla</b> („Para kesin yeter mi?“ için): her zaman bir sonraki ${z}, 1, 2, 3, 4'te bile.`, rrD: { 10: "Birler", 100: "Onlar", 1000: "Yüzler" }, arZ: { 10: "onluk sayıya", 100: "yüzlük sayıya" },
   iWhy1: nm => `${nm} haklı mı? Sorun ne?`,
   iWhy2: nm => `${nm}, paranın kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalı?`,
   why: [nm => `${nm} aşağı yuvarladı. Yuvarlanmış toplam gerçek fiyattan küçük. Belki para yetmez.`, nm => `${nm} toplarken yanlış hesapladı.`, nm => `Sorun yok. Yuvarlama kuralıyla paranın yetip yetmediği her zaman kesin bilinir.`],
@@ -656,6 +668,15 @@ tr: {
   plNoOk: "İyi buldun! Yukarı yuvarlama hatayı buldu. Şimdi doğru hesapla.",
   plYesOk: "Doğru! Sonuç yukarı yuvarlanmış toplama uyuyor.",
   claimed: (nm, C) => `${nm} adlı öğrencinin sonucu: ${eur(C)}`,
+  pkI: (a, b, B, n) => `${a} ve ${b} için <b>${eur(B)}</b> var. Paranın <b>kesin</b> yettiği <b>3 ürün</b> seçin. <b>${n} farklı seçenek</b> bulun.`,
+  pkSure: "Para kesin yeter.", pkSwap: "Kesin değil. Bir ürünü değiştiriyoruz.",
+  pkSureBad: (U, B) => `Tekrar bakın: Yukarı yuvarlanmış toplam ${eur(U)}. Bu, ${eur(B)} tutarından fazla. Para kesin yetmez.`,
+  pkSwapBad: (U, B) => `Tekrar bakın: Yukarı yuvarlanmış toplam ${eur(U)}. Bu, ${eur(B)} tutarından fazla değil. Yani para kesin yeter.`,
+  pkSwapOk: (U, B) => `Doğru! Yukarı yuvarlanmış ${eur(U)}, ${eur(B)} tutarından fazla. Kesin yetmez. Bir ürünü değiştirip tekrar deneyin.`,
+  pkMore: (U, B, k, n) => `Doğru! Yukarı yuvarlanmış ${eur(U)}, ${eur(B)} tutarından fazla değil. Para kesin yeter. ${n} seçenekten ${k} tanesini buldunuz. Bir tane daha bulun!`,
+  pkGo: "Yukarı yuvarlamaya geç", pkNeed: "Tam olarak 3 ürün seçin.", pkFull: "Zaten 3 ürün seçtiniz. Önce bir ürünü çıkarmak için ona dokunun.", pkDup: "Bu seçeneği zaten buldunuz. Başka bir tane arayın!",
+  pkFound: (k, n) => `Bulunan: ${n} seçenekten ${k}`, pkTip: "3 ürüne dokunun. Her fiyatı aklınızdan yukarı yuvarlayıp toplayın. Toplam paranızdan fazla değilse para kesin yeter. Daha ucuz ürünler seçin.",
+  pkSent: (list, B) => `${eur(B)} ile para kesin yeter: ${list}. Her fiyatı yukarı yuvarladık. Toplam ${eur(B)} tutarından büyük değilse para kesin yeter.`,
   iPlan: (a, b, B) => `${a} ve ${b} sınıf için alışveriş yapabilir. <b>${eur(B)}</b> paraları var. Broşürden en az 3 ürüne dokunun.`,
   planCtx: { 1: "5a için yeni teneffüs oyunları", 2: "5a için bir okuma köşesi", 3: "Okul için yeni bir medya odası" },
   cart: "Alışveriş sepeti", need3: "En az 3 ürün seçin.", toOver: "Yukarı yuvarlamaya geç",
@@ -718,11 +739,11 @@ tr: {
   tipNums: "Hangi sayılar para miktarı? Sadece onlara ihtiyacın var.",
   tipLines: "Satır satır kendin hesapla ve Tom ile karşılaştır.",
   tipPlan: "Bir ürünü sepete koymak için ona dokunun. Tekrar dokunursanız çıkar.",
-  pTitle: "Eşli çalışma", pOn: "İki kişi", pOff: "Tek kişi", pNames: "İsimler", pA: "Partner A", pB: "Partner B",
+  pTitle: "Eşli çalışma", pOn: "İki kişi", pOff: "Tek kişi", pNames: "İsimler", pNamePh: "Ad", pA: "Partner A", pB: "Partner B",
   pTurn: (a, b) => `<b>${a}</b> hesaplıyor. <b>${b}</b> izliyor, kontrol ediyor ve açıklamaya yardım ediyor.`,
   pSwap: (a, b) => `Değişin! Şimdi <b>${b}</b> hesaplıyor. Önce <b>${a}</b> hesaplama yolunu kısaca anlatıyor.`,
   pDiscuss: "Birlikte konuşun:",
-  pPm: { why: "Burada neden yukarı yuvarlanıyor? Birbirinize açıklayın.", over: "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", exact: "Tam sonuç yukarı yuvarlanmış toplama uyuyor mu? Bunu nereden anlıyorsunuz?", diff: "Hangi toplam gerçek fiyatın altında, hangisi üstünde? Neden?", book: "Ne zaman aşağı, ne zaman yukarı yuvarladınız? Yuvarlama kuralını açıklayın.", plaus: "Sonucun doğru olup olamayacağını nereden anladınız?", plan: "Paranızın yetip yetmeyeceğine nasıl karar verdiniz?", rest: "Sağlamayı nasıl yaptınız?", def: "Hesaplama yolunuzu birbirinize açıklayın." },
+  pPm: { why: "Burada neden yukarı yuvarlanıyor? Birbirinize açıklayın.", over: "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", exact: "Tam sonuç yukarı yuvarlanmış toplama uyuyor mu? Bunu nereden anlıyorsunuz?", diff: "Hangi toplam gerçek fiyatın altında, hangisi üstünde? Neden?", book: "Ne zaman aşağı, ne zaman yukarı yuvarladınız? Yuvarlama kuralını açıklayın.", plaus: "Sonucun doğru olup olamayacağını nereden anladınız?", plan: "Paranızın yetip yetmeyeceğine nasıl karar verdiniz?", pick: "Üç ürünün paranıza kesin yettiğini nasıl anladınız?", rest: "Sağlamayı nasıl yaptınız?", def: "Hesaplama yolunuzu birbirinize açıklayın." },
   pPrompts: ["Nasıl yuvarladınız? Neden yukarı?", "Para kesin yeter mi? Bunu nereden anlıyorsunuz?", "Tam sonuç yukarı yuvarlanmış toplama uyuyor mu?", "Kontrol kuralını kendi sözlerinizle açıklayın.", "Sağlamayı birlikte yapın.", "Günlük hayatta yukarı yuvarlamak size nerede yardım eder?"],
   inTitle: "Alışverişte aşağı ve yukarı yuvarlama",
   inNext: "İleri", inBack: "Geri", inGo: "Alıştırmaya başla",
@@ -822,14 +843,14 @@ const finalPhase = (E, B) => ({ type: "choice", instr: "final", opts: [{ key: "d
 const gridPhase = (nums, U, n, s) => ({ type: "grid", instr: "grid", nums, U, n, s });
 
 /* ======================= generators ======================= */
-const CYCLE = { 1: ["why", "over", "exact", "diff", "plaus", "book", "plan"], 2: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"], 3: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"] };
+const CYCLE = { 1: ["why", "over", "pick", "exact", "diff", "plaus", "book", "plan", "pick"], 2: ["why", "over", "pick", "exact", "diff", "plaus", "book", "plan", "rest", "pick"], 3: ["why", "over", "pick", "exact", "diff", "plaus", "book", "plan", "rest"] };
 /* Pflichtaufgaben in orange: nur Aufrunden, Vergleichen und Entscheiden, ohne Rechenkästchen */
 const MUSTSEQ = [["why"], ["diff"], ["over", true], ["diff"], ["over", false]];
 function makeTask(level) {
   if (level === 4) return makeExpert();
   if (level === 1 && tab === 1 && locked()) { const [m, sure] = MUSTSEQ[Math.min(must, MUSTSEQ.length - 1)]; const t = m === "why" ? makeWhy(1) : m === "diff" ? makeDiff(1, true) : makeOver(1, true, sure); t.must = true; return t }
   const seq = store.get("up-seq", { 1: 0, 2: 0, 3: 0 }); const m = CYCLE[level][seq[level] % CYCLE[level].length]; seq[level]++; store.set("up-seq", seq);
-  return ({ book: makeBook, diff: makeDiff, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest })[m](level);
+  return ({ book: makeBook, diff: makeDiff, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest, pick: makePick })[m](level);
 }
 const nround = (n, pl) => Math.floor(n / pl + .5) * pl;
 function makeBook(lv) {
@@ -871,7 +892,7 @@ function makeDiff(lv, noGrid) {
   const s = STEP[lv], n = lv === 1 ? 2 : 3; let b, Rs, U, E, D, g = 0;
   const below = lv === 1 || Math.random() < .7;
   do { b = basket(lv, n); Rs = sum(b.map(x => nround(x.p, s))); U = sum(b.map(x => up(x.p, s))); D = sum(b.map(x => down(x.p, s))); E = sum(b.map(x => x.p)); g++ }
-  while (g < 400 && (Rs === U || Rs === D || Rs === E || (below ? Rs > E : Rs < E) || b.some(x => x.p % 10 === 0)));
+  while (g < 400 && (Rs === U || Rs === D || Rs === E || (below ? Rs > E : Rs < E) || b.some(x => x.p % 10 === 0 || x.p < s)));
   const ex = a => a.map(fmt).join(" + "), rs = b.map(x => nround(x.p, s)), us = b.map(x => up(x.p, s)), dsx = b.map(x => down(x.p, s));
   return {
     mode: "diff", lv, b, Rs, U, E, ctx: "basketN", noGrid: !!noGrid,
@@ -915,6 +936,24 @@ function buildPlan(t) {
   t.phases = [{ type: "select" }, overPhase(b, s), decidePhase(t.U, t.B), gridPhase(b.map(x => x.p), t.U, b.length, s),
     { type: "choice", instr: "final", opts: [{ key: "decYes", ok: t.E <= t.B, bad: () => L().finYesBad(t.E, t.B) }, { key: "decNo", ok: t.E > t.B, bad: () => L().finNoBad(t.E, t.B), replan: true }] }];
   t.final = () => { const names = b.map(x => lang === "de" ? x.it.acc || x.it.de : x.it[lang]); const list = names.length > 1 ? names.slice(0, -1).join(L().comma) + L().and + names[names.length - 1] : names[0]; return `<div class="sentence"><b class="h">${L().portfolio}</b>${L().planSent(list, t.U, t.E, t.B)}</div>` };
+}
+/* Drei Sachen aussuchen (wie die Bonus-Aufgabe): 6 Angebote, 3 auswählen, das Geld soll sicher reichen. Zwei verschiedene Möglichkeiten finden. */
+function makePick(lv) {
+  const s = STEP[lv]; let pool, B, Us, g = 0;
+  do {
+    pool = basket(lv, 6); Us = [];
+    for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) for (let k = j + 1; k < 6; k++) Us.push({ U: up(pool[i].p, s) + up(pool[j].p, s) + up(pool[k].p, s), E: pool[i].p + pool[j].p + pool[k].p });
+    const sorted = Us.map(o => o.U).sort((a, b) => a - b); B = sorted[rnd(6, 11)]; g++;
+    var nSure = Us.filter(o => o.U <= B).length, trap = Us.some(o => o.U > B && o.E <= B);
+  } while (g < 300 && (nSure < 5 || nSure > 14 || !trap || new Set(pool.map(x => x.p)).size < 6 || pool.some(x => x.p % s === 0)));
+  const n = shuffle(NAMES.slice());
+  return { mode: "pick", lv, pool, B, a: n[0], b2: n[1], sel: [], found: [], foundTxt: [], need: 2, ctx: "pickc", phases: [{ type: "pick" }],
+    final: function () { return `<div class="sentence"><b class="h">${L().portfolio}</b>${L().pkSent(this.foundTxt.map((k, n) => `(${n + 1}) ` + k.split("|").map(i => esc(this.pool[i].it[lang])).join(L().comma)).join(" "), this.B)}</div>` } };
+}
+function buildPick(t) {
+  const s = STEP[t.lv], b = t.sel.slice().sort((a, c) => a - c).map(i => t.pool[i]);
+  t.b = b; t.key = t.sel.slice().sort((a, c) => a - c).join("|"); t.E = sum(b.map(x => x.p)); t.U = sum(b.map(x => up(x.p, s)));
+  t.phases = [{ type: "pick" }, overPhase(b, s), { type: "choice", instr: "decide", opts: [{ key: "pkSure", ok: t.U <= t.B, bad: () => L().pkSureBad(t.U, t.B) }, { key: "pkSwap", ok: t.U > t.B, bad: () => L().pkSwapBad(t.U, t.B) }] }];
 }
 function restTask(lv, mode) {
   const b = basket(lv, lv === 1 ? 2 : rnd(1, 2), false), S = sum(b.map(x => x.p)), big = lv === 3 ? 1000 : lv === 2 ? 100 : 10;
@@ -1248,7 +1287,16 @@ function renderPartner() {
   const on = el("button", "seg", L().pOn); on.type = "button"; on.setAttribute("aria-pressed", !!partner.on); on.onclick = () => { partner.on = true; savePartner(); render() };
   const off = el("button", "seg", L().pOff); off.type = "button"; off.setAttribute("aria-pressed", !partner.on); off.onclick = () => { partner.on = false; savePartner(); render() };
   btns.append(on, off);
+  if (partner.on) { const nm = el("button", "seg", L().pNames); nm.type = "button"; nm.setAttribute("aria-pressed", !!partner.showNames); nm.onclick = () => { partner.showNames = !partner.showNames; savePartner(); render() }; btns.append(nm) }
   bar.append(who, btns);
+  if (partner.on && partner.showNames) {
+    const box = el("div", "names");
+    [["a", "partnerA", L().pA], ["b", "partnerB", L().pB]].forEach(([k, id, lab]) => {
+      const l = el("label", "", lab), inp = document.createElement("input"); inp.id = id; inp.type = "text"; inp.maxLength = 20; inp.value = partner[k] || ""; inp.autocomplete = "off"; inp.placeholder = L().pNamePh;
+      inp.oninput = () => { partner[k] = inp.value; savePartner(); who.innerHTML = L().pTurn(pName(partner.turn), pName(1 - partner.turn)) };
+      l.appendChild(inp); box.appendChild(l) });
+    bar.appendChild(box);
+  }
   return bar;
 }
 /* context box (word problem / basket) */
@@ -1265,6 +1313,7 @@ function ctxHTML() {
   if (t.ctx === "claim") return `<div class="word">${shopTable(t.b)}</div><span class="claimed">${L().claimed(t.nm, t.C)}</span>`;
   if (t.ctx === "rest") return `<div class="word">${shopTable(t.b, undefined, `<p style="margin:8px 0 0">${L().iRest(t.nm, t.B)}</p>`)}</div>`;
   if (t.ctx === "receipt") return `<div class="receipt"><div style="text-align:center;font-weight:700">${L().shop}</div><hr>${t.b.map(x => `<div class="r"><span>${esc(x.it[lang])}</span><span>${fmt(x.p)} €</span></div>`).join("")}<hr><div class="r tot"><span>${L().total.toUpperCase()}</span><span>${fmt(t.C)} €</span></div></div>`;
+  if (t.ctx === "pickc" && pi > 0) return `<div class="word"><b>${L().planCtx[t.lv]}</b>${shopTable(t.b, t.B)}</div>`;
   if (t.ctx === "plan" && pi > 0) { const s = STEP[t.lv]; return `<div class="word"><b>${L().planCtx[t.lv]}</b>${shopTable(t.b, t.B, pi > 2 ? `<span class="given">${L().ueberschlag}: ${eur(t.U)}</span>` : "")}</div>` }
   return "";
 }
@@ -1344,6 +1393,16 @@ function instrText(P) {
   }
   return "";
 }
+/* Regel-Kasten: zeigt bei jeder Übungsaufgabe, welche Regel gemeint ist */
+function ruleBox(t) {
+  const P = ph(); if (!P || P.type === "select") return null;
+  const rest = P.type === "steps" && P.lines && P.lines[0] && P.lines[0].kind === "nround";
+  const pl = t.mode === "book" ? t.pl : rest ? P.lines[0].pl : STEP[level];
+  const onlyRR = t.mode === "book" || t.mode === "rest";
+  const b = el("div", "rulestrip");
+  b.innerHTML = `<div>${L().rrBox(L().rrD[pl] || L().rrD[10])}</div>` + (onlyRR ? "" : `<div>${L().arBox(L().arZ[STEP[level]] || L().arZ[10])}</div>`);
+  return b;
+}
 function renderTask() {
   view.appendChild(renderPartner());
   const lvl = curLevel(); const p = el("section", "panel"); view.appendChild(p);
@@ -1354,7 +1413,8 @@ function renderTask() {
   const P = done ? task.phases[task.phases.length - 1] : ph();
   const t = task;
   if (t.mode === "plaus" && pi === 0 && !done) p.appendChild(el("p", "instr", L().iPlaus(t.nm, t.C)));
-  if (P.type !== "select" && P.type !== "chips") { const c = ctxHTML(); if (c) p.appendChild(el("div", "", c)) }
+  if (P.type !== "select" && P.type !== "chips" && P.type !== "pick") { const c = ctxHTML(); if (c) p.appendChild(el("div", "", c)) }
+  if (tab === 1 && !done) { const rb = ruleBox(t); if (rb) p.appendChild(rb) }
   if (P.type === "select") {
     p.appendChild(el("p", "instr", L().iPlan(t.a, t.b2, t.B)));
     p.appendChild(el("p", "word", `<b>${L().planCtx[t.lv]}</b> · ${L().budget}: <b>${eur(t.B)}</b>`));
@@ -1363,6 +1423,18 @@ function renderTask() {
     p.appendChild(g);
     p.appendChild(el("p", "", `<b>🛒 ${L().cart}:</b> ${t.sel.length ? t.sel.map(i => esc(ITEMS[t.lv][i][lang])).join(L().comma) : "–"}`));
     const a = el("div", "actions"); const b = el("button", "btn primary", L().toOver); b.type = "button"; b.onclick = () => { if (t.sel.length < 3) { attempts; feedback = { cls: "bad", text: L().need3 }; render(); return } buildPlan(t); advance() }; a.appendChild(b); p.appendChild(a);
+  }
+  if (P.type === "pick" && !done) {
+    p.appendChild(el("p", "instr", L().pkI(t.a, t.b2, t.B, t.need)));
+    p.appendChild(el("p", "word", `<b>${L().planCtx[t.lv]}</b> · ${L().budget}: <b>${eur(t.B)}</b>`));
+    const g = el("div", "prods");
+    t.pool.forEach((x, i) => { const b = el("button", "prod", `<span class="ic">${x.it.ic}</span><span>${esc(x.it[lang])}</span><b>${eur(x.p)}</b>`); b.type = "button"; b.setAttribute("aria-pressed", t.sel.includes(i)); b.onclick = () => { const k = t.sel.indexOf(i); if (k >= 0) { t.sel.splice(k, 1); feedback = null } else if (t.sel.length >= 3) feedback = { cls: "bad", text: L().pkFull }; else { t.sel.push(i); feedback = null } render() }; g.appendChild(b) });
+    p.appendChild(g);
+    p.appendChild(el("p", "", `<b>🛒 ${L().cart}:</b> ${t.sel.length ? t.sel.map(i => esc(t.pool[i].it[lang])).join(L().comma) : "–"}`));
+    if (t.found.length) p.appendChild(el("p", "", `<b>✅ ${L().pkFound(t.found.length, t.need)}:</b> ${t.found.map(k => k.split("|").map(i => esc(t.pool[i].it[lang])).join(L().comma)).join(" · ")}`));
+    const a = el("div", "actions"); const b = el("button", "btn primary", L().pkGo); b.type = "button";
+    b.onclick = () => { if (t.sel.length !== 3) { feedback = { cls: "bad", text: L().pkNeed }; render(); return } const key = t.sel.slice().sort((x, y) => x - y).join("|"); if (t.found.includes(key)) { feedback = { cls: "bad", text: L().pkDup }; render(); return } buildPick(t); advance() };
+    a.appendChild(b); p.appendChild(a);
   }
   if (P.type === "chips") {
     const w = el("p", "word");
@@ -1472,6 +1544,11 @@ function check() {
 function pickChoice(i) {
   const P = ph(), o = P.opts[i]; task.picked = i;
   if (o.ok) {
+    if (task.mode === "pick" && P.instr === "decide") {
+      const t = task, sure = t.U <= t.B;
+      if (sure) { t.found.push(t.key); t.foundTxt.push(t.key); if (t.found.length >= t.need) { advance(L().decSureOk(t.U, t.B)); return } }
+      t.sel = []; t.phases = [{ type: "pick" }]; pi = 0; initPhase(); feedback = { cls: "ok", text: sure ? L().pkMore(t.U, t.B, t.found.length, t.need) : L().pkSwapOk(t.U, t.B) }; render(); return;
+    }
     if (o.replan) { task.phases = [{ type: "select" }]; pi = 0; initPhase(); feedback = { cls: "ok", text: L().planNo }; render(); return }
     advance(P.okMsg ? P.okMsg() : null); return;
   }
@@ -1574,6 +1651,7 @@ function tipText() {
   else if (P.type === "chips") s += L().tipNums;
   else if (P.type === "lines" || P.type === "reasons") s += L().tipLines;
   else if (P.type === "select") s += L().tipPlan;
+  else if (P.type === "pick") s += L().pkTip;
   if (tipLevel > 2) s += `<br><br><b>${L().tip3}</b>`;
   return s;
 }
