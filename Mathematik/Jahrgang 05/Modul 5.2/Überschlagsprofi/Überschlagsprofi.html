@@ -392,7 +392,7 @@ de: {
   /* instructions */
   iDiff1: "Schritt 1: Runde jeden Preis nach der Rundungsregel und addiere. Welche Summe kommt heraus?",
   iDiff2: "Schritt 2: Runde jetzt jeden Preis auf und addiere. Welche Summe kommt heraus?",
-  iDiff3: E => `Schritt 4: Genau sind es ${eur(E)}. Welche Summe liegt immer über dem echten Preis?`,
+  iDiff3: (E, n) => `Schritt ${n}: Genau sind es ${eur(E)}. Welche Summe liegt immer über dem echten Preis?`,
   iDiffGrid: "Schritt 3: Rechne den genauen Preis schriftlich.",
   diff3o: ["Die aufgerundete Summe", "Die Summe nach der Rundungsregel", "Beide Summen"],
   diffBad1: "Rundungsregel: Schau auf die Ziffer rechts von der Rundungsstelle. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.",
@@ -595,7 +595,7 @@ tr: {
   whyTitle: "Neden yanlış?", cardBtn: n => `${n}. ipucu kartına bak`,
   iDiff1: "1. adım: Her fiyatı yuvarlama kuralıyla yuvarla ve topla. Hangi toplam çıkar?",
   iDiff2: "2. adım: Şimdi her fiyatı yukarı yuvarla ve topla. Hangi toplam çıkar?",
-  iDiff3: E => `4. adım: Tam fiyat ${eur(E)}. Hangi toplam her zaman gerçek fiyatın üstündedir?`,
+  iDiff3: (E, n) => `${n}. adım: Tam fiyat ${eur(E)}. Hangi toplam her zaman gerçek fiyatın üstündedir?`,
   iDiffGrid: "3. adım: Tam fiyatı alt alta hesapla.",
   diff3o: ["Yukarı yuvarlanmış toplam", "Yuvarlama kuralıyla bulunan toplam", "İki toplam da"],
   diffBad1: "Yuvarlama kuralı: Yuvarlanacak basamağın sağındaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.",
@@ -823,8 +823,11 @@ const gridPhase = (nums, U, n, s) => ({ type: "grid", instr: "grid", nums, U, n,
 
 /* ======================= generators ======================= */
 const CYCLE = { 1: ["why", "over", "exact", "diff", "plaus", "book", "plan"], 2: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"], 3: ["why", "over", "exact", "diff", "plaus", "book", "plan", "rest"] };
+/* Pflichtaufgaben in orange: nur Aufrunden, Vergleichen und Entscheiden, ohne Rechenkästchen */
+const MUSTSEQ = [["why"], ["diff"], ["over", true], ["diff"], ["over", false]];
 function makeTask(level) {
   if (level === 4) return makeExpert();
+  if (level === 1 && tab === 1 && locked()) { const [m, sure] = MUSTSEQ[Math.min(must, MUSTSEQ.length - 1)]; const t = m === "why" ? makeWhy(1) : m === "diff" ? makeDiff(1, true) : makeOver(1, true, sure); t.must = true; return t }
   const seq = store.get("up-seq", { 1: 0, 2: 0, 3: 0 }); const m = CYCLE[level][seq[level] % CYCLE[level].length]; seq[level]++; store.set("up-seq", seq);
   return ({ book: makeBook, diff: makeDiff, why: makeWhy, over: makeOver, exact: makeExact, plaus: makePlaus, plan: makePlan, rest: makeRest })[m](level);
 }
@@ -864,28 +867,29 @@ function makeWhy(lv) {
   };
 }
 /* Unterschied beobachten: Rundungsregel und Aufrunden am selben Einkauf vergleichen (wie im Unterricht) */
-function makeDiff(lv) {
+function makeDiff(lv, noGrid) {
   const s = STEP[lv], n = lv === 1 ? 2 : 3; let b, Rs, U, E, D, g = 0;
   const below = lv === 1 || Math.random() < .7;
   do { b = basket(lv, n); Rs = sum(b.map(x => nround(x.p, s))); U = sum(b.map(x => up(x.p, s))); D = sum(b.map(x => down(x.p, s))); E = sum(b.map(x => x.p)); g++ }
   while (g < 400 && (Rs === U || Rs === D || Rs === E || (below ? Rs > E : Rs < E) || b.some(x => x.p % 10 === 0)));
   const ex = a => a.map(fmt).join(" + "), rs = b.map(x => nround(x.p, s)), us = b.map(x => up(x.p, s)), dsx = b.map(x => down(x.p, s));
   return {
-    mode: "diff", lv, b, Rs, U, E, ctx: "basketN",
+    mode: "diff", lv, b, Rs, U, E, ctx: "basketN", noGrid: !!noGrid,
     phases: [
       { type: "choice", instr: "diff1", opts: shuffle([{ text: `${ex(rs)} = ${eur(Rs)}`, ok: true }, { text: `${ex(us)} = ${eur(U)}`, ok: false, bad: () => L().diffBad1 }, ...(D !== U ? [{ text: `${ex(dsx)} = ${eur(D)}`, ok: false, bad: () => L().diffBad1 }] : [])]) },
       { type: "choice", instr: "diff2", opts: shuffle([{ text: `${ex(us)} = ${eur(U)}`, ok: true }, { text: `${ex(rs)} = ${eur(Rs)}`, ok: false, bad: () => L().diffBad2 }, ...(D !== Rs ? [{ text: `${ex(dsx)} = ${eur(D)}`, ok: false, bad: () => L().diffBad2 }] : [])]) },
-      gridPhase(b.map(x => x.p), U, b.length, s),
+      ...(noGrid ? [] : [gridPhase(b.map(x => x.p), U, b.length, s)]),
       { type: "choice", instr: "diff3", opts: shuffle([0, 1, 2].map(i => ({ text: () => L().diff3o[i], ok: i === 0, bad: () => L().diffBad3 }))) }
     ],
     final: () => `<div class="sentence"><b class="h">${L().portfolio}</b>${L().diffSent(Rs, U, E)}</div>`
   };
 }
-function makeOver(lv) {
+function makeOver(lv, noGrid, sure) {
   const s = STEP[lv], b = basket(lv, lv === 1 ? 2 : 3), U = sum(b.map(x => up(x.p, s)));
-  const B = Math.random() < .5 ? U + s * rnd(0, 2) : Math.max(s, U - s * rnd(1, 2));
+  const wantSure = sure === undefined ? Math.random() < .5 : sure;
+  const B = wantSure ? U + s * rnd(0, 2) : U - s * (U >= 4 * s ? rnd(1, 2) : 1);
   const E = sum(b.map(x => x.p)), ph = [overPhase(b, s), decidePhase(U, B)];
-  if (U > B) ph.push(gridPhase(b.map(x => x.p), U, b.length, s), finalPhase(E, B));
+  if (U > B && !noGrid) ph.push(gridPhase(b.map(x => x.p), U, b.length, s), finalPhase(E, B));
   return { mode: "over", b, B, U, E, nm: pick(NAMES), ctx: "basket", phases: ph };
 }
 function makeExact(lv) {
@@ -1328,7 +1332,7 @@ function instrText(P) {
   const t = task;
   switch (P.instr) {
     case "why1": return L().iWhy1(task.nm); case "why2": return L().iWhy2(task.nm);
-    case "diff1": return L().iDiff1; case "diff2": return L().iDiff2; case "diff3": return L().iDiff3(task.E);
+    case "diff1": return L().iDiff1; case "diff2": return L().iDiff2; case "diff3": return L().iDiff3(task.E, task.noGrid ? 3 : 4);
     case "over": return L().iOver(P.lines[0].s || STEP[t.lv || 1]);
     case "decide": return L().iDecide; case "final": return L().iFinal; case "grid": return task.mode === "diff" ? L().iDiffGrid + " " + L().iGrid : L().iGrid;
     case "plaus2": return L().iPlaus2(t.nm, t.C, t.U);
