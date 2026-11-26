@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Rundungsprofi</title>
+<title>Reicht unser Geld?</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Lexend:wght@500;600;700&display=swap">
@@ -371,7 +371,7 @@ const PLAN = {1:[100,80], 2:[500,400], 3:[4000,3000]};
 /* ======================= texts ======================= */
 const T = {
 de: {
-  title: 'Rundungsprofi', sub: "Auf- und abrunden beim Einkaufen", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
+  title: 'Reicht unser Geld?', sub: "Sicher entscheiden beim Einkaufen", other: "Türkçe", reset: "Neu starten", reset2: "Wirklich alles löschen?",
   tabs: ["Input", "Üben", "Experten", "Ergebnisse sichern", "Merkzettel", "Tippkarten"],
   lv: [["Stufe 1", "orange"], ["Stufe 2", "pink"], ["Stufe 3", "lila"]],
   solvedN: n => `${n} gelöst`, upMsg: (n, a, b) => `Stark! ${n} Aufgaben hintereinander in Stufe ${a} richtig gerechnet. Probiert jetzt Stufe ${b}!`, lockShort: n => `nach ${n} Aufgaben in orange`, lockInfo: (n, k) => `Startet in Stufe orange: Die ersten ${n} Aufgaben sind Pflicht (geschafft: ${Math.min(k, n)} von ${n}). Danach könnt ihr eure Stufe frei wählen.`, lockGo: "Zu Stufe orange", unlockMsg: n => `Super! Ihr habt ${n} Aufgaben in Stufe orange gelöst. Jetzt sind pink, lila und die Experten freigeschaltet. Wählt eure Stufe selbst.`, unlockStay: "In orange weiterrechnen", guessT: "Stopp – nicht raten!", guessP: "Ihr antwortet sehr schnell oder probiert nur aus. Raten führt nicht zum Ziel: So lernt ihr nichts für die Klassenarbeit. Lest die Aufgabe genau, rechnet zuerst und antwortet dann. Jede und jeder ist selbst für das eigene Lernen verantwortlich.", guessOk: "Verstanden", svFast: "Das ging sehr schnell. Habt ihr jede Antwort wirklich gerechnet und besprochen? Raten führt nicht zum Ziel. Prüft eure Antworten noch einmal.", svFastGo: "Wir haben alles geprüft – abgeben", upGo: b => `Zu Stufe ${b}`, upStay: "Noch hier bleiben",
@@ -381,7 +381,7 @@ de: {
   zahl: s => s === 100 ? "Hunderterzahl" : "Zehnerzahl", stelle: s => s === 100 ? "Hunderter" : "Zehner",
   budget: "Budget", total: "Summe", ueberschlag: "Aufgerundete Summe", exact: "genau",
   check: "Prüfen", tip: "Tipp", next: "Nächste Aufgabe", show: "Lösung zeigen", del: "Löschen", go: "Weiter",
-  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein Rundungsprofi.", "Richtig! Weiter so."],
+  ok: ["Richtig! Super gerechnet.", "Klasse, alles richtig!", "Genau! Du bist ein echter Geld-Detektiv.", "Richtig! Weiter so."],
   stepOk: "Richtig! Weiter mit der nächsten Zeile.",
   bad: "Noch nicht ganz. Prüfe diesen Schritt noch einmal.",
   badGrid: "Noch nicht ganz. Die rot markierten Kästchen stimmen nicht. Prüfe diese Spalten noch einmal.",
@@ -399,7 +399,7 @@ de: {
   diffBad1: "Rundungsregel: Schau auf die Ziffer rechts von der Rundungsstelle. 0 bis 4 → abrunden, 5 bis 9 → aufrunden.",
   diffBad2: "Jeden Preis aufrunden heißt: Du nimmst immer die nächstgrößere glatte Zahl, auch wenn die Rundungsregel bei 1, 2, 3 oder 4 abrunden würde.",
   diffBad3: "Vergleiche beide Summen mit dem genauen Preis. Welche Summe kann auch darunter liegen?",
-  diffSent: (Rs, U, E) => `Rundungsregel: ${eur(Rs)} liegt ${Rs < E ? "unter" : "über"} dem echten Preis von ${eur(E)}. Aufgerundet: ${eur(U)} liegt darüber. Die aufgerundete Summe liegt immer über dem echten Preis. Darum runde ich jeden Preis auf, wenn ich sicher wissen will, ob mein Geld reicht.`,
+  diffSent: (Rs, U, E) => `Rundungsregel: ${eur(Rs)} liegt ${Rs < E ? "unter" : "über"} dem echten Preis von ${eur(E)}. Aufgerundet: ${eur(U)} liegt darüber. Die aufgerundete Summe liegt nie unter dem echten Preis. Darum runde ich jeden Preis auf, wenn ich sicher wissen will, ob mein Geld reicht.`,
   whyClaim: (nm, ds, D) => `${nm} rundet nach der Rundungsregel. Dabei wird jeder Preis abgerundet: <b>${ds} = ${eur(D)}</b>. ${nm} sagt: „Das Geld reicht sicher!“`,
   rrBox: d => `📏 <b>Rundungsregel</b> (für „ungefähr“): Schau auf die ${d}. 0, 1, 2, 3, 4 → abrunden · 5, 6, 7, 8, 9 → aufrunden.`, arBox: z => `💶 <b>Jeden Preis aufrunden</b> (für „Reicht das Geld sicher?“): immer zur nächstgrößeren ${z}, auch bei 1, 2, 3, 4.`, rrD: { 10: "Einer", 100: "Zehner", 1000: "Hunderter" }, arZ: { 10: "Zehnerzahl", 100: "Hunderterzahl" },
   iWhy1: nm => `Hat ${nm} recht? Was ist das Problem?`,
@@ -543,7 +543,7 @@ de: {
   in1items: [["Wasserpistole", 34], ["Puzzle", 33], ["Kreisel-Set", 35]],
   in2h: "Schritt 1: Runden mit der Rundungsregel", in2: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden. Das Zeichen ≈ bedeutet „ungefähr gleich“. Mia rundet und addiert im Kopf:", in2b: "100 € ist nicht mehr als 100 €. Mia denkt: Das Geld reicht!",
   in3h: "An der Kasse", in3: "Die Kasse zeigt aber:", in3b: "Das Geld reicht nicht! Mia hat 34 € und 33 € abgerundet. Ihre gerundete Summe (100 €) liegt unter dem echten Preis (102 €).",
-  in4h: "Sicher entscheiden: jeden Preis aufrunden", in4: "Soll das Geld sicher reichen, rundet Mia jeden Preis auf. Dann liegt das Ergebnis immer über dem echten Preis.", in4b: "120 € ist mehr als 100 €. Mia muss genau rechnen: 102 € > 100 €. Das Geld reicht nicht.",
+  in4h: "Sicher entscheiden: jeden Preis aufrunden", in4: "Soll das Geld sicher reichen, rundet Mia jeden Preis auf. Dann liegt das Ergebnis nie unter dem echten Preis.", in4b: "120 € ist mehr als 100 €. Mia muss genau rechnen: 102 € > 100 €. Das Geld reicht nicht.",
   in5h: "Entscheiden, genau rechnen, prüfen", in5: "Elif hat 50 € und kauft für 18 €, 14 € und 9 €. Sie rundet jeden Preis auf. 50 € ist nicht mehr als 50 €: Das Geld reicht sicher. Zur Kontrolle rechnet sie genau. 41 € liegt etwas unter 50 €. Das passt! Zum Schluss rechnet sie das Wechselgeld aus und macht die Probe:",
   in6h: "Teste dich!", in6: "Noah hat 50 €. Er kauft einen Ball für 23 € und Kreide für 14 €. Wie muss Noah runden, um schnell im Kopf sicher zu prüfen, ob sein Geld reicht?",
   in6opts: [["Nach der Rundungsregel: 20 + 10 = 30", false], ["Jeden Preis aufrunden: 30 + 20 = 50", true]],
@@ -566,7 +566,7 @@ de: {
    c5: (B, ps) => `Du hast ${B} € und kaufst Dinge für ${ps.map(x => x + " €").join(", ").replace(/, ([^,]*)$/, " und $1")}.`, s5: "Was zeigt die aufgerundete Summe?", h5: e => `Aufgerundete Summe: ${e}.`, c6: "Für ein ungefähres Ergebnis rundest du nach der Rundungsregel.", s6: "Welche Rundung ist richtig?", h6: "Rundungsregel: Schau auf die Einer. 0, 1, 2, 3, 4 → abrunden; 5, 6, 7, 8, 9 → aufrunden." },
    svOk: "Richtig!", svDone: "Ergebnisse gesichert!", svFirst: (n, t) => `Beim ersten Versuch richtig: ${n} von ${t}`, svMerk: "Merkzettel ansehen", svOpen: (n, t) => `${n} von ${t} Aufgaben geschafft`,
   merkTitle: "Merkzettel",
-  merkRules: ["Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden. Das Zeichen ≈ heißt „ungefähr gleich“.", "Wie viel ungefähr? Runde nach der Rundungsregel und rechne im Kopf. Das Ergebnis kann über oder unter dem echten Preis liegen.", "💶 Reicht mein Geld sicher? Runde jeden Preis <b>auf</b>, auch wenn die Rundungsregel abrunden würde. Dann liegt das Ergebnis immer über dem echten Preis.", "Aufgerundete Summe ≤ Budget: Das Geld reicht sicher. Aufgerundete Summe > Budget: genau rechnen.", "Prüfregel: Das genaue Ergebnis ist nie größer als die aufgerundete Summe. Es ist aber auch nicht viel kleiner: pro Preis höchstens 9 € (beim Runden auf Hunderter höchstens 99 €).", "Runde an der größten Stelle der kleineren Zahl. Beispiel: 358 + 47 → beide auf Zehner: 360 + 50 = 410.", "Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag.", "Mehr dazu im Buch auf Seite 34."],
+  merkRules: ["Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden. Das Zeichen ≈ heißt „ungefähr gleich“.", "Wie viel ungefähr? Runde nach der Rundungsregel und rechne im Kopf. Das Ergebnis kann über oder unter dem echten Preis liegen.", "💶 Reicht mein Geld sicher? Runde jeden Preis <b>auf</b>, auch wenn die Rundungsregel abrunden würde. Dann liegt das Ergebnis nie unter dem echten Preis.", "Aufgerundete Summe ≤ Budget: Das Geld reicht sicher. Aufgerundete Summe > Budget: genau rechnen.", "Prüfregel: Das genaue Ergebnis ist nie größer als die aufgerundete Summe. Es ist aber auch nicht viel kleiner: pro Preis höchstens 9 € (beim Runden auf Hunderter höchstens 99 €).", "Runde an der größten Stelle der kleineren Zahl. Beispiel: 358 + 47 → beide auf Zehner: 360 + 50 = 410.", "Probe mit der Umkehraufgabe: Preis + Wechselgeld = bezahlter Betrag.", "Mehr dazu im Buch auf Seite 34."],
   errTitle: "Typische Fehler",
   errs: [["Abgerundet statt aufgerundet", "Budget 50 €: 14 € → <s>10 €</s> → richtig 20 €"], ["Genaue Preise statt gerundeter", "Aufrunden: <s>18 + 14 + 9</s> → richtig 20 + 20 + 10"], ["Übertrag vergessen", "18 + 14 + 9 = <s>31</s> → richtig 41"], ["Ergebnis größer als die aufgerundete Summe", "Aufgerundet 50, Ergebnis <s>61</s> → kann nicht stimmen"], ["Wechselgeld ohne Probe", "50 − 41 = <s>19</s>, Probe: 41 + 19 = 60 → richtig 9"]],
   glossTitle: "Fachbegriffe",
@@ -585,7 +585,7 @@ de: {
   ]
 },
 tr: {
-  title: 'Yuvarlama Ustası', sub: "Alışverişte aşağı ve yukarı yuvarlama", other: "Deutsch", reset: "Yeniden başla", reset2: "Her şey silinsin mi?",
+  title: 'Paramız yeter mi?', sub: "Alışverişte kesin karar ver", other: "Deutsch", reset: "Yeniden başla", reset2: "Her şey silinsin mi?",
   tabs: ["Giriş", "Alıştırma", "Uzman", "Sonuçları pekiştir", "Not kâğıdı", "İpucu kartları"],
   lv: [["Seviye 1", "turuncu"], ["Seviye 2", "pembe"], ["Seviye 3", "mor"]],
   solvedN: n => `${n} çözüldü`, upMsg: (n, a, b) => `Harika! ${a} seviyesinde art arda ${n} soru doğru hesaplandı. Şimdi ${b} seviyesini deneyin!`, lockShort: n => `turuncuda ${n} sorudan sonra`, lockInfo: (n, k) => `Turuncu seviyeden başlayın: İlk ${n} soru zorunlu (tamamlanan: ${Math.min(k, n)} / ${n}). Sonra seviyenizi serbestçe seçebilirsiniz.`, lockGo: "Turuncu seviyeye git", unlockMsg: n => `Süper! Turuncu seviyede ${n} soru çözdünüz. Şimdi pembe, mor ve uzman soruları açıldı. Seviyenizi kendiniz seçin.`, unlockStay: "Turuncuda devam et", guessT: "Dur – tahmin etme!", guessP: "Çok hızlı cevap veriyorsunuz ya da sadece deniyorsunuz. Tahmin etmek hedefe götürmez: Böyle sınav için bir şey öğrenemezsiniz. Soruyu dikkatlice okuyun, önce hesaplayın, sonra cevap verin. Herkes kendi öğrenmesinden kendisi sorumludur.", guessOk: "Anladım", svFast: "Bu çok hızlı oldu. Her cevabı gerçekten hesapladınız ve konuştunuz mu? Tahmin etmek hedefe götürmez. Cevaplarınızı bir daha kontrol edin.", svFastGo: "Hepsini kontrol ettik – teslim et", upGo: b => `${b} seviyesine geç`, upStay: "Burada kalmaya devam et",
@@ -595,7 +595,7 @@ tr: {
   zahl: s => s === 100 ? "yüzlük sayı" : "onluk sayı", stelle: s => s === 100 ? "yüzlük" : "onluk",
   budget: "Bütçe", total: "Toplam", ueberschlag: "Yukarı yuvarlanmış toplam", exact: "tam",
   check: "Kontrol et", tip: "İpucu", next: "Sonraki soru", show: "Çözümü göster", del: "Sil", go: "İleri",
-  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen bir yuvarlama ustasısın.", "Doğru! Böyle devam et."],
+  ok: ["Doğru! Harika hesapladın.", "Süper, hepsi doğru!", "Aynen öyle! Sen gerçek bir para dedektifisin.", "Doğru! Böyle devam et."],
   stepOk: "Doğru! Sonraki satıra geç.",
   bad: "Henüz tam değil. Bu adımı bir daha kontrol et.",
   badGrid: "Henüz tam değil. Kırmızı işaretli kutular yanlış. Bu sütunları bir daha kontrol et.",
@@ -612,7 +612,7 @@ tr: {
   diffBad1: "Yuvarlama kuralı: Yuvarlanacak basamağın sağındaki rakama bak. 0–4 → aşağı, 5–9 → yukarı.",
   diffBad2: "Her fiyatı yukarı yuvarlamak demek: Her zaman bir sonraki büyük yuvarlak sayıyı alırsın, yuvarlama kuralı 1, 2, 3 ya da 4'te aşağı yuvarlasa bile.",
   diffBad3: "İki toplamı tam fiyatla karşılaştır. Hangisi altında da kalabilir?",
-  diffSent: (Rs, U, E) => `Yuvarlama kuralı: ${eur(Rs)}, gerçek fiyatın (${eur(E)}) ${Rs < E ? "altında" : "üstünde"}. Yukarı yuvarlanmış: ${eur(U)}, üstünde. Yukarı yuvarlanmış toplam her zaman gerçek fiyatın üstündedir. Bu yüzden paramın kesin yetip yetmediğini bilmek istersem her fiyatı yukarı yuvarlarım.`,
+  diffSent: (Rs, U, E) => `Yuvarlama kuralı: ${eur(Rs)}, gerçek fiyatın (${eur(E)}) ${Rs < E ? "altında" : "üstünde"}. Yukarı yuvarlanmış: ${eur(U)}, üstünde. Yukarı yuvarlanmış toplam asla gerçek fiyatın altında olmaz. Bu yüzden paramın kesin yetip yetmediğini bilmek istersem her fiyatı yukarı yuvarlarım.`,
   whyClaim: (nm, ds, D) => `${nm} yuvarlama kuralına göre yuvarlıyor. Böylece her fiyat aşağı yuvarlanıyor: <b>${ds} = ${eur(D)}</b>. ${nm} diyor ki: „Para kesin yeter!“`,
   rrBox: d => `📏 <b>Yuvarlama kuralı</b> („yaklaşık“ için): ${d} basamağına bak. 0, 1, 2, 3, 4 → aşağı · 5, 6, 7, 8, 9 → yukarı.`, arBox: z => `💶 <b>Her fiyatı yukarı yuvarla</b> („Para kesin yeter mi?“ için): her zaman bir sonraki ${z}, 1, 2, 3, 4'te bile.`, rrD: { 10: "Birler", 100: "Onlar", 1000: "Yüzler" }, arZ: { 10: "onluk sayıya", 100: "yüzlük sayıya" },
   iWhy1: nm => `${nm} haklı mı? Sorun ne?`,
@@ -751,7 +751,7 @@ tr: {
   in1items: [["Su tabancası", 34], ["Yapboz", 33], ["Topaç seti", 35]],
   in2h: "1. adım: Yuvarlama kuralıyla yuvarla", in2: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı. ≈ işareti „yaklaşık olarak eşit“ demek. Mia yuvarlar ve aklından toplar:", in2b: "100 €, 100 €'dan fazla değil. Mia düşünüyor: Para yeter!",
   in3h: "Kasada", in3: "Ama kasa şunu gösteriyor:", in3b: "Para yetmiyor! Mia 34 € ve 33 €'yu aşağı yuvarladı. Yuvarlanmış toplam (100 €) gerçek fiyatın (102 €) altında.",
-  in4h: "Kesin karar: her fiyatı yukarı yuvarla", in4: "Para kesin yetsin diye Mia her fiyatı yukarı yuvarlar. O zaman sonuç her zaman gerçek fiyatın üstündedir.", in4b: "120 €, 100 €'dan fazla. Mia tam hesaplamalı: 102 € > 100 €. Para yetmiyor.",
+  in4h: "Kesin karar: her fiyatı yukarı yuvarla", in4: "Para kesin yetsin diye Mia her fiyatı yukarı yuvarlar. O zaman sonuç asla gerçek fiyatın altında olmaz.", in4b: "120 €, 100 €'dan fazla. Mia tam hesaplamalı: 102 € > 100 €. Para yetmiyor.",
   in5h: "Karar ver, tam hesapla, kontrol et", in5: "Elif'in 50 € parası var ve 18 €, 14 € ve 9 €'luk şeyler alıyor. Her fiyatı yukarı yuvarlar. 50 €, 50 €'dan fazla değil: Para kesin yeter. Kontrol için tam hesaplar. 41 €, 50 €'nun biraz altında. Uyuyor! Sonunda para üstünü hesaplar ve sağlama yapar:",
   in6h: "Kendini dene!", in6: "Noah'nın 50 € parası var. 23 €'ya bir top ve 14 €'ya tebeşir alıyor. Parasının kesin yetip yetmediğini aklından hızlıca kontrol etmek için nasıl yuvarlamalı?",
   in6opts: [["Yuvarlama kuralına göre: 20 + 10 = 30", false], ["Her fiyatı yukarı yuvarla: 30 + 20 = 50", true]],
@@ -773,7 +773,7 @@ tr: {
    c5: (B, ps) => `${B} € paran var ve ${ps.map(x => x + " €").join(", ")} tutan şeyler alıyorsun.`, s5: "Yukarı yuvarlanmış toplam ne gösteriyor?", h5: e => `Yukarı yuvarlanmış toplam: ${e}.`, c6: "Yaklaşık bir sonuç için yuvarlama kuralına göre yuvarlarsın.", s6: "Hangi yuvarlama doğru?", h6: "Yuvarlama kuralı: Birler basamağına bak. 0, 1, 2, 3, 4 → aşağı; 5, 6, 7, 8, 9 → yukarı." },
    svOk: "Doğru!", svDone: "Sonuçlar pekiştirildi!", svFirst: (n, t) => `İlk denemede doğru: ${n} / ${t}`, svMerk: "Not kâğıdını aç", svOpen: (n, t) => `${n} / ${t} tamam`,
   merkTitle: "Not kâğıdı",
-  merkRules: ["Yuvarlama kuralı: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı. ≈ işareti „yaklaşık olarak eşit“ demek.", "Yaklaşık ne kadar? Yuvarlama kuralıyla yuvarla ve aklından hesapla. Sonuç gerçek fiyatın üstünde ya da altında olabilir.", "💶 Param kesin yeter mi? Her fiyatı <b>yukarı</b> yuvarla, yuvarlama kuralı aşağı yuvarlasa bile. O zaman sonuç her zaman gerçek fiyatın üstündedir.", "Yukarı yuvarlanmış toplam ≤ bütçe: Para kesin yeter. Yukarı yuvarlanmış toplam > bütçe: Tam hesapla.", "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış toplamdan asla büyük değildir. Ama çok da küçük değildir: fiyat başına en fazla 9 € (yüzlüğe yuvarlarken en fazla 99 €).", "Küçük sayının en büyük basamağına göre yuvarla. Örnek: 358 + 47 → ikisi de onluğa: 360 + 50 = 410.", "Ters işlemle sağlama: fiyat + para üstü = ödenen para.", "Daha fazlası kitapta, sayfa 34'te."],
+  merkRules: ["Yuvarlama kuralı: 0, 1, 2, 3, 4 → aşağı. 5, 6, 7, 8, 9 → yukarı. ≈ işareti „yaklaşık olarak eşit“ demek.", "Yaklaşık ne kadar? Yuvarlama kuralıyla yuvarla ve aklından hesapla. Sonuç gerçek fiyatın üstünde ya da altında olabilir.", "💶 Param kesin yeter mi? Her fiyatı <b>yukarı</b> yuvarla, yuvarlama kuralı aşağı yuvarlasa bile. O zaman sonuç asla gerçek fiyatın altında olmaz.", "Yukarı yuvarlanmış toplam ≤ bütçe: Para kesin yeter. Yukarı yuvarlanmış toplam > bütçe: Tam hesapla.", "Kontrol kuralı: Tam sonuç yukarı yuvarlanmış toplamdan asla büyük değildir. Ama çok da küçük değildir: fiyat başına en fazla 9 € (yüzlüğe yuvarlarken en fazla 99 €).", "Küçük sayının en büyük basamağına göre yuvarla. Örnek: 358 + 47 → ikisi de onluğa: 360 + 50 = 410.", "Ters işlemle sağlama: fiyat + para üstü = ödenen para.", "Daha fazlası kitapta, sayfa 34'te."],
   errTitle: "Sık yapılan hatalar",
   errs: [["Yukarı yerine aşağı yuvarlanmış", "Bütçe 50 €: 14 € → <s>10 €</s> → doğrusu 20 €"], ["Yuvarlanmış yerine tam fiyatlar", "Yukarı yuvarlama: <s>18 + 14 + 9</s> → doğrusu 20 + 20 + 10"], ["Elde unutulmuş", "18 + 14 + 9 = <s>31</s> → doğrusu 41"], ["Sonuç yukarı yuvarlanmış toplamdan büyük", "Yukarı yuvarlanmış 50, sonuç <s>61</s> → doğru olamaz"], ["Sağlamasız para üstü", "50 − 41 = <s>19</s>, sağlama: 41 + 19 = 60 → doğrusu 9"]],
   glossTitle: "Terimler (Almanca – Türkçe)",
