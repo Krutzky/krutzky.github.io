@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mitrechnen: Reicht das Geld?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600;700&display=swap">
+<style>
+:root{
+  --paper:#F7FAFD; --line:#D3E0EE; --surface:#FFFFFF; --ink:#1C2A4A; --muted:#55627F;
+  --bad:#D3263A; --ok:#17844F; --okbg:#E3F5EB; --badbg:#FCE6E9; --focus:#2B6CD8;
+  --orange:#E97A00; --navy:#020C45; --soft:#EEF3F9;
+  --f-head:"Lexend","Trebuchet MS",sans-serif; --f-body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+button{touch-action:manipulation;font:inherit;cursor:pointer}
+header{background:var(--navy);color:#fff;padding:18px 20px calc(16px);}
+header h1{margin:0;font:600 clamp(1.3rem,4.5vw,1.8rem) var(--f-head)}
+header p{margin:4px 0 0;opacity:.85;font-size:1rem}
+.bar{height:10px;background:rgba(255,255,255,.2);border-radius:99px;margin-top:12px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--orange);border-radius:99px;transition:width .3s}
+main{max-width:760px;margin:0 auto;padding:18px 16px 120px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 20px;box-shadow:0 2px 8px rgba(28,42,74,.06)}
+.chip{display:inline-block;background:var(--orange);color:#fff;font:600 .95rem var(--f-head);padding:4px 12px;border-radius:99px;margin-bottom:10px}
+.q{font-size:clamp(1.25rem,4.2vw,1.6rem);line-height:1.4;margin:6px 0 16px}
+.rule{background:var(--soft);border-radius:14px;padding:10px 14px;margin:0 0 16px;font-size:1.05rem}
+.shop{width:100%;border-collapse:collapse;margin:0 0 16px;font-size:1.2rem}
+.shop td{padding:8px 4px;border-bottom:1px dashed var(--line)}
+.shop td:last-child{text-align:right;font-weight:700}
+.shop tr.bud td{border-bottom:0;border-top:2px solid var(--ink);font-weight:700}
+.opts{display:grid;gap:14px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{min-height:84px;border:3px solid var(--line);background:var(--surface);border-radius:18px;font-size:clamp(1.3rem,4.6vw,1.8rem);font-weight:700;color:var(--ink);padding:12px}
+.opt:active{transform:scale(.98)}
+.opt.sel{border-color:var(--focus);background:var(--soft)}
+.msg.info{background:var(--soft);color:var(--ink)}
+.nav{display:flex;justify-content:space-between;align-items:center;margin:0 0 6px}
+.nav .back{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 16px;font-size:1.05rem}
+.nav .back:disabled{opacity:.4}
+.nav .cnt{color:var(--muted);font-weight:700}
+.opt.ok{border-color:var(--ok);background:var(--okbg);color:var(--ok)}
+.opt.bad{border-color:var(--bad);background:var(--badbg);color:var(--bad)}
+.opt:disabled{cursor:default}
+.msg{margin-top:16px;border-radius:14px;padding:14px 16px;font-size:1.15rem;line-height:1.45}
+.msg.ok{background:var(--okbg);color:var(--ok)}
+.msg.bad{background:var(--badbg);color:var(--bad)}
+.next{display:block;width:100%;margin-top:16px;min-height:76px;border:0;border-radius:18px;background:var(--orange);color:#fff;font:600 1.5rem var(--f-head)}
+.stars{font:600 1.2rem var(--f-head);text-align:center;margin:14px 0 0;color:var(--muted)}
+.big{font:600 clamp(1.6rem,6vw,2.2rem) var(--f-head);text-align:center;margin:8px 0}
+.nl{margin:6px 0 16px}
+#zoomfix{position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9999;display:none;padding:14px 20px;border-radius:999px;border:0;background:var(--ink);color:#fff;font:600 1.1rem var(--f-body);box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#zoomfix.on{display:block}
+@media (prefers-color-scheme: dark){
+  :root{--paper:#111827;--line:#223149;--surface:#18233A;--ink:#E5ECF8;--muted:#A3B0C8;--okbg:#173A2B;--badbg:#47202A;--ok:#4FCB8C;--bad:#FF6F80;--soft:#1F2B44}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mitrechnen: Reicht das Geld?</h1>
+  <p>Rechne mit den Folien mit. Tippe auf die richtige Antwort.</p>
+  <div class="bar"><span id="prog"></span></div>
+</header>
+<main id="view"></main>
+<button id="zoomfix" type="button">🔍 Normale Größe</button>
+<script>
+const RULE = "Rundungsregel: 0, 1, 2, 3, 4 → abrunden. 5, 6, 7, 8, 9 → aufrunden.";
+const UP = "Jeden Preis aufrunden: Du nimmst immer die nächstgrößere Zehnerzahl, auch wenn die Rundungsregel abrunden würde (bei 1, 2, 3, 4). Beispiel: 52 € → 60 €.";
+const MIA = `<table class="shop"><tr><td>🔫 Wasserpistole</td><td>34 €</td></tr><tr><td>🧩 Puzzle</td><td>33 €</td></tr><tr><td>🌀 Kreisel-Set</td><td>35 €</td></tr><tr class="bud"><td>💶 Mia hat</td><td>100 €</td></tr></table>`;
+const roundQ = (p, mode) => {
+  const d = Math.floor(p / 10) * 10, u = d + 10, r = p % 10 >= 5 ? u : d, right = mode === "up" ? u : r;
+  return mode === "up"
+    ? { chip: "Aufrunden", top: `<p class="rule">${UP}</p>`, q: `Runde <b>${p} €</b> auf.`, opts: [d + " €", u + " €"], ok: 1, why: `Jeden Preis aufrunden: Du nimmst die nächstgrößere Zehnerzahl: ${p} € → ${u} €.` }
+    : { chip: "Rundungsregel", top: `<p class="rule">${RULE}</p>`, q: `Runde <b>${p} €</b> mit der Rundungsregel.`, opts: [d + " €", u + " €"], ok: right === d ? 0 : 1, why: `Schau auf die Einer: ${p % 10} → ${right === d ? "abrunden" : "aufrunden"}. Also ${p} € ≈ ${right} €.` };
+};
+const TOY = `<table class="shop"><tr><td>🏸 Federball-Set</td><td>24 €</td></tr><tr><td>⚽ Fußball</td><td>19 €</td></tr></table>`;
+const pred = (q, opts, why) => ({ chip: "", top: MIA, q, opts, ok: -1, why });
+const FIXED = [
+  /* Folie 2: Mias Einkauf, Rundungsregel */
+  { chip: "Folie 2 · Mia kauft ein", top: MIA + `<p class="rule">${RULE}</p>`, q: "Runde <b>34 €</b> mit der Rundungsregel.", opts: ["30 €", "40 €"], ok: 0, why: "Bei 4 wird abgerundet: 34 € ≈ 30 €." },
+  { chip: "Folie 2 · Mia kauft ein", top: MIA + `<p class="rule">${RULE}</p>`, q: "Runde <b>33 €</b> mit der Rundungsregel.", opts: ["30 €", "40 €"], ok: 0, why: "Bei 3 wird abgerundet: 33 € ≈ 30 €." },
+  { chip: "Folie 2 · Mia kauft ein", top: MIA + `<p class="rule">${RULE}</p>`, q: "Runde <b>35 €</b> mit der Rundungsregel.", opts: ["30 €", "40 €"], ok: 1, why: "Bei 5 wird aufgerundet: 35 € ≈ 40 €." },
+  { chip: "Folie 2 · Mia kauft ein", top: MIA, q: "30 + 30 + 40 = ?", opts: ["100 €", "110 €", "120 €"], ok: 0, why: "30 + 30 + 40 = 100." },
+  { chip: "Folie 2 · Mia kauft ein", top: MIA, q: "Deine Vorhersage: Reicht Mias Geld?", opts: ["👍 Das Geld reicht.", "👎 Das Geld reicht nicht."], ok: -1, why: "Merk dir deine Vorhersage. Gleich piept die Kasse …" },
+  /* Folie 3: An der Kasse */
+  { chip: "Folie 3 · Piep, piep, piep … an der Kasse!", top: MIA + `<p class="big">🧾 Summe: 102 €</p>`, q: "An der Kasse kostet es 102 €. Reicht Mias Geld?", opts: ["Ja", "Nein"], ok: 1, why: "Oh nein! 102 € ist mehr als 100 €. Es fehlen 2 €. Mia muss etwas zurücklegen." },
+  /* Folie 4: Wo ist das Geld geblieben? */
+  { chip: "Folie 4 · Geld-Detektive: Warum fehlen Mia 2 €?", top: `<p class="rule">Gerundet: 34 → 30 · 33 → 30 · 35 → 40<br>Gerundete Summe: 100 € · Echter Preis: 102 €</p>`, q: "Liegt die gerundete Summe (100 €) über oder unter dem echten Preis (102 €)?", opts: ["darüber", "darunter"], ok: 1, why: "100 € liegt 2 € unter 102 €. Mia hat zu wenig gerechnet, weil sie 34 € und 33 € abgerundet hat." },
+  /* Folie 5: Jeden Preis aufrunden */
+  { chip: "Folie 5 · Jeden Preis aufrunden", top: MIA + `<p class="rule">${UP}</p>`, q: "Runde <b>34 €</b> auf die nächstgrößere Zehnerzahl auf.", opts: ["30 €", "40 €"], ok: 1, why: "Aufrunden: 34 € → 40 €." },
+  { chip: "Folie 5 · Jeden Preis aufrunden", top: MIA + `<p class="rule">${UP}</p>`, q: "Runde <b>33 €</b> auf die nächstgrößere Zehnerzahl auf.", opts: ["30 €", "40 €"], ok: 1, why: "Aufrunden: 33 € → 40 €." },
+  { chip: "Folie 5 · Jeden Preis aufrunden", top: MIA + `<p class="rule">${UP}</p>`, q: "Runde <b>35 €</b> auf die nächstgrößere Zehnerzahl auf.", opts: ["30 €", "40 €"], ok: 1, why: "Aufrunden: 35 € → 40 €." },
+  { chip: "Folie 5 · Jeden Preis aufrunden", top: MIA, q: "40 + 40 + 40 = ?", opts: ["100 €", "110 €", "120 €"], ok: 2, why: "40 + 40 + 40 = 120." },
+  { chip: "Folie 5 · Jeden Preis aufrunden", top: MIA, q: "Liegt die aufgerundete Summe (120 €) über oder unter dem echten Preis (102 €)?", opts: ["darüber", "darunter"], ok: 0, why: "120 € liegt über 102 €. Wenn du jeden Preis aufrundest, liegt das Ergebnis nie unter dem echten Preis." },
+  /* Folie 6/7: Wir beobachten den Unterschied */
+  { chip: "Folie 6 · Schritt 1: Rundungsregel", top: TOY + `<p class="rule">${RULE}</p>`, q: "Runde <b>24 €</b> mit der Rundungsregel.", opts: ["20 €", "30 €"], ok: 0, why: "Bei 4 wird abgerundet: 24 € ≈ 20 €." },
+  { chip: "Folie 6 · Schritt 1: Rundungsregel", top: TOY + `<p class="rule">${RULE}</p>`, q: "Runde <b>19 €</b> mit der Rundungsregel.", opts: ["10 €", "20 €"], ok: 1, why: "Bei 9 wird aufgerundet: 19 € ≈ 20 €." },
+  { chip: "Folie 6 · Schritt 1: Rundungsregel", top: TOY, q: "20 + 20 = ?", opts: ["30 €", "40 €", "50 €"], ok: 1, why: "20 + 20 = 40." },
+  { chip: "Folie 6 · Schritt 2: Aufrunden", top: TOY + `<p class="rule">${UP}</p>`, q: "Runde <b>24 €</b> auf die nächstgrößere Zehnerzahl auf.", opts: ["20 €", "30 €"], ok: 1, why: "Aufrunden: 24 € → 30 €." },
+  { chip: "Folie 6 · Schritt 2: Aufrunden", top: TOY + `<p class="rule">${UP}</p>`, q: "Runde <b>19 €</b> auf die nächstgrößere Zehnerzahl auf.", opts: ["10 €", "20 €"], ok: 1, why: "Aufrunden: 19 € → 20 €." },
+  { chip: "Folie 6 · Schritt 2: Aufrunden", top: TOY, q: "30 + 20 = ?", opts: ["40 €", "50 €", "60 €"], ok: 1, why: "30 + 20 = 50." },
+  { chip: "Folie 6 · Schritt 3: Genau rechnen", top: TOY, q: "24 + 19 = ?", opts: ["33 €", "43 €", "53 €"], ok: 1, why: "24 + 19 = 43." },
+  { chip: "Folie 6 · Schritt 3: Beobachten", top: TOY + `<p class="rule">Rundungsregel: 40 € · Aufgerundet: 50 € · Genau: 43 €</p>`, q: "Wo liegt 40 € (Rundungsregel)?", opts: ["über 43 €", "unter 43 €"], ok: 1, why: "40 € liegt unter dem echten Preis von 43 €." },
+  { chip: "Folie 6 · Schritt 3: Beobachten", top: TOY + `<p class="rule">Rundungsregel: 40 € · Aufgerundet: 50 € · Genau: 43 €</p>`, q: "Wo liegt 50 € (aufgerundet)?", opts: ["über 43 €", "unter 43 €"], ok: 0, why: "50 € liegt über dem echten Preis. So ist es beim Aufrunden immer." },
+  /* Folie 8: Zwei Fragen, zwei Wege */
+  { chip: "Folie 8 · Zwei Fragen, zwei Wege", top: "", q: "Du willst <b>sicher</b> wissen, ob dein Geld reicht. Wie rundest du?", opts: ["mit der Rundungsregel", "jeden Preis aufrunden"], ok: 1, two: false, why: "Will ich sicher wissen, ob mein Geld reicht, runde ich jeden Preis auf." }
+];
+let i = 0, picked = null, wrong = [], stars = 0, extra = null, lastP = 0;
+function randTask() {
+  let p; do { p = 11 + Math.floor(Math.random() * 39) } while (p % 10 === 0 || p === lastP); lastP = p;
+  return roundQ(p, Math.random() < .5 ? "up" : "rule");
+}
+const cur = () => i < FIXED.length ? FIXED[i] : extra;
+function el(t, c, h) { const e = document.createElement(t); if (c) e.className = c; if (h !== undefined) e.innerHTML = h; return e }
+function render() {
+  const v = document.getElementById("view"); v.innerHTML = "";
+  document.getElementById("prog").style.width = Math.min(100, Math.round(i / FIXED.length * 100)) + "%";
+  if (i === FIXED.length && !extra) {
+    const c = el("section", "card");
+    c.appendChild(el("p", "big", "⭐ Super gemacht!"));
+    c.appendChild(el("p", "q", "Du weißt jetzt: Willst du sicher wissen, ob dein Geld reicht, rundest du jeden Preis <b>auf</b>."));
+    c.appendChild(el("p", "q", "Gleich übst du mit deinem Partner in der Lern-App weiter."));
+    v.appendChild(c); return;
+  }
+  const t = cur(), c = el("section", "card");
+  c.appendChild(el("span", "chip", t.chip));
+  const nav = el("div", "nav"); const bb = el("button", "back", "← Zurück"); bb.type = "button"; bb.disabled = i === 0; bb.onclick = () => { i--; picked = null; wrong = []; render() }; nav.append(bb, el("span", "cnt", `${i + 1} / ${FIXED.length}`)); c.appendChild(nav);
+  c.insertAdjacentHTML("beforeend", t.top || "");
+  c.appendChild(el("p", "q", t.q));
+  const o = el("div", "opts" + (t.opts.length === 2 && t.two !== false ? " two" : ""));
+  t.opts.forEach((s, k) => {
+    const b = el("button", "opt", s); b.type = "button";
+    if (wrong.includes(k)) { b.classList.add("bad"); b.disabled = true }
+    if (picked === t.ok && k === t.ok) b.classList.add("ok");
+    if (t.ok === -1 && picked === k) b.classList.add("sel");
+    if (picked === t.ok || (t.ok === -1 && picked !== null)) b.disabled = true;
+    b.onclick = () => { if (t.ok === -1) { picked = k; render(); return } picked = k; if (k !== t.ok) wrong.push(k); else stars++; render() };
+    o.appendChild(b);
+  });
+  c.appendChild(o);
+  if (t.ok === -1 && picked !== null) { c.appendChild(el("div", "msg info", t.why)); const b = el("button", "next", "Weiter"); b.type = "button"; b.onclick = () => { i++; picked = null; wrong = []; render(); window.scrollTo(0, 0) }; c.appendChild(b) }
+  if (t.ok !== -1 && picked !== null && picked !== t.ok) c.appendChild(el("div", "msg bad", "Noch nicht. " + (t.chip === "Rundungsregel" ? RULE : t.chip === "Aufrunden" ? UP : "Schau noch einmal genau hin.") + " Versuch es noch einmal."));
+  if (picked === t.ok) {
+    c.appendChild(el("div", "msg ok", "✓ Richtig! " + t.why));
+    const b = el("button", "next", "Weiter"); b.type = "button";
+    b.onclick = () => { if (i < FIXED.length) i++; if (i >= FIXED.length && extra) extra = randTask(); picked = null; wrong = []; render(); window.scrollTo(0, 0) };
+    c.appendChild(b);
+  }
+  c.appendChild(el("p", "stars", `⭐ ${stars}`));
+  v.appendChild(c);
+}
+render();
+/* Zoom zurücksetzen, falls die Seite vergrößert wurde */
+(function () {
+  const vm = document.querySelector('meta[name="viewport"]'), base = vm.getAttribute("content"), btn = document.getElementById("zoomfix"), vv = window.visualViewport;
+  function check() { const z = vv ? vv.scale : 1; btn.classList.toggle("on", z > 1.05); btn.style.transform = z > 1.05 ? `scale(${1 / z})` : ""; btn.style.transformOrigin = "100% 100%" }
+  btn.addEventListener("click", () => { vm.setAttribute("content", "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1"); setTimeout(() => { vm.setAttribute("content", base); check() }, 400) });
+  if (vv) { vv.addEventListener("resize", check); vv.addEventListener("scroll", check) }
+  check();
+})();
+</script>
+</body>
+</html>
